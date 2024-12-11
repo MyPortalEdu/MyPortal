@@ -5,7 +5,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Courses")]
+    [Table("course")]
     public class Course : LookupItem
     {
         public Course()

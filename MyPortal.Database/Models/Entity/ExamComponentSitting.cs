@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("ExamComponentSittings")]
+    [Table("exam_component_sitting")]
     public class ExamComponentSitting : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid ComponentId { get; set; }

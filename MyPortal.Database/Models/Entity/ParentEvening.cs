@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("ParentEvenings")]
+    [Table("parent_evening")]
     public class ParentEvening : Database.BaseTypes.Entity
     {
         public ParentEvening()

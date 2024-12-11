@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("SessionPeriods")]
+[Table("session_period")]
 public class SessionPeriod : BaseTypes.Entity
 {
     public Guid SessionId { get; set; }

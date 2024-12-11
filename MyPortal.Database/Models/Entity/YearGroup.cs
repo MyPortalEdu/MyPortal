@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("YearGroups")]
+    [Table("year_group")]
     public class YearGroup : BaseTypes.Entity, IStudentGroupEntity
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

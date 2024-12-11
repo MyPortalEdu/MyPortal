@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("GovernanceTypes")]
+    [Table("governance_type")]
     public class GovernanceType : LookupItem, ICensusEntity
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

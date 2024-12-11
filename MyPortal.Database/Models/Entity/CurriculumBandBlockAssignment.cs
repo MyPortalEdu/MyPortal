@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("CurriculumBandBlockAssignments")]
+    [Table("curriculum_band_block_assignment")]
     public class CurriculumBandBlockAssignment : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid BlockId { get; set; }

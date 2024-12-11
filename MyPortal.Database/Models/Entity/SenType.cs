@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("SenTypes")]
+    [Table("sen_type")]
     public class SenType : LookupItem, ICensusEntity
     {
         public SenType()

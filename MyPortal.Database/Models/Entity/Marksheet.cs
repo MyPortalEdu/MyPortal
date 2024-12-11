@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Marksheets")]
+    [Table("marksheet")]
     public class Marksheet : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid MarksheetTemplateId { get; set; }

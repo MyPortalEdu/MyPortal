@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("DiaryEvents")]
+    [Table("diary_event")]
     public class DiaryEvent : BaseTypes.Entity, ICreatableSystemEntity
     {
         public DiaryEvent()

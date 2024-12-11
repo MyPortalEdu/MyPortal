@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("UserLogins")]
+    [Table("user_logins")]
     public class UserLogin : IdentityUserLogin<Guid>
     {
         public virtual User User { get; set; }

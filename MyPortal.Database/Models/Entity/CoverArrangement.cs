@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("CoverArrangements")]
+    [Table("cover_arrangement")]
     public class CoverArrangement : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid WeekId { get; set; }

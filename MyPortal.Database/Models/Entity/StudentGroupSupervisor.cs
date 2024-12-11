@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("StudentGroupSupervisors")]
+    [Table("student_group_supervisor")]
     public class StudentGroupSupervisor : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid StudentGroupId { get; set; }

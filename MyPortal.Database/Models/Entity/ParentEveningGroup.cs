@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
+    [Table("parent_evening_group")]
     public class ParentEveningGroup : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid ParentEveningId { get; set; }

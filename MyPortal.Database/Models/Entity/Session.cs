@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Sessions")]
+    [Table("session")]
     public class Session : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid ClassId { get; set; }

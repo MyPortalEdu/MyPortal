@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Ethnicities")]
+    [Table("ethnicity")]
     public class Ethnicity : LookupItem, ICensusEntity
     {
         public Ethnicity()

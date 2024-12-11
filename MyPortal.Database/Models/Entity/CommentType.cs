@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("CommentTypes")]
+[Table("comment_type")]
 public class CommentType : BaseTypes.LookupItem
 {
     public virtual ICollection<Comment> Comments { get; set; }

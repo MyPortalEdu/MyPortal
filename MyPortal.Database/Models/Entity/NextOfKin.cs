@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("NextOfKin")]
+    [Table("next_of_kin")]
     public class NextOfKin : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid StaffMemberId { get; set; }

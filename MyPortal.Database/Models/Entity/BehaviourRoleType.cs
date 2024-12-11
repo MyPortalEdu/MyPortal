@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("BehaviourRoleTypes")]
+[Table("behaviour_role_type")]
 public class BehaviourRoleType : LookupItem
 {
     [Column(Order = 4)] public int DefaultPoints { get; set; }

@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("ReportCards")]
+    [Table("report_card")]
     public class ReportCard : BaseTypes.Entity, IActivatable
     {
         [Column(Order = 2)] public Guid StudentId { get; set; }

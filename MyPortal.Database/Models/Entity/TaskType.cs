@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("TaskTypes")]
+    [Table("task_type")]
     public class TaskType : LookupItem, ISystemEntity
     {
         public TaskType()

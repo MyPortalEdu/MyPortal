@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("AgentTypes")]
+    [Table("agent_type")]
     public class AgentType : LookupItem
     {
         public virtual ICollection<Agent> Agents { get; set; }

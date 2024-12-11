@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using MyPortal.Database.Models.Entity;
 
 namespace MyPortal.Database.Helpers
@@ -30,11 +31,14 @@ namespace MyPortal.Database.Helpers
 
             string tblAlias;
             GetTableName(t, out tblAlias, alias);
+
             var props = GetColumnProperties(t);
 
             foreach (var prop in props)
             {
-                propNames.Add($"{tblAlias}.{prop.Name}");
+                var entityColumn = ((ColumnAttribute)prop.GetCustomAttribute(typeof(ColumnAttribute)))?.Name 
+                                   ?? prop.Name;
+                propNames.Add($"{tblAlias}.{ToSnakeCase(entityColumn)}");
             }
 
             return propNames.ToArray();
@@ -109,6 +113,22 @@ namespace MyPortal.Database.Helpers
                 ((ColumnAttribute)Attribute.GetCustomAttribute(p, typeof(ColumnAttribute)))?.Order).ToList());
 
             return props;
+        }
+
+        private static string ToSnakeCase(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // Use a regular expression to insert an underscore before each uppercase letter
+            // and convert all uppercase letters to lowercase
+            var snakeCase = Regex.Replace(input, "([A-Z])", "_$1").ToLower();
+
+            // Remove the leading underscore if it exists (in case the string starts with an uppercase letter)
+            if (snakeCase.StartsWith("_"))
+                snakeCase = snakeCase.Substring(1);
+
+            return snakeCase;
         }
 
         internal static string GetTableName(Type t, out string outputAlias, string tblAlias = null,

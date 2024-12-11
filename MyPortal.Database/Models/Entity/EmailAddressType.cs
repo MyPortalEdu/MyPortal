@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("EmailAddressTypes")]
+    [Table("email_address_type")]
     public class EmailAddressType : LookupItem
     {
         public EmailAddressType()

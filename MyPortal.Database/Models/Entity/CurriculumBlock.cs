@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("CurriculumBlocks")]
+    [Table("curriculum_block")]
     public class CurriculumBlock : BaseTypes.Entity
     {
         public CurriculumBlock()

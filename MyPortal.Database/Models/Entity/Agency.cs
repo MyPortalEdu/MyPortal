@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Agencies")]
+    [Table("agency")]
     public class Agency : BaseTypes.Entity, IDirectoryEntity, ISoftDeleteEntity
     {
         public Agency()

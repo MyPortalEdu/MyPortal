@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("BehaviourOutcomes")]
+    [Table("behaviour_outcome")]
     public class BehaviourOutcome : LookupItem, ISystemEntity
     {
         public BehaviourOutcome()

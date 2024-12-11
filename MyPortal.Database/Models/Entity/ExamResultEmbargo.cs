@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("ExamResultEmbargoes")]
+    [Table("exam_result_embargo")]
     public class ExamResultEmbargo : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid ResultSetId { get; set; }

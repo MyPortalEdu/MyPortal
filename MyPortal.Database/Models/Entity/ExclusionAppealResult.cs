@@ -5,6 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
+    [Table("exclusion_appeal_result")]
     public class ExclusionAppealResult : LookupItem, ISystemEntity
     {
         public ExclusionAppealResult()

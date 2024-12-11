@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("StaffAbsences")]
+    [Table("staff_absence")]
     public class StaffAbsence : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid StaffMemberId { get; set; }

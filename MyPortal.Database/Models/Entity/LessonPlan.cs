@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("LessonPlans")]
+    [Table("lesson_plan")]
     public class LessonPlan : BaseTypes.Entity, IDirectoryEntity, ICreatable
     {
         public LessonPlan()

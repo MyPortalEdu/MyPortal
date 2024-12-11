@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("AddressTypes")]
+    [Table("address_type")]
     public class AddressType : BaseTypes.LookupItem
     {
         public AddressType()

@@ -7,7 +7,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Aspects")]
+    [Table("aspect")]
     public class Aspect : LookupItem, ISystemEntity
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("SubjectStaffMemberRoles")]
+    [Table("subject_staff_member_role")]
     public class SubjectStaffMemberRole : LookupItem
     {
         public SubjectStaffMemberRole()

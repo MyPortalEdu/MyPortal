@@ -4,6 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
+    [Table("exam_special_arrangement")]
     public class ExamSpecialArrangement : BaseTypes.Entity, ISystemEntity
     {
         [Column(Order = 2)] public string Description { get; set; }

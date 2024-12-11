@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("VatRates")]
+    [Table("vat_rate")]
     public class VatRate : LookupItem
     {
         public VatRate()

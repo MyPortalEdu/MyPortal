@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("DiaryEventTemplates")]
+    [Table("diary_event_template")]
     public class DiaryEventTemplate : LookupItem
     {
         [Column(Order = 4)] public Guid EventTypeId { get; set; }

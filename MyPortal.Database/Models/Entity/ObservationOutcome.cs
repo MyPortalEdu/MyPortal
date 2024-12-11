@@ -5,7 +5,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("ObservationOutcomes")]
+    [Table("observation_outcome")]
     public class ObservationOutcome : LookupItem
     {
         public ObservationOutcome()

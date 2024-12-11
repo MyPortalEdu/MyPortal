@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("AttendancePeriods")]
+    [Table("attendance_period")]
     public class AttendancePeriod : BaseTypes.Entity
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

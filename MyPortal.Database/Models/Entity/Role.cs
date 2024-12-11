@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Roles")]
+    [Table("role")]
     public class Role : IdentityRole<Guid>, ISystemEntity
     {
         public Role()

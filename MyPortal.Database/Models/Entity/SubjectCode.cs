@@ -5,7 +5,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("SubjectCodes")]
+    [Table("subject_code")]
     public class SubjectCode : LookupItem
     {
         public SubjectCode()

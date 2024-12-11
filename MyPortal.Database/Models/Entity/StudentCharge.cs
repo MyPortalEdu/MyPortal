@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("StudentCharges")]
+    [Table("student_charge")]
     public class StudentCharge : BaseTypes.Entity
     {
         public StudentCharge()

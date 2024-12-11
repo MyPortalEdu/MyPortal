@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("SessionTypes")]
+[Table("session_type")]
 public class SessionType : LookupItem
 {
     [Column(Order = 4)] public string Code { get; set; }

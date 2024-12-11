@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Tasks")]
+    [Table("task")]
     public class Task : BaseTypes.Entity, ISystemEntity, ICreatable
     {
         [Column(Order = 2)] public Guid TypeId { get; set; }

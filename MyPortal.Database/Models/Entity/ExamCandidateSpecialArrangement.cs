@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("ExamCandidateSpecialArrangements")]
+    [Table("exam_candidate_special_arrangement")]
     public class ExamCandidateSpecialArrangement : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid CandidateId { get; set; }

@@ -4,7 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("Languages")]
+    [Table("language")]
     public class Language : LookupItem, ICensusEntity
     {
         [Column(Order = 4)] public string Code { get; set; }

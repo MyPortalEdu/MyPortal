@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("CommentBankAreas")]
+[Table("comment_bank_area")]
 public class CommentBankArea : BaseTypes.Entity
 {
     [Column(Order = 2)] public Guid CommentBankId { get; set; }

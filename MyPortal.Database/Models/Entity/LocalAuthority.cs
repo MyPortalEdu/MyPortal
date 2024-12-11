@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("LocalAuthorities")]
+    [Table("local_authority")]
     public class LocalAuthority : BaseTypes.Entity
     {
         public LocalAuthority()

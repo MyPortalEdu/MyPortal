@@ -4,7 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("RegGroups")]
+    [Table("reg_group")]
     public class RegGroup : BaseTypes.Entity, IStudentGroupEntity
     {
         [Column(Order = 2)] public Guid StudentGroupId { get; set; }

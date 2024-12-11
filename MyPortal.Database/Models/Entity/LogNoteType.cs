@@ -6,8 +6,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [DataContract]
-    [Table("LogNoteTypes")]
+    [Table("log_note_type")]
     public class LogNoteType : LookupItem
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

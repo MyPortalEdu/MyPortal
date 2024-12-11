@@ -7,7 +7,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("ExamQualificationLevels")]
+    [Table("exam_qualification_level")]
     public class ExamQualificationLevel : LookupItem, ISystemEntity
     {
         // TODO: Populate Data

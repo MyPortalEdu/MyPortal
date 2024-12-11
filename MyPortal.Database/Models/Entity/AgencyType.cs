@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("AgencyTypes")]
+    [Table("agency_type")]
     public class AgencyType : LookupItem
     {
         public AgencyType()
