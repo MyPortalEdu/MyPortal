@@ -1,4 +1,4 @@
-# <img src="https://i.imgur.com/146wCuq.png" alt="MyPortal" width=500/>
+# <img src="https://i.imgur.com/dAVgTNy.png" alt="MyPortal" width=500/>
 MyPortal is an open-source cloud-based school information management system (MIS). The MyPortal school MIS system is perfect the whole school community – from teachers, data administrators and staff, to students and parents.
 
 ## 100% Cloud-Based Platform
