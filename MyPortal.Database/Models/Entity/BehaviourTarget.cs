@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("behaviour_target")]
+    [Table("BehaviourTargets")]
     public class BehaviourTarget : LookupItem
     {
         public virtual ICollection<ReportCardTarget> ReportCardLinks { get; set; }

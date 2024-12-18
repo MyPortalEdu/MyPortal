@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("curriculum_year_group")]
+    [Table("CurriculumYearGroups")]
     public class CurriculumYearGroup : BaseTypes.Entity, ICensusEntity
     {
         [Column(Order = 2)]

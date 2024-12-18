@@ -4,7 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exclusion")]
+    [Table("Exclusions")]
     public class Exclusion : BaseTypes.Entity, ISoftDeleteEntity
     {
         [Column(Order = 2)] public Guid StudentId { get; set; }

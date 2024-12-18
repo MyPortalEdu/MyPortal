@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("comment")]
+    [Table("Comments")]
     public class Comment : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid CommentTypeId { get; set; }

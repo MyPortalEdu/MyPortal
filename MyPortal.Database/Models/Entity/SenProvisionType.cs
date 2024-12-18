@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("sen_provision_type")]
+    [Table("SenProvisionTypes")]
     public class SenProvisionType : LookupItem
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

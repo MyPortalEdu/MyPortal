@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("gifted_talented")]
+    [Table("GiftedTalentedStudents")]
     public class GiftedTalented : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid StudentId { get; set; }

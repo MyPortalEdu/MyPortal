@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("phone_number_type")]
+    [Table("PhoneNumberTypes")]
     public class PhoneNumberType : LookupItem
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

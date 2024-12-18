@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("medical_event")]
+    [Table("MedicalEvents")]
     public class MedicalEvent : BaseTypes.Entity, ICreatable
     {
         [Column(Order = 2)] public Guid PersonId { get; set; }

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("academic_term")]
+    [Table("AcademicTerms")]
     public class AcademicTerm : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid AcademicYearId { get; set; }

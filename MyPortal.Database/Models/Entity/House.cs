@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("house")]
+    [Table("Houses")]
     public class House : BaseTypes.Entity, IStudentGroupEntity
     {
         [Column(Order = 2)] public Guid StudentGroupId { get; set; }

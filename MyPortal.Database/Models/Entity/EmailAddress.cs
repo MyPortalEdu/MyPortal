@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("email_address")]
+    [Table("EmailAddresses")]
     public class EmailAddress : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid TypeId { get; set; }

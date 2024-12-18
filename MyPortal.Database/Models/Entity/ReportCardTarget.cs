@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("report_card_target")]
+    [Table("ReportCardTargets")]
     public class ReportCardTarget : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid ReportCardId { get; set; }

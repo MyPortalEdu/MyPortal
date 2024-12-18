@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("achievement_type")]
+    [Table("AchievementTypes")]
     public class AchievementType : LookupItem
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

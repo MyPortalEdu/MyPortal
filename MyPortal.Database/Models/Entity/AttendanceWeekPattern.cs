@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("attendance_week_pattern")]
+    [Table("AttendanceWeekPatterns")]
     public class AttendanceWeekPattern : BaseTypes.Entity
     {
         public AttendanceWeekPattern()

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("academic_year")]
+    [Table("AcademicYears")]
     public class AcademicYear : BaseTypes.Entity
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

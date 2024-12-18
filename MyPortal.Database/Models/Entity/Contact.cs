@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("contact")]
+    [Table("Contacts")]
     public class Contact : BaseTypes.Entity
     {
         public Contact()

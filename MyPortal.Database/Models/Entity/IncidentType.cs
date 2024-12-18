@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("incident_type")]
+    [Table("IncidentTypes")]
     public class IncidentType : LookupItem
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

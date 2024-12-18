@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("photo")]
+    [Table("Photos")]
     public class Photo : BaseTypes.Entity
     {
         [Column(Order = 2)] public byte[] Data { get; set; }

@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exam_base_element")]
     public class ExamBaseElement : BaseTypes.Entity
     {
         public ExamBaseElement()

@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("staff_illness_type")]
+    [Table("StaffIllnessTypes")]
     public class StaffIllnessType : LookupItem, ISystemEntity
     {
         public StaffIllnessType()

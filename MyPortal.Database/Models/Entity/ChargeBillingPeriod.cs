@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("charge_billing_period")]
+[Table("ChargeBillingPeriods")]
 public class ChargeBillingPeriod : BaseTypes.Entity
 {
     [Column(Order = 2)] public string Name { get; set; }

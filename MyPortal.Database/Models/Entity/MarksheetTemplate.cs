@@ -4,7 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("marksheet_template")]
+    [Table("MarksheetTemplates")]
     public class MarksheetTemplate : BaseTypes.Entity, IActivatable
     {
         [Column(Order = 2)] public string Name { get; set; }

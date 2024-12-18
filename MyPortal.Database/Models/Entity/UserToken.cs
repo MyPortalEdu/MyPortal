@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("user_token")]
+    [Table("UserTokens")]
     public class UserToken : IdentityUserToken<Guid>
     {
         public virtual User User { get; set; }

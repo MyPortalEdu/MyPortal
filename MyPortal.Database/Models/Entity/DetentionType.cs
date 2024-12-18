@@ -5,7 +5,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("detention_type")]
+    [Table("DetentionTypes")]
     public class DetentionType : LookupItem
     {
         public DetentionType()

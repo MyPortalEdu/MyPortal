@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("directory")]
+    [Table("Directories")]
     public class Directory : BaseTypes.Entity
     {
         public Directory()

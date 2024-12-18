@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("report_card_target_entry")]
+    [Table("ReportCardTargetEntries")]
     public class ReportCardTargetEntry : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid EntryId { get; set; }

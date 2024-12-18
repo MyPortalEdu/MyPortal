@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("log_note")]
+    [Table("LogNotes")]
     public class LogNote : BaseTypes.Entity, ISoftDeleteEntity, ICreatable
     {
         [Column(Order = 2)] public Guid TypeId { get; set; }

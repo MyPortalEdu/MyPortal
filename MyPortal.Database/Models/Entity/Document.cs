@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("document")]
+    [Table("Documents")]
     public class Document : BaseTypes.Entity, ICreatable, IDirectoryEntity, ISoftDeleteEntity
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage",

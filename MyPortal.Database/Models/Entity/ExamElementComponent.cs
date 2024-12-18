@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exam_element_component")]
     public class ExamElementComponent : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid ElementId { get; set; }

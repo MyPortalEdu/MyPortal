@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("document_type")]
+    [Table("DocumentTypes")]
     public class DocumentType : LookupItem, ISystemEntity
     {
         public DocumentType()

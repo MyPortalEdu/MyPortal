@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("bulletin")]
+    [Table("Bulletins")]
     public class Bulletin : BaseTypes.Entity, IDirectoryEntity, ICreatable
     {
         [Column(Order = 2)] public Guid DirectoryId { get; set; }

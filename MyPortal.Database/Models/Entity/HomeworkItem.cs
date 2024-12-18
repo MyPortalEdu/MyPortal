@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("homework_item")]
+    [Table("HomeworkItems")]
     public class HomeworkItem : BaseTypes.Entity, IDirectoryEntity
     {
         public HomeworkItem()

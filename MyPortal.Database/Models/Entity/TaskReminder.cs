@@ -4,7 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("task_reminder")]
+[Table("TaskReminders")]
 public class TaskReminder : BaseTypes.Entity, IReminder
 {
     [Column(Order = 2)] public Guid TaskId { get; set; }

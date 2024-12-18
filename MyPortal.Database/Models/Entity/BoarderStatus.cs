@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("boarder_status")]
+    [Table("BoarderStatus")]
     public class BoarderStatus : LookupItem, ICensusEntity
     {
         public BoarderStatus()

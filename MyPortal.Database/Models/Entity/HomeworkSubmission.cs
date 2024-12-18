@@ -4,7 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("homework_submission")]
+    [Table("HomeworkSubmissions")]
     public class HomeworkSubmission : BaseTypes.Entity, ITaskEntity
     {
         [Column(Order = 2)] public Guid HomeworkId { get; set; }

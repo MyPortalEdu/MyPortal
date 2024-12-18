@@ -7,7 +7,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("student_group")]
+    [Table("StudentGroups")]
     public class StudentGroup : LookupItem, ISystemEntity
     {
         [Column(Order = 4)]
