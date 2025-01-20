@@ -21,7 +21,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class BehaviourService : BaseServiceWithAccessControl, IBehaviourService
+    public sealed class BehaviourService : BaseServiceWithAccessControl, IBehaviourService
     {
         public BehaviourService(ISessionUser user, IUserService userService, IPersonService personService,
             IStudentService studentService) : base(user, userService, personService, studentService)

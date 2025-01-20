@@ -15,7 +15,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class AcademicYearService : BaseService, IAcademicYearService
+    public sealed class AcademicYearService : BaseService, IAcademicYearService
     {
         public AcademicYearService(ISessionUser user) : base(user)
         {

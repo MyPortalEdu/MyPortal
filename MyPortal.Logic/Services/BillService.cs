@@ -10,7 +10,7 @@ using MyPortal.Logic.Models.Data.Finance;
 
 namespace MyPortal.Logic.Services
 {
-    public class BillService : BaseService, IBillService
+    public sealed class BillService : BaseService, IBillService
     {
         public BillService(ISessionUser user) : base(user)
         {

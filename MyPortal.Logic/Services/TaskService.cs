@@ -19,7 +19,7 @@ using TaskStatus = MyPortal.Database.Models.Search.TaskStatus;
 
 namespace MyPortal.Logic.Services
 {
-    public class TaskService : BaseService, ITaskService
+    public sealed class TaskService : BaseService, ITaskService
     {
         private readonly IUserService _userService;
         private readonly IPersonService _personService;

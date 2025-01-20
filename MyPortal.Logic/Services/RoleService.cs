@@ -18,7 +18,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class RoleService : BaseService, IRoleService
+    public sealed class RoleService : BaseService, IRoleService
     {
         private RoleManager<Role> _roleManager;
 

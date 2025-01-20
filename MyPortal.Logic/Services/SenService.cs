@@ -8,7 +8,7 @@ using MyPortal.Logic.Models.Data.Students;
 
 namespace MyPortal.Logic.Services
 {
-    public class SenService : BaseService, ISenService
+    public sealed class SenService : BaseService, ISenService
     {
         public SenService(ISessionUser user) : base(user)
         {

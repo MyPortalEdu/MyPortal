@@ -12,7 +12,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class ContactService : BaseService, IContactService
+    public sealed class ContactService : BaseService, IContactService
     {
         public ContactService(ISessionUser user) : base(user)
         {

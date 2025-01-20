@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class LogNoteService : BaseServiceWithAccessControl, ILogNoteService
+    public sealed class LogNoteService : BaseServiceWithAccessControl, ILogNoteService
     {
         public LogNoteService(ISessionUser user, IUserService userService, IPersonService personService,
             IStudentService studentService) : base(user, userService, personService, studentService)

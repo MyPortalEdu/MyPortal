@@ -21,7 +21,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class UserService : BaseService, IUserService
+    public sealed class UserService : BaseService, IUserService
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<Role> _roleManager;

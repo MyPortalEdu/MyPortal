@@ -3,24 +3,66 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
+using MyPortal.Database.Enums;
 using MyPortal.Database.Exceptions;
 using MyPortal.Database.Models.Entity;
+using MyPortal.Database.Models.QueryResults.Assessment;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Assessment;
 using MyPortal.Logic.Models.Data.Assessment.MarksheetEntry;
+using MyPortal.Logic.Models.Permissions;
 using MyPortal.Logic.Models.Requests.Assessment;
 using MyPortal.Logic.Models.Summary;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services;
 
-public class AssessmentService : BaseServiceWithAccessControl, IAssessmentService
+public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmentService
 {
     public AssessmentService(ISessionUser user, IUserService userService, IPersonService personService,
         IStudentService studentService) : base(user, userService, personService, studentService)
     {
+    }
+
+    private async Task<MultiAccessModel> GetMarksheetAccess(MarksheetDetailModel marksheet)
+    {
+        var accessModel = new MultiAccessModel();
+        
+        if (await User.HasPermission(UserService, PermissionValue.AssessmentUpdateAllMarksheets))
+        {
+            accessModel.CanEdit = true;
+            accessModel.CanView = true;
+            return accessModel;
+        }
+        
+        await using var unitOfWork = await User.GetConnection();
+        
+        var user = await UserService.GetCurrentUser();
+
+        if (user.PersonId.HasValue)
+        {
+            var staffMember = await unitOfWork.StaffMembers.GetByPersonId(user.PersonId.Value);
+            
+            if (staffMember != null)
+            {
+                if (marksheet.OwnerId.HasValue && marksheet.OwnerId.Value == staffMember.Id)
+                {
+                    accessModel.CanEdit = true;
+                    accessModel.CanView = true;
+                    return accessModel;
+                }
+            }
+        }
+
+        if (await User.HasPermission(UserService, PermissionValue.AssessmentViewAllMarksheets))
+        {
+            accessModel.CanView = true;
+            return accessModel;
+        }
+
+        return accessModel;
     }
 
     public async Task<IEnumerable<ResultModel>> GetPreviousResults(Guid studentId, Guid aspectId, DateTime dateTo)
@@ -88,8 +130,20 @@ public class AssessmentService : BaseServiceWithAccessControl, IAssessmentServic
         {
             throw new NotFoundException("Marksheet not found.");
         }
+        
+        var accessModel = await GetMarksheetAccess(metadata);
+
+        if (!accessModel.CanView)
+        {
+            throw new PermissionException("You do not have permission to view this marksheet.");
+        }
 
         var marksheet = new MarksheetEntryDataModel();
+
+        if (!accessModel.CanEdit)
+        {
+            marksheet.IsReadOnly = true;
+        }
 
         marksheet.Title = $"{metadata.TemplateName} ({metadata.StudentGroupCode})";
 

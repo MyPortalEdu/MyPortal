@@ -8,7 +8,7 @@ using MyPortal.Logic.Models.Requests.Documents;
 
 namespace MyPortal.Logic.Services
 {
-    public class LocalFileService : BaseService, IFileService
+    public sealed class LocalFileService : BaseService, IFileService
     {
         private readonly ILocalFileProvider _fileProvider;
         private readonly IDocumentAccessController _documentAccessController;

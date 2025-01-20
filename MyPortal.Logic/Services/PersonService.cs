@@ -12,7 +12,7 @@ using MyPortal.Logic.Models.Data.People;
 
 namespace MyPortal.Logic.Services
 {
-    public class PersonService : BaseService, IPersonService
+    public sealed class PersonService : BaseService, IPersonService
     {
         private readonly IUserService _userService;
         

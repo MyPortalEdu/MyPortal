@@ -6,7 +6,7 @@ using MyPortal.Logic.Interfaces.Services;
 
 namespace MyPortal.Logic.Services
 {
-    public class SystemSettingService : BaseService, ISystemSettingService
+    public sealed class SystemSettingService : BaseService, ISystemSettingService
     {
         public SystemSettingService(ISessionUser user) : base(user)
         {

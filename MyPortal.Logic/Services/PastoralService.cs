@@ -7,7 +7,7 @@ using MyPortal.Logic.Models.Data.Curriculum;
 
 namespace MyPortal.Logic.Services;
 
-public class PastoralService : BaseService, IPastoralService
+public sealed class PastoralService : BaseService, IPastoralService
 {
     public PastoralService(ISessionUser user) : base(user)
     {

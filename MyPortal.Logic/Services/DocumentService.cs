@@ -16,7 +16,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class DocumentService : BaseServiceWithAccessControl, IDocumentService, IDocumentAccessController
+    public sealed class DocumentService : BaseServiceWithAccessControl, IDocumentService, IDocumentAccessController
     {
         private readonly IStaffMemberService _staffMemberService;
         

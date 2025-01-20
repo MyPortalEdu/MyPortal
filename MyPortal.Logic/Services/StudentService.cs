@@ -18,7 +18,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class StudentService : BaseService, IStudentService
+    public sealed class StudentService : BaseService, IStudentService
     {
         private readonly IUserService _userService;
         

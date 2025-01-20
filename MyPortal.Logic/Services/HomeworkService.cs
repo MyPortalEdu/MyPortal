@@ -14,7 +14,7 @@ using Task = MyPortal.Database.Models.Entity.Task;
 
 namespace MyPortal.Logic.Services;
 
-public class HomeworkService : BaseService, IHomeworkService
+public sealed class HomeworkService : BaseService, IHomeworkService
 {
     public HomeworkService(ISessionUser user) : base(user)
     {

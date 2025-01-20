@@ -1,6 +1,6 @@
 ﻿namespace MyPortal.Logic.Models.Permissions;
 
-public class EventAccessModel
+public class MultiAccessModel
 {
     public bool CanView { get; set; }
     public bool CanEdit { get; set; }

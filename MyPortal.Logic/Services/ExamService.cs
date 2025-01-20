@@ -8,7 +8,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services;
 
-public class ExamService : BaseService, IExamService
+public sealed class ExamService : BaseService, IExamService
 {
     public ExamService(ISessionUser user) : base(user)
     {
