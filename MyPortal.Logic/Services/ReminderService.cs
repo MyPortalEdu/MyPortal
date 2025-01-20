@@ -11,7 +11,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services;
 
-public class ReminderService : BaseService, IReminderService
+public sealed class ReminderService : BaseService, IReminderService
 {
     public ReminderService(ISessionUser user) : base(user)
     {

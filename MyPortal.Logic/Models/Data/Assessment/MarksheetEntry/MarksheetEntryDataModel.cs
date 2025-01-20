@@ -15,6 +15,7 @@ public class MarksheetEntryDataModel
 
     public string Title { get; set; }
     public bool Completed { get; set; }
+    public bool IsReadOnly { get; set; }
 
     public ICollection<MarksheetColumnDataModel> Columns { get; set; }
     public ICollection<MarksheetStudentDataModel> Students { get; set; }

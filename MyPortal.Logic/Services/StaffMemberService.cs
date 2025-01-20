@@ -10,7 +10,7 @@ using MyPortal.Logic.Models.Requests.StaffMember;
 
 namespace MyPortal.Logic.Services
 {
-    public class StaffMemberService : BaseService, IStaffMemberService
+    public sealed class StaffMemberService : BaseService, IStaffMemberService
     {
         public StaffMemberService(ISessionUser user) : base(user)
         {

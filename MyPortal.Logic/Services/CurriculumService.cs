@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class CurriculumService : BaseService, ICurriculumService
+    public sealed class CurriculumService : BaseService, ICurriculumService
     {
         public CurriculumService(ISessionUser user) : base(user)
         {

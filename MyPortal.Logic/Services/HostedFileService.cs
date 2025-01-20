@@ -8,7 +8,7 @@ using MyPortal.Logic.Models.Web;
 
 namespace MyPortal.Logic.Services
 {
-    public class HostedFileService : BaseService, IFileService
+    public sealed class HostedFileService : BaseService, IFileService
     {
         private readonly IHostedFileProvider _fileProvider;
         private readonly IDocumentAccessController _documentAccessController;

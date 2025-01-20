@@ -20,18 +20,18 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Services
 {
-    public class CalendarService : BaseServiceWithAccessControl, ICalendarService
+    public sealed class CalendarService : BaseServiceWithAccessControl, ICalendarService
     {
         public CalendarService(ISessionUser user, IUserService userService, IPersonService personService,
             IStudentService studentService) : base(user, userService, personService, studentService)
         {
         }
 
-        private async Task<EventAccessModel> GetEventPermissions(Guid eventId)
+        private async Task<MultiAccessModel> GetEventPermissions(Guid eventId)
         {
             await using var unitOfWork = await User.GetConnection();
             
-            var response = new EventAccessModel();
+            var response = new MultiAccessModel();
 
             var userId = User.GetUserId();
             var diaryEvent = await GetEvent(eventId);

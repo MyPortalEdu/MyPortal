@@ -12,7 +12,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Services
 {
-    public class ParentEveningService : BaseService, IParentEveningService
+    public sealed class ParentEveningService : BaseService, IParentEveningService
     {
         public ParentEveningService(ISessionUser user) : base(user)
         {
