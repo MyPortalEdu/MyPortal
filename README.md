@@ -8,6 +8,6 @@ A powerful, versatile, online school management system you can build and shape t
 - Intuitive and easy to use
 - Easy to host on Windows and Linux
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Find MyPortal on Twitter at https://twitter.com/MyPortalEDU
