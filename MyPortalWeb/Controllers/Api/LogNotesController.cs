@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyPortal.Database.Constants;
 using MyPortal.Database.Enums;
 using MyPortal.Logic.Attributes;
 using MyPortal.Logic.Constants;
@@ -32,16 +32,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(LogNoteModel), 200)]
         public async Task<IActionResult> GetById([FromQuery] Guid logNoteId)
         {
-            try
-            {
-                var logNote = await _logNoteService.GetLogNoteById(logNoteId);
+            var logNote = await _logNoteService.GetLogNoteById(logNoteId);
 
-                return Ok(logNote);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(logNote);
         }
 
         [HttpGet]
@@ -49,16 +42,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<LogNoteTypeModel>), 200)]
         public async Task<IActionResult> GetTypes()
         {
-            try
-            {
-                var logNoteTypes = await _logNoteService.GetLogNoteTypes();
+            var logNoteTypes = await _logNoteService.GetLogNoteTypes();
 
-                return Ok(logNoteTypes);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(logNoteTypes);
         }
 
         [HttpGet]
@@ -67,29 +53,22 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<LogNoteModel>), 200)]
         public async Task<IActionResult> GetByStudent([FromRoute] Guid studentId, [FromQuery] Guid? academicYearId)
         {
-            try
+            if (academicYearId == null || academicYearId == Guid.Empty)
             {
-                if (academicYearId == null || academicYearId == Guid.Empty)
-                {
-                    academicYearId = (await _academicYearService.GetCurrentAcademicYear(true))?.Id;
-                }
-
-                if (academicYearId.HasValue)
-                {
-                    var logNotes =
-                        await _logNoteService.GetLogNotesByStudent(studentId, academicYearId.Value);
-
-                    var result = logNotes;
-
-                    return Ok(result);
-                }
-
-                return BadRequest("Academic year not found.");
+                academicYearId = (await _academicYearService.GetCurrentAcademicYear(true))?.Id;
             }
-            catch (Exception e)
+
+            if (academicYearId.HasValue)
             {
-                return HandleException(e);
+                var logNotes =
+                    await _logNoteService.GetLogNotesByStudent(studentId, academicYearId.Value);
+
+                var result = logNotes;
+
+                return Ok(result);
             }
+
+            return Error(HttpStatusCode.BadRequest, "No academic year found.");
         }
 
         [HttpPost]
@@ -99,16 +78,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Create([FromBody] LogNoteRequestModel requestModel)
         {
-            try
-            {
-                await _logNoteService.CreateLogNote(requestModel);
+            await _logNoteService.CreateLogNote(requestModel);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPut]
@@ -118,16 +90,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Update([FromRoute] Guid logNoteId, [FromBody] LogNoteRequestModel requestModel)
         {
-            try
-            {
-                await _logNoteService.UpdateLogNote(logNoteId, requestModel);
+            await _logNoteService.UpdateLogNote(logNoteId, requestModel);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpDelete]
@@ -137,17 +102,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Delete([FromRoute] Guid logNoteId)
         {
-            try
-            {
-                await _logNoteService.DeleteLogNote(logNoteId);
+            await _logNoteService.DeleteLogNote(logNoteId);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            return Ok();
         }
     }
 }

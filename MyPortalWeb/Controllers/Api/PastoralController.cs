@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Curriculum;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api
 {
     [Authorize]
     [Route("api/pastoral")]
-    public class PastoralController : BaseApiController
+    public class PastoralController : ControllerBase
     {
         private readonly IPastoralService _pastoralService;
 
@@ -25,16 +23,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<HouseModel>), 200)]
         public async Task<IActionResult> GetHouses()
         {
-            try
-            {
-                var houses = await _pastoralService.GetHouses();
+            var houses = await _pastoralService.GetHouses();
 
-                return Ok(houses);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(houses);
         }
 
         [HttpGet]
@@ -42,16 +33,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<RegGroupModel>), 200)]
         public async Task<IActionResult> GetRegGroups()
         {
-            try
-            {
-                var regGroups = await _pastoralService.GetRegGroups();
+            var regGroups = await _pastoralService.GetRegGroups();
 
-                return Ok(regGroups);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(regGroups);
         }
 
         [HttpGet]
@@ -59,16 +43,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<YearGroupModel>), 200)]
         public async Task<IActionResult> GetYearGroups()
         {
-            try
-            {
-                var yearGroups = await _pastoralService.GetYearGroups();
+            var yearGroups = await _pastoralService.GetYearGroups();
 
-                return Ok(yearGroups);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(yearGroups);
         }
     }
 }

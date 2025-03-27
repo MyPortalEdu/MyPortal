@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MyPortal.Database.Enums;
 using MyPortal.Logic.Attributes;
@@ -39,16 +38,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(AchievementModel), 200)]
         public async Task<IActionResult> GetAchievementById([FromRoute] Guid achievementId)
         {
-            try
-            {
-                var achievement = await _behaviourService.GetStudentAchievementById(achievementId);
+            var achievement = await _behaviourService.GetStudentAchievementById(achievementId);
 
-                return Ok(achievement);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(achievement);
         }
 
         [HttpGet]
@@ -58,26 +50,18 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> GetAchievementsByStudent([FromRoute] Guid studentId,
             [FromQuery] Guid? academicYearId)
         {
-            try
+            var fromAcademicYearId = academicYearId
+                                     ?? (await _academicYearService.GetCurrentAcademicYear(true)).Id;
+
+            if (fromAcademicYearId == null)
             {
-                var fromAcademicYearId = academicYearId
-                                         ?? (await _academicYearService.GetCurrentAcademicYear(true)).Id;
-
-                if (fromAcademicYearId == null)
-                {
-                    return Error(HttpStatusCode.BadRequest, "No academic year is currently selected.");
-                }
-
-                var achievements =
-                    await _behaviourService.GetAchievementsByStudent(studentId, fromAcademicYearId.Value);
-
-                return Ok(achievements);
+                return Error(HttpStatusCode.BadRequest, "No academic year is currently selected.");
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+
+            var achievements =
+                await _behaviourService.GetAchievementsByStudent(studentId, fromAcademicYearId.Value);
+
+            return Ok(achievements);
         }
 
         [HttpPost]
@@ -87,16 +71,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> CreateAchievement([FromBody] AchievementRequestModel model)
         {
-            try
-            {
-                await _behaviourService.CreateAchievement(model);
+            await _behaviourService.CreateAchievement(model);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPut]
@@ -107,16 +84,9 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> UpdateAchievement([FromQuery] Guid achievementId,
             [FromBody] AchievementRequestModel achievement)
         {
-            try
-            {
-                await _behaviourService.UpdateAchievement(achievementId, achievement);
+            await _behaviourService.UpdateAchievement(achievementId, achievement);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpDelete]
@@ -126,16 +96,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteAchievement([FromRoute] Guid achievementId)
         {
-            try
-            {
-                await _behaviourService.DeleteAchievement(achievementId);
+            await _behaviourService.DeleteAchievement(achievementId);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpGet]
@@ -144,16 +107,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(StudentIncidentModel), 200)]
         public async Task<IActionResult> GetIncidentById([FromRoute] Guid incidentId)
         {
-            try
-            {
-                var incident = await _behaviourService.GetIncidentById(incidentId);
+            var incident = await _behaviourService.GetIncidentById(incidentId);
 
-                return Ok(incident);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(incident);
         }
 
         [HttpGet]
@@ -163,25 +119,18 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> GetIncidentsByStudent([FromRoute] Guid studentId,
             [FromQuery] Guid? academicYearId)
         {
-            try
+            var fromAcademicYearId = academicYearId
+                                     ?? (await _academicYearService.GetCurrentAcademicYear(true)).Id;
+
+            if (fromAcademicYearId == null)
             {
-                var fromAcademicYearId = academicYearId
-                                         ?? (await _academicYearService.GetCurrentAcademicYear(true)).Id;
-
-                if (fromAcademicYearId == null)
-                {
-                    return Error(HttpStatusCode.BadRequest, "No academic year is currently selected.");
-                }
-
-                var incidents =
-                    (await _behaviourService.GetIncidentsByStudent(studentId, fromAcademicYearId.Value)).ToList();
-
-                return Ok(incidents);
+                return Error(HttpStatusCode.BadRequest, "No academic year is currently selected.");
             }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+
+            var incidents =
+                (await _behaviourService.GetIncidentsByStudent(studentId, fromAcademicYearId.Value)).ToList();
+
+            return Ok(incidents);
         }
 
         [HttpPost]
@@ -191,16 +140,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Create([FromBody] IncidentRequestModel model)
         {
-            try
-            {
-                await _behaviourService.CreateIncident(model);
+            await _behaviourService.CreateIncident(model);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPost]
@@ -211,16 +153,9 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> Update([FromRoute] Guid incidentId,
             [FromBody] IncidentRequestModel requestModel)
         {
-            try
-            {
-                await _behaviourService.UpdateIncident(incidentId, requestModel);
+            await _behaviourService.UpdateIncident(incidentId, requestModel);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpDelete]
@@ -230,15 +165,8 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Delete([FromRoute] Guid incidentId)
         {
-            try
-            {
-                await _behaviourService.DeleteIncident(incidentId);
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            await _behaviourService.DeleteIncident(incidentId);
+            return Ok();
         }
     }
 }

@@ -1,16 +1,14 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MyPortal.Database.Enums;
 using MyPortal.Logic.Attributes;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Requests.Assessment;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api;
 
 [Microsoft.AspNetCore.Components.Route("api/assessment")]
-public sealed class AssessmentController : BaseApiController
+public sealed class AssessmentController : ControllerBase
 {
     private readonly IAssessmentService _assessmentService;
 
@@ -24,17 +22,10 @@ public sealed class AssessmentController : BaseApiController
     [Permission(PermissionValue.AssessmentViewResults)]
     public async Task<IActionResult> GetPreviousResults([FromQuery] ResultHistoryRequestModel model)
     {
-        try
-        {
-            var resultHistory =
-                await _assessmentService.GetPreviousResults(model.StudentId, model.AspectId, model.DateTo);
+        var resultHistory =
+            await _assessmentService.GetPreviousResults(model.StudentId, model.AspectId, model.DateTo);
 
-            return Ok(resultHistory);
-        }
-        catch (Exception e)
-        {
-            return HandleException(e);
-        }
+        return Ok(resultHistory);
     }
 
     [HttpPut]
@@ -42,15 +33,8 @@ public sealed class AssessmentController : BaseApiController
     [Permission(PermissionValue.AssessmentEditResults)]
     public async Task<IActionResult> SaveResults([FromBody] UpdateResultsRequestModel model)
     {
-        try
-        {
-            await _assessmentService.SaveResults(model.Results);
+        await _assessmentService.SaveResults(model.Results);
 
-            return Ok();
-        }
-        catch (Exception e)
-        {
-            return HandleException(e);
-        }
+        return Ok();
     }
 }

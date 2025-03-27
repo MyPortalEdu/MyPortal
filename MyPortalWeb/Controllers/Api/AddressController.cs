@@ -8,11 +8,10 @@ using MyPortal.Logic.Enums;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Addresses;
 using MyPortal.Logic.Models.Requests.Addresses;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api
 {
-    public class AddressController : BaseApiController
+    public class AddressController : ControllerBase
     {
         private readonly IAddressService _addressService;
 
@@ -28,16 +27,9 @@ namespace MyPortalWeb.Controllers.Api
             PermissionValue.PeopleEditStaffBasicDetails, PermissionValue.AgencyEditAgencies)]
         public async Task<IActionResult> GetExistingAddresses([FromQuery] AddressSearchRequestModel searchModel)
         {
-            try
-            {
-                var addresses = await _addressService.GetMatchingAddresses(searchModel);
+            var addresses = await _addressService.GetMatchingAddresses(searchModel);
 
-                return Ok(addresses);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(addresses);
         }
 
         [HttpPut]
@@ -47,16 +39,9 @@ namespace MyPortalWeb.Controllers.Api
             PermissionValue.PeopleEditStaffBasicDetails, PermissionValue.AgencyEditAgencies)]
         public async Task<IActionResult> UpdateAddress([FromRoute] Guid addressId, AddressRequestModel model)
         {
-            try
-            {
-                await _addressService.UpdateAddress(addressId, model);
+            await _addressService.UpdateAddress(addressId, model);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPost]
@@ -67,16 +52,9 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> CreatePersonAddress([FromRoute] Guid personId,
             [FromBody] EntityAddressRequestModel personAddress)
         {
-            try
-            {
-                await _addressService.CreateAddressForPerson(personId, personAddress);
+            await _addressService.CreateAddressForPerson(personId, personAddress);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPut]
@@ -87,16 +65,9 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> UpdatePersonAddressLink([FromRoute] Guid addressPersonId,
             [FromBody] LinkAddressRequestModel addressLink)
         {
-            try
-            {
-                await _addressService.UpdateAddressLinkForPerson(addressPersonId, addressLink);
+            await _addressService.UpdateAddressLinkForPerson(addressPersonId, addressLink);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpGet]
@@ -107,16 +78,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<AddressLinkDataModel>), 200)]
         public async Task<IActionResult> GetAddressesByPerson([FromRoute] Guid personId)
         {
-            try
-            {
-                var addresses = await _addressService.GetAddressLinksByPerson(personId);
+            var addresses = await _addressService.GetAddressLinksByPerson(personId);
 
-                return Ok(addresses);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(addresses);
         }
     }
 }

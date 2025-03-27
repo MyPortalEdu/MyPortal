@@ -8,12 +8,11 @@ using MyPortal.Logic.Extensions;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Requests.Person.Tasks;
-using MyPortalWeb.Controllers.BaseControllers;
 using MyPortalWeb.Models.Requests;
 
 namespace MyPortalWeb.Controllers.Api
 {
-    public class TasksController : BaseApiController
+    public class TasksController : ControllerBase
     {
         private readonly ITaskService _taskService;
 
@@ -27,16 +26,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(TaskModel), 200)]
         public async Task<IActionResult> GetById([FromRoute] Guid taskId)
         {
-            try
-            {
-                var task = await _taskService.GetTaskById(taskId);
+            var task = await _taskService.GetTaskById(taskId);
 
-                return Ok(task);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(task);
         }
 
         [HttpGet]
@@ -45,16 +37,9 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> GetByPerson([FromRoute] Guid personId,
             [FromQuery] TaskSearchOptions searchOptions)
         {
-            try
-            {
-                var tasks = (await _taskService.GetByPerson(personId, searchOptions)).ToArray();
+            var tasks = (await _taskService.GetByPerson(personId, searchOptions)).ToArray();
 
-                return Ok(tasks);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(tasks);
         }
 
         [HttpGet]
@@ -62,16 +47,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<TaskTypeModel>), 200)]
         public async Task<IActionResult> GetTaskTypes([FromQuery] bool personal = false)
         {
-            try
-            {
-                var taskTypes = await _taskService.GetTypes(personal);
+            var taskTypes = await _taskService.GetTypes(personal);
 
-                return Ok(taskTypes);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(taskTypes);
         }
 
         [HttpPost]
@@ -79,25 +57,18 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Create([FromBody] TaskRequestModel requestModel)
         {
-            try
+            var userId = User.GetUserId();
+
+            if (userId != null)
             {
-                var userId = User.GetUserId();
+                requestModel.AssignedById = userId.Value;
 
-                if (userId != null)
-                {
-                    requestModel.AssignedById = userId.Value;
+                await _taskService.CreateTask(requestModel);
 
-                    await _taskService.CreateTask(requestModel);
-
-                    return Ok();
-                }
-
-                return Unauthorized();
+                return Ok();
             }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+
+            return Unauthorized();
         }
 
         [HttpPut]
@@ -105,16 +76,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Update([FromRoute] Guid taskId, [FromBody] TaskRequestModel requestModel)
         {
-            try
-            {
-                await _taskService.UpdateTask(taskId, requestModel);
+            await _taskService.UpdateTask(taskId, requestModel);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPost]
@@ -122,16 +86,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> ToggleCompleted([FromBody] TaskToggleRequestModel model)
         {
-            try
-            {
-                await _taskService.SetCompleted(model.TaskId, model.Completed);
+            await _taskService.SetCompleted(model.TaskId, model.Completed);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpDelete]
@@ -139,16 +96,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> Delete([FromRoute] Guid taskId)
         {
-            try
-            {
-                await _taskService.DeleteTask(taskId);
+            await _taskService.DeleteTask(taskId);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
     }
 }

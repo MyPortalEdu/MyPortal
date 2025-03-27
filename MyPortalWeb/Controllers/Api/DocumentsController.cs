@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MyPortal.Database.Constants;
-using MyPortal.Database.Enums;
-using MyPortal.Logic.Enums;
-using MyPortal.Logic.Extensions;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Requests.Documents;
@@ -37,16 +32,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(DocumentModel), 200)]
         public async Task<IActionResult> GetDocumentById([FromRoute] Guid documentId)
         {
-            try
-            {
-                var document = await _documentService.GetDocumentById(documentId);
+            var document = await _documentService.GetDocumentById(documentId);
 
-                return Ok(document);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(document);
         }
 
         [HttpPost]
@@ -54,16 +42,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> CreateDocument([FromBody] DocumentRequestModel model)
         {
-            try
-            {
-                await _documentService.CreateDocument(model);
+            await _documentService.CreateDocument(model);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPost]
@@ -73,24 +54,17 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> UploadFile([FromRoute] Guid documentId,
             [FromBody] FileUploadRequestModel requestModel)
         {
-            try
+            if (_fileService is LocalFileService localFileService)
             {
-                if (_fileService is LocalFileService localFileService)
-                {
-                    requestModel.DocumentId = documentId;
+                requestModel.DocumentId = documentId;
 
-                    await localFileService.UploadFileToDocument(requestModel);
+                await localFileService.UploadFileToDocument(requestModel);
 
-                    return Ok();
-                }
-
-                return BadRequest(
-                    "MyPortal is currently configured to use a third party file provider. Please use LinkHostedFile endpoint instead.");
+                return Ok();
             }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+
+            return BadRequest(
+                "MyPortal is currently configured to use a third party file provider. Please use LinkHostedFile endpoint instead.");
         }
 
         [HttpPost]
@@ -99,22 +73,15 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(400)]
         public async Task<IActionResult> LinkHostedFile([FromBody] HostedFileRequestModel requestModel)
         {
-            try
+            if (_fileService is HostedFileService hostedFileService)
             {
-                if (_fileService is HostedFileService hostedFileService)
-                {
-                    await hostedFileService.AttachFileToDocument(requestModel.DocumentId, requestModel.FileId);
+                await hostedFileService.AttachFileToDocument(requestModel.DocumentId, requestModel.FileId);
 
-                    return Ok();
-                }
+                return Ok();
+            }
 
-                return BadRequest(
-                    "MyPortal is currently configured to host files locally. Please use UploadFile endpoint instead.");
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return BadRequest(
+                "MyPortal is currently configured to host files locally. Please use UploadFile endpoint instead.");
         }
 
         [HttpDelete]
@@ -122,16 +89,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveAttachment([FromRoute] Guid documentId)
         {
-            try
-            {
-                await _fileService.RemoveFileFromDocument(documentId);
+            await _fileService.RemoveFileFromDocument(documentId);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPut]
@@ -140,16 +100,9 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> UpdateDocument([FromRoute] Guid documentId,
             [FromBody] DocumentRequestModel model)
         {
-            try
-            {
-                await _documentService.UpdateDocument(documentId, model);
+            await _documentService.UpdateDocument(documentId, model);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpDelete]
@@ -157,16 +110,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteDocument([FromRoute] Guid documentId)
         {
-            try
-            {
-                await _documentService.DeleteDocument(documentId);
+            await _documentService.DeleteDocument(documentId);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpGet]
@@ -175,21 +121,14 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(400)]
         public async Task<IActionResult> GetWebActions([FromQuery] Guid documentId)
         {
-            try
+            if (_fileService is HostedFileService hostedFileService)
             {
-                if (_fileService is HostedFileService hostedFileService)
-                {
-                    var webActions = await hostedFileService.GetWebActionsByDocument(documentId);
+                var webActions = await hostedFileService.GetWebActionsByDocument(documentId);
 
-                    return Ok(webActions);
-                }
+                return Ok(webActions);
+            }
 
-                return Ok(new List<WebAction>());
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(new List<WebAction>());
         }
 
         [HttpGet]
@@ -197,30 +136,23 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(DirectoryChildWrapper), 200)]
         public async Task<IActionResult> GetDirectoryChildren([FromRoute] Guid directoryId)
         {
-            try
+            var directory = await _documentService.GetDirectoryById(directoryId);
+
+            var children =
+                await _documentService.GetDirectoryChildren(directoryId);
+
+            var childList = new List<DirectoryChildSummaryModel>();
+
+            childList.AddRange(children.Subdirectories.Select(x => x.GetListModel()));
+            childList.AddRange(children.Files.Select(x => x.GetListModel()));
+
+            var response = new DirectoryChildWrapper
             {
-                var directory = await _documentService.GetDirectoryById(directoryId);
+                Directory = directory,
+                Children = childList
+            };
 
-                var children =
-                    await _documentService.GetDirectoryChildren(directoryId);
-
-                var childList = new List<DirectoryChildSummaryModel>();
-
-                childList.AddRange(children.Subdirectories.Select(x => x.GetListModel()));
-                childList.AddRange(children.Files.Select(x => x.GetListModel()));
-
-                var response = new DirectoryChildWrapper
-                {
-                    Directory = directory,
-                    Children = childList
-                };
-
-                return Ok(response);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(response);
         }
 
         [HttpPost]
@@ -228,16 +160,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> CreateDirectory([FromBody] DirectoryRequestModel requestModel)
         {
-            try
-            {
-                await _documentService.CreateDirectory(requestModel);
+            await _documentService.CreateDirectory(requestModel);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpPut]
@@ -246,16 +171,9 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> UpdateDirectory([FromRoute] Guid directoryId,
             [FromBody] DirectoryRequestModel requestModel)
         {
-            try
-            {
-                await _documentService.UpdateDirectory(directoryId, requestModel);
+            await _documentService.UpdateDirectory(directoryId, requestModel);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpDelete]
@@ -263,16 +181,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteDirectory([FromRoute] Guid directoryId)
         {
-            try
-            {
-                await _documentService.DeleteDirectory(directoryId);
+            await _documentService.DeleteDirectory(directoryId);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpGet]
@@ -280,16 +191,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(DirectoryModel), 200)]
         public async Task<IActionResult> GetDirectoryById([FromRoute] Guid directoryId)
         {
-            try
-            {
-                var directory = await _documentService.GetDirectoryById(directoryId);
+            var directory = await _documentService.GetDirectoryById(directoryId);
 
-                return Ok(directory);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(directory);
         }
     }
 }
