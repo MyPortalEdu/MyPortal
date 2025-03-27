@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("building_floor")]
+    [Table("BuildingFloors")]
     public class BuildingFloor : BaseTypes.LookupItem
     {
         [Column(Order = 4)] public Guid BuildingId { get; set; }

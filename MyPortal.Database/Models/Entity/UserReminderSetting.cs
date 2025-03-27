@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("user_reminder_setting")]
+[Table("UserReminderSettings")]
 public class UserReminderSetting : BaseTypes.Entity
 {
     [Column(Order = 2)] public Guid UserId { get; set; }

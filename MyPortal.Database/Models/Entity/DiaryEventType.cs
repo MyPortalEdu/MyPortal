@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("diary_event_type")]
+    [Table("DiaryEventTypes")]
     public class DiaryEventType : LookupItem, ISystemEntity
     {
         public DiaryEventType()

@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exam_board")]
+    [Table("ExamBoards")]
     public class ExamBoard : BaseTypes.Entity, IActivatable
     {
         // TODO: Populate Data

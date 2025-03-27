@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("system_setting")]
+    [Table("SystemSettings")]
     public class SystemSetting
     {
         [Column(Order = 0)] [Key] public string Name { get; set; }

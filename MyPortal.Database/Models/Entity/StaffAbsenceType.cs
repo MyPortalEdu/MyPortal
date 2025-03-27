@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("staff_absence_type")]
+    [Table("StaffAbsenceTypes")]
     public class StaffAbsenceType : LookupItem, ISystemEntity
     {
         public StaffAbsenceType()

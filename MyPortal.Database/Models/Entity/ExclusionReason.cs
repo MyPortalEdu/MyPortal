@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 namespace MyPortal.Database.Models.Entity
 {
     // FIXED
-    [Table("exclusion_reason")]
+    [Table("ExclusionReasons")]
     public class ExclusionReason : LookupItem, ISystemEntity, ICensusEntity
     {
         public ExclusionReason()

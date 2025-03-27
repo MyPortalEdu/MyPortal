@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("lesson_plan_homework_item")]
+    [Table("LessonPlanHomeworkItems")]
     public class LessonPlanHomeworkItem : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid LessonPlanId { get; set; }

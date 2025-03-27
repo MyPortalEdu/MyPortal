@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exam_assessment_mode")]
+    [Table("ExamAssessmentModes")]
     public class ExamAssessmentMode : LookupItem
     {
         // TODO: Populate Data

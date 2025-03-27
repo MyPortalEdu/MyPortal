@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("subject_code_set")]
+    [Table("SubjectCodeSets")]
     public class SubjectCodeSet : LookupItem
     {
         public SubjectCodeSet()

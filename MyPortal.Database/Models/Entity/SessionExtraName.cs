@@ -1,9 +1,7 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity;
 
-[Table("session_extra_name")]
 public class SessionExtraName : BaseTypes.Entity
 {
     public Guid AttendanceWeekId { get; set; }

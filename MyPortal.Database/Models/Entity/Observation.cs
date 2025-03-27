@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("observation")]
+    [Table("Observations")]
     public class Observation : BaseTypes.Entity
     {
         [Column(Order = 2, TypeName = "date")] public DateTime Date { get; set; }

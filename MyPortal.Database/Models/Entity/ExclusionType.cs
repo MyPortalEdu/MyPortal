@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 namespace MyPortal.Database.Models.Entity
 {
     // FIXED
-    [Table("exclusion_type")]
+    [Table("ExclusionTypes")]
     public class ExclusionType : LookupItem, ICensusEntity, ISystemEntity
     {
         public ExclusionType()

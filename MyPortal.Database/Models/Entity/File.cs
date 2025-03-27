@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("file")]
+    [Table("Files")]
     public class File : BaseTypes.Entity
     {
         [Column(Order = 2)] [Required] public string FileId { get; set; }

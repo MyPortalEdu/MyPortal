@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exam_assessment_aspect")]
     public class ExamAssessmentAspect : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid AssessmentId { get; set; }

@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("relationship_type")]
+    [Table("RelationshipTypes")]
     public class RelationshipType : LookupItem
     {
         public RelationshipType()

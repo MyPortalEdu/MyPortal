@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("enrolment_status")]
+    [Table("EnrolmentStatus")]
     public class EnrolmentStatus : LookupItem, ICensusEntity
     {
         public EnrolmentStatus()

@@ -6,7 +6,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("attendance_code")]
+    [Table("AttendanceCodes")]
     public class AttendanceCode : BaseTypes.Entity, ISystemEntity, ICensusEntity, IActivatable
     {
         [Column(Order = 2)]

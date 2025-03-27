@@ -4,7 +4,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("behaviour_status")]
+    [Table("BehaviourStatus")]
     public class BehaviourStatus : LookupItem
     {
         [Column(Order = 4)] public bool Resolved { get; set; }

@@ -11,7 +11,7 @@ namespace MyPortal.Database.Models.Entity
         Component
     }
 
-    [Table("exam_assessment")]
+    [Table("ExamAssessments")]
     public class ExamAssessment : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid ExamBoardId { get; set; }

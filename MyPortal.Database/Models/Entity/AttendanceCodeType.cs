@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("attendance_code_type")]
+    [Table("AttendanceCodeTypes")]
     public class AttendanceCodeType : BaseTypes.Entity, IReadOnlyEntity
     {
         public AttendanceCodeType()

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exam_base_component")]
+    [Table("ExamBaseComponents")]
     public class ExamBaseComponent : BaseTypes.Entity
     {
         [Column(Order = 2)] public Guid AssessmentModeId { get; set; }

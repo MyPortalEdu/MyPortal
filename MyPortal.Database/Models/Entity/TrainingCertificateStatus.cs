@@ -5,7 +5,7 @@ using MyPortal.Database.BaseTypes;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("training_certificate_status")]
+    [Table("TrainingCertificateStatus")]
     public class TrainingCertificateStatus : LookupItem
     {
         public TrainingCertificateStatus()

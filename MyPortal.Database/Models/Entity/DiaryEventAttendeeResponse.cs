@@ -5,7 +5,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("diary_event_attendee_response")]
+    [Table("DiaryEventAttendeeResponses")]
     public class DiaryEventAttendeeResponse : LookupItem, IReadOnlyEntity
     {
         public DiaryEventAttendeeResponse()

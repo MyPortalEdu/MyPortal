@@ -4,7 +4,7 @@ using MyPortal.Database.Interfaces;
 
 namespace MyPortal.Database.Models.Entity
 {
-    [Table("exam_seat_allocation")]
+    [Table("ExamSeatAllocations")]
     public class ExamSeatAllocation : BaseTypes.Entity, IActivatable
     {
         [Column(Order = 2)] public Guid SittingId { get; set; }
