@@ -10,18 +10,17 @@ using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Requests.Settings.Roles;
 using MyPortal.Logic.Models.Structures;
-using MyPortalWeb.Controllers.BaseControllers;
 using MyPortalWeb.Models.Response;
 
 namespace MyPortalWeb.Controllers.Api
 {
     [Authorize]
     [Route("api/roles")]
-    public class RolesController : BaseApiController
+    public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;
 
-        public RolesController(IUserService userService, IRoleService roleService)
+        public RolesController(IRoleService roleService)
         {
             _roleService = roleService;
         }
@@ -32,16 +31,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(NewEntityResponseModel), 200)]
         public async Task<IActionResult> CreateRole([FromBody] RoleRequestModel model)
         {
-            try
-            {
-                var newId = (await _roleService.CreateRole(model)).FirstOrDefault();
+            var newId = (await _roleService.CreateRole(model)).FirstOrDefault();
 
-                return Ok(new NewEntityResponseModel { Id = newId });
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(new NewEntityResponseModel { Id = newId });
         }
 
         [HttpPut]
@@ -50,16 +42,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> UpdateRole([FromRoute] Guid roleId, [FromBody] RoleRequestModel model)
         {
-            try
-            {
-                await _roleService.UpdateRole(roleId, model);
+            await _roleService.UpdateRole(roleId, model);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpDelete]
@@ -68,16 +53,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteRole([FromRoute] Guid roleId)
         {
-            try
-            {
-                await _roleService.DeleteRole(roleId);
+            await _roleService.DeleteRole(roleId);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
 
         [HttpGet]
@@ -86,16 +64,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<RoleModel>), 200)]
         public async Task<IActionResult> GetRoles([FromQuery] string roleName)
         {
-            try
-            {
-                IEnumerable<RoleModel> roles = await _roleService.GetRoles(roleName);
-
-                return Ok(roles);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            IEnumerable<RoleModel> roles = await _roleService.GetRoles(roleName);
+            
+                            return Ok(roles);
         }
 
         [HttpGet]
@@ -104,17 +75,10 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(RoleModel), 200)]
         public async Task<IActionResult> GetRoleById([FromRoute] Guid roleId)
         {
-            try
-            {
-                // Don't get cached version - get from database
-                var role = await _roleService.GetRoleById(roleId, false);
+            // Don't get cached version - get from database
+            var role = await _roleService.GetRoleById(roleId, false);
 
-                return Ok(role);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(role);
         }
 
         [HttpGet]
@@ -123,16 +87,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(TreeNode), 200)]
         public async Task<IActionResult> GetPermissionsTree([FromRoute] Guid roleId)
         {
-            try
-            {
-                var permissionsTree = await _roleService.GetPermissionsTree(roleId);
+            var permissionsTree = await _roleService.GetPermissionsTree(roleId);
 
-                return Ok(permissionsTree);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(permissionsTree);
         }
     }
 }

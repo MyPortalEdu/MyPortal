@@ -7,14 +7,12 @@ using MyPortal.Database.Models.Search;
 using MyPortal.Logic.Constants;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.People;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api
 {
     [Authorize]
-    public class PersonController : BaseApiController
+    public class PersonController : ControllerBase
     {
-        
         private readonly IPersonService _personService;
         
         public PersonController(IPersonService personService)
@@ -28,16 +26,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<PersonSearchResultModel>), 200)]
         public async Task<IActionResult> SearchPeople([FromQuery] PersonSearchOptions searchModel)
         {
-            try
-            {
-                var people = await _personService.GetPeopleWithTypes(searchModel);
+            var people = await _personService.GetPeopleWithTypes(searchModel);
 
-                return Ok(people);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(people);
         }
 
         [HttpGet]
@@ -45,16 +36,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(PersonModel), 200)]
         public async Task<IActionResult> GetPersonByUser([FromRoute] Guid userId)
         {
-            try
-            {
-                var person = await _personService.GetPersonByUserId(userId, false);
+            var person = await _personService.GetPersonByUserId(userId, false);
 
-                return Ok(person);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(person);
         }
     }
 }

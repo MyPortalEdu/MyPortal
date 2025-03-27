@@ -8,12 +8,11 @@ using MyPortal.Logic.Attributes;
 using MyPortal.Logic.Constants;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Finance;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api
 {
     [Route("api/bills")]
-    public class BillsController : BaseApiController
+    public class BillsController : ControllerBase
     {
         private readonly IBillService _billService;
 
@@ -29,16 +28,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<BillModel>), 200)]
         public async Task<IActionResult> GenerateChargeBills([FromRoute] Guid chargeBillingPeriodId)
         {
-            try
-            {
-                var generatedBills = await _billService.GenerateChargeBills(chargeBillingPeriodId);
+            var generatedBills = await _billService.GenerateChargeBills(chargeBillingPeriodId);
 
-                return Ok(generatedBills);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(generatedBills);
         }
     }
 }

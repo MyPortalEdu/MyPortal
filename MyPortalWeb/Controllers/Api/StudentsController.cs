@@ -47,16 +47,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(StudentModel), 200)]
         public async Task<IActionResult> GetById([FromRoute] Guid studentId)
         {
-            try
-            {
-                var student = await _studentService.GetStudentById(studentId);
+            var student = await _studentService.GetStudentById(studentId);
 
-                return Ok(student);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(student);
         }
 
         [HttpGet]
@@ -65,26 +58,19 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(StudentStatsModel), 200)]
         public async Task<IActionResult> GetStatsById([FromRoute] Guid studentId, [FromQuery] Guid? academicYearId)
         {
-            try
+            if (academicYearId == null || academicYearId == Guid.Empty)
             {
-                if (academicYearId == null || academicYearId == Guid.Empty)
-                {
-                    academicYearId = (await _academicYearService.GetCurrentAcademicYear(true)).Id;
-                }
-
-                if (!academicYearId.HasValue)
-                {
-                    return Error(HttpStatusCode.NotFound, "No academic year was found.");
-                }
-
-                var studentStats = await _studentService.GetStatsByStudentId(studentId, academicYearId.Value);
-
-                return Ok(studentStats);
+                academicYearId = (await _academicYearService.GetCurrentAcademicYear(true)).Id;
             }
-            catch (Exception e)
+
+            if (!academicYearId.HasValue)
             {
-                return HandleException(e);
+                return Error(HttpStatusCode.NotFound, "No academic year was found.");
             }
+
+            var studentStats = await _studentService.GetStatsByStudentId(studentId, academicYearId.Value);
+
+            return Ok(studentStats);
         }
     }
 }

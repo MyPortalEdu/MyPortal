@@ -6,15 +6,14 @@ using MyPortal.Database.Enums;
 using MyPortal.Logic.Attributes;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Students;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api
 {
-    public class SenController : BaseApiController
+    public class SenController : ControllerBase
     {
         private readonly ISenService _senService;
 
-        public SenController(IUserService userService, ISenService senService)
+        public SenController(ISenService senService)
         {
             _senService = senService;
         }
@@ -25,16 +24,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<GiftedTalentedModel>), 200)]
         public async Task<IActionResult> GetGiftedTalentedByStudent([FromRoute] Guid studentId)
         {
-            try
-            {
-                var giftedTalented = await _senService.GetGiftedTalentedSubjects(studentId);
+            var giftedTalented = await _senService.GetGiftedTalentedSubjects(studentId);
 
-                return Ok(giftedTalented);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(giftedTalented);
         }
     }
 }

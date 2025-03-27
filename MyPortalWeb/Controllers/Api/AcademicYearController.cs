@@ -1,18 +1,16 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyPortal.Database.Enums;
 using MyPortal.Logic.Attributes;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Requests.Curriculum;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api
 {
     [Authorize]
     [Route("api/academicYears")]
-    public sealed class AcademicYearController : BaseApiController
+    public sealed class AcademicYearController : ControllerBase
     {
         private readonly IAcademicYearService _academicYearService;
 
@@ -27,16 +25,9 @@ namespace MyPortalWeb.Controllers.Api
         [ProducesResponseType(200)]
         public async Task<IActionResult> CreateAcademicYear([FromBody] AcademicYearRequestModel requestModel)
         {
-            try
-            {
-                await _academicYearService.CreateAcademicYear(requestModel);
+            await _academicYearService.CreateAcademicYear(requestModel);
 
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok();
         }
     }
 }

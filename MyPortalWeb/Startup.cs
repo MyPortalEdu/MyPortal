@@ -1,12 +1,19 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Extensions;
+using MyPortal.Logic.Models.Response;
 using MyPortalWeb.Extensions;
+using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace MyPortalWeb
@@ -70,6 +77,26 @@ namespace MyPortalWeb
 
             app.UseAuthentication();
             app.UseIdentityServer();
+            app.UseExceptionHandler(b =>
+            {
+                b.Run(async context =>
+                {
+                    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+                    context.Response.ContentType = "application/json";
+                    context.Response.StatusCode = exception switch
+                    {
+                        NotFoundException => StatusCodes.Status404NotFound,
+                        SecurityTokenException => StatusCodes.Status401Unauthorized,
+                        PermissionException => StatusCodes.Status403Forbidden,
+                        LogicException => StatusCodes.Status400BadRequest,
+                        InvalidDataException => StatusCodes.Status400BadRequest,
+                        NotImplementedException => StatusCodes.Status501NotImplemented,
+                        _ => StatusCodes.Status500InternalServerError
+                    };
+                    var response = new ErrorResponseModel(exception?.Message);
+                    await context.Response.WriteAsync(JsonConvert.SerializeObject(response));
+                });
+            });
             app.UseAuthorization();
             app.UseMyPortal();
             //app.UseDefaultFiles();

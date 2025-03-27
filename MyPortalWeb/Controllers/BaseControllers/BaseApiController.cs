@@ -22,39 +22,7 @@ namespace MyPortalWeb.Controllers.BaseControllers
         {
             
         }
-
-        protected IActionResult HandleException(Exception ex)
-        {
-            HttpStatusCode statusCode;
-
-            var message = ex.GetBaseException().Message;
-
-            switch (ex)
-            {
-                case NotFoundException:
-                    statusCode = HttpStatusCode.NotFound;
-                    break;
-                case SecurityTokenException:
-                    statusCode = HttpStatusCode.Unauthorized;
-                    break;
-                case PermissionException:
-                    statusCode = HttpStatusCode.Forbidden;
-                    break;
-                case LogicException:
-                case InvalidDataException:
-                    statusCode = HttpStatusCode.BadRequest;
-                    break;
-                case NotImplementedException:
-                    statusCode = HttpStatusCode.NotImplemented;
-                    break;
-                default:
-                    statusCode = HttpStatusCode.InternalServerError;
-                    break;
-            }
-
-            return Error((int)statusCode, message);
-        }
-
+        
         protected IActionResult Error(int statusCode, string errorMessage)
         {
             var error = new ErrorResponseModel(errorMessage);

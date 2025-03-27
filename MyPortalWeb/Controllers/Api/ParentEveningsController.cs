@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using MyPortal.Database.Enums;
-using MyPortal.Logic.Attributes;
 using MyPortal.Logic.Interfaces.Services;
-using MyPortalWeb.Controllers.BaseControllers;
 
 namespace MyPortalWeb.Controllers.Api
 {
     [Microsoft.AspNetCore.Components.Route("api/parentEvenings")]
-    public class ParentEveningsController : BaseApiController
+    public class ParentEveningsController : ControllerBase
     {
         private readonly IParentEveningService _parentEveningService;
 
@@ -23,17 +20,10 @@ namespace MyPortalWeb.Controllers.Api
         public async Task<IActionResult> GetParentEveningTemplatesByStaffMember([FromRoute] Guid parentEveningId,
             [FromRoute] Guid staffMemberId)
         {
-            try
-            {
-                var parentEveningTemplates =
-                    await _parentEveningService.GetAppointmentTemplatesByStaffMember(parentEveningId, staffMemberId);
+            var parentEveningTemplates =
+                await _parentEveningService.GetAppointmentTemplatesByStaffMember(parentEveningId, staffMemberId);
 
-                return Ok(parentEveningTemplates);
-            }
-            catch (Exception e)
-            {
-                return HandleException(e);
-            }
+            return Ok(parentEveningTemplates);
         }
     }
 }
