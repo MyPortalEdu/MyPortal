@@ -5,8 +5,7 @@ namespace MyPortal.Database.Models.Connection;
 
 public class DbUserWithContext : DbUser
 {
-    public DbUserWithContext(Guid userId, DbTransaction transaction, ApplicationDbContext context,
-        bool auditEnabled = true) : base(userId,
+    public DbUserWithContext(Guid userId, DbTransaction transaction, ApplicationDbContext context) : base(userId,
         transaction)
     {
         Context = context;
