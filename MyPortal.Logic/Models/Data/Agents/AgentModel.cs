@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Agents
 {
-    public class AgentModel : BaseModelWithLoad
+    public class AgentModel : EntityModel
     {
         public AgentModel(Agent model) : base(model)
         {
@@ -52,18 +50,5 @@ namespace MyPortal.Logic.Models.Data.Agents
         public virtual AgencyModel Agency { get; set; }
         public virtual PersonModel Person { get; set; }
         public virtual AgentTypeModel AgentType { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var agent = await unitOfWork.Agents.GetById(Id.Value);
-
-                if (agent != null)
-                {
-                    LoadFromModel(agent);
-                }
-            }
-        }
     }
 }

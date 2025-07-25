@@ -7,7 +7,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum;
 
-public class StudentGroupSupervisorModel : BaseModel
+public class StudentGroupSupervisorModel : EntityModel
 {
     public StudentGroupSupervisorModel(StudentGroupSupervisor model) : base(model)
     {
@@ -28,19 +28,6 @@ public class StudentGroupSupervisorModel : BaseModel
         if (model.Supervisor != null)
         {
             Supervisor = new StaffMemberModel(model.Supervisor);
-        }
-    }
-
-    public async Task Load(IUnitOfWork unitOfWork)
-    {
-        if (Id.HasValue)
-        {
-            var groupSupervisor = await unitOfWork.StudentGroupSupervisors.GetById(Id.Value);
-
-            if (groupSupervisor != null)
-            {
-                LoadFromModel(groupSupervisor);
-            }
         }
     }
 

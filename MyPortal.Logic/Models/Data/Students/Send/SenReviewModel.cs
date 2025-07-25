@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Calendar;
 using MyPortal.Logic.Models.Data.StaffMembers;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Logic.Models.Data.Students.SEND
+namespace MyPortal.Logic.Models.Data.Students.Send
 {
-    public class SenReviewModel : BaseModelWithLoad
+    public class SenReviewModel : EntityModel
     {
         public SenReviewModel(SenReview model) : base(model)
         {
@@ -82,15 +80,5 @@ namespace MyPortal.Logic.Models.Data.Students.SEND
         public virtual SenReviewStatusModel ReviewStatus { get; set; }
 
         public virtual SenReviewTypeModel ReviewType { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.SenReviews.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Documents
 {
-    public class FileModel : BaseModel
+    public class FileModel : EntityModel
     {
         public FileModel(File model) : base(model)
         {

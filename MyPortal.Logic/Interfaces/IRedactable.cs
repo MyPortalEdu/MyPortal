@@ -5,5 +5,5 @@ namespace MyPortal.Logic.Interfaces;
 
 public interface IRedactable
 {
-    Task Redact(IUnitOfWork unitOfWork);
+    void Redact();
 }

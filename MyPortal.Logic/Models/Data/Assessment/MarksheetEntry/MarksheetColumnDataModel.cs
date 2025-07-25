@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Assessment.MarksheetEntry;
 

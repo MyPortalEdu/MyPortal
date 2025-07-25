@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
 using MyPortal.Logic.Models.Summary;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Documents
 {
-    public class DocumentModel : BaseModelWithLoad
+    public class DocumentModel : EntityModel
     {
         public DocumentModel(Document model) : base(model)
         {
@@ -75,15 +73,6 @@ namespace MyPortal.Logic.Models.Data.Documents
         public DirectoryChildSummaryModel GetListModel()
         {
             return new DirectoryChildSummaryModel(this);
-        }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Documents.GetById(Id.Value);
-                LoadFromModel(model);
-            }
         }
     }
 }

@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Students;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamCandidateModel : BaseModelWithLoad
+    public class ExamCandidateModel : EntityModel
     {
         public ExamCandidateModel(ExamCandidate model) : base(model)
         {
@@ -45,15 +43,5 @@ namespace MyPortal.Logic.Models.Data.Examinations
         public string Note { get; set; }
 
         public virtual StudentModel Student { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ExamCandidates.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

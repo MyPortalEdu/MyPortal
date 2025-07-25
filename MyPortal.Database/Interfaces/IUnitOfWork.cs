@@ -10,5 +10,6 @@ namespace MyPortal.Database.Interfaces
         Task BatchSaveChangesAsync();
         Task SaveChangesAsync();
         Task<bool> GetLock(string name, int timeout = 0);
+        TRepository GetRepository<TRepository>() where TRepository : IRepository;
     }
 }

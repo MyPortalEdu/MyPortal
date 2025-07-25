@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class LessonPlanModel : BaseModelWithLoad
+    public class LessonPlanModel : EntityModel
     {
         public LessonPlanModel(LessonPlan model) : base(model)
         {
@@ -53,15 +51,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public virtual DirectoryModel Directory { get; set; }
         public virtual UserModel CreatedBy { get; set; }
         public virtual StudyTopicModel StudyTopic { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.LessonPlans.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

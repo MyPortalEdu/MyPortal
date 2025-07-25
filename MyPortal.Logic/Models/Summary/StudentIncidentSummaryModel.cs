@@ -18,7 +18,7 @@ namespace MyPortal.Logic.Models.Summary
         public string Comments { get; set; }
         public int Points { get; set; }
 
-        private StudentIncidentSummaryModel(StudentIncidentModel model)
+        public StudentIncidentSummaryModel(StudentIncidentModel model)
         {
             if (model.Id.HasValue)
             {
@@ -33,15 +33,6 @@ namespace MyPortal.Logic.Models.Summary
             CreatedDate = model.Incident.CreatedDate;
             Comments = model.Incident.Comments;
             Points = model.Points;
-        }
-
-        public static async Task<StudentIncidentSummaryModel> GetSummary(IUnitOfWork unitOfWork,
-            StudentIncidentModel model)
-        {
-            await model.Incident.Load(unitOfWork);
-            await model.Student.Load(unitOfWork);
-
-            return new StudentIncidentSummaryModel(model);
         }
     }
 }

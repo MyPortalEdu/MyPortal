@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Calendar;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.School
 {
-    public class ParentEveningModel : BaseModelWithLoad
+    public class ParentEveningModel : EntityModel
     {
         public ParentEveningModel(ParentEvening model) : base(model)
         {
@@ -37,15 +35,5 @@ namespace MyPortal.Logic.Models.Data.School
         public DateTime BookingClosed { get; set; }
 
         public virtual DiaryEventModel Event { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ParentEvenings.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

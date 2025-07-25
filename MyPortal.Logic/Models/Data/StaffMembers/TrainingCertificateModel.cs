@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.StaffMembers
 {
-    public class TrainingCertificateModel : BaseModelWithLoad
+    public class TrainingCertificateModel : EntityModel
     {
         public TrainingCertificateModel(TrainingCertificate model) : base(model)
         {
@@ -46,15 +44,5 @@ namespace MyPortal.Logic.Models.Data.StaffMembers
         public virtual TrainingCourseModel TrainingCourse { get; set; }
 
         public virtual TrainingCertificateStatusModel Status { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.TrainingCertificates.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

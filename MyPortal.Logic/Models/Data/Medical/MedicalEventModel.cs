@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Medical
 {
-    public class MedicalEventModel : BaseModelWithLoad
+    public class MedicalEventModel : EntityModel
     {
         public MedicalEventModel(MedicalEvent model) : base(model)
         {
@@ -45,15 +43,5 @@ namespace MyPortal.Logic.Models.Data.Medical
         public virtual UserModel CreatedBy { get; set; }
 
         public virtual PersonModel Person { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.MedicalEvents.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

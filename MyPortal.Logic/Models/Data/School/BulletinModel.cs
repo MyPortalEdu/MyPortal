@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.School
 {
-    public class BulletinModel : BaseModelWithLoad
+    public class BulletinModel : EntityModel
     {
         public BulletinModel(Bulletin model) : base(model)
         {
@@ -58,18 +56,5 @@ namespace MyPortal.Logic.Models.Data.School
         public DirectoryModel Directory { get; set; }
 
         public bool Expired => ExpireDate <= DateTime.Now;
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var bulletin = await unitOfWork.Bulletins.GetById(Id.Value);
-
-                if (bulletin != null)
-                {
-                    LoadFromModel(bulletin);
-                }
-            }
-        }
     }
 }

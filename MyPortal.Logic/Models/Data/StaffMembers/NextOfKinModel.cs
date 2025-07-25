@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.StaffMembers
 {
-    public class NextOfKinModel : BaseModelWithLoad
+    public class NextOfKinModel : EntityModel
     {
         public NextOfKinModel(NextOfKin model) : base(model)
         {
@@ -43,15 +41,5 @@ namespace MyPortal.Logic.Models.Data.StaffMembers
         public virtual StaffMemberModel StaffMember { get; set; }
         public virtual PersonModel NextOfKinPerson { get; set; }
         public virtual NextOfKinRelationshipTypeModel RelationshipType { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.NextOfKin.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

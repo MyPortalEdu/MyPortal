@@ -5,7 +5,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Documents
 {
-    public class PhotoModel : BaseModel
+    public class PhotoModel : EntityModel
     {
         public PhotoModel(Photo model) : base(model)
         {

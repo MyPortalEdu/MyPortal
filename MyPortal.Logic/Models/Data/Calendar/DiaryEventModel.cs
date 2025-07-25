@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Enums;
 using MyPortal.Logic.Extensions;
 using MyPortal.Logic.Models.Data.School;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Calendar
 {
-    public class DiaryEventModel : BaseModelWithLoad, ICloneable
+    public class DiaryEventModel : EntityModel, ICloneable
     {
         private DateTime _startTime;
         private DateTime _endTime;
@@ -21,7 +19,7 @@ namespace MyPortal.Logic.Models.Data.Calendar
         {
         }
 
-        public DiaryEventModel(DiaryEvent model) : base(model)
+        public DiaryEventModel(DiaryEvent model)
         {
             LoadFromModel(model);
         }
@@ -133,16 +131,6 @@ namespace MyPortal.Logic.Models.Data.Calendar
         public virtual DiaryEventTypeModel EventType { get; set; }
         public virtual UserModel CreatedBy { get; set; }
         public virtual RoomModel Room { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.DiaryEvents.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
 
         public object Clone()
         {

@@ -6,11 +6,10 @@ using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Enums;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Settings
 {
-    public class UserModel : BaseModelWithLoad
+    public class UserModel : EntityModel
     {
         public UserModel(User model) : base(model)
         {
@@ -68,30 +67,6 @@ namespace MyPortal.Logic.Models.Data.Settings
             bool includeMiddleName = true)
         {
             return Person != null ? Person.GetName(format, usePreferred, includeMiddleName) : UserName;
-        }
-
-        public async Task<string> GetProfileImageAsBase64(IUnitOfWork unitOfWork)
-        {
-            if (Person != null)
-            {
-                await Person.Load(unitOfWork);
-            }
-            else
-            {
-                return null;
-            }
-
-            return Person.Photo != null ? Convert.ToBase64String(Person.Photo.Data) : null;
-        }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Users.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
         }
     }
 }

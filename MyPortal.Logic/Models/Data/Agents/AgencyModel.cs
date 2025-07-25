@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Agents
 {
-    public class AgencyModel : BaseModelWithLoad
+    public class AgencyModel : EntityModel
     {
         public AgencyModel(Agency model) : base(model)
         {
@@ -45,18 +43,5 @@ namespace MyPortal.Logic.Models.Data.Agents
 
         public virtual AgencyTypeModel AgencyType { get; set; }
         public virtual DirectoryModel Directory { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var agency = await unitOfWork.Agencies.GetById(Id.Value);
-
-                if (agency != null)
-                {
-                    LoadFromModel(agency);
-                }
-            }
-        }
     }
 }

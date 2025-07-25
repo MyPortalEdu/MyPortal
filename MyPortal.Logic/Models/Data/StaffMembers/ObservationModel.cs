@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.StaffMembers
 {
-    public class ObservationModel : BaseModelWithLoad
+    public class ObservationModel : EntityModel
     {
         public ObservationModel(Observation model) : base(model)
         {
@@ -44,15 +42,5 @@ namespace MyPortal.Logic.Models.Data.StaffMembers
         public virtual StaffMemberModel Observee { get; set; }
         public virtual StaffMemberModel Observer { get; set; }
         public virtual ObservationOutcomeModel Outcome { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Observations.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

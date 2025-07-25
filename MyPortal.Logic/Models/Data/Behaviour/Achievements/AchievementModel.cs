@@ -1,16 +1,14 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Curriculum;
 using MyPortal.Logic.Models.Data.School;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Behaviour.Achievements
 {
-    public class AchievementModel : BaseModelWithLoad
+    public class AchievementModel : EntityModel
     {
         internal AchievementModel(Achievement model) : base(model)
         {
@@ -70,18 +68,5 @@ namespace MyPortal.Logic.Models.Data.Behaviour.Achievements
         public AcademicYearModel AcademicYear { get; set; }
 
         public UserModel CreatedBy { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var achievement = await unitOfWork.Achievements.GetById(Id.Value);
-
-                if (achievement != null)
-                {
-                    LoadFromModel(achievement);
-                }
-            }
-        }
     }
 }

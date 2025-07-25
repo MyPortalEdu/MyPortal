@@ -1,15 +1,13 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Attendance;
 using MyPortal.Logic.Models.Data.School;
 using MyPortal.Logic.Models.Data.StaffMembers;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class CoverArrangementModel : BaseModelWithLoad
+    public class CoverArrangementModel : EntityModel
     {
         public CoverArrangementModel(CoverArrangement model) : base(model)
         {
@@ -63,19 +61,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public bool StaffChanged => TeacherId.HasValue;
 
         public bool RoomChanged => RoomId.HasValue;
-
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var coverArrangement = await unitOfWork.CoverArrangements.GetById(Id.Value);
-
-                if (coverArrangement != null)
-                {
-                    LoadFromModel(coverArrangement);
-                }
-            }
-        }
     }
 }

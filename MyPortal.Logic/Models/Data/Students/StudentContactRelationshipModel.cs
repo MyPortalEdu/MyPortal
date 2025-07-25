@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Contacts;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Students
 {
-    public class StudentContactRelationshipModel : BaseModelWithLoad
+    public class StudentContactRelationshipModel : EntityModel
     {
         public StudentContactRelationshipModel(StudentContactRelationship model) : base(model)
         {
@@ -57,15 +55,5 @@ namespace MyPortal.Logic.Models.Data.Students
         public virtual RelationshipTypeModel RelationshipType { get; set; }
         public virtual StudentModel Student { get; set; }
         public virtual ContactModel Contact { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.StudentContactRelationships.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

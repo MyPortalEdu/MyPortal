@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.School
 {
-    public class RoomModel : BaseModelWithLoad
+    public class RoomModel : EntityModel
     {
         public RoomModel(Room model) : base(model)
         {
@@ -42,15 +40,5 @@ namespace MyPortal.Logic.Models.Data.School
         public bool ExcludeFromCover { get; set; }
 
         public virtual BuildingFloorModel BuildingFloor { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Rooms.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.StaffMembers;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Students
 {
-    public class ParentEveningAppointmentModel : BaseModelWithLoad
+    public class ParentEveningAppointmentModel : EntityModel
     {
         public ParentEveningAppointmentModel(ParentEveningAppointment model) : base(model)
         {
@@ -45,15 +43,5 @@ namespace MyPortal.Logic.Models.Data.Students
 
         public ParentEveningStaffMemberModel ParentEveningStaffMember { get; set; }
         public StudentModel Student { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ParentEveningAppointments.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -7,7 +7,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum;
 
-public class SessionPeriodModel : BaseModelWithLoad
+public class SessionPeriodModel : EntityModel
 {
     public SessionPeriodModel(SessionPeriod model) : base(model)
     {
@@ -34,15 +34,4 @@ public class SessionPeriodModel : BaseModelWithLoad
 
     public virtual SessionModel Session { get; set; }
     public virtual AttendancePeriodModel Period { get; set; }
-
-
-    protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-    {
-        if (Id.HasValue)
-        {
-            var model = await unitOfWork.SessionPeriods.GetById(Id.Value);
-
-            LoadFromModel(model);
-        }
-    }
 }

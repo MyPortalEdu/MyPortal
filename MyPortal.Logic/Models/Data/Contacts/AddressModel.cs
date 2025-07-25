@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Contacts
 {
-    public class AddressModel : BaseModel
+    public class AddressModel : EntityModel
     {
         public AddressModel(Address model) : base(model)
         {

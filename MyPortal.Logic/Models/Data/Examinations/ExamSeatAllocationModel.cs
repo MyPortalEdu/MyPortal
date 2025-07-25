@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamSeatAllocationModel : BaseModelWithLoad
+    public class ExamSeatAllocationModel : EntityModel
     {
         public ExamSeatAllocationModel(ExamSeatAllocation model) : base(model)
         {
@@ -47,15 +45,5 @@ namespace MyPortal.Logic.Models.Data.Examinations
 
         public virtual ExamComponentSittingModel Sitting { get; set; }
         public virtual ExamCandidateModel Candidate { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ExamSeatAllocations.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

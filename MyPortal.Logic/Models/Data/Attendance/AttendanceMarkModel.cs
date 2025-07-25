@@ -1,16 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Students;
-using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Attendance
 {
-    public class AttendanceMarkModel : BaseModelWithLoad
+    public class AttendanceMarkModel
     {
-        public AttendanceMarkModel(AttendanceMark model) : base(model)
+        public AttendanceMarkModel(AttendanceMark model)
         {
             LoadFromModel(model);
         }
@@ -64,18 +61,5 @@ namespace MyPortal.Logic.Models.Data.Attendance
         public StudentModel Student { get; set; }
 
         public AttendanceWeekModel Week { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var attendanceMark = await unitOfWork.AttendanceMarks.GetById(Id.Value);
-
-                if (attendanceMark != null)
-                {
-                    LoadFromModel(attendanceMark);
-                }
-            }
-        }
     }
 }

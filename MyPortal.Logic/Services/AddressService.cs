@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Exceptions;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
-using MyPortal.Logic.Helpers;
 using MyPortal.Logic.Interfaces;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Addresses;
@@ -45,7 +45,7 @@ namespace MyPortal.Logic.Services
 
             var searchOptions = searchModel.GetSearchOptions();
 
-            var matchingAddresses = await unitOfWork.Addresses.GetAll(searchOptions);
+            var matchingAddresses = await unitOfWork.GetRepository<IAddressRepository>().GetAll(searchOptions);
 
             return matchingAddresses.Select(a => new AddressModel(a)).ToArray();
         }
@@ -58,7 +58,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var person = await unitOfWork.People.GetById(personId);
+            var person = await unitOfWork.GetRepository<IPersonRepository>().GetById(personId);
 
             if (person == null)
             {
@@ -67,12 +67,12 @@ namespace MyPortal.Logic.Services
 
             if (model.Main)
             {
-                var personAddresses = await unitOfWork.AddressPeople.GetByPerson(person.Id);
+                var personAddresses = await unitOfWork.GetRepository<IAddressPersonRepository>().GetByPerson(person.Id);
 
                 foreach (var linkedAddress in personAddresses)
                 {
                     linkedAddress.Main = false;
-                    await unitOfWork.AddressPeople.Update(linkedAddress);
+                    await unitOfWork.GetRepository<IAddressPersonRepository>().Update(linkedAddress);
                 }
             }
 
@@ -93,7 +93,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var agency = await unitOfWork.Agencies.GetById(agencyId);
+            var agency = await unitOfWork.GetRepository<IAgencyRepository>().GetById(agencyId);
 
             if (agency == null)
             {
@@ -102,12 +102,13 @@ namespace MyPortal.Logic.Services
 
             if (model.Main)
             {
-                var agencyAddresses = await unitOfWork.AddressAgencies.GetByAgency(agency.Id);
+                var agencyAddresses = await unitOfWork.GetRepository<IAddressAgencyRepository>()
+                    .GetByAgency(agency.Id);
 
                 foreach (var linkedAddress in agencyAddresses)
                 {
                     linkedAddress.Main = false;
-                    await unitOfWork.AddressAgencies.Update(linkedAddress);
+                    await unitOfWork.GetRepository<IAddressAgencyRepository>().Update(linkedAddress);
                 }
             }
 
@@ -129,7 +130,7 @@ namespace MyPortal.Logic.Services
             await VerifyAccessToPerson(addressPersonId);
 
             await using var unitOfWork = await User.GetConnection();
-            var addressPerson = await unitOfWork.AddressPeople.GetById(addressPersonId);
+            var addressPerson = await unitOfWork.GetRepository<IAddressPersonRepository>().GetById(addressPersonId);
 
             if (addressPerson == null)
             {
@@ -140,7 +141,7 @@ namespace MyPortal.Logic.Services
             addressPerson.AddressTypeId = model.AddressTypeId;
             addressPerson.Main = model.Main;
 
-            await unitOfWork.AddressPeople.Update(addressPerson);
+            await unitOfWork.GetRepository<IAddressPersonRepository>().Update(addressPerson);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -150,7 +151,7 @@ namespace MyPortal.Logic.Services
             Validate(model);
 
             await using var unitOfWork = await User.GetConnection();
-            var addressAgency = await unitOfWork.AddressAgencies.GetById(addressAgencyId);
+            var addressAgency = await unitOfWork.GetRepository<IAddressAgencyRepository>().GetById(addressAgencyId);
 
             if (addressAgency == null)
             {
@@ -161,7 +162,7 @@ namespace MyPortal.Logic.Services
             addressAgency.AddressTypeId = model.AddressTypeId;
             addressAgency.Main = model.Main;
 
-            await unitOfWork.AddressAgencies.Update(addressAgency);
+            await unitOfWork.GetRepository<IAddressAgencyRepository>().Update(addressAgency);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -172,7 +173,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var address = await unitOfWork.Addresses.GetById(addressId);
+            var address = await unitOfWork.GetRepository<IAddressRepository>().GetById(addressId);
 
             if (address == null)
             {
@@ -189,7 +190,7 @@ namespace MyPortal.Logic.Services
             address.Postcode = model.Postcode;
             address.Country = model.Country;
 
-            await unitOfWork.Addresses.Update(address);
+            await unitOfWork.GetRepository<IAddressRepository>().Update(address);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -200,14 +201,14 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var address = await unitOfWork.Addresses.GetById(model.AddressId);
+            var address = await unitOfWork.GetRepository<IAddressRepository>().GetById(model.AddressId);
 
             if (address == null)
             {
                 throw new NotFoundException("Address not found.");
             }
 
-            var person = await unitOfWork.People.GetById(model.EntityId);
+            var person = await unitOfWork.GetRepository<IPersonRepository>().GetById(model.EntityId);
 
             if (person == null)
             {
@@ -223,7 +224,7 @@ namespace MyPortal.Logic.Services
                 Main = model.Main
             };
 
-            unitOfWork.AddressPeople.Create(addressPerson);
+            unitOfWork.GetRepository<IAddressPersonRepository>().Create(addressPerson);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -234,14 +235,14 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var address = await unitOfWork.Addresses.GetById(model.AddressId);
+            var address = await unitOfWork.GetRepository<IAddressRepository>().GetById(model.AddressId);
 
             if (address == null)
             {
                 throw new NotFoundException("Address not found.");
             }
 
-            var agency = await unitOfWork.Agencies.GetById(model.EntityId);
+            var agency = await unitOfWork.GetRepository<IAgencyRepository>().GetById(model.EntityId);
 
             if (agency == null)
             {
@@ -257,7 +258,7 @@ namespace MyPortal.Logic.Services
                 Main = model.Main
             };
 
-            unitOfWork.AddressAgencies.Create(addressAgency);
+            unitOfWork.GetRepository<IAddressAgencyRepository>().Create(addressAgency);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -267,7 +268,8 @@ namespace MyPortal.Logic.Services
             await VerifyAccessToPerson(personId);
             
             await using var unitOfWork = await User.GetConnection();
-            var addressPeople = await unitOfWork.AddressPeople.GetByPerson(personId);
+            var addressPeople = await unitOfWork.GetRepository<IAddressPersonRepository>()
+                .GetByPerson(personId);
             var results = addressPeople.Select(ap => new AddressLinkDataModel(ap)).ToArray();
 
             return results;
@@ -276,7 +278,7 @@ namespace MyPortal.Logic.Services
         public async Task<IEnumerable<AddressLinkDataModel>> GetAddressLinksByAgency(Guid agencyId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var addressAgencies = await unitOfWork.AddressAgencies.GetByAgency(agencyId);
+            var addressAgencies = await unitOfWork.GetRepository<IAddressAgencyRepository>().GetByAgency(agencyId);
             var results = addressAgencies.Select(ap => new AddressLinkDataModel(ap)).ToArray();
 
             return results;
@@ -285,8 +287,8 @@ namespace MyPortal.Logic.Services
         public async Task<LinkedAddressesDataModel> GetAddressLinksByAddress(Guid addressId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var addressPeople = await unitOfWork.AddressPeople.GetByAddress(addressId);
-            var addressAgencies = await unitOfWork.AddressAgencies.GetByAddress(addressId);
+            var addressPeople = await unitOfWork.GetRepository<IAddressPersonRepository>().GetByAddress(addressId);
+            var addressAgencies = await unitOfWork.GetRepository<IAddressAgencyRepository>().GetByAddress(addressId);
 
             return new LinkedAddressesDataModel
             {
@@ -305,7 +307,7 @@ namespace MyPortal.Logic.Services
             if (numberOfLinks <= 0)
             {
                 // Delete unlinked address from database to prevent cluttering db with unused addresses
-                await unitOfWork.Addresses.Delete(addressId);
+                await unitOfWork.GetRepository<IAddressRepository>().Delete(addressId);
             }
         }
 
@@ -315,7 +317,7 @@ namespace MyPortal.Logic.Services
 
             await using (var unitOfWork = await User.GetConnection())
             {
-                var addressPerson = await unitOfWork.AddressPeople.GetById(addressPersonId);
+                var addressPerson = await unitOfWork.GetRepository<IAddressPersonRepository>().GetById(addressPersonId);
 
                 if (addressPerson == null)
                 {
@@ -324,7 +326,7 @@ namespace MyPortal.Logic.Services
 
                 addressId = addressPerson.AddressId;
 
-                await unitOfWork.AddressPeople.Delete(addressPerson.Id);
+                await unitOfWork.GetRepository<IAddressPersonRepository>().Delete(addressPerson.Id);
 
                 await unitOfWork.SaveChangesAsync();
             }
@@ -338,7 +340,7 @@ namespace MyPortal.Logic.Services
 
             await using (var unitOfWork = await User.GetConnection())
             {
-                var addressAgency = await unitOfWork.AddressAgencies.GetById(addressAgencyId);
+                var addressAgency = await unitOfWork.GetRepository<IAddressAgencyRepository>().GetById(addressAgencyId);
 
                 if (addressAgency == null)
                 {
@@ -347,7 +349,7 @@ namespace MyPortal.Logic.Services
 
                 addressId = addressAgency.AddressId;
 
-                await unitOfWork.AddressAgencies.Delete(addressAgency.Id);
+                await unitOfWork.GetRepository<IAddressAgencyRepository>().Delete(addressAgency.Id);
 
                 await unitOfWork.SaveChangesAsync();
             }

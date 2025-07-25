@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Students;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Finance
 {
-    public class BillModel : BaseModelWithLoad
+    public class BillModel : EntityModel
     {
         public BillModel(Bill model) : base(model)
         {
@@ -36,18 +34,5 @@ namespace MyPortal.Logic.Models.Data.Finance
         public bool? Dispatched { get; set; }
 
         public StudentModel Student { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var bill = await unitOfWork.Bills.GetById(Id.Value);
-
-                if (bill != null)
-                {
-                    LoadFromModel(bill);
-                }
-            }
-        }
     }
 }

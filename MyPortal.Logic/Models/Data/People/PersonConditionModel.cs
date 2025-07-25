@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Medical;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.People
 {
-    public class PersonConditionModel : BaseModelWithLoad
+    public class PersonConditionModel : EntityModel
     {
         public PersonConditionModel(PersonCondition model) : base(model)
         {
@@ -43,15 +41,5 @@ namespace MyPortal.Logic.Models.Data.People
 
         public virtual PersonModel Person { get; set; }
         public virtual MedicalConditionModel MedicalCondition { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.PersonConditions.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

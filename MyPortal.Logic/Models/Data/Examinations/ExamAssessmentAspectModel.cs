@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Assessment;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamAssessmentAspectModel : BaseModelWithLoad
+    public class ExamAssessmentAspectModel : EntityModel
     {
         public ExamAssessmentAspectModel(ExamAssessmentAspect model) : base(model)
         {
@@ -48,14 +46,5 @@ namespace MyPortal.Logic.Models.Data.Examinations
         public virtual AspectModel Aspect { get; set; }
         public virtual ExamAssessmentModel Assessment { get; set; }
         public virtual ExamSeriesModel Series { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ExamAssessmentAspects.GetById(Id.Value);
-                LoadFromModel(model);
-            }
-        }
     }
 }

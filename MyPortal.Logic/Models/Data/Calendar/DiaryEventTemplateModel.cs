@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Calendar
 {
-    public class DiaryEventTemplateModel : LookupItemModelWithLoad
+    public class DiaryEventTemplateModel : EntityModel
     {
         public Guid EventTypeId { get; set; }
 
@@ -33,16 +31,6 @@ namespace MyPortal.Logic.Models.Data.Calendar
             if (model.DiaryEventType != null)
             {
                 DiaryEventType = new DiaryEventTypeModel(model.DiaryEventType);
-            }
-        }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.DiaryEventTemplates.GetById(Id.Value);
-
-                LoadFromModel(model);
             }
         }
     }

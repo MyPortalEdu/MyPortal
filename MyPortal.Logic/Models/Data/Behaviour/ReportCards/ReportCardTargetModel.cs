@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Behaviour.ReportCards
 {
-    public class ReportCardTargetModel : BaseModelWithLoad
+    public class ReportCardTargetModel : EntityModel
     {
         public ReportCardTargetModel(ReportCardTarget model) : base(model)
         {
@@ -35,15 +33,5 @@ namespace MyPortal.Logic.Models.Data.Behaviour.ReportCards
 
         public virtual ReportCardModel ReportCard { get; set; }
         public virtual BehaviourTargetModel Target { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ReportCardTargets.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

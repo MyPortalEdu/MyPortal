@@ -1,14 +1,12 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Data.Students;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Assessment
 {
-    public class ResultModel : BaseModelWithLoad
+    public class ResultModel : EntityModel
     {
         public ResultModel(Result model) : base(model)
         {
@@ -83,15 +81,5 @@ namespace MyPortal.Logic.Models.Data.Assessment
         public virtual GradeModel Grade { get; set; }
 
         public virtual UserModel CreatedBy { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Results.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.People
 {
-    public class TaskModel : BaseModelWithLoad
+    public class TaskModel : EntityModel
     {
         public TaskModel(Task model) : base(model)
         {
@@ -71,15 +70,5 @@ namespace MyPortal.Logic.Models.Data.People
         public virtual TaskTypeModel Type { get; set; }
 
         public bool Overdue => !Completed && DueDate <= DateTime.Now;
-
-        protected override async System.Threading.Tasks.Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Tasks.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

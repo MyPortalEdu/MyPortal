@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Assessment
 {
-    public class GradeModel : BaseModelWithLoad
+    public class GradeModel : EntityModel
     {
         public GradeModel(Grade model) : base(model)
         {
@@ -36,15 +34,5 @@ namespace MyPortal.Logic.Models.Data.Assessment
         public decimal Value { get; set; }
 
         public virtual GradeSetModel GradeSet { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Grades.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

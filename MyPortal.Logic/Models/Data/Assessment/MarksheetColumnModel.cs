@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Assessment
 {
-    public class MarksheetColumnModel : BaseModelWithLoad
+    public class MarksheetColumnModel : EntityModel
     {
         public MarksheetColumnModel(MarksheetColumn model) : base(model)
         {
@@ -46,15 +44,5 @@ namespace MyPortal.Logic.Models.Data.Assessment
         public virtual MarksheetTemplateModel Template { get; set; }
         public virtual AspectModel Aspect { get; set; }
         public virtual ResultSetModel ResultSet { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.MarksheetColumns.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

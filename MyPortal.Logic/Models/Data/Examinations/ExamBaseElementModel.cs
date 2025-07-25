@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Curriculum;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamBaseElementModel : BaseModelWithLoad
+    public class ExamBaseElementModel : EntityModel
     {
         public ExamBaseElementModel(ExamBaseElement model) : base(model)
         {
@@ -51,15 +49,5 @@ namespace MyPortal.Logic.Models.Data.Examinations
         public virtual ExamAssessmentModel Assessment { get; set; }
         public virtual SubjectCodeModel QcaCode { get; set; }
         public virtual ExamQualificationLevelModel Level { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ExamBaseElements.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Assessment;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamSeasonModel : BaseModelWithLoad
+    public class ExamSeasonModel : EntityModel
     {
         public ExamSeasonModel(ExamSeason model) : base(model)
         {
@@ -45,15 +43,5 @@ namespace MyPortal.Logic.Models.Data.Examinations
         public bool Default { get; set; }
 
         public virtual ResultSetModel ResultSet { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ExamSeasons.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

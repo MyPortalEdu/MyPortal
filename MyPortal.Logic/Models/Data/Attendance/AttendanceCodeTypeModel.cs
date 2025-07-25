@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Attendance
 {
-    public class AttendanceCodeTypeModel : BaseModel
+    public class AttendanceCodeTypeModel : EntityModel
     {
         public AttendanceCodeTypeModel(AttendanceCodeType model) : base(model)
         {

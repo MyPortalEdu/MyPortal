@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Assessment;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamQualificationLevelModel : LookupItemModelWithLoad
+    public class ExamQualificationLevelModel : LookupItemModel
     {
         public Guid QualificationId { get; set; }
 
@@ -38,16 +36,6 @@ namespace MyPortal.Logic.Models.Data.Examinations
             if (model.Qualification != null)
             {
                 Qualification = new ExamQualificationModel(model.Qualification);
-            }
-        }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ExamQualificationLevels.GetById(Id.Value);
-
-                LoadFromModel(model);
             }
         }
     }

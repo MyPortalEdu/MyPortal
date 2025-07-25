@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Calendar
 {
-    public class DiaryEventAttendeeModel : BaseModelWithLoad
+    public class DiaryEventAttendeeModel : EntityModel
     {
         public DiaryEventAttendeeModel(DiaryEventAttendee model) : base(model)
         {
@@ -55,15 +53,5 @@ namespace MyPortal.Logic.Models.Data.Calendar
         public virtual DiaryEventModel Event { get; set; }
         public virtual PersonModel Person { get; set; }
         public virtual DiaryEventAttendeeResponseModel Response { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.DiaryEventAttendees.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class SubjectModel : BaseModelWithLoad
+    public class SubjectModel : EntityModel
     {
         public SubjectModel(Subject model) : base(model)
         {
@@ -36,15 +34,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public bool Deleted { get; set; }
 
         public virtual SubjectCodeModel SubjectCode { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Subjects.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }
