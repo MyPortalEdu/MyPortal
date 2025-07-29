@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
@@ -28,10 +29,11 @@ namespace MyPortal.Logic.Services
             }
 
             ChargeBillingPeriod chargeBillingPeriod =
-                await unitOfWork.ChargeBillingPeriods.GetById(chargeBillingPeriodId);
+                await unitOfWork.GetRepository<IChargeBillingPeriodRepository>().GetById(chargeBillingPeriodId);
 
             var billableStudents =
-                (await unitOfWork.StudentCharges.GetOutstandingByBillingPeriod(chargeBillingPeriodId)).GroupBy(sc =>
+                (await unitOfWork.GetRepository<IStudentChargeRepository>()
+                    .GetOutstandingByBillingPeriod(chargeBillingPeriodId)).GroupBy(sc =>
                     sc.StudentId);
 
             var generatedBills = new List<Bill>();
@@ -47,7 +49,8 @@ namespace MyPortal.Logic.Services
                 };
 
                 var chargeDiscounts =
-                    (await unitOfWork.ChargeDiscounts.GetByStudent(billableStudent.Key)).ToArray();
+                    (await unitOfWork.GetRepository<IChargeDiscountRepository>().GetByStudent(billableStudent.Key))
+                    .ToArray();
 
                 foreach (var studentCharge in billableStudent)
                 {
@@ -77,7 +80,7 @@ namespace MyPortal.Logic.Services
                     }
                 }
 
-                unitOfWork.Bills.Create(bill);
+                unitOfWork.GetRepository<IBillRepository>().Create(bill);
                 generatedBills.Add(bill);
             }
 

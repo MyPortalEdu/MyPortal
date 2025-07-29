@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Search;
+using MyPortal.Database.Repositories;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Extensions;
 using MyPortal.Logic.Interfaces;
@@ -33,19 +35,21 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var student = await unitOfWork.Students.GetById(studentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
 
             await VerifyAccessToPerson(student.PersonId);
 
             var achievements =
-                (await unitOfWork.StudentAchievements.GetByStudent(studentId, academicYearId)).Select(a =>
+                (await unitOfWork.GetRepository<IStudentAchievementRepository>()
+                    .GetByStudent(studentId, academicYearId)).Select(a =>
                     new StudentAchievementModel(a));
 
             var summaries = new List<StudentAchievementSummaryModel>();
 
             foreach (var achievementModel in achievements)
             {
-                summaries.Add(await StudentAchievementSummaryModel.GetSummary(unitOfWork, achievementModel));
+                // TODO: This should have its own query as the navigation properties are likely no longer available
+                summaries.Add(new StudentAchievementSummaryModel(achievementModel));
             }
 
             return summaries;
@@ -55,9 +59,9 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var achievement = await unitOfWork.StudentAchievements.GetById(achievementId);
+            var achievement = await unitOfWork.GetRepository<IStudentAchievementRepository>().GetById(achievementId);
 
-            var student = await unitOfWork.Students.GetById(achievement.StudentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(achievement.StudentId);
 
             await VerifyAccessToPerson(student.PersonId);
 
@@ -68,7 +72,8 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var points = await unitOfWork.StudentAchievements.GetPointsByStudent(studentId, academicYearId);
+            var points = await unitOfWork.GetRepository<IStudentAchievementRepository>()
+                .GetPointsByStudent(studentId, academicYearId);
 
             return points;
         }
@@ -77,7 +82,8 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var count = await unitOfWork.StudentAchievements.GetCountByStudent(studentId, academicYearId);
+            var count = await unitOfWork.GetRepository<IStudentAchievementRepository>()
+                .GetCountByStudent(studentId, academicYearId);
 
             return count;
         }
@@ -115,7 +121,7 @@ namespace MyPortal.Logic.Services
                     }
                 };
 
-                unitOfWork.StudentAchievements.Create(model);
+                unitOfWork.GetRepository<IStudentAchievementRepository>().Create(model);
 
                 await unitOfWork.SaveChangesAsync();
 
@@ -131,7 +137,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var achievementInDb = await unitOfWork.StudentAchievements.GetById(achievementId);
+            var achievementInDb = await unitOfWork.GetRepository<IStudentAchievementRepository>().GetById(achievementId);
 
             if (achievementInDb == null)
             {
@@ -147,7 +153,7 @@ namespace MyPortal.Logic.Services
             achievementInDb.Achievement.Comments = achievement.Comments;
             achievementInDb.Points = achievement.Points;
 
-            await unitOfWork.StudentAchievements.Update(achievementInDb);
+            await unitOfWork.GetRepository<IStudentAchievementRepository>().Update(achievementInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -161,7 +167,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.Achievements.Delete(achievementId);
+            await unitOfWork.GetRepository<IAchievementRepository>().Delete(achievementId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -169,7 +175,7 @@ namespace MyPortal.Logic.Services
         public async Task<IEnumerable<AchievementTypeModel>> GetAchievementTypes()
         {
             await using var unitOfWork = await User.GetConnection();
-            var types = await unitOfWork.AchievementTypes.GetAll();
+            var types = await unitOfWork.GetRepository<IAchievementTypeRepository>().GetAll();
 
             return types.Select(t => new AchievementTypeModel(t)).ToList();
         }
@@ -177,7 +183,7 @@ namespace MyPortal.Logic.Services
         public async Task<IEnumerable<AchievementOutcomeModel>> GetAchievementOutcomes()
         {
             await using var unitOfWork = await User.GetConnection();
-            var outcomes = await unitOfWork.AchievementOutcomes.GetAll();
+            var outcomes = await unitOfWork.GetRepository<IAchievementOutcomeRepository>().GetAll();
 
             return outcomes.Select(o => new AchievementOutcomeModel(o)).ToList();
         }
@@ -187,11 +193,12 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var student = await unitOfWork.Students.GetById(studentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
 
             await VerifyAccessToPerson(student.PersonId);
-            
-            var incidents = await unitOfWork.StudentIncidents.GetByStudent(studentId, academicYearId);
+
+            var incidents = await unitOfWork.GetRepository<IStudentIncidentRepository>()
+                .GetByStudent(studentId, academicYearId);
 
             var models = incidents.Select(i => new StudentIncidentModel(i));
 
@@ -199,7 +206,8 @@ namespace MyPortal.Logic.Services
 
             foreach (var model in models)
             {
-                results.Add(await StudentIncidentSummaryModel.GetSummary(unitOfWork, model));
+                // TODO: May need addressing
+                results.Add(new StudentIncidentSummaryModel(model));
             }
 
             return results;
@@ -208,9 +216,9 @@ namespace MyPortal.Logic.Services
         public async Task<StudentIncidentModel> GetIncidentById(Guid incidentId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var incident = await unitOfWork.StudentIncidents.GetById(incidentId);
+            var incident = await unitOfWork.GetRepository<IStudentIncidentRepository>().GetById(incidentId);
 
-            var student = await unitOfWork.Students.GetById(incident.StudentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(incident.StudentId);
 
             await VerifyAccessToPerson(student.PersonId);
 
@@ -220,7 +228,8 @@ namespace MyPortal.Logic.Services
         public async Task<int> GetBehaviourPointsByStudent(Guid studentId, Guid academicYearId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var points = await unitOfWork.StudentIncidents.GetPointsByStudent(studentId, academicYearId);
+            var points = await unitOfWork.GetRepository<IStudentIncidentRepository>()
+                .GetPointsByStudent(studentId, academicYearId);
 
             return points;
         }
@@ -228,7 +237,8 @@ namespace MyPortal.Logic.Services
         public async Task<int> GetBehaviourCountByStudent(Guid studentId, Guid academicYearId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var count = await unitOfWork.StudentIncidents.GetCountByStudent(studentId, academicYearId);
+            var count = await unitOfWork.GetRepository<IStudentIncidentRepository>()
+                .GetCountByStudent(studentId, academicYearId);
 
             return count;
         }
@@ -271,7 +281,7 @@ namespace MyPortal.Logic.Services
 
                 await using var unitOfWork = await User.GetConnection();
 
-                unitOfWork.StudentIncidents.Create(studentIncident);
+                unitOfWork.GetRepository<IStudentIncidentRepository>().Create(studentIncident);
 
                 await unitOfWork.SaveChangesAsync();
 
@@ -287,7 +297,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var studentIncidentInDb = await unitOfWork.StudentIncidents.GetById(incidentId);
+            var studentIncidentInDb = await unitOfWork.GetRepository<IStudentIncidentRepository>().GetById(incidentId);
 
             if (studentIncidentInDb == null)
             {
@@ -301,9 +311,10 @@ namespace MyPortal.Logic.Services
             studentIncidentInDb.StatusId = incident.StatusId;
             studentIncidentInDb.Incident.Comments = incident.Comments;
 
-            await unitOfWork.StudentIncidents.Update(studentIncidentInDb);
+            await unitOfWork.GetRepository<IStudentIncidentRepository>().Update(studentIncidentInDb);
 
-            var linkedDetentions = await unitOfWork.StudentDetentions.GetByStudentIncident(studentIncidentInDb.Id);
+            var linkedDetentions = await unitOfWork.GetRepository<IStudentDetentionRepository>()
+                .GetByStudentIncident(studentIncidentInDb.Id);
 
             var detentionsToAdd = incident.DetentionIds.Where(d => linkedDetentions.All(ld => ld.DetentionId != d))
                 .ToArray();
@@ -323,7 +334,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.Incidents.Delete(incidentId);
+            await unitOfWork.GetRepository<IIncidentRepository>().Delete(incidentId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -332,7 +343,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var types = await unitOfWork.IncidentTypes.GetAll();
+            var types = await unitOfWork.GetRepository<IIncidentTypeRepository>().GetAll();
 
             return types.Select(t => new IncidentTypeModel(t)).ToList();
         }
@@ -341,7 +352,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var roleTypes = await unitOfWork.BehaviourRoleTypes.GetAll();
+            var roleTypes = await unitOfWork.GetRepository<IBehaviourRoleTypeRepository>().GetAll();
 
             return roleTypes.Select(r => new BehaviourRoleTypeModel(r)).ToList();
         }
@@ -350,7 +361,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var outcomes = await unitOfWork.BehaviourOutcomes.GetAll();
+            var outcomes = await unitOfWork.GetRepository<IBehaviourOutcomeRepository>().GetAll();
 
             return outcomes.Select(o => new BehaviourOutcomeModel(o)).ToList();
         }
@@ -359,7 +370,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var status = await unitOfWork.BehaviourStatus.GetAll();
+            var status = await unitOfWork.GetRepository<IBehaviourStatusRepository>().GetAll();
 
             return status.Select(s => new BehaviourStatusModel(s)).ToList();
         }
@@ -368,7 +379,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var detentions = await unitOfWork.Detentions.GetAll(searchOptions);
+            var detentions = await unitOfWork.GetRepository<IDetentionRepository>().GetAll(searchOptions);
 
             return detentions.Select(d => new DetentionModel(d));
         }
@@ -377,7 +388,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var detention = await unitOfWork.Detentions.GetById(detentionId);
+            var detention = await unitOfWork.GetRepository<IDetentionRepository>().GetById(detentionId);
 
             return new DetentionModel(detention);
         }
@@ -386,7 +397,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var detention = await unitOfWork.Detentions.GetByIncident(incidentId);
+            var detention = await unitOfWork.GetRepository<IDetentionRepository>().GetByIncident(incidentId);
 
             return new DetentionModel(detention);
         }
@@ -413,7 +424,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            unitOfWork.Detentions.Create(detention);
+            unitOfWork.GetRepository<IDetentionRepository>().Create(detention);
 
             DateTime? nextOccurrence = model.StartTime.GetNextOccurrence(model.Frequency);
             TimeSpan duration = model.EndTime - model.StartTime;
@@ -435,7 +446,7 @@ namespace MyPortal.Logic.Services
                     }
                 };
 
-                unitOfWork.Detentions.Create(nextDetention);
+                unitOfWork.GetRepository<IDetentionRepository>().Create(nextDetention);
                 await unitOfWork.BatchSaveChangesAsync();
 
                 nextOccurrence = nextOccurrence.Value.GetNextOccurrence(model.Frequency);
@@ -452,14 +463,14 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var detentionInDb = await unitOfWork.Detentions.GetById(detentionId);
+            var detentionInDb = await unitOfWork.GetRepository<IDetentionRepository>().GetById(detentionId);
 
             detentionInDb.DetentionTypeId = detention.DetentionTypeId;
             detentionInDb.Event.StartTime = detention.StartTime;
             detentionInDb.Event.EndTime = detention.EndTime;
             detentionInDb.Event.RoomId = detention.RoomId;
 
-            await unitOfWork.Detentions.Update(detentionInDb);
+            await unitOfWork.GetRepository<IDetentionRepository>().Update(detentionInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -468,7 +479,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.Detentions.Delete(detentionId);
+            await unitOfWork.GetRepository<IDetentionRepository>().Delete(detentionId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -478,14 +489,14 @@ namespace MyPortal.Logic.Services
             await using var unitOfWork = await User.GetConnection();
 
             var involvedStudents =
-                (await unitOfWork.StudentIncidents.GetByIncident(incidentId)).Select(s =>
+                (await unitOfWork.GetRepository<IStudentIncidentRepository>().GetByIncident(incidentId)).Select(s =>
                     new StudentIncidentModel(s)).ToList();
 
             var results = new List<StudentIncidentSummaryModel>();
 
             foreach (var involvedStudent in involvedStudents)
             {
-                results.Add(await StudentIncidentSummaryModel.GetSummary(unitOfWork, involvedStudent));
+                results.Add(new StudentIncidentSummaryModel(involvedStudent));
             }
 
             return results;
@@ -508,7 +519,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            unitOfWork.StudentIncidents.Create(studentIncident);
+            unitOfWork.GetRepository<IStudentIncidentRepository>().Create(studentIncident);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -517,21 +528,22 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var studentIncident = await unitOfWork.StudentIncidents.GetById(studentIncidentId);
+            var studentIncident = await unitOfWork.GetRepository<IStudentIncidentRepository>().GetById(studentIncidentId);
 
             if (studentIncident == null)
             {
                 throw new NotFoundException("Student incident not found.");
             }
 
-            var studentCount = await unitOfWork.StudentIncidents.GetCountByIncident(studentIncident.IncidentId);
+            var studentCount = await unitOfWork.GetRepository<IStudentIncidentRepository>()
+                .GetCountByIncident(studentIncident.IncidentId);
 
             if (studentCount < 2)
             {
                 throw new LogicException("Cannot remove the only student from this incident.");
             }
 
-            await unitOfWork.StudentIncidents.Delete(studentIncidentId);
+            await unitOfWork.GetRepository<IStudentIncidentRepository>().Delete(studentIncidentId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -540,7 +552,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var studentIncident = await unitOfWork.StudentIncidents.GetById(studentIncidentId);
+            var studentIncident = await unitOfWork.GetRepository<IStudentIncidentRepository>().GetById(studentIncidentId);
 
             if (studentIncident == null)
             {
@@ -555,7 +567,7 @@ namespace MyPortal.Logic.Services
                     DetentionId = detentionId
                 };
 
-                unitOfWork.StudentDetentions.Create(incidentDetention);
+                unitOfWork.GetRepository<StudentDetentionRepository>().Create(incidentDetention);
             }
 
             await unitOfWork.SaveChangesAsync();
@@ -568,14 +580,15 @@ namespace MyPortal.Logic.Services
             foreach (var detentionId in detentionIds)
             {
                 var relatedIncident =
-                    await unitOfWork.StudentDetentions.GetStudentDetention(detentionId, studentIncidentId);
+                    await unitOfWork.GetRepository<IStudentDetentionRepository>()
+                        .GetStudentDetention(detentionId, studentIncidentId);
 
                 if (relatedIncident == null)
                 {
                     throw new NotFoundException("Detention not found.");
                 }
 
-                await unitOfWork.StudentDetentions.Delete(relatedIncident.Id);
+                await unitOfWork.GetRepository<IStudentDetentionRepository>().Delete(relatedIncident.Id);
             }
 
             await unitOfWork.SaveChangesAsync();

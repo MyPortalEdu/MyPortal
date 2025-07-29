@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Helpers;
@@ -23,7 +24,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var bands = await unitOfWork.CurriculumBands.GetAll();
+            var bands = await unitOfWork.GetRepository<ICurriculumBandRepository>().GetAll();
 
             return bands.Select(b => new CurriculumBandModel(b)).ToArray();
         }
@@ -32,7 +33,8 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var bands = await unitOfWork.CurriculumBands.GetCurriculumBandsByYearGroup(yearGroupId);
+            var bands = await unitOfWork.GetRepository<ICurriculumBandRepository>()
+                .GetCurriculumBandsByYearGroup(yearGroupId);
 
             return bands.Select(b => new CurriculumBandModel(b)).ToArray();
         }
@@ -41,7 +43,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var band = await unitOfWork.CurriculumBands.GetById(bandId);
+            var band = await unitOfWork.GetRepository<ICurriculumBandRepository>().GetById(bandId);
 
             return new CurriculumBandModel(band);
         }
@@ -60,7 +62,7 @@ namespace MyPortal.Logic.Services
                 StudentGroup = StudentGroupHelper.CreateStudentGroupFromModel(model)
             };
 
-            unitOfWork.CurriculumBands.Create(band);
+            unitOfWork.GetRepository<ICurriculumBandRepository>().Create(band);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -71,7 +73,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var bandInDb = await unitOfWork.CurriculumBands.GetById(bandId);
+            var bandInDb = await unitOfWork.GetRepository<ICurriculumBandRepository>().GetById(bandId);
 
             if (bandInDb == null)
             {
@@ -83,8 +85,8 @@ namespace MyPortal.Logic.Services
 
             StudentGroupHelper.UpdateStudentGroupFromModel(bandInDb.StudentGroup, model);
 
-            await unitOfWork.StudentGroups.Update(bandInDb.StudentGroup);
-            await unitOfWork.CurriculumBands.Update(bandInDb);
+            await unitOfWork.GetRepository<IStudentGroupRepository>().Update(bandInDb.StudentGroup);
+            await unitOfWork.GetRepository<ICurriculumBandRepository>().Update(bandInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -93,7 +95,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.CurriculumBands.Delete(bandId);
+            await unitOfWork.GetRepository<ICurriculumBandRepository>().Delete(bandId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -102,7 +104,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var blocks = await unitOfWork.CurriculumBlocks.GetAll();
+            var blocks = await unitOfWork.GetRepository<ICurriculumBlockRepository>().GetAll();
 
             return blocks.Select(b => new CurriculumBlockModel(b));
         }

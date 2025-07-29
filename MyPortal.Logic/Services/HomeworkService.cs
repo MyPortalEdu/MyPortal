@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Search;
 using MyPortal.Logic.Exceptions;
@@ -43,7 +44,7 @@ public sealed class HomeworkService : BaseService, IHomeworkService
 
         foreach (var studentId in model.StudentIds)
         {
-            var student = await unitOfWork.Students.GetById(studentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
 
             if (student == null)
             {
@@ -67,7 +68,7 @@ public sealed class HomeworkService : BaseService, IHomeworkService
             homeworkItem.Submissions.Add(submission);
         }
 
-        unitOfWork.HomeworkItems.Create(homeworkItem);
+        unitOfWork.GetRepository<IHomeworkItemRepository>().Create(homeworkItem);
         await unitOfWork.SaveChangesAsync();
     }
 
@@ -77,14 +78,14 @@ public sealed class HomeworkService : BaseService, IHomeworkService
 
         await using var unitOfWork = await User.GetConnection();
 
-        var homework = await unitOfWork.HomeworkItems.GetById(homeworkId);
+        var homework = await unitOfWork.GetRepository<IHomeworkItemRepository>().GetById(homeworkId);
 
         homework.Title = model.Title;
         homework.Description = model.Description;
         homework.SubmitOnline = model.SubmitOnline;
         homework.MaxPoints = model.MaxPoints;
 
-        await unitOfWork.HomeworkItems.Update(homework);
+        await unitOfWork.GetRepository<IHomeworkItemRepository>().Update(homework);
 
         await unitOfWork.SaveChangesAsync();
     }
@@ -93,7 +94,7 @@ public sealed class HomeworkService : BaseService, IHomeworkService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        await unitOfWork.HomeworkItems.Delete(homeworkId);
+        await unitOfWork.GetRepository<IHomeworkItemRepository>().Delete(homeworkId);
 
         await unitOfWork.SaveChangesAsync();
     }
@@ -102,7 +103,8 @@ public sealed class HomeworkService : BaseService, IHomeworkService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var submissions = await unitOfWork.HomeworkSubmissions.GetHomeworkSubmissionsByStudent(studentId);
+        var submissions = await unitOfWork.GetRepository<IHomeworkSubmissionRepository>()
+            .GetHomeworkSubmissionsByStudent(studentId);
 
         return submissions.Select(s => new HomeworkSubmissionModel(s));
     }
@@ -111,7 +113,8 @@ public sealed class HomeworkService : BaseService, IHomeworkService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var submissions = await unitOfWork.HomeworkSubmissions.GetHomeworkSubmissionsByStudentGroup(studentGroupId);
+        var submissions = await unitOfWork.GetRepository<IHomeworkSubmissionRepository>()
+            .GetHomeworkSubmissionsByStudentGroup(studentGroupId);
 
         return submissions.Select(s => new HomeworkSubmissionModel(s));
     }
@@ -121,7 +124,8 @@ public sealed class HomeworkService : BaseService, IHomeworkService
         await using var unitOfWork = await User.GetConnection();
 
         var homeworkItems =
-            (await unitOfWork.HomeworkItems.GetHomework(searchOptions)).Select(hi => new HomeworkItemModel(hi));
+            (await unitOfWork.GetRepository<IHomeworkItemRepository>().GetHomework(searchOptions)).Select(hi =>
+                new HomeworkItemModel(hi));
 
         return homeworkItems;
     }
@@ -132,8 +136,8 @@ public sealed class HomeworkService : BaseService, IHomeworkService
 
         await using var unitOfWork = await User.GetConnection();
 
-        var homework = await unitOfWork.HomeworkItems.GetById(model.HomeworkId);
-        var student = await unitOfWork.Students.GetById(model.StudentId);
+        var homework = await unitOfWork.GetRepository<IHomeworkItemRepository>().GetById(model.HomeworkId);
+        var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(model.StudentId);
 
         if (homework == null)
         {
@@ -164,7 +168,7 @@ public sealed class HomeworkService : BaseService, IHomeworkService
             }
         };
 
-        unitOfWork.HomeworkSubmissions.Create(homeworkSubmission);
+        unitOfWork.GetRepository<IHomeworkSubmissionRepository>().Create(homeworkSubmission);
 
         await unitOfWork.SaveChangesAsync();
     }
@@ -177,7 +181,8 @@ public sealed class HomeworkService : BaseService, IHomeworkService
 
         await using var unitOfWork = await User.GetConnection();
 
-        var homeworkSubmission = await unitOfWork.HomeworkSubmissions.GetById(homeworkSubmissionId);
+        var homeworkSubmission =
+            await unitOfWork.GetRepository<IHomeworkSubmissionRepository>().GetById(homeworkSubmissionId);
 
         if (homeworkSubmission == null)
         {
@@ -194,7 +199,7 @@ public sealed class HomeworkService : BaseService, IHomeworkService
             homeworkSubmission.Task.CompletedDate = DateTime.Now;
         }
 
-        await unitOfWork.HomeworkSubmissions.Update(homeworkSubmission);
+        await unitOfWork.GetRepository<IHomeworkSubmissionRepository>().Update(homeworkSubmission);
 
         await unitOfWork.SaveChangesAsync();
     }
@@ -203,7 +208,7 @@ public sealed class HomeworkService : BaseService, IHomeworkService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        await unitOfWork.HomeworkSubmissions.Delete(homeworkSubmissionId);
+        await unitOfWork.GetRepository<IHomeworkSubmissionRepository>().Delete(homeworkSubmissionId);
 
         await unitOfWork.SaveChangesAsync();
     }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MyPortal.Database.Constants;
 using MyPortal.Database.Enums;
 using MyPortal.Database.Exceptions;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.QueryResults.Curriculum;
 using MyPortal.Logic.Enums;
@@ -30,7 +31,7 @@ namespace MyPortal.Logic.Services
         private async Task<MultiAccessModel> GetEventPermissions(Guid eventId)
         {
             await using var unitOfWork = await User.GetConnection();
-            
+
             var response = new MultiAccessModel();
 
             var userId = User.GetUserId();
@@ -58,7 +59,7 @@ namespace MyPortal.Logic.Services
             }
 
             var user = await UserService.GetCurrentUser();
-            
+
             if (user.PersonId.HasValue)
             {
                 var attendee = await GetEventAttendee(eventId, user.PersonId.Value);
@@ -87,7 +88,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var eventTypes = await unitOfWork.DiaryEventTypes.GetAll(includeReserved);
+            var eventTypes = await unitOfWork.GetRepository<IDiaryEventTypeRepository>().GetAll(includeReserved);
 
             return eventTypes.Select(t => new DiaryEventTypeModel(t)).ToList();
         }
@@ -96,22 +97,23 @@ namespace MyPortal.Logic.Services
             DateTime dateTo)
         {
             await VerifyAccessToPerson(personId);
-            
+
             var calendarEvents = new List<CalendarEventModel>();
 
             await using var unitOfWork = await User.GetConnection();
 
             // Get event type data so events can be coloured correctly
-            var eventTypes = (await unitOfWork.DiaryEventTypes.GetAll(true)).ToList();
+            var eventTypes = (await unitOfWork.GetRepository<IDiaryEventTypeRepository>().GetAll(true)).ToList();
 
             var person = await PersonService.GetPersonWithTypesById(personId);
 
-            var publicEvents = (await unitOfWork.DiaryEvents.GetPublicEvents(dateFrom, dateTo))
+            var publicEvents =
+                (await unitOfWork.GetRepository<IDiaryEventRepository>().GetPublicEvents(dateFrom, dateTo))
                 .Select(e => new DiaryEventModel(e)).ToList();
 
             // Get all generic events for person
             var events =
-                (await unitOfWork.DiaryEvents.GetByPerson(dateFrom, dateTo, personId))
+                (await unitOfWork.GetRepository<IDiaryEventRepository>().GetByPerson(dateFrom, dateTo, personId))
                 .Select(e => new DiaryEventModel(e)).ToList();
 
             foreach (var diaryEvent in events.Union(publicEvents))
@@ -122,7 +124,7 @@ namespace MyPortal.Logic.Services
             // If person is student or staff, get lesson events
             if (person.PersonTypes.StudentId.HasValue || person.PersonTypes.StaffId.HasValue)
             {
-                SessionPeriodDetailModel[] sessions = Array.Empty<SessionPeriodDetailModel>();
+                SessionPeriodDetailModel[] sessions = [];
 
                 var coverEventType = eventTypes.FirstOrDefault(t => t.Id == EventTypes.Cover);
 
@@ -141,14 +143,16 @@ namespace MyPortal.Logic.Services
                 if (person.PersonTypes.StudentId.HasValue)
                 {
                     sessions =
-                        (await unitOfWork.SessionPeriods.GetPeriodDetailsByStudent(person.PersonTypes.StudentId.Value,
+                        (await unitOfWork.GetRepository<ISessionPeriodRepository>().GetPeriodDetailsByStudent(
+                            person.PersonTypes.StudentId.Value,
                             dateFrom, dateTo)).ToArray();
                 }
                 else if (person.PersonTypes.StaffId.HasValue)
                 {
-                    sessions = (await unitOfWork.SessionPeriods.GetPeriodDetailsByStaffMember(
-                        person.PersonTypes.StaffId.Value, dateFrom,
-                        dateTo)).ToArray();
+                    sessions = (await unitOfWork.GetRepository<ISessionPeriodRepository>()
+                        .GetPeriodDetailsByStaffMember(
+                            person.PersonTypes.StaffId.Value, dateFrom,
+                            dateTo)).ToArray();
                 }
 
                 var sessionData = SessionHelper.GetSessionData(sessions);
@@ -164,7 +168,8 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var diaryEvent = new DiaryEventModel(await unitOfWork.DiaryEvents.GetById(eventId));
+            var diaryEvent =
+                new DiaryEventModel(await unitOfWork.GetRepository<IDiaryEventRepository>().GetById(eventId));
 
             return diaryEvent;
         }
@@ -174,7 +179,7 @@ namespace MyPortal.Logic.Services
             await using var unitOfWork = await User.GetConnection();
 
             var attendees =
-                (await unitOfWork.DiaryEventAttendees.GetByEvent(eventId)).Select(a =>
+                (await unitOfWork.GetRepository<IDiaryEventAttendeeRepository>().GetByEvent(eventId)).Select(a =>
                     new DiaryEventAttendeeModel(a));
 
             return attendees;
@@ -184,7 +189,8 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var attendee = await unitOfWork.DiaryEventAttendees.GetAttendee(eventId, personId);
+            var attendee = await unitOfWork.GetRepository<IDiaryEventAttendeeRepository>()
+                .GetAttendee(eventId, personId);
 
             return new DiaryEventAttendeeModel(attendee);
         }
@@ -207,7 +213,7 @@ namespace MyPortal.Logic.Services
 
                 var eventTypes = (await GetEventTypes()).ToArray();
 
-                var user = await unitOfWork.Users.GetById(userId.Value);
+                var user = await unitOfWork.GetRepository<IUserRepository>().GetById(userId.Value);
 
                 if (user == null)
                 {
@@ -259,7 +265,7 @@ namespace MyPortal.Logic.Services
                     });
                 }
 
-                unitOfWork.DiaryEvents.Create(diaryEvent);
+                unitOfWork.GetRepository<IDiaryEventRepository>().Create(diaryEvent);
 
                 await unitOfWork.SaveChangesAsync();
             }
@@ -279,7 +285,7 @@ namespace MyPortal.Logic.Services
 
             var eventTypes = (await GetEventTypes()).ToArray();
 
-            var eventInDb = await unitOfWork.DiaryEvents.GetById(eventId);
+            var eventInDb = await unitOfWork.GetRepository<IDiaryEventRepository>().GetById(eventId);
 
             if (eventInDb.EventType.System)
             {
@@ -303,7 +309,7 @@ namespace MyPortal.Logic.Services
             eventInDb.Public = model.IsPublic;
             eventInDb.AllDay = model.IsAllDay;
 
-            await unitOfWork.DiaryEvents.Update(eventInDb);
+            await unitOfWork.GetRepository<IDiaryEventRepository>().Update(eventInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -311,10 +317,10 @@ namespace MyPortal.Logic.Services
         public async Task DeleteEvent(Guid eventId)
         {
             await VerifyEditAccessForEvent(eventId);
-            
+
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.DiaryEvents.Delete(eventId);
+            await unitOfWork.GetRepository<IDiaryEventRepository>().Delete(eventId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -322,10 +328,11 @@ namespace MyPortal.Logic.Services
         public async Task CreateOrUpdateEventAttendees(Guid eventId, EventAttendeesRequestModel model)
         {
             await VerifyEditAccessForEvent(eventId);
-            
+
             await using var unitOfWork = await User.GetConnection();
 
-            var attendees = (await unitOfWork.DiaryEventAttendees.GetByEvent(eventId)).ToArray();
+            var attendees = (await unitOfWork.GetRepository<IDiaryEventAttendeeRepository>().GetByEvent(eventId))
+                .ToArray();
 
             foreach (var attendee in model.Attendees)
             {
@@ -340,7 +347,7 @@ namespace MyPortal.Logic.Services
                     existingAttendee.Attended = attendee.Attended;
                     existingAttendee.ResponseId = attendee.ResponseId;
 
-                    await unitOfWork.DiaryEventAttendees.Update(existingAttendee);
+                    await unitOfWork.GetRepository<IDiaryEventAttendeeRepository>().Update(existingAttendee);
                 }
                 else
                 {
@@ -355,7 +362,7 @@ namespace MyPortal.Logic.Services
                         Attended = attendee.Attended
                     };
 
-                    unitOfWork.DiaryEventAttendees.Create(newAttendee);
+                    unitOfWork.GetRepository<IDiaryEventAttendeeRepository>().Create(newAttendee);
                 }
             }
 
@@ -365,14 +372,14 @@ namespace MyPortal.Logic.Services
         public async Task DeleteEventAttendee(Guid eventId, Guid personId)
         {
             await VerifyEditAccessForEvent(eventId);
-            
+
             await using var unitOfWork = await User.GetConnection();
 
-            var attendees = await unitOfWork.DiaryEventAttendees.GetByEvent(eventId);
+            var attendees = await unitOfWork.GetRepository<IDiaryEventAttendeeRepository>().GetByEvent(eventId);
 
             foreach (var attendee in attendees.Where(a => a.PersonId == personId))
             {
-                await unitOfWork.DiaryEventAttendees.Delete(attendee.Id);
+                await unitOfWork.GetRepository<IDiaryEventAttendeeRepository>().Delete(attendee.Id);
             }
 
             await unitOfWork.SaveChangesAsync();

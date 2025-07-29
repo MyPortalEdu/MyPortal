@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MyPortal.Database.Constants;
 using MyPortal.Database.Enums;
 using MyPortal.Database.Exceptions;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.QueryResults.Assessment;
 using MyPortal.Logic.Exceptions;
@@ -29,22 +30,23 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     private async Task<MultiAccessModel> GetMarksheetAccess(MarksheetDetailModel marksheet)
     {
         var accessModel = new MultiAccessModel();
-        
+
         if (await User.HasPermission(UserService, PermissionValue.AssessmentUpdateAllMarksheets))
         {
             accessModel.CanEdit = true;
             accessModel.CanView = true;
             return accessModel;
         }
-        
+
         await using var unitOfWork = await User.GetConnection();
-        
+
         var user = await UserService.GetCurrentUser();
 
         if (user.PersonId.HasValue)
         {
-            var staffMember = await unitOfWork.StaffMembers.GetByPersonId(user.PersonId.Value);
-            
+            var staffMember =
+                await unitOfWork.GetRepository<IStaffMemberRepository>().GetByPersonId(user.PersonId.Value);
+
             if (staffMember != null)
             {
                 if (marksheet.OwnerId.HasValue && marksheet.OwnerId.Value == staffMember.Id)
@@ -69,11 +71,12 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var student = await unitOfWork.Students.GetById(studentId);
+        var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
 
         await VerifyAccessToPerson(student.PersonId);
 
-        var results = await unitOfWork.Results.GetPreviousResults(studentId, aspectId, dateTo);
+        var results = await unitOfWork.GetRepository<IResultRepository>()
+            .GetPreviousResults(studentId, aspectId, dateTo);
 
         return results.Select(r => new ResultModel(r)).ToList();
     }
@@ -81,7 +84,7 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     public async Task<ResultModel> GetResult(Guid resultId)
     {
         await using var unitOfWork = await User.GetConnection();
-        var result = await unitOfWork.Results.GetById(resultId);
+        var result = await unitOfWork.GetRepository<IResultRepository>().GetById(resultId);
 
         if (result == null)
         {
@@ -94,7 +97,7 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     public async Task<ResultModel> GetResult(Guid studentId, Guid aspectId, Guid resultSetId)
     {
         await using var unitOfWork = await User.GetConnection();
-        var result = await unitOfWork.Results.GetResult(studentId, aspectId, resultSetId);
+        var result = await unitOfWork.GetRepository<IResultRepository>().GetResult(studentId, aspectId, resultSetId);
 
         if (result == null)
         {
@@ -107,9 +110,9 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     public async Task<IEnumerable<ResultModel>> GetPreviousResults(Guid resultId)
     {
         await using var unitOfWork = await User.GetConnection();
-        var result = await unitOfWork.Results.GetById(resultId);
+        var result = await unitOfWork.GetRepository<IResultRepository>().GetById(resultId);
 
-        var student = await unitOfWork.Students.GetById(result.StudentId);
+        var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(result.StudentId);
 
         await VerifyAccessToPerson(student.PersonId);
 
@@ -124,13 +127,13 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     public async Task<MarksheetEntryDataModel> GetMarksheet(Guid marksheetId)
     {
         await using var unitOfWork = await User.GetConnection();
-        var metadata = await unitOfWork.Marksheets.GetMarksheetDetails(marksheetId);
+        var metadata = await unitOfWork.GetRepository<IMarksheetRepository>().GetMarksheetDetails(marksheetId);
 
         if (metadata == null)
         {
             throw new NotFoundException("Marksheet not found.");
         }
-        
+
         var accessModel = await GetMarksheetAccess(metadata);
 
         if (!accessModel.CanView)
@@ -154,9 +157,11 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
 
         marksheet.Completed = metadata.Completed;
 
-        var marksheetColumns = (await unitOfWork.MarksheetColumns.GetByMarksheet(marksheetId))
+        var marksheetColumns =
+            (await unitOfWork.GetRepository<IMarksheetColumnRepository>().GetByMarksheet(marksheetId))
             .Select(c => new MarksheetColumnModel(c)).ToList();
-        var resultData = (await unitOfWork.Results.GetResultDetailsByMarksheet(marksheetId)).ToList();
+        var resultData = (await unitOfWork.GetRepository<IResultRepository>().GetResultDetailsByMarksheet(marksheetId))
+            .ToList();
 
         await PopulateMarksheetColumns(marksheet, marksheetColumns);
         marksheet.PopulateResults(resultData);
@@ -175,7 +180,8 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
         {
             if (columnModel.Aspect.GradeSetId.HasValue && !gradeSets.ContainsKey(columnModel.Aspect.GradeSetId.Value))
             {
-                var grades = (await unitOfWork.Grades.GetByGradeSet(columnModel.Aspect.GradeSetId.Value))
+                var grades = (await unitOfWork.GetRepository<IGradeRepository>()
+                        .GetByGradeSet(columnModel.Aspect.GradeSetId.Value))
                     .Select(g => new GradeModel(g)).ToArray();
 
                 if (grades.Any())
@@ -235,7 +241,7 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
 
         await using var unitOfWork = await User.GetConnection();
 
-        unitOfWork.Aspects.Create(aspect);
+        unitOfWork.GetRepository<IAspectRepository>().Create(aspect);
 
         await unitOfWork.SaveChangesAsync();
 
@@ -248,7 +254,7 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
 
         await using var unitOfWork = await User.GetConnection();
 
-        var aspect = await unitOfWork.Aspects.GetById(aspectId);
+        var aspect = await unitOfWork.GetRepository<IAspectRepository>().GetById(aspectId);
 
         if (aspect == null)
         {
@@ -268,14 +274,14 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var aspect = await unitOfWork.Aspects.GetById(aspectId);
+        var aspect = await unitOfWork.GetRepository<IAspectRepository>().GetById(aspectId);
 
         if (aspect == null)
         {
             throw new NotFoundException("Aspect not found.");
         }
 
-        await unitOfWork.Aspects.Delete(aspectId);
+        await unitOfWork.GetRepository<IAspectRepository>().Delete(aspectId);
 
         await unitOfWork.SaveChangesAsync();
     }
@@ -296,7 +302,7 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
 
             if (aspect == null)
             {
-                aspect = await unitOfWork.Aspects.GetById(model.AspectId);
+                aspect = await unitOfWork.GetRepository<IAspectRepository>().GetById(model.AspectId);
 
                 if (aspect == null)
                 {
@@ -310,7 +316,7 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
 
             if (resultSet == null)
             {
-                resultSet = await unitOfWork.ResultSets.GetById(model.ResultSetId);
+                resultSet = await unitOfWork.GetRepository<IResultSetRepository>().GetById(model.ResultSetId);
 
                 if (resultSet == null)
                 {
@@ -326,7 +332,8 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
             }
 
             Result result =
-                await unitOfWork.Results.GetResult(model.StudentId, model.AspectId, model.ResultSetId);
+                await unitOfWork.GetRepository<IResultRepository>()
+                    .GetResult(model.StudentId, model.AspectId, model.ResultSetId);
 
             bool createNewResult = result == null;
 
@@ -367,7 +374,7 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
 
                 if (grade == null)
                 {
-                    grade = await unitOfWork.Grades.GetById(model.GradeId.Value);
+                    grade = await unitOfWork.GetRepository<IGradeRepository>().GetById(model.GradeId.Value);
 
                     if (grade == null)
                     {
@@ -404,11 +411,11 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
 
             if (createNewResult)
             {
-                unitOfWork.Results.Create(result);
+                unitOfWork.GetRepository<IResultRepository>().Create(result);
             }
             else
             {
-                await unitOfWork.Results.Update(result);
+                await unitOfWork.GetRepository<IResultRepository>().Update(result);
             }
         }
 
@@ -419,14 +426,14 @@ public sealed class AssessmentService : BaseServiceWithAccessControl, IAssessmen
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var result = await unitOfWork.Results.GetById(resultId);
+        var result = await unitOfWork.GetRepository<IResultRepository>().GetById(resultId);
 
         if (result == null)
         {
             throw new NotFoundException("Result not found.");
         }
 
-        await unitOfWork.Results.Delete(resultId);
+        await unitOfWork.GetRepository<IResultRepository>().Delete(resultId);
 
         await unitOfWork.SaveChangesAsync();
     }

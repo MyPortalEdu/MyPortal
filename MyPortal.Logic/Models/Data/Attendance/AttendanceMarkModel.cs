@@ -2,10 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Students;
+using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Attendance
 {
-    public class AttendanceMarkModel
+    public class AttendanceMarkModel : EntityModel
     {
         public AttendanceMarkModel(AttendanceMark model)
         {

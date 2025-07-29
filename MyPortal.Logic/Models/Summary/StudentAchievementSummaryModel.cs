@@ -14,7 +14,7 @@ namespace MyPortal.Logic.Models.Summary
         public string Comments { get; set; }
         public int Points { get; set; }
 
-        private StudentAchievementSummaryModel(StudentAchievementModel model)
+        public StudentAchievementSummaryModel(StudentAchievementModel model)
         {
             if (model.Id.HasValue)
             {
