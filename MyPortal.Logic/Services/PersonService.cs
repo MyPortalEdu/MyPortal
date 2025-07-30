@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Search;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Helpers;
@@ -38,7 +38,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var person = await unitOfWork.People.GetById(personId);
+            var person = await unitOfWork.GetRepository<IPersonRepository>().GetById(personId);
 
             return new PersonModel(person);
         }
@@ -59,7 +59,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var people = await unitOfWork.People.GetAll(searchModel);
+            var people = await unitOfWork.GetRepository<IPersonRepository>().GetAll(searchModel);
 
             return people.Select(p => new PersonModel(p)).ToList();
         }
@@ -68,7 +68,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var results = await unitOfWork.People.GetAllWithTypes(searchModel);
+            var results = await unitOfWork.GetRepository<IPersonRepository>().GetAllWithTypes(searchModel);
 
             return results.Select(r => new PersonSearchResultModel(r)).ToList();
         }
@@ -77,7 +77,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var result = await unitOfWork.People.GetPersonWithTypesById(personId);
+            var result = await unitOfWork.GetRepository<IPersonRepository>().GetPersonWithTypesById(personId);
 
             if (result == null)
             {
@@ -91,7 +91,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var result = await unitOfWork.People.GetPersonWithTypesByUserId(userId);
+            var result = await unitOfWork.GetRepository<IPersonRepository>().GetPersonWithTypesByUserId(userId);
 
             return new PersonSearchResultModel(result);
         }
@@ -100,7 +100,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var result = await unitOfWork.People.GetPersonWithTypesByDirectoryId(directoryId);
+            var result = await unitOfWork.GetRepository<IPersonRepository>().GetPersonWithTypesByDirectoryId(directoryId);
 
             return new PersonSearchResultModel(result);
         }
@@ -109,7 +109,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var person = await unitOfWork.People.GetByUserId(userId);
+            var person = await unitOfWork.GetRepository<IPersonRepository>().GetByUserId(userId);
 
             if (person == null)
             {

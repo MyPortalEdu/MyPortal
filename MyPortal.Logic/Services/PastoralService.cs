@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Logic.Interfaces;
 using MyPortal.Logic.Interfaces.Services;
 using MyPortal.Logic.Models.Data.Curriculum;
@@ -17,7 +18,7 @@ public sealed class PastoralService : BaseService, IPastoralService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var regGroups = await unitOfWork.RegGroups.GetAll();
+        var regGroups = await unitOfWork.GetRepository<IRegGroupRepository>().GetAll();
 
         var result = regGroups.Select(r => new RegGroupModel(r)).ToList();
 
@@ -28,7 +29,7 @@ public sealed class PastoralService : BaseService, IPastoralService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var yearGroups = await unitOfWork.YearGroups.GetAll();
+        var yearGroups = await unitOfWork.GetRepository<IYearGroupRepository>().GetAll();
 
         var models = yearGroups.Select(y => new YearGroupModel(y)).ToList();
 
@@ -39,7 +40,7 @@ public sealed class PastoralService : BaseService, IPastoralService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        var houses = await unitOfWork.Houses.GetAll();
+        var houses = await unitOfWork.GetRepository<IHouseRepository>().GetAll();
 
         var houseModels = houses.Select(h => new HouseModel(h)).ToList();
 

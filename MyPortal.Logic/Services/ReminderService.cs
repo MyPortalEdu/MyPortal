@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
@@ -22,7 +23,7 @@ public sealed class ReminderService : BaseService, IReminderService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        TaskReminder reminder = await unitOfWork.TaskReminders.GetById(reminderId);
+        TaskReminder reminder = await unitOfWork.GetRepository<ITaskReminderRepository>().GetById(reminderId);
 
         if (reminder == null)
         {
@@ -46,7 +47,8 @@ public sealed class ReminderService : BaseService, IReminderService
 
         await using var unitOfWork = await User.GetConnection();
 
-        IEnumerable<TaskReminder> taskReminders = await unitOfWork.TaskReminders.GetRemindersByUser(userId);
+        IEnumerable<TaskReminder> taskReminders =
+            await unitOfWork.GetRepository<ITaskReminderRepository>().GetRemindersByUser(userId);
 
         foreach (var taskReminder in taskReminders)
         {
@@ -71,13 +73,13 @@ public sealed class ReminderService : BaseService, IReminderService
     {
         await using var unitOfWork = await User.GetConnection();
 
-        TaskReminder reminder = await unitOfWork.TaskReminders.GetById(reminderId);
+        TaskReminder reminder = await unitOfWork.GetRepository<ITaskReminderRepository>().GetById(reminderId);
 
         if (reminder == null)
         {
             throw new NotFoundException("Task reminder not found.");
         }
 
-        await unitOfWork.TaskReminders.Delete(reminderId);
+        await unitOfWork.GetRepository<ITaskReminderRepository>().Delete(reminderId);
     }
 }

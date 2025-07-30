@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
 using MyPortal.Database.Enums;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Filters;
 using MyPortal.Database.Models.Search;
@@ -54,7 +55,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var localSchoolName = await unitOfWork.Schools.GetLocalSchoolName();
+            var localSchoolName = await unitOfWork.GetRepository<ISchoolRepository>().GetLocalSchoolName();
 
             return localSchoolName;
         }
@@ -74,7 +75,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var bulletins = await unitOfWork.Bulletins.GetBulletins(searchOptions);
+            var bulletins = await unitOfWork.GetRepository<IBulletinRepository>().GetBulletins(searchOptions);
 
             return bulletins.Select(b => new BulletinModel(b));
         }
@@ -85,7 +86,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var bulletins = await unitOfWork.Bulletins.GetBulletinDetails(searchOptions);
+            var bulletins = await unitOfWork.GetRepository<IBulletinRepository>().GetBulletinDetails(searchOptions);
 
             return bulletins.Select(b => new BulletinSummaryModel(b));
         }
@@ -97,7 +98,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var bulletins = await unitOfWork.Bulletins.GetBulletinDetails(searchOptions, filter);
+            var bulletins = await unitOfWork.GetRepository<IBulletinRepository>().GetBulletinDetails(searchOptions, filter);
 
             var response = new BulletinPageResponse(bulletins);
 
@@ -131,7 +132,7 @@ namespace MyPortal.Logic.Services
                     Approved = false
                 };
 
-                unitOfWork.Bulletins.Create(bulletin);
+                unitOfWork.GetRepository<IBulletinRepository>().Create(bulletin);
 
                 await unitOfWork.SaveChangesAsync();
 
@@ -147,7 +148,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var bulletin = await unitOfWork.Bulletins.GetById(bulletinId);
+            var bulletin = await unitOfWork.GetRepository<IBulletinRepository>().GetById(bulletinId);
 
             if (bulletin == null)
             {
@@ -160,7 +161,7 @@ namespace MyPortal.Logic.Services
             bulletin.Private = model.Private;
             bulletin.Directory.Private = model.Private;
 
-            await unitOfWork.Bulletins.Update(bulletin);
+            await unitOfWork.GetRepository<IBulletinRepository>().Update(bulletin);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -169,21 +170,21 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var bulletin = await unitOfWork.Bulletins.GetById(bulletinId);
+            var bulletin = await unitOfWork.GetRepository<IBulletinRepository>().GetById(bulletinId);
 
             if (bulletin == null)
             {
                 throw new NotFoundException("Bulletin not found.");
             }
 
-            await unitOfWork.Bulletins.Delete(bulletinId);
+            await unitOfWork.GetRepository<IBulletinRepository>().Delete(bulletinId);
         }
 
         public async Task SetBulletinApproved(ApproveBulletinRequestModel model)
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var bulletin = await unitOfWork.Bulletins.GetById(model.BulletinId);
+            var bulletin = await unitOfWork.GetRepository<IBulletinRepository>().GetById(model.BulletinId);
 
             if (bulletin == null)
             {

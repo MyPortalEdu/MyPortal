@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
 using MyPortal.Logic.Interfaces.Services;
@@ -26,7 +27,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var document = await unitOfWork.Documents.GetById(upload.DocumentId);
+            var document = await unitOfWork.GetRepository<IDocumentRepository>().GetById(upload.DocumentId);
 
             if (document == null)
             {
@@ -42,7 +43,7 @@ namespace MyPortal.Logic.Services
 
             document.Attachment = file;
 
-            await unitOfWork.Documents.Update(document);
+            await unitOfWork.GetRepository<IDocumentRepository>().Update(document);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -53,7 +54,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var file = await unitOfWork.Files.GetByDocumentId(documentId);
+            var file = await unitOfWork.GetRepository<IFileRepository>().GetByDocumentId(documentId);
 
             var stream = await _fileProvider.LoadFileAsStream(file.FileId);
 
@@ -66,7 +67,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var file = await unitOfWork.Files.GetByDocumentId(documentId);
+            var file = await unitOfWork.GetRepository<IFileRepository>().GetByDocumentId(documentId);
 
             if (file == null)
             {
@@ -75,7 +76,7 @@ namespace MyPortal.Logic.Services
 
             _fileProvider.DeleteFile(file.FileId);
 
-            await unitOfWork.Files.Delete(file.Id);
+            await unitOfWork.GetRepository<IFileRepository>().Delete(file.Id);
 
             await unitOfWork.SaveChangesAsync();
         }

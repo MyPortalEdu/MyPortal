@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,40 +49,38 @@ namespace MyPortalWeb.Controllers.Api
         }
 
         [HttpPost]
-        [Route("{documentId}/file")]
+        [Route("{documentId}/upload-file")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public async Task<IActionResult> UploadFile([FromRoute] Guid documentId,
             [FromBody] FileUploadRequestModel requestModel)
         {
-            if (_fileService is LocalFileService localFileService)
+            if (_fileService is not LocalFileService localFileService)
             {
-                requestModel.DocumentId = documentId;
-
-                await localFileService.UploadFileToDocument(requestModel);
-
-                return Ok();
+                return Error(HttpStatusCode.NotImplemented, "Direct file upload is not supported in this configuration.");
             }
 
-            return BadRequest(
-                "MyPortal is currently configured to use a third party file provider. Please use LinkHostedFile endpoint instead.");
+            requestModel.DocumentId = documentId;
+
+            await localFileService.UploadFileToDocument(requestModel);
+
+            return Ok();
         }
 
         [HttpPost]
-        [Route("{documentId}/file")]
+        [Route("{documentId}/link-hosted-file")]
         [ProducesResponseType(200)]
         [ProducesResponseType(400)]
         public async Task<IActionResult> LinkHostedFile([FromBody] HostedFileRequestModel requestModel)
         {
-            if (_fileService is HostedFileService hostedFileService)
+            if (_fileService is not HostedFileService hostedFileService)
             {
-                await hostedFileService.AttachFileToDocument(requestModel.DocumentId, requestModel.FileId);
-
-                return Ok();
+                return Error(HttpStatusCode.NotImplemented, "Hosted file linking is not supported in this configuration.");
             }
 
-            return BadRequest(
-                "MyPortal is currently configured to host files locally. Please use UploadFile endpoint instead.");
+            await hostedFileService.AttachFileToDocument(requestModel.DocumentId, requestModel.FileId);
+
+            return Ok();
         }
 
         [HttpDelete]

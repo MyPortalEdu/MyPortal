@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Helpers;
@@ -20,7 +21,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var staffMember = await unitOfWork.StaffMembers.GetById(staffMemberId);
+            var staffMember = await unitOfWork.GetRepository<IStaffMemberRepository>().GetById(staffMemberId);
 
             if (staffMember == null)
             {
@@ -44,7 +45,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var staffMember = await unitOfWork.StaffMembers.GetById(staffMemberId);
+            var staffMember = await unitOfWork.GetRepository<IStaffMemberRepository>().GetById(staffMemberId);
 
             if (staffMember == null)
             {
@@ -58,7 +59,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var staffMember = await unitOfWork.StaffMembers.GetByPersonId(personId);
+            var staffMember = await unitOfWork.GetRepository<IStaffMemberRepository>().GetByPersonId(personId);
 
             if (staffMember == null && throwIfNotFound)
             {
@@ -72,7 +73,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var staffMember = await unitOfWork.StaffMembers.GetByUserId(userId);
+            var staffMember = await unitOfWork.GetRepository<IStaffMemberRepository>().GetByUserId(userId);
 
             if (staffMember == null && throwIfNotFound)
             {
@@ -102,7 +103,7 @@ namespace MyPortal.Logic.Services
                 Person = PersonHelper.CreatePersonFromModel(model)
             };
 
-            unitOfWork.StaffMembers.Create(staffMember);
+            unitOfWork.GetRepository<IStaffMemberRepository>().Create(staffMember);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -113,7 +114,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var staffMemberInDb = await unitOfWork.StaffMembers.GetById(staffMemberId);
+            var staffMemberInDb = await unitOfWork.GetRepository<IStaffMemberRepository>().GetById(staffMemberId);
 
             if (staffMemberInDb == null)
             {
@@ -132,8 +133,8 @@ namespace MyPortal.Logic.Services
 
             PersonHelper.UpdatePersonFromModel(staffMemberInDb.Person, model);
 
-            await unitOfWork.People.Update(staffMemberInDb.Person);
-            await unitOfWork.StaffMembers.Update(staffMemberInDb);
+            await unitOfWork.GetRepository<IPersonRepository>().Update(staffMemberInDb.Person);
+            await unitOfWork.GetRepository<IStaffMemberRepository>().Update(staffMemberInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -142,14 +143,14 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var staffMemberInDb = await unitOfWork.StaffMembers.GetById(staffMemberId);
+            var staffMemberInDb = await unitOfWork.GetRepository<IStaffMemberRepository>().GetById(staffMemberId);
 
             if (staffMemberInDb == null)
             {
                 throw new NotFoundException("Staff member not found.");
             }
 
-            await unitOfWork.StaffMembers.Delete(staffMemberId);
+            await unitOfWork.GetRepository<IStaffMemberRepository>().Delete(staffMemberId);
 
             await unitOfWork.SaveChangesAsync();
         }
