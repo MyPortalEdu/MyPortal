@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Attendance
 {
-    public class AttendanceCodeModel : BaseModelWithLoad
+    public class AttendanceCodeModel : EntityModel
     {
         public AttendanceCodeModel(AttendanceCode model) : base(model)
         {
@@ -39,18 +37,5 @@ namespace MyPortal.Logic.Models.Data.Attendance
         public bool Restricted { get; set; }
 
         public virtual AttendanceCodeTypeModel CodeType { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.AttendanceCodes.GetById(Id.Value);
-
-                if (model != null)
-                {
-                    LoadFromModel(model);
-                }
-            }
-        }
     }
 }

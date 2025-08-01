@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.StaffMembers
 {
-    public class StaffMemberModel : BaseModelWithLoad
+    public class StaffMemberModel : EntityModel
     {
         public StaffMemberModel(StaffMember model) : base(model)
         {
@@ -63,15 +61,5 @@ namespace MyPortal.Logic.Models.Data.StaffMembers
         public virtual PersonModel Person { get; set; }
 
         public virtual StaffMemberModel LineManager { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.StaffMembers.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

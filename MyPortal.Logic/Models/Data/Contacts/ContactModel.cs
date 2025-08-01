@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Contacts
 {
-    public class ContactModel : BaseModelWithLoad
+    public class ContactModel : EntityModel
     {
         public ContactModel(Contact model) : base(model)
         {
@@ -40,18 +38,5 @@ namespace MyPortal.Logic.Models.Data.Contacts
         [StringLength(128)] public string NiNumber { get; set; }
 
         public virtual PersonModel Person { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var contact = await unitOfWork.Contacts.GetById(Id.Value);
-
-                if (contact != null)
-                {
-                    LoadFromModel(contact);
-                }
-            }
-        }
     }
 }

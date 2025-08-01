@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Constants;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class HouseModel : BaseModelWithLoad
+    public class HouseModel : EntityModel
     {
         public HouseModel(House model) : base(model)
         {
@@ -33,15 +31,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public string ColourCode { get; set; }
 
         public virtual StudentGroupModel StudentGroup { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Houses.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

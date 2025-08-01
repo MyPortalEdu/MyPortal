@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Extensions;
@@ -42,7 +43,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var role = await unitOfWork.Roles.GetById(roleId);
+            var role = await unitOfWork.GetRepository<IRoleRepository>().GetById(roleId);
 
             var permArray = PermissionHelper.CreatePermissionArray();
 
@@ -53,7 +54,7 @@ namespace MyPortal.Logic.Services
 
             role.Permissions = permArray.ToBytes();
 
-            await unitOfWork.Roles.Update(role);
+            await unitOfWork.GetRepository<IRoleRepository>().Update(role);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -119,7 +120,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.UserRoles.DeleteAllByRole(roleId);
+            await unitOfWork.GetRepository<IUserRoleRepository>().DeleteAllByRole(roleId);
 
             await unitOfWork.SaveChangesAsync();
 

@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.School
 {
-    public class LocalAuthorityModel : BaseModel
+    public class LocalAuthorityModel : EntityModel
     {
         public LocalAuthorityModel(LocalAuthority model) : base(model)
         {

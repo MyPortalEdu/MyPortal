@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class HomeworkItemModel : BaseModelWithLoad
+    public class HomeworkItemModel : EntityModel
     {
         public HomeworkItemModel(HomeworkItem model) : base(model)
         {
@@ -36,15 +34,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public bool SubmitOnline { get; set; }
 
         public virtual DirectoryModel Directory { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.HomeworkItems.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class ClassModel : BaseModelWithLoad
+    public class ClassModel : EntityModel
     {
         public ClassModel(Class model) : base(model)
         {
@@ -49,18 +47,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public DirectoryModel Directory { get; set; }
         public CourseModel Course { get; set; }
         public CurriculumGroupModel Group { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var currClass = await unitOfWork.Classes.GetById(Id.Value);
-
-                if (currClass != null)
-                {
-                    LoadFromModel(currClass);
-                }
-            }
-        }
     }
 }

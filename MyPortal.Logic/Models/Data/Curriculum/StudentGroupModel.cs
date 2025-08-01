@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class StudentGroupModel : LookupItemModelWithLoad
+    public class StudentGroupModel : LookupItemModel
     {
         public StudentGroupModel(StudentGroup model) : base(model)
         {
@@ -48,15 +46,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
 
         public StudentGroupModel PromoteToGroup { get; set; }
         public StudentGroupSupervisorModel MainSupervisor { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.StudentGroups.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

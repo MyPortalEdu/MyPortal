@@ -21,7 +21,7 @@ namespace MyPortal.Database
         private readonly string _connectionString;
         private DbTransaction _transaction;
         private readonly Guid _userId;
-        private readonly Dictionary<Type, IRepository> _repositories = new Dictionary<Type, IRepository>();
+        private readonly Dictionary<Type, IRepository> _repositories = new();
 
         public static async Task<IUnitOfWork> Create(Guid userId, ApplicationDbContext context)
         {

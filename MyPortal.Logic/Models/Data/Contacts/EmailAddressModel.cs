@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Contacts
 {
-    public class EmailAddressModel : BaseModelWithLoad
+    public class EmailAddressModel : EntityModel
     {
         public EmailAddressModel(EmailAddress model) : base(model)
         {
@@ -52,14 +50,5 @@ namespace MyPortal.Logic.Models.Data.Contacts
 
         public virtual PersonModel Person { get; set; }
         public virtual EmailAddressTypeModel Type { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.EmailAddresses.GetById(Id.Value);
-                LoadFromModel(model);
-            }
-        }
     }
 }

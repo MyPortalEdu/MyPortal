@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Contacts
 {
-    public class CommunicationLogModel : BaseModelWithLoad
+    public class CommunicationLogModel : EntityModel
     {
         public CommunicationLogModel(CommunicationLog model) : base(model)
         {
@@ -44,18 +42,5 @@ namespace MyPortal.Logic.Models.Data.Contacts
 
         public CommunicationTypeModel Type { get; set; }
         public ContactModel Contact { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var commLog = await unitOfWork.CommunicationLogs.GetById(Id.Value);
-
-                if (commLog != null)
-                {
-                    LoadFromModel(commLog);
-                }
-            }
-        }
     }
 }

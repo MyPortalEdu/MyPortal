@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class StudyTopicModel : LookupItemModelWithLoad
+    public class StudyTopicModel : LookupItemModel
     {
         public StudyTopicModel(StudyTopic model) : base(model)
         {
@@ -30,15 +28,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         [Required] [StringLength(128)] public string Name { get; set; }
 
         public virtual CourseModel Course { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.StudyTopics.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

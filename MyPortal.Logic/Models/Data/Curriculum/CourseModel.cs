@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class CourseModel : LookupItemModelWithLoad
+    public class CourseModel : LookupItemModel
     {
         public CourseModel(Course model) : base(model)
         {
@@ -29,19 +27,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public string Name { get; set; }
 
         public virtual SubjectModel Subject { get; set; }
-
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var course = await unitOfWork.Courses.GetById(Id.Value);
-
-                if (course != null)
-                {
-                    LoadFromModel(course);
-                }
-            }
-        }
     }
 }

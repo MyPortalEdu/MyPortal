@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Logic.Enums;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Helpers;
@@ -25,14 +26,15 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var parentEvening = await unitOfWork.ParentEvenings.GetById(parentEveningId);
+            var parentEvening = await unitOfWork.GetRepository<IParentEveningRepository>().GetById(parentEveningId);
 
             if (parentEvening == null)
             {
                 throw new NotFoundException("Parent evening not found.");
             }
 
-            var pesm = await unitOfWork.ParentEveningStaffMembers.GetInstanceByStaffMember(parentEveningId,
+            var pesm = await unitOfWork.GetRepository<IParentEveningStaffMemberRepository>().GetInstanceByStaffMember(
+                parentEveningId,
                 staffMemberId);
 
             if (pesm == null)
@@ -41,11 +43,13 @@ namespace MyPortal.Logic.Services
             }
 
             var appointments =
-                (await unitOfWork.ParentEveningAppointments.GetAppointmentsByStaffMember(parentEveningId,
+                (await unitOfWork.GetRepository<IParentEveningAppointmentRepository>().GetAppointmentsByStaffMember(
+                    parentEveningId,
                     staffMemberId))?.ToArray();
 
             var breaks =
-                (await unitOfWork.ParentEveningBreaks.GetBreaksByStaffMember(parentEveningId, staffMemberId))?
+                (await unitOfWork.GetRepository<IParentEveningBreakRepository>()
+                    .GetBreaksByStaffMember(parentEveningId, staffMemberId))?
                 .ToArray();
 
             var from = pesm.AvailableFrom.HasValue ? pesm.AvailableFrom.Value : parentEvening.Event.StartTime;

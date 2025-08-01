@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Attendance;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Behaviour.ReportCards
 {
-    public class ReportCardEntryModel : BaseModelWithLoad
+    public class ReportCardEntryModel : EntityModel
     {
         public ReportCardEntryModel(ReportCardEntry model) : base(model)
         {
@@ -56,15 +54,5 @@ namespace MyPortal.Logic.Models.Data.Behaviour.ReportCards
         public virtual UserModel CreatedBy { get; set; }
         public virtual AttendanceWeekModel AttendanceWeek { get; set; }
         public virtual AttendancePeriodModel Period { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ReportCardEntries.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

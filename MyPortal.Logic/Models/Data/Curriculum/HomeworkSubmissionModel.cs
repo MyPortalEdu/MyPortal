@@ -1,15 +1,13 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Data.Students;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class HomeworkSubmissionModel : BaseModelWithLoad
+    public class HomeworkSubmissionModel : EntityModel
     {
         public HomeworkSubmissionModel(HomeworkSubmission model) : base(model)
         {
@@ -57,15 +55,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public virtual StudentModel Student { get; set; }
         public virtual TaskModel Task { get; set; }
         public virtual DocumentModel SubmittedWork { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.HomeworkSubmissions.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

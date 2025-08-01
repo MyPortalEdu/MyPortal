@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Helpers;
 using MyPortal.Logic.Interfaces;
@@ -22,7 +23,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var students = await unitOfWork.Students.GetByContact(contactId, true);
+            var students = await unitOfWork.GetRepository<IStudentRepository>().GetByContact(contactId, true);
 
             return students.Select(s => new StudentModel(s));
         }
@@ -43,7 +44,7 @@ namespace MyPortal.Logic.Services
                 Person = PersonHelper.CreatePersonFromModel(model)
             };
 
-            unitOfWork.Contacts.Create(contact);
+            unitOfWork.GetRepository<IContactRepository>().Create(contact);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -54,7 +55,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var contact = await unitOfWork.Contacts.GetById(contactId);
+            var contact = await unitOfWork.GetRepository<IContactRepository>().GetById(contactId);
 
             contact.JobTitle = model.JobTitle;
             contact.NiNumber = model.NiNumber;
@@ -63,8 +64,8 @@ namespace MyPortal.Logic.Services
 
             PersonHelper.UpdatePersonFromModel(contact.Person, model);
 
-            await unitOfWork.People.Update(contact.Person);
-            await unitOfWork.Contacts.Update(contact);
+            await unitOfWork.GetRepository<IPersonRepository>().Update(contact.Person);
+            await unitOfWork.GetRepository<IContactRepository>().Update(contact);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -73,7 +74,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.Contacts.Delete(contactId);
+            await unitOfWork.GetRepository<IContactRepository>().Delete(contactId);
         }
     }
 }

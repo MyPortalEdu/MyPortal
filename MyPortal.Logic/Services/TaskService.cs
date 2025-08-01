@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
 using MyPortal.Database.Enums;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Search;
 using MyPortal.Logic.Enums;
@@ -61,7 +62,7 @@ namespace MyPortal.Logic.Services
                     Completed = false
                 };
 
-                unitOfWork.Tasks.Create(taskToAdd);
+                unitOfWork.GetRepository<ITaskRepository>().Create(taskToAdd);
 
                 await unitOfWork.SaveChangesAsync();
             }
@@ -75,7 +76,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var taskTypes = await unitOfWork.TaskTypes.GetAll(personalOnly, activeOnly, false);
+            var taskTypes = await unitOfWork.GetRepository<ITaskTypeRepository>().GetAll(personalOnly, activeOnly, false);
 
             return taskTypes.Select(t => new TaskTypeModel(t));
         }
@@ -84,7 +85,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var task = await unitOfWork.Tasks.GetById(taskId);
+            var task = await unitOfWork.GetRepository<ITaskRepository>().GetById(taskId);
 
             if (task == null)
             {
@@ -96,7 +97,7 @@ namespace MyPortal.Logic.Services
                 return true;
             }
 
-            var person = await unitOfWork.People.GetByUserId(userId);
+            var person = await unitOfWork.GetRepository<IPersonRepository>().GetByUserId(userId);
 
             if (person != null && task.AssignedToId == person.Id)
             {
@@ -127,7 +128,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var task = await unitOfWork.Tasks.GetById(taskId);
+            var task = await unitOfWork.GetRepository<ITaskRepository>().GetById(taskId);
 
             if (task == null)
             {
@@ -141,7 +142,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var reminders = await unitOfWork.TaskReminders.GetRemindersByUser(userId);
+            var reminders = await unitOfWork.GetRepository<ITaskReminderRepository>().GetRemindersByUser(userId);
 
             var reminder = reminders.FirstOrDefault(r => r.TaskId == taskId);
 
@@ -157,7 +158,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var reminders = await unitOfWork.TaskReminders.GetRemindersByUser(model.UserId);
+            var reminders = await unitOfWork.GetRepository<ITaskReminderRepository>().GetRemindersByUser(model.UserId);
 
             var existingReminder = reminders.FirstOrDefault(r => r.TaskId == model.TaskId);
 
@@ -174,7 +175,7 @@ namespace MyPortal.Logic.Services
                 RemindTime = model.RemindTime
             };
 
-            unitOfWork.TaskReminders.Create(newReminder);
+            unitOfWork.GetRepository<ITaskReminderRepository>().Create(newReminder);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -183,7 +184,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var existingReminder = await unitOfWork.TaskReminders.GetById(reminderId);
+            var existingReminder = await unitOfWork.GetRepository<ITaskReminderRepository>().GetById(reminderId);
 
             if (existingReminder == null)
             {
@@ -192,7 +193,7 @@ namespace MyPortal.Logic.Services
 
             existingReminder.RemindTime = model.RemindTime;
 
-            await unitOfWork.TaskReminders.Update(existingReminder);
+            await unitOfWork.GetRepository<ITaskReminderRepository>().Update(existingReminder);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -201,7 +202,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.TaskReminders.Delete(reminderId);
+            await unitOfWork.GetRepository<ITaskReminderRepository>().Delete(reminderId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -214,7 +215,7 @@ namespace MyPortal.Logic.Services
             {
                 await using var unitOfWork = await User.GetConnection();
 
-                var taskInDb = await unitOfWork.Tasks.GetById(taskId);
+                var taskInDb = await unitOfWork.GetRepository<ITaskRepository>().GetById(taskId);
 
                 if (taskInDb == null)
                 {
@@ -231,7 +232,7 @@ namespace MyPortal.Logic.Services
                 taskInDb.DueDate = task.DueDate;
                 taskInDb.TypeId = task.TypeId;
 
-                await unitOfWork.Tasks.Update(taskInDb);
+                await unitOfWork.GetRepository<ITaskRepository>().Update(taskInDb);
 
                 await unitOfWork.SaveChangesAsync();
             }
@@ -247,7 +248,7 @@ namespace MyPortal.Logic.Services
             {
                 await using var unitOfWork = await User.GetConnection();
 
-                await unitOfWork.Tasks.Delete(taskId);
+                await unitOfWork.GetRepository<ITaskRepository>().Delete(taskId);
 
                 await unitOfWork.SaveChangesAsync();
             }
@@ -263,7 +264,7 @@ namespace MyPortal.Logic.Services
             {
                 await using var unitOfWork = await User.GetConnection();
 
-                var taskInDb = await unitOfWork.Tasks.GetById(taskId);
+                var taskInDb = await unitOfWork.GetRepository<ITaskRepository>().GetById(taskId);
 
                 if (taskInDb.System)
                 {
@@ -273,7 +274,7 @@ namespace MyPortal.Logic.Services
                 taskInDb.Completed = completed;
                 taskInDb.CompletedDate = DateTime.Now;
 
-                await unitOfWork.Tasks.Update(taskInDb);
+                await unitOfWork.GetRepository<ITaskRepository>().Update(taskInDb);
 
                 await unitOfWork.SaveChangesAsync();
             }
@@ -296,7 +297,7 @@ namespace MyPortal.Logic.Services
 
                 await using var unitOfWork = await User.GetConnection();
 
-                var tasks = await unitOfWork.Tasks.GetByAssignedTo(personId, searchOptions);
+                var tasks = await unitOfWork.GetRepository<ITaskRepository>().GetByAssignedTo(personId, searchOptions);
 
                 return tasks.Select(t => new TaskModel(t));
             }
@@ -323,17 +324,17 @@ namespace MyPortal.Logic.Services
 
                 if (person.PersonTypes.StaffId.HasValue)
                 {
-                    await GetPermissionsForTasksStaffUser(response, user, person);
+                    return await GetPermissionsForTasksStaffUser(response, user, person);
                 }
 
                 if (person.PersonTypes.StudentId.HasValue)
                 {
-                    await GetPermissionsForTasksStudentUser(response, user, person);
+                    return await GetPermissionsForTasksStudentUser(response, user, person);
                 }
 
                 if (person.PersonTypes.ContactId.HasValue)
                 {
-                    await GetPermissionsForTasksContactUser(response, user, person);
+                    return await GetPermissionsForTasksContactUser(response, user, person);
                 }
 
                 return response;

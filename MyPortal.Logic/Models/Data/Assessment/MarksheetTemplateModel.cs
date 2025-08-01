@@ -3,7 +3,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Assessment
 {
-    public class MarksheetTemplateModel : BaseModel
+    public class MarksheetTemplateModel : EntityModel
     {
         public MarksheetTemplateModel(MarksheetTemplate model) : base(model)
         {

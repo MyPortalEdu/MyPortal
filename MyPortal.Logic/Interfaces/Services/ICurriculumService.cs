@@ -14,5 +14,6 @@ namespace MyPortal.Logic.Interfaces.Services
         Task CreateCurriculumBand(CurriculumBandRequestModel model);
         Task UpdateCurriculumBand(Guid bandId, CurriculumBandRequestModel model);
         Task DeleteCurriculumBand(Guid bandId);
+        Task<IEnumerable<CurriculumBlockModel>> GetCurriculumBlocks();
     }
 }

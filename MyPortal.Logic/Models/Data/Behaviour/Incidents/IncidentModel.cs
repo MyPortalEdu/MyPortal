@@ -1,16 +1,14 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Curriculum;
 using MyPortal.Logic.Models.Data.School;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Behaviour.Incidents
 {
-    public class IncidentModel : BaseModelWithLoad
+    public class IncidentModel : EntityModel
     {
         public IncidentModel(Incident model) : base(model)
         {
@@ -70,15 +68,5 @@ namespace MyPortal.Logic.Models.Data.Behaviour.Incidents
         public virtual AcademicYearModel AcademicYear { get; set; }
 
         public virtual UserModel CreatedBy { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Incidents.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

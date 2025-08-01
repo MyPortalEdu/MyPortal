@@ -1,15 +1,12 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Attributes;
-using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Models.Data.Behaviour.Achievements;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Students;
 
-public class StudentAchievementModel : BaseModelWithLoad
+public class StudentAchievementModel : EntityModel
 {
     public StudentAchievementModel(StudentAchievement model) : base(model)
     {
@@ -51,19 +48,4 @@ public class StudentAchievementModel : BaseModelWithLoad
 
     [EagerLoad] public virtual AchievementModel Achievement { get; set; }
     public virtual AchievementOutcomeModel Outcome { get; set; }
-
-    protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-    {
-        if (Id.HasValue)
-        {
-            var model = await unitOfWork.StudentAchievements.GetById(Id.Value);
-
-            if (model == null)
-            {
-                throw new NotFoundException("Student achievement not found.");
-            }
-
-            LoadFromModel(model);
-        }
-    }
 }

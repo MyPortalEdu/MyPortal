@@ -1,16 +1,14 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Enums;
 using MyPortal.Logic.Interfaces;
 using MyPortal.Logic.Models.Data.Documents;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.People
 {
-    public class PersonModel : BaseModelWithLoad, IRedactable
+    public class PersonModel : EntityModel, IRedactable
     {
         public PersonModel(Person model) : base(model)
         {
@@ -137,16 +135,7 @@ namespace MyPortal.Logic.Models.Data.People
             return name.Replace("  ", " ").Trim();
         }
 
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.People.GetById(Id.Value);
-                LoadFromModel(model);
-            }
-        }
-
-        public async Task Redact(IUnitOfWork unitOfWork)
+        public void Redact()
         {
             Title = null;
             FirstName = "";
@@ -154,15 +143,6 @@ namespace MyPortal.Logic.Models.Data.People
             LastName = "";
             PreferredFirstName = null;
             PreferredLastName = null;
-
-            await unitOfWork.Directories.DeleteWithChildren(DirectoryId);
-
-            if (PhotoId.HasValue)
-            {
-                await unitOfWork.Photos.Delete(PhotoId.Value);
-                PhotoId = null;
-            }
-
             NhsNumber = null;
             CreatedDate = DateTime.UnixEpoch;
             Gender = Constants.Sexes.Unknown;

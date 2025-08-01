@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Settings
 {
-    public class RoleModel : BaseModel
+    public class RoleModel : EntityModel
     {
         public RoleModel(Role model) : base(model)
         {

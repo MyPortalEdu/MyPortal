@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Assessment
 {
-    public class AspectModel : LookupItemModelWithLoad
+    public class AspectModel : LookupItemModel
     {
         public AspectModel(Aspect model) : base(model)
         {
@@ -52,18 +50,5 @@ namespace MyPortal.Logic.Models.Data.Assessment
         public virtual AspectTypeModel Type { get; set; }
 
         public virtual GradeSetModel GradeSet { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var aspect = await unitOfWork.Aspects.GetById(Id.Value);
-
-                if (aspect != null)
-                {
-                    LoadFromModel(aspect);
-                }
-            }
-        }
     }
 }

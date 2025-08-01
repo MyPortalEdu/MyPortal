@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
 using MyPortal.Logic.Interfaces.Services;
@@ -16,7 +17,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.SystemSettings.Update(name, value);
+            await unitOfWork.GetRepository<ISystemSettingRepository>().Update(name, value);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -25,7 +26,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var databaseVersion = await unitOfWork.SystemSettings.Get("DatabaseVersion");
+            var databaseVersion = await unitOfWork.GetRepository<ISystemSettingRepository>().Get("DatabaseVersion");
 
             if (databaseVersion == null)
             {

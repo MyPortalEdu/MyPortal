@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
@@ -24,7 +25,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var logNote = await unitOfWork.LogNotes.GetById(logNoteId);
+            var logNote = await unitOfWork.GetRepository<ILogNoteRepository>().GetById(logNoteId);
 
             if (logNote == null)
             {
@@ -36,7 +37,7 @@ namespace MyPortal.Logic.Services
                 throw new PermissionException("You do not have access to this log note.");
             }
             
-            var student = await unitOfWork.Students.GetById(logNote.StudentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(logNote.StudentId);
 
             await VerifyAccessToPerson(student.PersonId);
 
@@ -47,14 +48,15 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
             
-            var student = await unitOfWork.Students.GetById(studentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
             
             await VerifyAccessToPerson(student.PersonId);
             
             var includePrivate = User.IsType(UserTypes.Staff);
 
-            var logNotes = 
-                await unitOfWork.LogNotes.GetByStudent(studentId, academicYearId, includePrivate);
+            var logNotes =
+                await unitOfWork.GetRepository<ILogNoteRepository>()
+                    .GetByStudent(studentId, academicYearId, includePrivate);
 
             return logNotes.OrderByDescending(n => n.CreatedDate)
                 .Select(l => new LogNoteModel(l)).ToList();
@@ -64,7 +66,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var logNoteTypes = await unitOfWork.LogNoteTypes.GetAll();
+            var logNoteTypes = await unitOfWork.GetRepository<ILogNoteTypeRepository>().GetAll();
 
             return logNoteTypes.Select(t => new LogNoteTypeModel(t));
         }
@@ -95,7 +97,7 @@ namespace MyPortal.Logic.Services
                     AcademicYearId = logNoteModel.AcademicYearId
                 };
 
-                unitOfWork.LogNotes.Create(logNote);
+                unitOfWork.GetRepository<ILogNoteRepository>().Create(logNote);
 
                 await unitOfWork.SaveChangesAsync();
             }
@@ -111,7 +113,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var logNote = await unitOfWork.LogNotes.GetById(logNoteId);
+            var logNote = await unitOfWork.GetRepository<ILogNoteRepository>().GetById(logNoteId);
 
             var academicYearService = new AcademicYearService(User);
             await academicYearService.IsAcademicYearLocked(logNote.AcademicYearId);
@@ -124,7 +126,7 @@ namespace MyPortal.Logic.Services
             logNote.TypeId = logNoteModel.TypeId;
             logNote.Message = logNoteModel.Message;
 
-            await unitOfWork.LogNotes.Update(logNote);
+            await unitOfWork.GetRepository<ILogNoteRepository>().Update(logNote);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -138,7 +140,7 @@ namespace MyPortal.Logic.Services
             var academicYearService = new AcademicYearService(User);
             await academicYearService.IsAcademicYearLocked(logNote.AcademicYearId);
 
-            await unitOfWork.LogNotes.Delete(logNoteId);
+            await unitOfWork.GetRepository<ILogNoteRepository>().Delete(logNoteId);
 
             await unitOfWork.SaveChangesAsync();
         }

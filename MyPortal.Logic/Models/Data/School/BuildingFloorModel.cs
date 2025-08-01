@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.School
 {
-    public class BuildingFloorModel : LookupItemModelWithLoad
+    public class BuildingFloorModel : LookupItemModel
     {
         public BuildingFloorModel(BuildingFloor model) : base(model)
         {
@@ -27,18 +25,5 @@ namespace MyPortal.Logic.Models.Data.School
         public Guid BuildingId { get; set; }
 
         public BuildingModel Building { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var floor = await unitOfWork.BuildingFloors.GetById(Id.Value);
-
-                if (floor != null)
-                {
-                    LoadFromModel(floor);
-                }
-            }
-        }
     }
 }

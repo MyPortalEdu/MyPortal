@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class CurriculumYearGroupModel : BaseModel
+    public class CurriculumYearGroupModel : EntityModel
     {
         public CurriculumYearGroupModel(CurriculumYearGroup model) : base(model)
         {

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.People;
-using MyPortal.Logic.Models.Data.Students.SEND;
+using MyPortal.Logic.Models.Data.Students.Send;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Students
 {
-    public class StudentModel : BaseModelWithLoad
+    public class StudentModel : EntityModel
     {
         public StudentModel(Student model) : base(model)
         {
@@ -102,15 +100,5 @@ namespace MyPortal.Logic.Models.Data.Students
         public virtual EnrolmentStatusModel EnrolmentStatus { get; set; }
 
         public virtual BoarderStatusModel BoarderStatus { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Students.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

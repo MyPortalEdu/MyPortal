@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Finance
 {
-    public class BillItemModel : BaseModelWithLoad
+    public class BillItemModel : EntityModel
     {
         public BillItemModel(BillItem model) : base(model)
         {
@@ -51,18 +49,5 @@ namespace MyPortal.Logic.Models.Data.Finance
 
         public virtual BillModel Bill { get; set; }
         public virtual ProductModel Product { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var billItem = await unitOfWork.BillItems.GetById(Id.Value);
-
-                if (billItem != null)
-                {
-                    LoadFromModel(billItem);
-                }
-            }
-        }
     }
 }

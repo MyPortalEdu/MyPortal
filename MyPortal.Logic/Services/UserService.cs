@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MyPortal.Database.Enums;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Authentication;
 using MyPortal.Logic.Enums;
@@ -73,7 +74,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var rolePermissions = (await unitOfWork.UserRoles.GetByUser(userId)).ToList();
+            var rolePermissions = (await unitOfWork.GetRepository<IUserRoleRepository>().GetByUser(userId)).ToList();
 
             BitArray userPermissions = null;
 
@@ -120,11 +121,10 @@ namespace MyPortal.Logic.Services
 
             var response = new UserInfoModel();
 
-            var user = await unitOfWork.Users.GetById(userId);
+            var user = await unitOfWork.GetRepository<IUserRepository>().GetById(userId);
             var userModel = new UserModel(user);
 
             response.DisplayName = userModel.GetDisplayName(NameFormat.FullNameNoTitle, true, false);
-            response.ProfileImage = await userModel.GetProfileImageAsBase64(unitOfWork);
             response.Permissions = (await GetPermissionValuesByUser(userId)).ToArray();
 
             return response;
@@ -239,7 +239,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var userRoles = await unitOfWork.UserRoles.GetByUser(userId);
+            var userRoles = await unitOfWork.GetRepository<IUserRoleRepository>().GetByUser(userId);
 
             await RemoveFromRoles(userId, userRoles.Select(ur => ur.RoleId).ToArray());
 
@@ -392,7 +392,7 @@ namespace MyPortal.Logic.Services
             if (userId != null)
             {
                 await using var unitOfWork = await User.GetConnection();
-                var user = await unitOfWork.Users.GetById(userId.Value);
+                var user = await unitOfWork.GetRepository<IUserRepository>().GetById(userId.Value);
                 
                 var userModel = new UserModel(user);
                 
@@ -456,7 +456,7 @@ namespace MyPortal.Logic.Services
             {
                 await using var unitOfWork = await User.GetConnection();
 
-                user.Person = await unitOfWork.People.GetById(user.PersonId.Value);
+                user.Person = await unitOfWork.GetRepository<IPersonRepository>().GetById(user.PersonId.Value);
             }
 
             return new UserModel(user);

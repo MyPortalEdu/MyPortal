@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Logic.Models.Data.Students.SEND
+namespace MyPortal.Logic.Models.Data.Students.Send
 {
-    public class SenProvisionModel : BaseModelWithLoad
+    public class SenProvisionModel : EntityModel
     {
         public SenProvisionModel(SenProvision model) : base(model)
         {
@@ -46,14 +44,5 @@ namespace MyPortal.Logic.Models.Data.Students.SEND
         public virtual StudentModel Student { get; set; }
 
         public virtual SenProvisionTypeModel Type { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.SenProvisions.GetById(Id.Value);
-                LoadFromModel(model);
-            }
-        }
     }
 }

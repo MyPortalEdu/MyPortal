@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class YearGroupModel : BaseModelWithLoad
+    public class YearGroupModel : EntityModel
     {
         public YearGroupModel(YearGroup model) : base(model)
         {
@@ -35,15 +33,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
 
         public virtual StudentGroupModel StudentGroup { get; set; }
         public virtual CurriculumYearGroupModel CurriculumYearGroup { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.YearGroups.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

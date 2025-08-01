@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class LessonPlanTemplateModel : BaseModel
+    public class LessonPlanTemplateModel : EntityModel
     {
         public LessonPlanTemplateModel(LessonPlanTemplate model) : base(model)
         {

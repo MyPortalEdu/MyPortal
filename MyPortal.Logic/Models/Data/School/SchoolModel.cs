@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
-using MyPortal.Database.Interfaces;
 using MyPortal.Logic.Models.Data.Agents;
 using MyPortal.Logic.Models.Data.People;
 using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.School
 {
-    public class SchoolModel : BaseModelWithLoad
+    public class SchoolModel : EntityModel
     {
         public SchoolModel(Database.Models.Entity.School model) : base(model)
         {
@@ -94,15 +92,5 @@ namespace MyPortal.Logic.Models.Data.School
         public virtual IntakeTypeModel IntakeType { get; set; }
         public virtual PersonModel HeadTeacher { get; set; }
         public virtual LocalAuthorityModel LocalAuthority { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Schools.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

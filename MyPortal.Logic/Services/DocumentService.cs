@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
 using MyPortal.Database.Enums;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Filters;
 using MyPortal.Logic.Enums;
@@ -132,7 +133,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
             
-            var document = await unitOfWork.Documents.GetById(documentId);
+            var document = await unitOfWork.GetRepository<IDocumentRepository>().GetById(documentId);
 
             if (await CanAccessDirectory(document.DirectoryId, edit))
             {
@@ -179,7 +180,7 @@ namespace MyPortal.Logic.Services
             {
                 await using var unitOfWork = await User.GetConnection();
 
-                var directory = await unitOfWork.Directories.GetById(document.DirectoryId);
+                var directory = await unitOfWork.GetRepository<IDirectoryRepository>().GetById(document.DirectoryId);
 
                 if (directory == null)
                 {
@@ -201,7 +202,7 @@ namespace MyPortal.Logic.Services
                         Private = document.Private
                     };
 
-                    unitOfWork.Documents.Create(docToAdd);
+                    unitOfWork.GetRepository<IDocumentRepository>().Create(docToAdd);
                 }
                 catch (Exception e)
                 {
@@ -224,14 +225,14 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var documentInDb = await unitOfWork.Documents.GetById(documentId);
+            var documentInDb = await unitOfWork.GetRepository<IDocumentRepository>().GetById(documentId);
 
             documentInDb.Title = document.Title;
             documentInDb.Description = document.Description;
             documentInDb.Private = document.Private;
             documentInDb.TypeId = document.TypeId;
 
-            await unitOfWork.Documents.Update(documentInDb);
+            await unitOfWork.GetRepository<IDocumentRepository>().Update(documentInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -240,7 +241,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var documentTypes = await unitOfWork.DocumentTypes.Get(filter);
+            var documentTypes = await unitOfWork.GetRepository<IDocumentTypeRepository>().Get(filter);
 
             return documentTypes.Select(t => new DocumentTypeModel(t)).ToList();
         }
@@ -251,7 +252,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.Documents.Delete(documentId);
+            await unitOfWork.GetRepository<IDocumentRepository>().Delete(documentId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -260,7 +261,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var document = await unitOfWork.Documents.GetById(documentId);
+            var document = await unitOfWork.GetRepository<IDocumentRepository>().GetById(documentId);
 
             await VerifyDocumentAccess(document.DirectoryId, false);
 
@@ -278,7 +279,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var directory = await unitOfWork.Directories.GetById(directoryId);
+            var directory = await unitOfWork.GetRepository<IDirectoryRepository>().GetById(directoryId);
 
             if (directory == null)
             {
@@ -299,7 +300,8 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var parentDirectory = await unitOfWork.Directories.GetById(directory.ParentId.Value);
+            var parentDirectory =
+                await unitOfWork.GetRepository<IDirectoryRepository>().GetById(directory.ParentId.Value);
 
             if (parentDirectory == null)
             {
@@ -316,7 +318,7 @@ namespace MyPortal.Logic.Services
                 Private = directory.Private
             };
 
-            unitOfWork.Directories.Create(dirToAdd);
+            unitOfWork.GetRepository<IDirectoryRepository>().Create(dirToAdd);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -329,7 +331,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var dirInDb = await unitOfWork.Directories.GetById(directoryId);
+            var dirInDb = await unitOfWork.GetRepository<IDirectoryRepository>().GetById(directoryId);
 
             if (!string.IsNullOrWhiteSpace(directory.Name))
             {
@@ -344,7 +346,7 @@ namespace MyPortal.Logic.Services
                 dirInDb.ParentId = directory.ParentId;
             }
 
-            await unitOfWork.Directories.Update(dirInDb);
+            await unitOfWork.GetRepository<IDirectoryRepository>().Update(dirInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -355,7 +357,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.Directories.Delete(directoryId);
+            await unitOfWork.GetRepository<IDirectoryRepository>().Delete(directoryId);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -366,7 +368,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var directory = await unitOfWork.Directories.GetById(directoryId);
+            var directory = await unitOfWork.GetRepository<IDirectoryRepository>().GetById(directoryId);
 
             if (directory == null)
             {
@@ -378,9 +380,9 @@ namespace MyPortal.Logic.Services
             var includeRestricted = User.IsType(UserTypes.Staff);
 
             var subDirs =
-                await unitOfWork.Directories.GetSubdirectories(directoryId, includeRestricted);
+                await unitOfWork.GetRepository<IDirectoryRepository>().GetSubdirectories(directoryId, includeRestricted);
 
-            var files = await unitOfWork.Documents.GetByDirectory(directoryId);
+            var files = await unitOfWork.GetRepository<IDocumentRepository>().GetByDirectory(directoryId);
 
             children.Subdirectories = subDirs.Select(dir => new DirectoryModel(dir));
             children.Files = files.Select(doc => new DocumentModel(doc));
@@ -392,7 +394,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var dir = await unitOfWork.Directories.GetById(directoryId);
+            var dir = await unitOfWork.GetRepository<IDirectoryRepository>().GetById(directoryId);
 
             if (dir == null)
             {
@@ -416,7 +418,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var dir = await unitOfWork.Directories.GetById(directoryId);
+            var dir = await unitOfWork.GetRepository<IDirectoryRepository>().GetById(directoryId);
 
             if (dir == null)
             {

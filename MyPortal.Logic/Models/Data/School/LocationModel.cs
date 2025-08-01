@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.School
 {
-    public class LocationModel : BaseModel
+    public class LocationModel : EntityModel
     {
         public LocationModel(Location model) : base(model)
         {

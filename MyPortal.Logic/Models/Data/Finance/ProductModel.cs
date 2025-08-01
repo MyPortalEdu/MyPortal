@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Finance
 {
-    public class ProductModel : BaseModelWithLoad
+    public class ProductModel : EntityModel
     {
         public ProductModel(Product model) : base(model)
         {
@@ -55,15 +53,5 @@ namespace MyPortal.Logic.Models.Data.Finance
         public virtual ProductTypeModel Type { get; set; }
 
         public virtual VatRateModel VatRate { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Products.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Curriculum;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Assessment
 {
-    public class MarksheetModel : BaseModelWithLoad
+    public class MarksheetModel : EntityModel
     {
         public MarksheetModel(Marksheet model) : base(model)
         {
@@ -40,15 +38,5 @@ namespace MyPortal.Logic.Models.Data.Assessment
 
         public virtual MarksheetTemplateModel Template { get; set; }
         public virtual StudentGroupModel StudentGroup { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Marksheets.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

@@ -1,14 +1,12 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.School;
 using MyPortal.Logic.Models.Data.StaffMembers;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class SessionModel : BaseModelWithLoad
+    public class SessionModel : EntityModel
     {
         public SessionModel(Session model) : base(model)
         {
@@ -54,15 +52,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public virtual ClassModel Class { get; set; }
 
         public virtual RoomModel Room { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Sessions.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

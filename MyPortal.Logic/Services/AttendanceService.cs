@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Search;
 using MyPortal.Logic.Exceptions;
@@ -25,7 +26,8 @@ namespace MyPortal.Logic.Services
         public async Task<AttendanceMarkModel> GetAttendanceMark(Guid studentId, Guid attendanceWeekId, Guid periodId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var attendanceMark = await unitOfWork.AttendanceMarks.GetMark(studentId, attendanceWeekId, periodId);
+            var attendanceMark = await unitOfWork.GetRepository<IAttendanceMarkRepository>()
+                .GetMark(studentId, attendanceWeekId, periodId);
 
             if (attendanceMark == null)
             {
@@ -40,7 +42,8 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var metadata = (await unitOfWork.SessionPeriods.GetPeriodDetailsBySession(sessionId, attendanceWeekId))
+            var metadata = (await unitOfWork.GetRepository<ISessionPeriodRepository>()
+                    .GetPeriodDetailsBySession(sessionId, attendanceWeekId))
                 .ToArray();
 
             if (metadata == null)
@@ -64,15 +67,17 @@ namespace MyPortal.Logic.Services
             }
 
             var studentsInSession =
-                await unitOfWork.StudentGroupMemberships.GetMembershipsByGroup(registerPeriod.StudentGroupId,
+                await unitOfWork.GetRepository<IStudentGroupMembershipRepository>().GetMembershipsByGroup(registerPeriod.StudentGroupId,
                     registerPeriod.StartTime, registerPeriod.EndTime);
+            ;
 
             var extraNames = Array.Empty<SessionExtraName>();
 
             if (registerPeriod.SessionId.HasValue)
             {
                 extraNames =
-                    (await unitOfWork.SessionExtraNames.GetExtraNamesBySession(registerPeriod.SessionId.Value,
+                    (await unitOfWork.GetRepository<ISessionExtraNameRepository>().GetExtraNamesBySession(
+                        registerPeriod.SessionId.Value,
                         registerPeriod.AttendanceWeekId)).ToArray();
             }
 
@@ -93,7 +98,8 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var period = await unitOfWork.AttendancePeriods.GetInstanceByPeriodId(attendanceWeekId, periodId);
+            var period = await unitOfWork.GetRepository<IAttendancePeriodRepository>()
+                .GetInstanceByPeriodId(attendanceWeekId, periodId);
 
             if (period == null)
             {
@@ -115,7 +121,8 @@ namespace MyPortal.Logic.Services
                 TeacherId = model.TeacherId
             };
 
-            var sessions = await unitOfWork.SessionPeriods.SearchPeriodDetails(searchOptions);
+            var sessions = await unitOfWork.GetRepository<ISessionPeriodRepository>()
+                .SearchPeriodDetails(searchOptions);
 
             return sessions.Select(s => new AttendanceRegisterSummaryModel(s)).ToArray();
         }
@@ -130,10 +137,12 @@ namespace MyPortal.Logic.Services
             var register = await InitialiseRegister(dateFrom, dateTo, title, unlockedPeriods);
 
             var existingMarks =
-                await unitOfWork.AttendanceMarks.GetRegisterMarks(studentCollection, register.Periods);
+                await unitOfWork.GetRepository<IAttendanceMarkRepository>()
+                    .GetRegisterMarks(studentCollection, register.Periods);
 
             var possibleMarks =
-                await unitOfWork.AttendanceMarks.GetPossibleMarksByStudents(studentCollection, register.Periods);
+                await unitOfWork.GetRepository<IAttendanceMarkRepository>()
+                    .GetPossibleMarksByStudents(studentCollection, register.Periods);
 
             register.PopulateMarks(existingMarks);
             register.PopulateMissingMarks(possibleMarks);
@@ -150,14 +159,14 @@ namespace MyPortal.Logic.Services
 
             register.Title = title;
 
-            var periods = (await unitOfWork.AttendancePeriods
+            var periods = (await unitOfWork.GetRepository<IAttendancePeriodRepository>()
                 .GetInstancesByDateRange(dateFrom.Date, dateTo.Date)).ToArray();
 
             register.Periods = periods;
 
             register.PopulateColumnGroups(periods, unlockedPeriods);
 
-            var codes = (await unitOfWork.AttendanceCodes.GetAll())
+            var codes = (await unitOfWork.GetRepository<IAttendanceCodeRepository>().GetAll())
                 .Select(c => new AttendanceCodeModel(c))
                 .ToArray();
 
@@ -172,7 +181,8 @@ namespace MyPortal.Logic.Services
             await using var unitOfWork = await User.GetConnection();
 
             var studentGroupMembers =
-                await unitOfWork.StudentGroupMemberships.GetMembershipsByGroup(studentGroupId, dateFrom, dateTo);
+                await unitOfWork.GetRepository<IStudentGroupMembershipRepository>()
+                    .GetMembershipsByGroup(studentGroupId, dateFrom, dateTo);
 
             var studentIds = studentGroupMembers.Select(m => m.StudentId).ToArray();
 
@@ -214,7 +224,7 @@ namespace MyPortal.Logic.Services
                         Comments = markInDb.Comments
                     };
 
-                    await unitOfWork.AttendanceMarks.Update(updatedMark);
+                    await unitOfWork.GetRepository<IAttendanceMarkRepository>().Update(updatedMark);
                 }
                 else
                 {
@@ -229,7 +239,7 @@ namespace MyPortal.Logic.Services
                         Comments = model.Comments
                     };
 
-                    unitOfWork.AttendanceMarks.Create(mark);
+                    unitOfWork.GetRepository<IAttendanceMarkRepository>().Create(mark);
                 }
             }
 
@@ -242,7 +252,7 @@ namespace MyPortal.Logic.Services
 
             foreach (var attendanceMarkId in attendanceMarkIds)
             {
-                await unitOfWork.AttendanceMarks.Delete(attendanceMarkId);
+                await unitOfWork.GetRepository<IAttendanceMarkRepository>().Delete(attendanceMarkId);
             }
 
             await unitOfWork.SaveChangesAsync();
@@ -264,12 +274,12 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var codes = (await unitOfWork.AttendanceCodes.GetAll())
+            var codes = (await unitOfWork.GetRepository<IAttendanceCodeRepository>().GetAll())
                 .Select(c => new AttendanceCodeModel(c))
                 .ToList();
 
             var marks =
-                (await unitOfWork.AttendanceMarks.GetByStudent(studentId, academicYearId))
+                (await unitOfWork.GetRepository<IAttendanceMarkRepository>().GetByStudent(studentId, academicYearId))
                 .Select(m => new AttendanceMarkModel(m)).ToList();
 
             var summary = new AttendanceSummary(codes, marks);
@@ -281,7 +291,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var period = await unitOfWork.AttendancePeriods.GetById(periodId);
+            var period = await unitOfWork.GetRepository<IAttendancePeriodRepository>().GetById(periodId);
 
             if (period == null)
             {
@@ -295,7 +305,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var attendanceWeek = await unitOfWork.AttendanceWeeks.GetById(attendanceWeekId);
+            var attendanceWeek = await unitOfWork.GetRepository<IAttendanceWeekRepository>().GetById(attendanceWeekId);
 
             if (attendanceWeek == null)
             {
@@ -309,7 +319,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var week = await unitOfWork.AttendanceWeeks.GetByDate(date);
+            var week = await unitOfWork.GetRepository<IAttendanceWeekRepository>().GetByDate(date);
 
             if (week == null && throwIfNotFound)
             {
@@ -326,7 +336,8 @@ namespace MyPortal.Logic.Services
             await using var unitOfWork = await User.GetConnection();
 
             var existingNames =
-                await unitOfWork.SessionExtraNames.GetExtraNamesBySession(model.SessionId, model.AttendanceWeekId);
+                await unitOfWork.GetRepository<ISessionExtraNameRepository>()
+                    .GetExtraNamesBySession(model.SessionId, model.AttendanceWeekId);
 
             if (existingNames.Any(n => n.StudentId == model.StudentId))
             {
@@ -341,7 +352,7 @@ namespace MyPortal.Logic.Services
                 StudentId = model.StudentId
             };
 
-            unitOfWork.SessionExtraNames.Create(extraName);
+            unitOfWork.GetRepository<ISessionExtraNameRepository>().Create(extraName);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -350,7 +361,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.SessionExtraNames.Delete(extraNameId);
+            await unitOfWork.GetRepository<ISessionExtraNameRepository>().Delete(extraNameId);
 
             await unitOfWork.SaveChangesAsync();
         }

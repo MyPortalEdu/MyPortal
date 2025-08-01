@@ -1,4 +1,5 @@
 ﻿using System;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
@@ -34,7 +35,7 @@ public sealed class ExamService : BaseService, IExamService
                 EndTime = model.EndDate
             };
 
-            unitOfWork.ExamResultEmbargoes.Create(embargo);
+            unitOfWork.GetRepository<IExamResultEmbargoRepository>().Create(embargo);
         }
 
         await unitOfWork.SaveChangesAsync();
@@ -53,7 +54,8 @@ public sealed class ExamService : BaseService, IExamService
                 throw new InvalidDataException("End date cannot be in the past.");
             }
 
-            var embargoInDb = await unitOfWork.ExamResultEmbargoes.GetByResultSetId(model.ResultSetId);
+            var embargoInDb = await unitOfWork.GetRepository<IExamResultEmbargoRepository>()
+                .GetByResultSetId(model.ResultSetId);
 
             if (embargoInDb == null)
             {
@@ -62,7 +64,7 @@ public sealed class ExamService : BaseService, IExamService
 
             embargoInDb.EndTime = model.EndDate;
 
-            await unitOfWork.ExamResultEmbargoes.Update(embargoInDb);
+            await unitOfWork.GetRepository<IExamResultEmbargoRepository>().Update(embargoInDb);
         }
 
         await unitOfWork.SaveChangesAsync();

@@ -1,17 +1,15 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Attributes;
 using MyPortal.Logic.Models.Data.Curriculum;
 using MyPortal.Logic.Models.Data.Settings;
 using MyPortal.Logic.Models.Structures;
 using MyPortal.Logic.Models.Summary;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Students
 {
-    public class LogNoteModel : BaseModelWithLoad
+    public class LogNoteModel : EntityModel
     {
         public LogNoteModel(LogNote model) : base(model)
         {
@@ -77,16 +75,6 @@ namespace MyPortal.Logic.Models.Data.Students
         public LogNoteSummaryModel ToListModel()
         {
             return new LogNoteSummaryModel(this);
-        }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.LogNotes.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
         }
     }
 }

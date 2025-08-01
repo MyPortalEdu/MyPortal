@@ -1,14 +1,12 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Calendar;
 using MyPortal.Logic.Models.Data.StaffMembers;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Behaviour.Detentions
 {
-    public class DetentionModel : BaseModelWithLoad
+    public class DetentionModel : EntityModel
     {
         public DetentionModel(Detention model) : base(model)
         {
@@ -46,15 +44,5 @@ namespace MyPortal.Logic.Models.Data.Behaviour.Detentions
         public DetentionTypeModel Type { get; set; }
         public DiaryEventModel Event { get; set; }
         public StaffMemberModel Supervisor { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.Detentions.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

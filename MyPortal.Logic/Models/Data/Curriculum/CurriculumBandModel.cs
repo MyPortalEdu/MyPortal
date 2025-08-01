@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class CurriculumBandModel : BaseModelWithLoad
+    public class CurriculumBandModel : EntityModel
     {
         public CurriculumBandModel(CurriculumBand model) : base(model)
         {
@@ -50,15 +48,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public CurriculumYearGroupModel CurriculumYearGroup { get; set; }
 
         public StudentGroupModel StudentGroup { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.CurriculumBands.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

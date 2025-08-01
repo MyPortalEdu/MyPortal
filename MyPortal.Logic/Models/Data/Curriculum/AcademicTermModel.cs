@@ -1,13 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class AcademicTermModel : BaseModelWithLoad
+    public class AcademicTermModel : EntityModel
     {
         internal AcademicTermModel(AcademicTerm model) : base(model)
         {
@@ -36,18 +34,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
         public DateTime EndDate { get; set; }
 
         public AcademicYearModel AcademicYear { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var term = await unitOfWork.AcademicTerms.GetById(Id.Value);
-
-                if (term != null)
-                {
-                    LoadFromModel(term);
-                }
-            }
-        }
     }
 }

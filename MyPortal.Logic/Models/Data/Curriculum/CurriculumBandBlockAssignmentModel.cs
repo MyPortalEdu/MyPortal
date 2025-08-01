@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Curriculum
 {
-    public class CurriculumBandBlockAssignmentModel : BaseModelWithLoad
+    public class CurriculumBandBlockAssignmentModel : EntityModel
     {
         public CurriculumBandBlockAssignmentModel(CurriculumBandBlockAssignment model) : base(model)
         {
@@ -34,18 +32,5 @@ namespace MyPortal.Logic.Models.Data.Curriculum
 
         public CurriculumBlockModel Block { get; set; }
         public CurriculumBandModel Band { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var assignment = await unitOfWork.CurriculumBandBlockAssignments.GetById(Id.Value);
-
-                if (assignment != null)
-                {
-                    LoadFromModel(assignment);
-                }
-            }
-        }
     }
 }

@@ -1,15 +1,12 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
-using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Attendance
 {
-    public class AttendancePeriodModel : BaseModelWithLoad
+    public class AttendancePeriodModel
     {
-        public AttendancePeriodModel(AttendancePeriod model) : base(model)
+        public AttendancePeriodModel(AttendancePeriod model)
         {
             LoadFromModel(model);
         }
@@ -45,18 +42,5 @@ namespace MyPortal.Logic.Models.Data.Attendance
         public bool PmReg { get; set; }
 
         public AttendanceWeekPatternModel WeekPattern { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var period = await unitOfWork.AttendancePeriods.GetById(Id.Value);
-
-                if (period != null)
-                {
-                    LoadFromModel(period);
-                }
-            }
-        }
     }
 }

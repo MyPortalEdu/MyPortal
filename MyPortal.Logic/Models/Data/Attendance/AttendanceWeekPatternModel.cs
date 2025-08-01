@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Attendance
 {
-    public class AttendanceWeekPatternModel : BaseModel
+    public class AttendanceWeekPatternModel : EntityModel
     {
         public AttendanceWeekPatternModel(AttendanceWeekPattern model) : base(model)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Constants;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Extensions;
@@ -25,7 +26,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            return await unitOfWork.AcademicYears.IsYearLocked(academicYearId);
+            return await unitOfWork.GetRepository<IAcademicYearRepository>().IsYearLocked(academicYearId);
         }
 
         public async Task ThrowIfAcademicYearLocked(Guid academicYearId)
@@ -39,7 +40,7 @@ namespace MyPortal.Logic.Services
         public async Task<bool> IsAcademicYearLockedByWeek(Guid attendanceWeekId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var academicYear = await unitOfWork.AcademicYears.GetAcademicYearByWeek(attendanceWeekId);
+            var academicYear = await unitOfWork.GetRepository<IAcademicYearRepository>().GetAcademicYearByWeek(attendanceWeekId);
 
             if (await IsAcademicYearLocked(academicYear.Id))
             {
@@ -52,13 +53,13 @@ namespace MyPortal.Logic.Services
         public async Task<AcademicYearModel> GetCurrentAcademicYear(bool getLatestIfNull = false)
         {
             await using var unitOfWork = await User.GetConnection();
-            var acadYear = await unitOfWork.AcademicYears.GetCurrentAcademicYear();
+            var acadYear = await unitOfWork.GetRepository<IAcademicYearRepository>().GetCurrentAcademicYear();
 
             if (acadYear == null)
             {
                 if (getLatestIfNull)
                 {
-                    acadYear = await unitOfWork.AcademicYears.GetLatestAcademicYear();
+                    acadYear = await unitOfWork.GetRepository<IAcademicYearRepository>().GetLatestAcademicYear();
 
                     if (acadYear == null)
                     {
@@ -77,7 +78,7 @@ namespace MyPortal.Logic.Services
         public async Task<AcademicYearModel> GetAcademicYearById(Guid academicYearId)
         {
             await using var unitOfWork = await User.GetConnection();
-            var acadYear = await unitOfWork.AcademicYears.GetById(academicYearId);
+            var acadYear = await unitOfWork.GetRepository<IAcademicYearRepository>().GetById(academicYearId);
 
             return new AcademicYearModel(acadYear);
         }
@@ -85,7 +86,7 @@ namespace MyPortal.Logic.Services
         public async Task<IEnumerable<AcademicYearModel>> GetAcademicYears()
         {
             await using var unitOfWork = await User.GetConnection();
-            var acadYears = await unitOfWork.AcademicYears.GetAll();
+            var acadYears = await unitOfWork.GetRepository<IAcademicYearRepository>().GetAll();
 
             return acadYears.Select(y => new AcademicYearModel(y));
         }
@@ -125,7 +126,7 @@ namespace MyPortal.Logic.Services
 
                 foreach (var schoolHoliday in termModel.Holidays)
                 {
-                    unitOfWork.DiaryEvents.Create(new DiaryEvent
+                    unitOfWork.GetRepository<IDiaryEventRepository>().Create(new DiaryEvent
                     {
                         Id = Guid.NewGuid(),
                         Description = "School Holiday",
@@ -139,7 +140,7 @@ namespace MyPortal.Logic.Services
                 academicYear.AcademicTerms.Add(term);
             }
 
-            unitOfWork.AcademicYears.Create(academicYear);
+            unitOfWork.GetRepository<IAcademicYearRepository>().Create(academicYear);
 
             await unitOfWork.SaveChangesAsync();
 
@@ -204,12 +205,12 @@ namespace MyPortal.Logic.Services
             Validate(model);
 
             await using var unitOfWork = await User.GetConnection();
-            var academicYearInDb = await unitOfWork.AcademicYears.GetById(academicYearId);
+            var academicYearInDb = await unitOfWork.GetRepository<IAcademicYearRepository>().GetById(academicYearId);
 
             academicYearInDb.Name = model.Name;
             academicYearInDb.Locked = model.Locked;
 
-            await unitOfWork.AcademicYears.Update(academicYearInDb);
+            await unitOfWork.GetRepository<IAcademicYearRepository>().Update(academicYearInDb);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -218,7 +219,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            await unitOfWork.AcademicYears.Delete(academicYearId);
+            await unitOfWork.GetRepository<IAcademicYearRepository>().Delete(academicYearId);
 
             await unitOfWork.SaveChangesAsync();
         }

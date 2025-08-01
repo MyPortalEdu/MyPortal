@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.Behaviour.Incidents;
 using MyPortal.Logic.Models.Data.Students;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Behaviour.ReportCards
 {
-    public class ReportCardModel : BaseModelWithLoad
+    public class ReportCardModel : EntityModel
     {
         public ReportCardModel(ReportCard model) : base(model)
         {
@@ -50,15 +48,5 @@ namespace MyPortal.Logic.Models.Data.Behaviour.ReportCards
 
         public virtual StudentModel Student { get; set; }
         public virtual IncidentTypeModel BehaviourType { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ReportCards.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

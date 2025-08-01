@@ -1,12 +1,10 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamElementComponentModel : BaseModelWithLoad
+    public class ExamElementComponentModel : EntityModel
     {
         public ExamElementComponentModel(ExamElementComponent model) : base(model)
         {
@@ -34,15 +32,5 @@ namespace MyPortal.Logic.Models.Data.Examinations
 
         public virtual ExamElementModel Element { get; set; }
         public virtual ExamComponentModel Component { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ExamElementComponents.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }

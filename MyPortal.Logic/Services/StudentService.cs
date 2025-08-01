@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyPortal.Database.Enums;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Search;
 using MyPortal.Logic.Exceptions;
@@ -42,7 +43,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var student = await unitOfWork.Students.GetById(studentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
             if (student == null)
             {
                 throw new NotFoundException("Student not found.");
@@ -57,17 +58,20 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var student = await unitOfWork.Students.GetById(studentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
             
             await VerifyAccessToPerson(student.PersonId);
             
             var stats = new StudentStatsModel();
 
-            var achievements = await unitOfWork.StudentAchievements.GetPointsByStudent(studentId, academicYearId);
-            var incidents = await unitOfWork.StudentIncidents.GetPointsByStudent(studentId, academicYearId);
-            var attendanceMarks = await unitOfWork.AttendanceMarks.GetByStudent(studentId, academicYearId);
-            var exclusions = await unitOfWork.Exclusions.GetCountByStudent(studentId);
-            var attendanceCodes = await unitOfWork.AttendanceCodes.GetAll();
+            var achievements = await unitOfWork.GetRepository<IStudentAchievementRepository>()
+                .GetPointsByStudent(studentId, academicYearId);
+            var incidents = await unitOfWork.GetRepository<IStudentIncidentRepository>()
+                .GetPointsByStudent(studentId, academicYearId);
+            var attendanceMarks = await unitOfWork.GetRepository<IAttendanceMarkRepository>()
+                .GetByStudent(studentId, academicYearId);
+            var exclusions = await unitOfWork.GetRepository<IExclusionRepository>().GetCountByStudent(studentId);
+            var attendanceCodes = await unitOfWork.GetRepository<IAttendanceCodeRepository>().GetAll();
 
             var attendanceSummary =
                 new AttendanceSummary(attendanceCodes.Select(c => new AttendanceCodeModel(c)).ToList(),
@@ -86,7 +90,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var student = await unitOfWork.Students.GetByUserId(userId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetByUserId(userId);
 
             if (student == null && throwNotFound)
             {
@@ -100,7 +104,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var student = await unitOfWork.Students.GetByPersonId(personId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetByPersonId(personId);
 
             if (student == null && throwIfNotFound)
             {
@@ -126,7 +130,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var students = await unitOfWork.Students.GetAll(searchOptions);
+            var students = await unitOfWork.GetRepository<IStudentRepository>().GetAll(searchOptions);
 
             return students.Select(s => new StudentModel(s)).ToList();
         }
@@ -135,7 +139,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var students = await unitOfWork.Students.GetByContact(contactId, reportableOnly);
+            var students = await unitOfWork.GetRepository<IStudentRepository>().GetByContact(contactId, reportableOnly);
 
             return students.Select(s => new StudentModel(s)).ToList();
         }
@@ -144,7 +148,7 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var students = await unitOfWork.Students.SearchAll(searchOptions);
+            var students = await unitOfWork.GetRepository<IStudentRepository>().SearchAll(searchOptions);
 
             return students.Select(s => new StudentSummaryModel(s)).ToList();
         }
@@ -155,7 +159,8 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var admissionNumbers = (await unitOfWork.Students.GetAdmissionNumbers()).ToArray();
+            var admissionNumbers =
+                (await unitOfWork.GetRepository<IStudentRepository>().GetAdmissionNumbers()).ToArray();
 
             var nextAdmissionNumber = admissionNumbers.Any() ? admissionNumbers.Max() + 1 : 1;
 
@@ -191,7 +196,7 @@ namespace MyPortal.Logic.Services
                 });
             }
 
-            unitOfWork.Students.Create(student);
+            unitOfWork.GetRepository<IStudentRepository>().Create(student);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -200,14 +205,14 @@ namespace MyPortal.Logic.Services
         {
             await using var unitOfWork = await User.GetConnection();
 
-            var school = await unitOfWork.Schools.GetLocal();
+            var school = await unitOfWork.GetRepository<ISchoolRepository>().GetLocal();
 
             if (school == null)
             {
                 throw new NotFoundException("Local school not found.");
             }
 
-            var academicYear = await unitOfWork.AcademicYears.GetCurrentAcademicYear();
+            var academicYear = await unitOfWork.GetRepository<IAcademicYearRepository>().GetCurrentAcademicYear();
 
             if (academicYear == null)
             {
@@ -215,7 +220,8 @@ namespace MyPortal.Logic.Services
             }
 
             var academicTerms =
-                (await unitOfWork.AcademicTerms.GetByAcademicYear(academicYear.Id)).OrderBy(t => t.StartDate)
+                (await unitOfWork.GetRepository<IAcademicTermRepository>().GetByAcademicYear(academicYear.Id))
+                .OrderBy(t => t.StartDate)
                 .ToList();
 
             var firstTerm = academicTerms.FirstOrDefault();
@@ -228,7 +234,7 @@ namespace MyPortal.Logic.Services
             var allocationYear =
                 int.Parse(firstTerm.StartDate.Year.ToString().Substring(3, 2));
 
-            var upnSerials = (await unitOfWork.Students.GetUpns(school.LocalAuthority.LeaCode,
+            var upnSerials = (await unitOfWork.GetRepository<IStudentRepository>().GetUpns(school.LocalAuthority.LeaCode,
                 school.EstablishmentNumber,
                 allocationYear)).Select(u => int.Parse(u.Substring(10, 3))).ToList();
 
@@ -248,7 +254,7 @@ namespace MyPortal.Logic.Services
 
             await using var unitOfWork = await User.GetConnection();
 
-            var student = await unitOfWork.Students.GetById(studentId);
+            var student = await unitOfWork.GetRepository<IStudentRepository>().GetById(studentId);
 
             student.DateStarting = model.DateStarting;
             student.DateLeaving = model.DateLeaving;
@@ -261,8 +267,8 @@ namespace MyPortal.Logic.Services
 
             PersonHelper.UpdatePersonFromModel(student.Person, model);
 
-            await unitOfWork.People.Update(student.Person);
-            await unitOfWork.Students.Update(student);
+            await unitOfWork.GetRepository<IPersonRepository>().Update(student.Person);
+            await unitOfWork.GetRepository<IStudentRepository>().Update(student);
 
             await unitOfWork.SaveChangesAsync();
         }

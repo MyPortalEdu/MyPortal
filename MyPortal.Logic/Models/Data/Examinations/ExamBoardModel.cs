@@ -4,7 +4,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamBoardModel : BaseModel
+    public class ExamBoardModel : EntityModel
     {
         public ExamBoardModel(ExamBoard model) : base(model)
         {

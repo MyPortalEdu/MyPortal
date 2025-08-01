@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
-using MyPortal.Database.Interfaces;
 using MyPortal.Logic.Enums;
 using MyPortal.Logic.Models.Data.Students;
 
@@ -16,7 +14,7 @@ namespace MyPortal.Logic.Models.Summary
         public string Comments { get; set; }
         public int Points { get; set; }
 
-        private StudentAchievementSummaryModel(StudentAchievementModel model)
+        public StudentAchievementSummaryModel(StudentAchievementModel model)
         {
             if (model.Id.HasValue)
             {
@@ -29,14 +27,6 @@ namespace MyPortal.Logic.Models.Summary
             CreatedDate = model.Achievement.CreatedDate;
             Comments = model.Achievement.Comments;
             Points = model.Points;
-        }
-
-        public static async Task<StudentAchievementSummaryModel> GetSummary(IUnitOfWork unitOfWork,
-            StudentAchievementModel model)
-        {
-            await model.Load(unitOfWork);
-
-            return new StudentAchievementSummaryModel(model);
         }
     }
 }

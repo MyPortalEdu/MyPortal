@@ -6,7 +6,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.People;
 
-public class TaskReminderModel : BaseModelWithLoad
+public class TaskReminderModel : EntityModel
 {
     public TaskReminderModel(TaskReminder model) : base(model)
     {
@@ -32,14 +32,4 @@ public class TaskReminderModel : BaseModelWithLoad
     public DateTime RemindTime { get; set; }
 
     public virtual TaskModel Task { get; set; }
-
-    protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-    {
-        if (Id.HasValue)
-        {
-            var model = await unitOfWork.TaskReminders.GetById(Id.Value);
-
-            LoadFromModel(model);
-        }
-    }
 }

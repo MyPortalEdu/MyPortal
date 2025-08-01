@@ -3,7 +3,7 @@ using MyPortal.Logic.Models.Structures;
 
 namespace MyPortal.Logic.Models.Data.Examinations
 {
-    public class ExamSpecialArrangementModel : BaseModel
+    public class ExamSpecialArrangementModel : EntityModel
     {
         public ExamSpecialArrangementModel(ExamSpecialArrangement model) : base(model)
         {

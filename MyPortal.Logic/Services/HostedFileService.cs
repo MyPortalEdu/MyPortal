@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Logic.Exceptions;
 using MyPortal.Logic.Interfaces;
 using MyPortal.Logic.Interfaces.Services;
@@ -27,7 +28,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var document = await unitOfWork.Documents.GetById(documentId);
+            var document = await unitOfWork.GetRepository<IDocumentRepository>().GetById(documentId);
 
             if (document == null)
             {
@@ -38,7 +39,7 @@ namespace MyPortal.Logic.Services
 
             document.Attachment = file;
 
-            await unitOfWork.Documents.Update(document);
+            await unitOfWork.GetRepository<IDocumentRepository>().Update(document);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -49,14 +50,14 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var file = await unitOfWork.Files.GetByDocumentId(documentId);
+            var file = await unitOfWork.GetRepository<IFileRepository>().GetByDocumentId(documentId);
 
             if (file == null)
             {
                 throw new LogicException("No file is attached to this document.");
             }
 
-            await unitOfWork.Files.Delete(file.Id);
+            await unitOfWork.GetRepository<IFileRepository>().Delete(file.Id);
 
             await unitOfWork.SaveChangesAsync();
         }
@@ -67,7 +68,7 @@ namespace MyPortal.Logic.Services
             
             await using var unitOfWork = await User.GetConnection();
 
-            var file = await unitOfWork.Files.GetByDocumentId(documentId);
+            var file = await unitOfWork.GetRepository<IFileRepository>().GetByDocumentId(documentId);
 
             var webActions = await _fileProvider.GetWebActions(file.FileId);
 

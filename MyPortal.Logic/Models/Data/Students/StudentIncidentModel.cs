@@ -9,7 +9,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.Students;
 
-public class StudentIncidentModel : BaseModelWithLoad
+public class StudentIncidentModel : EntityModel
 {
     public StudentIncidentModel(StudentIncident model) : base(model)
     {
@@ -71,18 +71,8 @@ public class StudentIncidentModel : BaseModelWithLoad
 
     public BehaviourInvolvedStudentSummaryModel[] InvolvedStudents { get; set; }
 
-    protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
+    internal StudentIncidentSummaryModel ToListModel(IUnitOfWork unitOfWork)
     {
-        if (Id.HasValue)
-        {
-            var model = await unitOfWork.StudentIncidents.GetById(Id.Value);
-
-            LoadFromModel(model);
-        }
-    }
-
-    internal async Task<StudentIncidentSummaryModel> ToListModel(IUnitOfWork unitOfWork)
-    {
-        return await StudentIncidentSummaryModel.GetSummary(unitOfWork, this);
+        return new StudentIncidentSummaryModel(this);
     }
 }

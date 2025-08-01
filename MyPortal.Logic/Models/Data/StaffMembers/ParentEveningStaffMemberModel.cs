@@ -1,13 +1,11 @@
 ﻿using System;
-using MyPortal.Database.Interfaces;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Logic.Models.Data.School;
 using MyPortal.Logic.Models.Structures;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Logic.Models.Data.StaffMembers
 {
-    public class ParentEveningStaffMemberModel : BaseModelWithLoad
+    public class ParentEveningStaffMemberModel : EntityModel
     {
         public ParentEveningStaffMemberModel(ParentEveningStaffMember model) : base(model)
         {
@@ -48,15 +46,5 @@ namespace MyPortal.Logic.Models.Data.StaffMembers
 
         public virtual ParentEveningModel ParentEvening { get; set; }
         public virtual StaffMemberModel StaffMember { get; set; }
-
-        protected override async Task LoadFromDatabase(IUnitOfWork unitOfWork)
-        {
-            if (Id.HasValue)
-            {
-                var model = await unitOfWork.ParentEveningStaffMembers.GetById(Id.Value);
-
-                LoadFromModel(model);
-            }
-        }
     }
 }
