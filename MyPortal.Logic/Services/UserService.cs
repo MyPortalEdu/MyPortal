@@ -125,7 +125,6 @@ namespace MyPortal.Logic.Services
             var userModel = new UserModel(user);
 
             response.DisplayName = userModel.GetDisplayName(NameFormat.FullNameNoTitle, true, false);
-            //response.ProfileImage = await userModel.GetProfileImageAsBase64(unitOfWork);
             response.Permissions = (await GetPermissionValuesByUser(userId)).ToArray();
 
             return response;

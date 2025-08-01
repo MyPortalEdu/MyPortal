@@ -567,7 +567,7 @@ namespace MyPortal.Logic.Services
                     DetentionId = detentionId
                 };
 
-                unitOfWork.GetRepository<StudentDetentionRepository>().Create(incidentDetention);
+                unitOfWork.GetRepository<IStudentDetentionRepository>().Create(incidentDetention);
             }
 
             await unitOfWork.SaveChangesAsync();
