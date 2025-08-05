@@ -7,6 +7,7 @@ using MyPortal.Database.Helpers;
 using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Connection;
 using MyPortal.Database.Models.Entity;
+using MyPortal.Database.Models.Search;
 using MyPortal.Database.Repositories.Base;
 using SqlKata;
 using Task = System.Threading.Tasks.Task;
@@ -66,6 +67,23 @@ namespace MyPortal.Database.Repositories
             agency.TypeId = entity.TypeId;
             agency.Name = entity.Name;
             agency.Website = entity.Website;
+        }
+
+        public async Task<IEnumerable<Agency>> GetAll(AgencySearchOptions searchOptions)
+        {
+            var query = GetDefaultQuery();
+
+            if (!string.IsNullOrWhiteSpace(searchOptions.Name))
+            {
+                query.WhereStarts($"{TblAlias}.Name", searchOptions.Name);
+            }
+
+            if (searchOptions.AgencyTypeId != null)
+            {
+                query.Where($"{TblAlias}.TypeId", searchOptions.AgencyTypeId);
+            }
+
+            return await ExecuteQuery(query);
         }
     }
 }

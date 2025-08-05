@@ -13,6 +13,7 @@ using MyPortal.Logic.Models.Requests.School.Bulletins;
 
 namespace MyPortalWeb.Controllers.Api;
 
+[Authorize]
 [Route("api/bulletins")]
 public class BulletinsController : ControllerBase
 {

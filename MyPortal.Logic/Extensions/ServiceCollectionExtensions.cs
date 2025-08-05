@@ -66,6 +66,7 @@ namespace MyPortal.Logic.Extensions
             
             // These application services are independent of each other and can be created in any order
             services.AddScoped<IAcademicYearService, AcademicYearService>();
+            services.AddScoped<IAgencyService, AgencyService>();
             services.AddScoped<IActivityService, ActivityService>();
             services.AddScoped<IAddressService, AddressService>();
             services.AddScoped<IAttendanceService, AttendanceService>();

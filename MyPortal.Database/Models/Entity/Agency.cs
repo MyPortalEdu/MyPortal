@@ -19,6 +19,7 @@ namespace MyPortal.Database.Models.Entity
         [Column(Order = 3)] public Guid DirectoryId { get; set; }
 
         [Column(Order = 4)]
+        [Required]
         [StringLength(256)]
         public string Name { get; set; }
 
