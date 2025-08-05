@@ -17,16 +17,18 @@ namespace MyPortal.Database.Repositories
         public AchievementTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AchievementTypes";
 
         public async Task<IEnumerable<AchievementType>> GetTypesWithRecordedAchievementsByYear(Guid academicYearId)
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("Achievements as A", "A.AchievementTypeId", $"{TblAlias}.Id");
+            query.LeftJoin("Achievements as A", "A.AchievementTypeId", $"{TableAlias}.Id");
 
-            query.GroupBy(EntityHelper.GetPropertyNames(typeof(AchievementType)));
+            query.GroupBy(EntityHelper.GetColumns(typeof(AchievementType)));
 
-            query.Having($"COUNT({TblAlias}.Id)", ">", 0);
+            query.Having($"COUNT({TableAlias}.Id)", ">", 0);
 
             return await ExecuteQuery(query);
         }

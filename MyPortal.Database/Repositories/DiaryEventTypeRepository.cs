@@ -15,6 +15,8 @@ namespace MyPortal.Database.Repositories
         public DiaryEventTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DiaryEventTypes";
 
         public async Task<IEnumerable<DiaryEventType>> GetAll(bool includeReserved)
         {
@@ -22,7 +24,7 @@ namespace MyPortal.Database.Repositories
 
             if (!includeReserved)
             {
-                query.Where($"{TblAlias}.Reserved", false);
+                query.Where($"{TableAlias}.Reserved", false);
             }
 
             return await ExecuteQuery(query);

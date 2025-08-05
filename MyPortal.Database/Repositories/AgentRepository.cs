@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public AgentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Agents";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Agencies as AG", "AG.Id", $"{TblAlias}.AgencyId");
-            query.LeftJoin("AgentTypes as AT", "AT.Id", $"{TblAlias}.AgentTypeId");
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
+            query.LeftJoin("Agencies as AG", "AG.Id", $"{TableAlias}.AgencyId");
+            query.LeftJoin("AgentTypes as AT", "AT.Id", $"{TableAlias}.AgentTypeId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
 
             return query;
         }

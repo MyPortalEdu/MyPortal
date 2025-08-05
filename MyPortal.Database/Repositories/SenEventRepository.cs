@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public SenEventRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "SenEvents";
 
         public async Task Update(SenEvent entity)
         {

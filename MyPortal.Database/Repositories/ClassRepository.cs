@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public ClassRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Classes";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Courses as CC", "CC.Id", $"{TblAlias}.CourseId");
-            query.LeftJoin("CurriculumGroup as CG", "CG.Id", $"{TblAlias}.CurriculumGroupId");
+            query.LeftJoin("Courses as CC", "CC.Id", $"{TableAlias}.CourseId");
+            query.LeftJoin("CurriculumGroup as CG", "CG.Id", $"{TableAlias}.CurriculumGroupId");
 
             return query;
         }

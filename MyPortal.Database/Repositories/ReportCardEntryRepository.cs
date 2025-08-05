@@ -18,13 +18,15 @@ namespace MyPortal.Database.Repositories
         public ReportCardEntryRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ReportCardEntries";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ReportCards as RC", "RC.Id", $"{TblAlias}.ReportCardId");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
-            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TblAlias}.WeekId");
-            query.LeftJoin("AttendancePeriods as AP", "AP.Id", $"{TblAlias}.PeriodId");
+            query.LeftJoin("ReportCards as RC", "RC.Id", $"{TableAlias}.ReportCardId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
+            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TableAlias}.WeekId");
+            query.LeftJoin("AttendancePeriods as AP", "AP.Id", $"{TableAlias}.PeriodId");
 
             return query;
         }

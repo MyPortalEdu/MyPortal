@@ -20,11 +20,13 @@ namespace MyPortal.Database.Repositories
         public ParentEveningStaffMemberRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ParentEveningStaffMembers";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ParentEvenings as PE", "PE.Id", $"{TblAlias}.ParentEveningId");
-            query.LeftJoin("StaffMembers as SM", "SM.Id", $"{TblAlias}.StaffMemberId");
+            query.LeftJoin("ParentEvenings as PE", "PE.Id", $"{TableAlias}.ParentEveningId");
+            query.LeftJoin("StaffMembers as SM", "SM.Id", $"{TableAlias}.StaffMemberId");
 
             return query;
         }
@@ -60,7 +62,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.StaffMemberId");
+            query.Where($"{TableAlias}.StaffMemberId");
 
             return await ExecuteQuery(query);
         }
@@ -69,8 +71,8 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.ParentEveningId", parentEveningId);
-            query.Where($"{TblAlias}.StaffMemberId", staffMemberId);
+            query.Where($"{TableAlias}.ParentEveningId", parentEveningId);
+            query.Where($"{TableAlias}.StaffMemberId", staffMemberId);
 
             return await ExecuteQueryFirstOrDefault(query);
         }

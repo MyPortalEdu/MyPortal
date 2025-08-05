@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public SenReviewRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "SenReviews";
 
         public async Task Update(SenReview entity)
         {

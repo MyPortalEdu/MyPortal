@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public BillDiscountRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "BillDiscounts";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Bills as B", "B.Id", $"{TblAlias}.BillId");
-            query.LeftJoin("Discounts as D", "D.Id", $"{TblAlias}.DiscountId");
+            query.LeftJoin("Bills as B", "B.Id", $"{TableAlias}.BillId");
+            query.LeftJoin("Discounts as D", "D.Id", $"{TableAlias}.DiscountId");
 
             return query;
         }

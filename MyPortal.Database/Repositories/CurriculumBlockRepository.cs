@@ -19,12 +19,14 @@ namespace MyPortal.Database.Repositories
         public CurriculumBlockRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "CurriculumBlocks";
 
         public async Task<IEnumerable<CurriculumBlock>> GetByCurriculumBand(Guid bandId)
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("CurriculumBandBlock as CBB", "CBB.BlockId", $"{TblAlias}.Id");
+            query.LeftJoin("CurriculumBandBlock as CBB", "CBB.BlockId", $"{TableAlias}.Id");
 
             query.Where("CBB.BandId", bandId);
 
@@ -33,11 +35,11 @@ namespace MyPortal.Database.Repositories
 
         public async Task<Guid?> GetAcademicYearId(Guid blockId)
         {
-            var query = new Query(TblName);
+            var query = new Query(TableName);
 
             query.Select("Band.AcademicYearId");
 
-            query.LeftJoin("CurriculumBandBlockAssignments as Assignment", "Assignment.BlockId", $"{TblAlias}.Id");
+            query.LeftJoin("CurriculumBandBlockAssignments as Assignment", "Assignment.BlockId", $"{TableAlias}.Id");
             query.LeftJoin("CurriculumBands as Band", "Band.Id", "Assignment.BandId");
 
             query.Where("Block.Id", blockId);
@@ -52,7 +54,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("CurriculumBandBlockAssignment as Assignment", "Assignment.BlockId", $"{TblAlias}.Id");
+            query.LeftJoin("CurriculumBandBlockAssignment as Assignment", "Assignment.BlockId", $"{TableAlias}.Id");
             query.LeftJoin("CurriculumBand as Band", "Band.Id", "Assignment.BandId");
 
             query.Where("Band.AcademicYearId", academicYearId);

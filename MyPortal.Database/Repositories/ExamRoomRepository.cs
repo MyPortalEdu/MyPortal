@@ -18,10 +18,12 @@ namespace MyPortal.Database.Repositories
         public ExamRoomRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamRooms";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Rooms as R", "R.Id", $"{TblAlias}.RoomId");
+            query.LeftJoin("Rooms as R", "R.Id", $"{TableAlias}.RoomId");
 
             return query;
         }

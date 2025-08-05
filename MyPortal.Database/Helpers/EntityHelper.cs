@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -9,9 +9,28 @@ namespace MyPortal.Database.Helpers
 {
     internal static class EntityHelper
     {
-        internal static string[] GetPropertyNames(Type t, string alias = null)
+        private static readonly Dictionary<Type, string[]> _columnCache = new();
+
+        private static string[] GetColumnNames<T>()
         {
-            var propNames = new List<string>();
+        
+            var type = typeof(T);
+            if (_columnCache.TryGetValue(type, out var columns))
+                return columns;
+
+            columns = type.GetProperties()
+                .Where(p => p.GetCustomAttribute<ColumnAttribute>() != null)
+                .Select(p => p.GetCustomAttribute<ColumnAttribute>()?.Name ?? p.Name)
+                .ToArray();
+
+            _columnCache[type] = columns;
+            return columns;
+
+        }
+        
+        internal static string[] GetColumns(Type t, string alias = null)
+        {
+            var columnNames = new List<string>();
 
             if (t == typeof(Role))
             {
@@ -28,16 +47,14 @@ namespace MyPortal.Database.Helpers
                 return GetUserRolePropertyNames(alias);
             }
 
-            string tblAlias;
-            GetTableName(t, out tblAlias, alias);
-            var props = GetColumnProperties(t);
+            var columns = GetColumnNames<Type>();
 
-            foreach (var prop in props)
+            foreach (var column in columns)
             {
-                propNames.Add($"{tblAlias}.{prop.Name}");
+                columnNames.Add($"{alias}.{column}");
             }
 
-            return propNames.ToArray();
+            return columnNames.ToArray();
         }
 
         internal static string[] GetRolePropertyNames(string alias = null)
@@ -99,56 +116,6 @@ namespace MyPortal.Database.Helpers
             };
 
             return propNames.ToArray();
-        }
-
-        private static IEnumerable<PropertyInfo> GetColumnProperties(Type t)
-        {
-            var props = new List<PropertyInfo>();
-
-            props.AddRange(t.GetProperties().Where(p => Attribute.IsDefined(p, typeof(ColumnAttribute))).OrderBy(p =>
-                ((ColumnAttribute)Attribute.GetCustomAttribute(p, typeof(ColumnAttribute)))?.Order).ToList());
-
-            return props;
-        }
-
-        internal static string GetTableName(Type t, out string outputAlias, string tblAlias = null,
-            bool includeSchema = false, string schema = "dbo")
-        {
-            var entityTable = ((TableAttribute)t.GetCustomAttribute(typeof(TableAttribute)))?.Name ?? t.Name;
-
-            if (!string.IsNullOrWhiteSpace(tblAlias))
-            {
-                outputAlias = tblAlias;
-
-                if (includeSchema)
-                {
-                    return $"{schema}.{entityTable}";
-                }
-
-                return $"{entityTable}";
-            }
-
-            // StudentGroup -> SG
-            outputAlias = string.Concat(entityTable.Where(char.IsUpper));
-
-            if (includeSchema)
-            {
-                return $"{schema}.{entityTable}";
-            }
-
-            return $"{entityTable}";
-        }
-
-        internal static string GetTableName(Type t, bool includeSchema = false, string schema = "dbo")
-        {
-            var entityTable = ((TableAttribute)t.GetCustomAttribute(typeof(TableAttribute)))?.Name ?? t.Name;
-
-            if (includeSchema)
-            {
-                return $"{schema}.{entityTable}";
-            }
-
-            return $"{entityTable}";
         }
     }
 }

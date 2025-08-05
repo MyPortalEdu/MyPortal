@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public AddressPersonRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AddressPeople";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Addresses as A", "A.Id", $"{TblAlias}.AddressId");
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
+            query.LeftJoin("Addresses as A", "A.Id", $"{TableAlias}.AddressId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
 
             return query;
         }

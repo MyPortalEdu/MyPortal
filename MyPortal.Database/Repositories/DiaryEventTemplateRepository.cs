@@ -19,10 +19,12 @@ namespace MyPortal.Database.Repositories
         public DiaryEventTemplateRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DiaryEventTemplates";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("DiaryEventTypes as T", "T.Id", $"{TblAlias}.EventTypeId");
+            query.LeftJoin("DiaryEventTypes as T", "T.Id", $"{TableAlias}.EventTypeId");
 
             return query;
         }

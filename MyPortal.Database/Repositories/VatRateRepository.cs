@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public VatRateRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "VatRates";
 
         public async Task Update(VatRate entity)
         {

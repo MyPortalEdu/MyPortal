@@ -19,10 +19,12 @@ namespace MyPortal.Database.Repositories
         public HomeworkItemRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "HomeworkItems";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Directories as D", "D.Id", $"{TblAlias}.DirectoryId");
+            query.LeftJoin("Directories as D", "D.Id", $"{TableAlias}.DirectoryId");
 
             return query;
         }

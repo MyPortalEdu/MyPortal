@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public RoomClosureRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "RoomClosures";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Rooms as R", "R.Id", $"{TblAlias}.RoomId");
-            query.LeftJoin("RoomClosureReasons as RCR", "RCR.Id", $"{TblAlias}.ReasonId");
+            query.LeftJoin("Rooms as R", "R.Id", $"{TableAlias}.RoomId");
+            query.LeftJoin("RoomClosureReasons as RCR", "RCR.Id", $"{TableAlias}.ReasonId");
 
             return query;
         }

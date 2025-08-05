@@ -22,12 +22,14 @@ namespace MyPortal.Database.Repositories
         public PersonRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "People";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Ethnicities as E", "E.Id", $"{TblAlias}.EthnicityId");
-            query.LeftJoin("Directories as D", "D.Id", $"{TblAlias}.DirectoryId");
-            query.LeftJoin("Photos as PH", "PH.Id", $"{TblAlias}.PhotoId");
+            query.LeftJoin("Ethnicities as E", "E.Id", $"{TableAlias}.EthnicityId");
+            query.LeftJoin("Directories as D", "D.Id", $"{TableAlias}.DirectoryId");
+            query.LeftJoin("Photos as PH", "PH.Id", $"{TableAlias}.PhotoId");
 
             return query;
         }
@@ -61,10 +63,10 @@ namespace MyPortal.Database.Repositories
 
         protected virtual void IncludePersonTypes(Query query)
         {
-            query.LeftJoin("Users as U", "U.PersonId", $"{TblAlias}.Id");
-            query.LeftJoin("Students AS S", "S.PersonId", $"{TblAlias}.Id");
-            query.LeftJoin("StaffMembers AS SM", "SM.PersonId", $"{TblAlias}.Id");
-            query.LeftJoin("Contacts AS C", "C.PersonId", $"{TblAlias}.Id");
+            query.LeftJoin("Users as U", "U.PersonId", $"{TableAlias}.Id");
+            query.LeftJoin("Students AS S", "S.PersonId", $"{TableAlias}.Id");
+            query.LeftJoin("StaffMembers AS SM", "SM.PersonId", $"{TableAlias}.Id");
+            query.LeftJoin("Contacts AS C", "C.PersonId", $"{TableAlias}.Id");
 
             query.SelectRaw("U.Id as UserId");
             query.SelectRaw("S.Id as StudentId");
@@ -76,7 +78,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("Users as U", "U.PersonId", $"{TblAlias}.Id");
+            query.LeftJoin("Users as U", "U.PersonId", $"{TableAlias}.Id");
 
             query.Where("U.Id", userId);
 
@@ -87,7 +89,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.Id", personId);
+            query.Where($"{TableAlias}.Id", personId);
 
             return (await ExecuteQueryWithTypes(query)).FirstOrDefault();
         }
@@ -107,7 +109,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.DirectoryId", directoryId);
+            query.Where($"{TableAlias}.DirectoryId", directoryId);
 
             return (await ExecuteQueryWithTypes(query)).FirstOrDefault();
         }
@@ -116,7 +118,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            searchParams.ApplySearch(query, TblAlias);
+            searchParams.ApplySearch(query, TableAlias);
 
             return await ExecuteQuery(query);
         }
@@ -125,7 +127,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            searchParams.ApplySearch(query, TblAlias);
+            searchParams.ApplySearch(query, TableAlias);
 
             return await ExecuteQueryWithTypes(query);
         }

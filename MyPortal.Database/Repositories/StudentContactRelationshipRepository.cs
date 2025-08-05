@@ -20,12 +20,14 @@ namespace MyPortal.Database.Repositories
         public StudentContactRelationshipRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StudentContactRelationships";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("RelationshipTypes as RT", "RT.Id", $"{TblAlias}.RelationshipTypeId");
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("Contacts as C", "C.Id", $"{TblAlias}.ContactId");
+            query.LeftJoin("RelationshipTypes as RT", "RT.Id", $"{TableAlias}.RelationshipTypeId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("Contacts as C", "C.Id", $"{TableAlias}.ContactId");
 
             return query;
         }

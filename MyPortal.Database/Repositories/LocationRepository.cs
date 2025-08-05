@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public LocationRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Locations";
 
         public async Task Update(Location entity)
         {

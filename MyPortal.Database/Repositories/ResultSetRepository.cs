@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public ResultSetRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ResultSets";
 
         public async Task Update(ResultSet entity)
         {

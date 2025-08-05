@@ -16,11 +16,13 @@ namespace MyPortal.Database.Repositories
         public LessonPlanHomeworkItemRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "LessonPlanHomeworkItems";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("LessonPlans as LP", "LP.Id", $"{TblAlias}.LessonPlanId");
-            query.LeftJoin("HomeworkItems as HI", "HI.Id", $"{TblAlias}.HomeworkItemId");
+            query.LeftJoin("LessonPlans as LP", "LP.Id", $"{TableAlias}.LessonPlanId");
+            query.LeftJoin("HomeworkItems as HI", "HI.Id", $"{TableAlias}.HomeworkItemId");
 
             return query;
         }

@@ -18,13 +18,15 @@ namespace MyPortal.Database.Repositories
         public IncidentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Incidents";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("IncidentTypes as IT", "IT.Id", $"{TblAlias}.BehaviourTypeId");
-            query.LeftJoin("Locations as L", "L.Id", $"{TblAlias}.LocationId");
-            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TblAlias}.AcademicYearId");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
+            query.LeftJoin("IncidentTypes as IT", "IT.Id", $"{TableAlias}.BehaviourTypeId");
+            query.LeftJoin("Locations as L", "L.Id", $"{TableAlias}.LocationId");
+            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TableAlias}.AcademicYearId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
 
             return query;
         }

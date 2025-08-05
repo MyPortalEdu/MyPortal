@@ -20,11 +20,13 @@ namespace MyPortal.Database.Repositories
         public ParentEveningAppointmentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ParentEveningAppointments";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ParentEveningStaffMembers as PESM", "PESM.Id", $"{TblAlias}.ParentEveningStaffId");
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
+            query.LeftJoin("ParentEveningStaffMembers as PESM", "PESM.Id", $"{TableAlias}.ParentEveningStaffId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
 
             return query;
         }

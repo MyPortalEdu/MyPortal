@@ -16,11 +16,13 @@ namespace MyPortal.Database.Repositories
         public BillAccountTransactionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "BillAccountTransactions";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Bills as B", "B.Id", $"{TblAlias}.BillId");
-            query.LeftJoin("AccountTransactions as AT", "AT.Id", $"{TblAlias}.AccountTransactionId");
+            query.LeftJoin("Bills as B", "B.Id", $"{TableAlias}.BillId");
+            query.LeftJoin("AccountTransactions as AT", "AT.Id", $"{TableAlias}.AccountTransactionId");
 
             return query;
         }

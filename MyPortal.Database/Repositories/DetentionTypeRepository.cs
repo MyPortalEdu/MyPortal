@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public DetentionTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DetentionTypes";
 
         public async Task Update(DetentionType entity)
         {

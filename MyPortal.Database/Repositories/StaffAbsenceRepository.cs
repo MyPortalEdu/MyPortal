@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public StaffAbsenceRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StaffAbsences";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StaffMembers as SM", "SM.Id", $"{TblAlias}.StaffMemberId");
-            query.LeftJoin("StaffAbsenceTypes as SAT", "SAT.Id", $"{TblAlias}.AbsenceTypeId");
-            query.LeftJoin("StaffIllnessTypes as SIT", "SIT.Id", $"{TblAlias}.IllnessTypeId");
+            query.LeftJoin("StaffMembers as SM", "SM.Id", $"{TableAlias}.StaffMemberId");
+            query.LeftJoin("StaffAbsenceTypes as SAT", "SAT.Id", $"{TableAlias}.AbsenceTypeId");
+            query.LeftJoin("StaffIllnessTypes as SIT", "SIT.Id", $"{TableAlias}.IllnessTypeId");
 
             return query;
         }

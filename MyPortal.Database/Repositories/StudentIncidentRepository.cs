@@ -19,14 +19,16 @@ public class StudentIncidentRepository : BaseReadWriteRepository<StudentIncident
     public StudentIncidentRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "StudentIncidents";
 
     protected override Query JoinRelated(Query query)
     {
-        query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-        query.LeftJoin("Incidents as I", "I.Id", $"{TblAlias}.IncidentId");
-        query.LeftJoin("BehaviourRoleTypes as BRT", "BRT.Id", $"{TblAlias}.RoleTypeId");
-        query.LeftJoin("BehaviourOutcomes as BO", "BO.Id", $"{TblAlias}.OutcomeId");
-        query.LeftJoin("BehaviourStatus as BS", "BS.Id", $"{TblAlias}.StatusId");
+        query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+        query.LeftJoin("Incidents as I", "I.Id", $"{TableAlias}.IncidentId");
+        query.LeftJoin("BehaviourRoleTypes as BRT", "BRT.Id", $"{TableAlias}.RoleTypeId");
+        query.LeftJoin("BehaviourOutcomes as BO", "BO.Id", $"{TableAlias}.OutcomeId");
+        query.LeftJoin("BehaviourStatus as BS", "BS.Id", $"{TableAlias}.StatusId");
 
         return query;
     }
@@ -87,7 +89,7 @@ public class StudentIncidentRepository : BaseReadWriteRepository<StudentIncident
     {
         var query = GetDefaultQuery().AsCount();
 
-        query.Where($"{TblAlias}.StudentId", studentId);
+        query.Where($"{TableAlias}.StudentId", studentId);
         query.Where("I.AcademicYearId", academicYearId);
 
         return await ExecuteQueryIntResult(query) ?? 0;
@@ -104,7 +106,7 @@ public class StudentIncidentRepository : BaseReadWriteRepository<StudentIncident
 
     public async Task<int> GetPointsByStudent(Guid studentId, Guid academicYearId)
     {
-        var query = GetEmptyQuery().AsSum($"{TblAlias}.Points");
+        var query = GetEmptyQuery().AsSum($"{TableAlias}.Points");
 
         query.Where("I.StudentId", studentId);
         query.Where("I.AcademicYearId", academicYearId);

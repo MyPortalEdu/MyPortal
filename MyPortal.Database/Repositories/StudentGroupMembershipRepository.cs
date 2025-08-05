@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public StudentGroupMembershipRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StudentGroupMemberships";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TblAlias}.StudentGroupId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TableAlias}.StudentGroupId");
 
             return query;
         }

@@ -11,5 +11,7 @@ namespace MyPortal.Database.Repositories
         public DiaryEventAttendeeResponseRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DiaryEventAttendeeResponses";
     }
 }

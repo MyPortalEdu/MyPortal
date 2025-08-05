@@ -24,42 +24,44 @@ namespace MyPortal.Database.Repositories
         public BulletinRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Bulletins";
 
         private void ApplySearch(Query query, BulletinSearchOptions searchOptions)
         {
             if (!string.IsNullOrWhiteSpace(searchOptions.SearchText))
             {
                 query.Where(q =>
-                    q.WhereContainsWord($"{TblAlias}.Title", searchOptions.SearchText)
-                        .OrWhereContainsWord($"{TblAlias}.Summary", searchOptions.SearchText));
+                    q.WhereContainsWord($"{TableAlias}.Title", searchOptions.SearchText)
+                        .OrWhereContainsWord($"{TableAlias}.Summary", searchOptions.SearchText));
             }
 
             if (!searchOptions.IncludeStaffOnly)
             {
-                query.Where($"{TblAlias}.StaffOnly", false);
+                query.Where($"{TableAlias}.StaffOnly", false);
             }
 
             if (!searchOptions.IncludeExpired)
             {
                 query.Where(q =>
-                    q.WhereNull($"{TblAlias}.ExpireDate").OrWhere($"{TblAlias}.ExpireDate", ">", DateTime.Now));
+                    q.WhereNull($"{TableAlias}.ExpireDate").OrWhere($"{TableAlias}.ExpireDate", ">", DateTime.Now));
             }
 
             if (!searchOptions.IncludeUnapproved)
             {
-                query.Where($"{TblAlias}.Approved", true);
+                query.Where($"{TableAlias}.Approved", true);
             }
 
             if (searchOptions.IncludeCreatedBy.HasValue)
             {
-                query.OrWhere($"{TblAlias}.CreatedById", searchOptions.IncludeCreatedBy.Value);
+                query.OrWhere($"{TableAlias}.CreatedById", searchOptions.IncludeCreatedBy.Value);
             }
         }
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.AuthorId");
-            query.LeftJoin("Directories as D", "D.Id", $"{TblAlias}.DirectoryId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.AuthorId");
+            query.LeftJoin("Directories as D", "D.Id", $"{TableAlias}.DirectoryId");
 
             return query;
         }
@@ -93,22 +95,22 @@ namespace MyPortal.Database.Repositories
         {
             var query = new Query();
 
-            query.Select($"{TblAlias}.Id");
-            query.Select($"{TblAlias}.DirectoryId");
-            query.Select($"{TblAlias}.CreatedById");
+            query.Select($"{TableAlias}.Id");
+            query.Select($"{TableAlias}.DirectoryId");
+            query.Select($"{TableAlias}.CreatedById");
             query.SelectRaw("COALESCE(D.Name, U.UserName) as CreatedByName");
-            query.Select($"{TblAlias}.CreatedDate");
-            query.Select($"{TblAlias}.ExpireDate");
-            query.Select($"{TblAlias}.Title");
-            query.Select($"{TblAlias}.Detail");
-            query.Select($"{TblAlias}.Private");
-            query.Select($"{TblAlias}.Approved");
+            query.Select($"{TableAlias}.CreatedDate");
+            query.Select($"{TableAlias}.ExpireDate");
+            query.Select($"{TableAlias}.Title");
+            query.Select($"{TableAlias}.Detail");
+            query.Select($"{TableAlias}.Private");
+            query.Select($"{TableAlias}.Approved");
 
-            query.FromRaw($@"Bulletins as {TblAlias}");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
+            query.FromRaw($@"Bulletins as {TableAlias}");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
             query.ApplyName("D", "U.PersonId", NameFormat.FullNameAbbreviated);
 
-            query.OrderByDesc($"{TblAlias}.CreatedDate");
+            query.OrderByDesc($"{TableAlias}.CreatedDate");
 
             ApplySearch(query, searchOptions);
 
@@ -134,21 +136,21 @@ namespace MyPortal.Database.Repositories
         {
             var query = new Query();
 
-            query.Select($"{TblAlias}.Id");
-            query.Select($"{TblAlias}.DirectoryId");
-            query.Select($"{TblAlias}.CreatedById");
+            query.Select($"{TableAlias}.Id");
+            query.Select($"{TableAlias}.DirectoryId");
+            query.Select($"{TableAlias}.CreatedById");
             query.Select("D.DisplayName as CreatedByName");
-            query.Select($"{TblAlias}.CreatedDate");
-            query.Select($"{TblAlias}.ExpireDate");
-            query.Select($"{TblAlias}.Title");
-            query.Select($"{TblAlias}.Detail");
-            query.Select($"{TblAlias}.Private");
-            query.Select($"{TblAlias}.Approved");
+            query.Select($"{TableAlias}.CreatedDate");
+            query.Select($"{TableAlias}.ExpireDate");
+            query.Select($"{TableAlias}.Title");
+            query.Select($"{TableAlias}.Detail");
+            query.Select($"{TableAlias}.Private");
+            query.Select($"{TableAlias}.Approved");
 
-            query.FromRaw($@"Bulletins as {TblAlias}
-CROSS APPLY GetDisplayName({TblAlias}.CreatedById, 2, 1, 1) D");
+            query.FromRaw($@"Bulletins as {TableAlias}
+CROSS APPLY GetDisplayName({TableAlias}.CreatedById, 2, 1, 1) D");
 
-            query.OrderByDesc($"{TblAlias}.CreatedDate");
+            query.OrderByDesc($"{TableAlias}.CreatedDate");
 
             ApplySearch(query, searchOptions);
 
@@ -170,7 +172,7 @@ CROSS APPLY GetDisplayName({TblAlias}.CreatedById, 2, 1, 1) D");
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.AuthorId", "=", authorId);
+            query.Where($"{TableAlias}.AuthorId", "=", authorId);
 
             return await ExecuteQuery(query);
         }

@@ -18,10 +18,12 @@ namespace MyPortal.Database.Repositories
         public ExamSeasonRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamSeasons";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ResultSet as RS", "RS.Id", $"{TblAlias}.ResultSetId");
+            query.LeftJoin("ResultSet as RS", "RS.Id", $"{TableAlias}.ResultSetId");
 
             return query;
         }

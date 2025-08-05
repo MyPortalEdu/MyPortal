@@ -19,12 +19,14 @@ namespace MyPortal.Database.Repositories
         public CurriculumBandRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "CurriculumBands";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TblAlias}.AcademicYearId");
-            query.LeftJoin("CurriculumYearGroup as CYG", "CYG.Id", $"{TblAlias}.CurriculumYearGroupId");
-            query.LeftJoin("StudentGroup as SG", "SG.Id", $"{TblAlias}.StudentGroupId");
+            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TableAlias}.AcademicYearId");
+            query.LeftJoin("CurriculumYearGroup as CYG", "CYG.Id", $"{TableAlias}.CurriculumYearGroupId");
+            query.LeftJoin("StudentGroup as SG", "SG.Id", $"{TableAlias}.StudentGroupId");
 
             return query;
         }
@@ -60,7 +62,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.CurriculumYearGroupId", yearGroupId);
+            query.Where($"{TableAlias}.CurriculumYearGroupId", yearGroupId);
 
             return await ExecuteQuery(query);
         }

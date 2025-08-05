@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public CommentBankRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "CommentBanks";
 
         public async Task Update(CommentBank entity)
         {

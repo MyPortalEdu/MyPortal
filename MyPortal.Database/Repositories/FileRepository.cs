@@ -15,12 +15,14 @@ namespace MyPortal.Database.Repositories
         public FileRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Files";
 
         public async Task<File> GetByDocumentId(Guid documentId)
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.DocumentId", documentId);
+            query.Where($"{TableAlias}.DocumentId", documentId);
 
             return await ExecuteQueryFirstOrDefault(query);
         }

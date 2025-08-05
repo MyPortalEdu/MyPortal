@@ -19,12 +19,14 @@ namespace MyPortal.Database.Repositories
         public SubjectStaffMemberRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "SubjectStaffMembers";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Subjects as SU", "SU.Id", $"{TblAlias}.SubjectId");
-            query.LeftJoin("StaffMembers as SM", "SM.Id", $"{TblAlias}.StaffMemberId");
-            query.LeftJoin("SubjectStaffMemberRoles as SSMR", "SSMR.Id", $"{TblAlias}.RoleId");
+            query.LeftJoin("Subjects as SU", "SU.Id", $"{TableAlias}.SubjectId");
+            query.LeftJoin("StaffMembers as SM", "SM.Id", $"{TableAlias}.StaffMemberId");
+            query.LeftJoin("SubjectStaffMemberRoles as SSMR", "SSMR.Id", $"{TableAlias}.RoleId");
 
             return query;
         }

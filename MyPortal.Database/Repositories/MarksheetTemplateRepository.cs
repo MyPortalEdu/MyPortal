@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public MarksheetTemplateRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "MarksheetTemplates";
 
         public async Task Update(MarksheetTemplate entity)
         {

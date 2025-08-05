@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public GiftedTalentedRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "GiftedTalented";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("Subjects as SU", "SU.Id", $"{TblAlias}.SubjectId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("Subjects as SU", "SU.Id", $"{TableAlias}.SubjectId");
 
             return query;
         }
@@ -58,7 +60,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.StudentId", studentId);
+            query.Where($"{TableAlias}.StudentId", studentId);
 
             return await ExecuteQuery(query);
         }

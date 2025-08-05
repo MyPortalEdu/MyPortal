@@ -20,12 +20,14 @@ namespace MyPortal.Database.Repositories
         public DiaryEventAttendeeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DiaryEventAttendees";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("DiaryEvents as DE", "DE.Id", $"{TblAlias}.EventId");
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("DiaryEventAttendeeResponses as DEAR", "DEAR.Id", $"{TblAlias}.ResponseId");
+            query.LeftJoin("DiaryEvents as DE", "DE.Id", $"{TableAlias}.EventId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("DiaryEventAttendeeResponses as DEAR", "DEAR.Id", $"{TableAlias}.ResponseId");
 
             return query;
         }
@@ -62,7 +64,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.Id", eventId);
+            query.Where($"{TableAlias}.Id", eventId);
 
             return await ExecuteQuery(query);
         }
@@ -71,8 +73,8 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.EventId", eventId);
-            query.Where($"{TblAlias}.PersonId");
+            query.Where($"{TableAlias}.EventId", eventId);
+            query.Where($"{TableAlias}.PersonId");
 
             return await ExecuteQueryFirstOrDefault(query);
         }

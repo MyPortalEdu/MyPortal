@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public AddressRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Addresses";
 
         public async Task<IEnumerable<Address>> GetAddressesByPerson(Guid personId)
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("AddressPeople AS AP", "AP.AddressId", $"{TblAlias}.Id");
+            query.LeftJoin("AddressPeople AS AP", "AP.AddressId", $"{TableAlias}.Id");
 
             query.Where("AP.PersonId", personId);
 
@@ -34,47 +36,47 @@ namespace MyPortal.Database.Repositories
         {
             if (!string.IsNullOrWhiteSpace(searchOptions.Apartment))
             {
-                query.WhereStarts($"{TblAlias}.Apartment", searchOptions.Apartment);
+                query.WhereStarts($"{TableAlias}.Apartment", searchOptions.Apartment);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.BuildingName))
             {
-                query.WhereStarts($"{TblAlias}.BuildingName", searchOptions.BuildingName);
+                query.WhereStarts($"{TableAlias}.BuildingName", searchOptions.BuildingName);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.BuildingNumber))
             {
-                query.WhereStarts($"{TblAlias}.BuildingNumber", searchOptions.BuildingNumber);
+                query.WhereStarts($"{TableAlias}.BuildingNumber", searchOptions.BuildingNumber);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.Street))
             {
-                query.WhereStarts($"{TblAlias}.Street", searchOptions.Street);
+                query.WhereStarts($"{TableAlias}.Street", searchOptions.Street);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.District))
             {
-                query.WhereStarts($"{TblAlias}.District", searchOptions.District);
+                query.WhereStarts($"{TableAlias}.District", searchOptions.District);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.Town))
             {
-                query.WhereStarts($"{TblAlias}.Town", searchOptions.Town);
+                query.WhereStarts($"{TableAlias}.Town", searchOptions.Town);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.County))
             {
-                query.WhereStarts($"{TblAlias}.County", searchOptions.County);
+                query.WhereStarts($"{TableAlias}.County", searchOptions.County);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.Country))
             {
-                query.WhereStarts($"{TblAlias}.Country", searchOptions.Country);
+                query.WhereStarts($"{TableAlias}.Country", searchOptions.Country);
             }
 
             if (!string.IsNullOrWhiteSpace(searchOptions.Postcode))
             {
-                query.WhereStarts($"{TblAlias}.Postcode", searchOptions.Postcode);
+                query.WhereStarts($"{TableAlias}.Postcode", searchOptions.Postcode);
             }
         }
 

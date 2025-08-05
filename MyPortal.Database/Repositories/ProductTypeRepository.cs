@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public ProductTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ProductTypes";
 
         public async Task Update(ProductType entity)
         {

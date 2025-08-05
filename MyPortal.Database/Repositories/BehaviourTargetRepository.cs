@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public BehaviourTargetRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "BehaviourTargets";
 
         public async Task Update(BehaviourTarget entity)
         {

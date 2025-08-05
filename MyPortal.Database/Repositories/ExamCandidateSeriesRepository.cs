@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public ExamCandidateSeriesRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamCandidateSeries";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ExamSeries as ES", "ES.Id", $"{TblAlias}.SeriesId");
-            query.LeftJoin("ExamCandidate as EC", "EC.Id", $"{TblAlias}.CandidateId");
+            query.LeftJoin("ExamSeries as ES", "ES.Id", $"{TableAlias}.SeriesId");
+            query.LeftJoin("ExamCandidate as EC", "EC.Id", $"{TableAlias}.CandidateId");
 
             return query;
         }

@@ -18,6 +18,8 @@ namespace MyPortal.Database.Repositories
         public MarksheetRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Marksheets";
 
         private Query WithMarksheets(Query query, string alias)
         {
@@ -62,8 +64,8 @@ namespace MyPortal.Database.Repositories
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TblAlias}.StudentGroupId");
-            query.LeftJoin("MarksheetTemplates as MT", "MT.Id", $"{TblAlias}.MarksheetTemplateId");
+            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TableAlias}.StudentGroupId");
+            query.LeftJoin("MarksheetTemplates as MT", "MT.Id", $"{TableAlias}.MarksheetTemplateId");
 
             return query;
         }

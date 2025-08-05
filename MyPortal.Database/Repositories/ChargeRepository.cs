@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public ChargeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Charges";
 
         public async Task Update(Charge entity)
         {

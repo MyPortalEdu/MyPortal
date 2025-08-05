@@ -19,11 +19,13 @@ internal class AddressAgencyRepository : BaseReadWriteRepository<AddressAgency>,
     public AddressAgencyRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "AddressAgencies";
 
     protected override Query JoinRelated(Query query)
     {
-        query.LeftJoin("Addresses as A", "A.Id", $"{TblAlias}.AddressId");
-        query.LeftJoin("Agencies as AG", "AG.Id", $"{TblAlias}.AgencyId");
+        query.LeftJoin("Addresses as A", "A.Id", $"{TableAlias}.AddressId");
+        query.LeftJoin("Agencies as AG", "AG.Id", $"{TableAlias}.AgencyId");
 
         return query;
     }

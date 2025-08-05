@@ -15,10 +15,12 @@ namespace MyPortal.Database.Repositories
         public SubjectCodeRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "SubjectCodes";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("SubjectCodeSets as SCS", "SCS.Id", $"{TblAlias}.SubjectCodeSetId");
+            query.LeftJoin("SubjectCodeSets as SCS", "SCS.Id", $"{TableAlias}.SubjectCodeSetId");
 
             return query;
         }

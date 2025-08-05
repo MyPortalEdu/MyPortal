@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public StudentGroupRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StudentGroups";
 
         public async Task Update(StudentGroup entity)
         {

@@ -17,10 +17,12 @@ namespace MyPortal.Database.Repositories
         public UserRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Users";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
 
             return query;
         }
@@ -48,9 +50,9 @@ namespace MyPortal.Database.Repositories
 
         public async Task<bool> UserExists(string username)
         {
-            var query = GetEmptyQuery(typeof(User), "User");
+            var query = GetEmptyQuery("Users", "User");
 
-            query.Where($"{TblAlias}.UserName", username);
+            query.Where($"{TableAlias}.UserName", username);
 
             query.AsCount();
 
@@ -63,7 +65,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.UserName", username);
+            query.Where($"{TableAlias}.UserName", username);
 
             return await ExecuteQueryFirstOrDefault(query);
         }

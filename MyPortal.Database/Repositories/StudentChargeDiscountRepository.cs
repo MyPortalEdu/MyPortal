@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public StudentChargeDiscountRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StudentChargeDiscounts";
 
         public async Task<IEnumerable<StudentChargeDiscount>> GetByStudent(Guid studentId)
         {

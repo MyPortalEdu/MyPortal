@@ -10,5 +10,7 @@ namespace MyPortal.Database.Repositories
         public EnrolmentStatusRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "EnrolmentStatus";
     }
 }

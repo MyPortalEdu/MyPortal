@@ -10,5 +10,7 @@ namespace MyPortal.Database.Repositories
         public IntakeTypeRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "IntakeTypes";
     }
 }

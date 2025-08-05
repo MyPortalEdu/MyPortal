@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public ProductRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Products";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ProductTypes as PT", "PT.Id", $"{TblAlias}.ProductTypeId");
-            query.LeftJoin("VatRates as VR", "VR.Id", $"{TblAlias}.VatRateId");
+            query.LeftJoin("ProductTypes as PT", "PT.Id", $"{TableAlias}.ProductTypeId");
+            query.LeftJoin("VatRates as VR", "VR.Id", $"{TableAlias}.VatRateId");
 
             return query;
         }

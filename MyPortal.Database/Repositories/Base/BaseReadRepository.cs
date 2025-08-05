@@ -7,7 +7,6 @@ using MyPortal.Database.Helpers;
 using MyPortal.Database.Interfaces;
 using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Connection;
-using MyPortal.Database.Models.Entity;
 using SqlKata;
 
 namespace MyPortal.Database.Repositories.Base
@@ -15,14 +14,17 @@ namespace MyPortal.Database.Repositories.Base
     public abstract class BaseReadRepository<TEntity> : BaseRepository, IReadRepository<TEntity>
         where TEntity : class, IEntity
     {
-        public BaseReadRepository(DbUser dbUser, string tblAlias = null) : base(dbUser)
+        public BaseReadRepository(DbUser dbUser, string tableAlias = null) : base(dbUser)
         {
-            TblName = EntityHelper.GetTableName(typeof(TEntity), out TblAlias, tblAlias);
+            TableAlias = tableAlias;
         }
 
-        protected string TblName;
+        protected abstract string TableName { get; }
 
-        protected string TblAlias;
+        protected string TableAlias;
+
+        protected string TableReference =>
+            !string.IsNullOrWhiteSpace(TableAlias) ? $"[{TableName}] AS [{TableAlias}]" : TableName;
 
         protected virtual Query JoinRelated(Query query)
         {
@@ -55,14 +57,14 @@ namespace MyPortal.Database.Repositories.Base
 
         protected virtual Query GetDefaultQuery(bool includeSoftDeleted = false)
         {
-            var query = new Query($"{TblName} as {TblAlias}").SelectAllColumns(typeof(TEntity), TblAlias);
+            var query = new Query($"{TableReference}").SelectAllColumns(typeof(TEntity), TableAlias);
 
             JoinRelated(query);
             SelectAllRelated(query);
 
             if (typeof(TEntity).GetInterfaces().Contains(typeof(ISoftDeleteEntity)) && !includeSoftDeleted)
             {
-                query.Where($"{TblAlias}.Deleted", false);
+                query.Where($"{TableAlias}.Deleted", false);
             }
 
             return query;
@@ -70,13 +72,13 @@ namespace MyPortal.Database.Repositories.Base
 
         protected Query GetDefaultQuery(Type t, bool includeSoftDeleted = false)
         {
-            var tblName = EntityHelper.GetTableName(t, out string tblAlias);
-
-            var query = new Query($"{tblName} as {tblAlias}").SelectAllColumns(t, tblAlias);
+            var tableIdentifier = !string.IsNullOrWhiteSpace(TableAlias) ? TableAlias : TableName;
+            
+            var query = new Query(TableReference).SelectAllColumns(t, tableIdentifier);
 
             if (t.GetInterfaces().Contains(typeof(ISoftDeleteEntity)) && !includeSoftDeleted)
             {
-                query.Where($"{tblAlias}.Deleted", false);
+                query.Where($"{tableIdentifier}.Deleted", false);
             }
 
             return query;
@@ -93,7 +95,7 @@ namespace MyPortal.Database.Repositories.Base
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.Id", id);
+            query.Where($"{TableAlias}.Id", id);
 
             return (await ExecuteQuery(query)).SingleOrDefault();
         }
@@ -108,14 +110,15 @@ namespace MyPortal.Database.Repositories.Base
 
         protected Query GetEmptyQuery()
         {
-            return GetEmptyQuery(typeof(TEntity), TblAlias);
+            return GetEmptyQuery(TableName, TableAlias);
         }
 
-        protected Query GetEmptyQuery(Type t, string alias = null)
+        protected Query GetEmptyQuery(string tableName, string tableAlias)
         {
-            var tableName = EntityHelper.GetTableName(t);
-            var table = string.IsNullOrWhiteSpace(alias) ? tableName : $"{tableName} as {alias}";
-            return new Query(table);
+            var tableIdentifier = !string.IsNullOrWhiteSpace(tableAlias)
+                ? $"[{tableName}] as [{tableAlias}]"
+                : $"[{tableName}]";
+            return new Query(tableIdentifier);
         }
 
         protected async Task<int?> ExecuteQueryIntResult(Query query)

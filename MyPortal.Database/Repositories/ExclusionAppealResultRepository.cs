@@ -11,5 +11,7 @@ namespace MyPortal.Database.Repositories
         public ExclusionAppealResultRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExclusionAppealResults";
     }
 }

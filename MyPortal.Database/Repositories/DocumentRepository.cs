@@ -19,13 +19,15 @@ namespace MyPortal.Database.Repositories
         public DocumentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Documents";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
-            query.LeftJoin("Directory as P", "P.Id", $"{TblAlias}.DirectoryId");
-            query.LeftJoin("DocumentType as DT", "DT.Id", $"{TblAlias}.DocumentTypeId");
-            query.LeftJoin("Files as F", "F.Id", $"{TblAlias}.FileId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
+            query.LeftJoin("Directory as P", "P.Id", $"{TableAlias}.DirectoryId");
+            query.LeftJoin("DocumentType as DT", "DT.Id", $"{TableAlias}.DocumentTypeId");
+            query.LeftJoin("Files as F", "F.Id", $"{TableAlias}.FileId");
 
             return query;
         }
@@ -64,7 +66,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.DirectoryId", directoryId);
+            query.Where($"{TableAlias}.DirectoryId", directoryId);
 
             return await ExecuteQuery(query);
         }

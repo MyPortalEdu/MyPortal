@@ -10,5 +10,7 @@ namespace MyPortal.Database.Repositories
         public RelationshipTypeRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "RelationshipTypes";
     }
 }

@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public ReportCardRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ReportCards";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("IncidentType as IT", "IT.Id", $"{TblAlias}.BehaviourTypeId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("IncidentType as IT", "IT.Id", $"{TableAlias}.BehaviourTypeId");
 
             return query;
         }

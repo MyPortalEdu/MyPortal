@@ -20,7 +20,7 @@ namespace MyPortal.Database.Repositories.Base
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TblAlias}.StudentGroupId");
+            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TableAlias}.StudentGroupId");
 
             return query;
         }

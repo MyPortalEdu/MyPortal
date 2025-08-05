@@ -19,13 +19,15 @@ namespace MyPortal.Database.Repositories
         public ExclusionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Exclusions";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("ExclusionTypes as ET", "ET.Id", $"{TblAlias}.ExclusionTypeId");
-            query.LeftJoin("ExclusionReasons as ER", "ER.Id", $"{TblAlias}.ExclusionReasonId");
-            query.LeftJoin("ExclusionAppealResults as EAR", "EAR.Id", $"{TblAlias}.AppealResultId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("ExclusionTypes as ET", "ET.Id", $"{TableAlias}.ExclusionTypeId");
+            query.LeftJoin("ExclusionReasons as ER", "ER.Id", $"{TableAlias}.ExclusionReasonId");
+            query.LeftJoin("ExclusionAppealResults as EAR", "EAR.Id", $"{TableAlias}.AppealResultId");
 
             return query;
         }
@@ -64,7 +66,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery().AsCount();
 
-            query.Where($"{TblAlias}.StudentId", studentId);
+            query.Where($"{TableAlias}.StudentId", studentId);
 
             return await ExecuteQueryIntResult(query) ?? 0;
         }
@@ -73,7 +75,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.StudentId", studentId);
+            query.Where($"{TableAlias}.StudentId", studentId);
 
             return await ExecuteQuery(query);
         }

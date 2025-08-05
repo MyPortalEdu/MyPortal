@@ -19,20 +19,22 @@ namespace MyPortal.Database.Repositories
         public DiaryEventRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DiaryEvents";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("DiaryEventTypes as DET", "DET.Id", $"{TblAlias}.EventTypeId");
-            query.LeftJoin("Rooms as R", "R.Id", $"{TblAlias}.RoomId");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
+            query.LeftJoin("DiaryEventTypes as DET", "DET.Id", $"{TableAlias}.EventTypeId");
+            query.LeftJoin("Rooms as R", "R.Id", $"{TableAlias}.RoomId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
 
             return query;
         }
 
         private Query JoinEventTypeEntities(Query query)
         {
-            query.LeftJoin("Detentions as D", "D.EventId", $"{TblAlias}.Id");
-            query.LeftJoin("ParentEvenings as PE", "PE.EventId", $"{TblAlias}.Id");
+            query.LeftJoin("Detentions as D", "D.EventId", $"{TableAlias}.Id");
+            query.LeftJoin("ParentEvenings as PE", "PE.EventId", $"{TableAlias}.Id");
 
             return query;
         }
@@ -87,12 +89,12 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.WhereDate($"{TblAlias}.StartTime", ">=", firstDate.Date);
-            query.WhereDate($"{TblAlias}.EndTime", "<", lastDate.Date.AddDays(1));
+            query.WhereDate($"{TableAlias}.StartTime", ">=", firstDate.Date);
+            query.WhereDate($"{TableAlias}.EndTime", "<", lastDate.Date.AddDays(1));
 
             if (!includePrivateEvents)
             {
-                query.WhereTrue($"{TblAlias}.IsPublic");
+                query.WhereTrue($"{TableAlias}.IsPublic");
             }
 
             return await ExecuteQuery(query);
@@ -102,16 +104,16 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("DiaryEventAttendees as A", "A.EventId", $"{TblAlias}.Id");
+            query.LeftJoin("DiaryEventAttendees as A", "A.EventId", $"{TableAlias}.Id");
 
             JoinEventTypeEntities(query);
             JoinEventTypePeople(query);
 
-            query.Where($"{TblAlias}.StartTime", ">=", firstDate.Date);
+            query.Where($"{TableAlias}.StartTime", ">=", firstDate.Date);
 
             // Events might start today but go on for 2 weeks (unlikely but still a use case)
             // we want to include these events but exclude events that start after the end date
-            query.Where($"{TblAlias}.StartTime", "<=", lastDate.Date.AddTicks(TimeSpan.TicksPerDay - 1));
+            query.Where($"{TableAlias}.StartTime", "<=", lastDate.Date.AddTicks(TimeSpan.TicksPerDay - 1));
 
             query.Where(q =>
             {
@@ -131,7 +133,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.Public", true);
+            query.Where($"{TableAlias}.Public", true);
 
             return await ExecuteQuery(query);
         }
@@ -140,13 +142,13 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.WhereDate($"{TblAlias}.StartTime", ">=", firstDate.Date);
+            query.WhereDate($"{TableAlias}.StartTime", ">=", firstDate.Date);
 
             // Events might start today but go on for 2 weeks (unlikely but still a use case)
             // we want to include these events but exclude events that start after the end date
-            query.WhereDate($"{TblAlias}.StartTime", "<=", lastDate.Date.AddTicks(TimeSpan.TicksPerDay - 1));
+            query.WhereDate($"{TableAlias}.StartTime", "<=", lastDate.Date.AddTicks(TimeSpan.TicksPerDay - 1));
 
-            query.Where($"{TblAlias}.RoomId", roomId);
+            query.Where($"{TableAlias}.RoomId", roomId);
 
             return await ExecuteQuery(query);
         }

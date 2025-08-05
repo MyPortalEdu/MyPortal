@@ -3,6 +3,7 @@ using MyPortal.Database.Constants;
 using MyPortal.Database.Enums;
 using MyPortal.Database.Models.Entity;
 using MyPortal.Database.Models.Filters;
+using MyPortal.Database.Sorting;
 using SqlKata;
 
 namespace MyPortal.Database.Helpers
@@ -11,7 +12,7 @@ namespace MyPortal.Database.Helpers
     {
         public static Query SelectAllColumns(this Query query, Type type, string alias = null)
         {
-            var columnNames = EntityHelper.GetPropertyNames(type, alias);
+            var columnNames = EntityHelper.GetColumns(type, alias);
 
             query.Select(columnNames);
 
@@ -20,7 +21,7 @@ namespace MyPortal.Database.Helpers
 
         public static Query GroupByEntityColumns(this Query query, Type type, string alias = null)
         {
-            var columnNames = EntityHelper.GetPropertyNames(type, alias);
+            var columnNames = EntityHelper.GetColumns(type, alias);
 
             query.GroupBy(columnNames);
 

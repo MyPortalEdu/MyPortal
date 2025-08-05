@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public CommunicationLogRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "CommunicationLogs";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Contacts as C", "C.Id", $"{TblAlias}.ContactId");
-            query.LeftJoin("CommunicationTypes as CT", "CT.Id", $"{TblAlias}.CommunicationTypeId");
+            query.LeftJoin("Contacts as C", "C.Id", $"{TableAlias}.ContactId");
+            query.LeftJoin("CommunicationTypes as CT", "CT.Id", $"{TableAlias}.CommunicationTypeId");
 
             return query;
         }

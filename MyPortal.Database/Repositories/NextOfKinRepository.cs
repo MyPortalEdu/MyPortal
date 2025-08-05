@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public NextOfKinRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "NextOfKin";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StaffMember as SM", "SM.Id", $"{TblAlias}.StaffMemberId");
-            query.LeftJoin("Person as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("NextOfKinRelationshipTypes as NKRT", "NKRT.Id", $"{TblAlias}.RelationshipTypeId");
+            query.LeftJoin("StaffMember as SM", "SM.Id", $"{TableAlias}.StaffMemberId");
+            query.LeftJoin("Person as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("NextOfKinRelationshipTypes as NKRT", "NKRT.Id", $"{TableAlias}.RelationshipTypeId");
 
             return query;
         }

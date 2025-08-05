@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public ExclusionReasonRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExclusionReasons";
 
         public async Task Update(ExclusionReason entity)
         {

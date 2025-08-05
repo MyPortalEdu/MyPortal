@@ -19,12 +19,14 @@ namespace MyPortal.Database.Repositories
         public TrainingCertificateRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "TrainingCertificates";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StaffMembers as S", "S.Id", $"{TblAlias}.StaffId");
-            query.LeftJoin("TrainingCourses as TC", "TC.Id", $"{TblAlias}.CourseId");
-            query.LeftJoin("TrainingCertificateStatus as TCS", "TCS.Id", $"{TblAlias}.StatusId");
+            query.LeftJoin("StaffMembers as S", "S.Id", $"{TableAlias}.StaffId");
+            query.LeftJoin("TrainingCourses as TC", "TC.Id", $"{TableAlias}.CourseId");
+            query.LeftJoin("TrainingCertificateStatus as TCS", "TCS.Id", $"{TableAlias}.StatusId");
 
             return query;
         }

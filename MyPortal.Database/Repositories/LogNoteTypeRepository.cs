@@ -10,5 +10,7 @@ namespace MyPortal.Database.Repositories
         public LogNoteTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "LogNoteTypes";
     }
 }

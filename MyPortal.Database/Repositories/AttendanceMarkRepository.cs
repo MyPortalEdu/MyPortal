@@ -21,10 +21,12 @@ namespace MyPortal.Database.Repositories
         public AttendanceMarkRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AttendanceMarks";
 
         private Query GetRegisterMarksFromPeriodsQuery(AttendancePeriodInstance[] attendancePeriods)
         {
-            var query = GetEmptyQuery(typeof(AttendanceMark), "AM");
+            var query = GetEmptyQuery("AttendanceMarks", "AM");
 
             JoinRelated(query);
 
@@ -125,11 +127,11 @@ namespace MyPortal.Database.Repositories
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AttendanceCodes as AC", "AC.Id", $"{TblAlias}.CodeId");
-            query.LeftJoin("AttendancePeriods as AP", "AP.Id", $"{TblAlias}.PeriodId");
-            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TblAlias}.WeekId");
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
+            query.LeftJoin("AttendanceCodes as AC", "AC.Id", $"{TableAlias}.CodeId");
+            query.LeftJoin("AttendancePeriods as AP", "AP.Id", $"{TableAlias}.PeriodId");
+            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TableAlias}.WeekId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
 
             return query;
         }
@@ -171,11 +173,11 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TblAlias}.WeekId");
+            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TableAlias}.WeekId");
             query.LeftJoin("AcademicTerms AS AT", "AT.Id", "AW.AcademicTermId");
             query.LeftJoin("AcademicYears AS AY", "AY.Id", "AT.AcademicYearId");
 
-            query.Where($"{TblAlias}.StudentId", "=", studentId);
+            query.Where($"{TableAlias}.StudentId", "=", studentId);
             query.Where("AY.Id", "=", academicYearId);
 
             return await ExecuteQuery(query);
@@ -220,11 +222,11 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TblAlias}.WeekId");
+            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TableAlias}.WeekId");
 
-            query.Where($"{TblAlias}.StudentId", "=", studentId);
+            query.Where($"{TableAlias}.StudentId", "=", studentId);
             query.Where("AW.Id", "=", attendanceWeekId);
-            query.Where($"{TblAlias}.PeriodId", "=", periodId);
+            query.Where($"{TableAlias}.PeriodId", "=", periodId);
 
             return (await ExecuteQuery(query)).SingleOrDefault();
         }

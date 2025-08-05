@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public MedicalConditionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "MedicalConditions";
 
         public async Task Update(MedicalCondition entity)
         {

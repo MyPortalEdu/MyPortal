@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public ExamBaseElementRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamBaseElements";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ExamAssessments as EA", "EA.Id", $"{TblAlias}.AssessmentId");
-            query.LeftJoin("SubjectCodes as SC", "SC.Id", $"{TblAlias}.QcaCodeId");
-            query.LeftJoin("ExamQualificationLevels as EQL", "EQL.Id", $"{TblAlias}.LevelId");
+            query.LeftJoin("ExamAssessments as EA", "EA.Id", $"{TableAlias}.AssessmentId");
+            query.LeftJoin("SubjectCodes as SC", "SC.Id", $"{TableAlias}.QcaCodeId");
+            query.LeftJoin("ExamQualificationLevels as EQL", "EQL.Id", $"{TableAlias}.LevelId");
 
             return query;
         }

@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public StaffAbsenceTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StaffAbsenceTypes";
 
         public async Task Update(StaffAbsenceType entity)
         {

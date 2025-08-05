@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public DietaryRequirementRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DietaryRequirements";
 
         public async Task Update(DietaryRequirement entity)
         {

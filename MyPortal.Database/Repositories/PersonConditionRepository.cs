@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public PersonConditionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "PersonConditions";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("MedicalConditions as MC", "MC.Id", $"{TblAlias}.ConditionId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("MedicalConditions as MC", "MC.Id", $"{TableAlias}.ConditionId");
 
             return query;
         }

@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public ExamSeatAllocationRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamSeatAllocations";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ExamComponentSittings as ECS", "ECS.Id", $"{TblAlias}.SittingId");
-            query.LeftJoin("ExamCandidates as EC", "EC.Id", $"{TblAlias}.CandidateId");
+            query.LeftJoin("ExamComponentSittings as ECS", "ECS.Id", $"{TableAlias}.SittingId");
+            query.LeftJoin("ExamCandidates as EC", "EC.Id", $"{TableAlias}.CandidateId");
 
             return query;
         }

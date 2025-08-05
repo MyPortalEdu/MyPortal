@@ -18,13 +18,15 @@ namespace MyPortal.Database.Repositories
         public AchievementRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Achievements";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AchievementTypes as AT", "AT.Id", $"{TblAlias}.AchievementTypeId");
-            query.LeftJoin("Locations as L", "L.Id", $"{TblAlias}.LocationId");
-            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TblAlias}.AcademicYearId");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
+            query.LeftJoin("AchievementTypes as AT", "AT.Id", $"{TableAlias}.AchievementTypeId");
+            query.LeftJoin("Locations as L", "L.Id", $"{TableAlias}.LocationId");
+            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TableAlias}.AcademicYearId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
 
             return query;
         }

@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public SubjectStaffMemberRoleRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "SubjectStaffMemberRoles";
 
         public async Task Update(SubjectStaffMemberRole entity)
         {

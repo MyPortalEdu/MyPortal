@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public LessonPlanRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "LessonPlans";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Directories as D", "D.Id", $"{TblAlias}.DirectoryId");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
-            query.LeftJoin("StudyTopics as ST", "ST.Id", $"{TblAlias}.StudyTopicId");
+            query.LeftJoin("Directories as D", "D.Id", $"{TableAlias}.DirectoryId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
+            query.LeftJoin("StudyTopics as ST", "ST.Id", $"{TableAlias}.StudyTopicId");
 
             return query;
         }

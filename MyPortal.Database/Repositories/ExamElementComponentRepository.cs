@@ -16,11 +16,13 @@ namespace MyPortal.Database.Repositories
         public ExamElementComponentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamElementComponents";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ExamElements as EE", "EE.Id", $"{TblAlias}.ElementId");
-            query.LeftJoin("ExamComponent as EC", "EC.Id", $"{TblAlias}.ComponentId");
+            query.LeftJoin("ExamElements as EE", "EE.Id", $"{TableAlias}.ElementId");
+            query.LeftJoin("ExamComponent as EC", "EC.Id", $"{TableAlias}.ComponentId");
 
             return query;
         }

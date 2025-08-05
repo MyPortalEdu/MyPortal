@@ -19,16 +19,18 @@ namespace MyPortal.Database.Repositories
         public SchoolRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Schools";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Agencies as A", "A.Id", $"{TblAlias}.AgencyId");
-            query.LeftJoin("SchoolPhases as SP", "SP.Id", $"{TblAlias}.PhaseId");
-            query.LeftJoin("SchoolTypes as ST", "ST.Id", $"{TblAlias}.TypeId");
-            query.LeftJoin("GovernanceTypes as GT", "GT.Id", $"{TblAlias}.GovernanceTypeId");
-            query.LeftJoin("IntakeTypes as IT", "IT.Id", $"{TblAlias}.IntakeTypeId");
-            query.LeftJoin("People as HT", "HT.Id", $"{TblAlias}.HeadTeacherId");
-            query.LeftJoin("LocalAuthorities as LA", "LA.Id", $"{TblAlias}.LocalAuthorityId");
+            query.LeftJoin("Agencies as A", "A.Id", $"{TableAlias}.AgencyId");
+            query.LeftJoin("SchoolPhases as SP", "SP.Id", $"{TableAlias}.PhaseId");
+            query.LeftJoin("SchoolTypes as ST", "ST.Id", $"{TableAlias}.TypeId");
+            query.LeftJoin("GovernanceTypes as GT", "GT.Id", $"{TableAlias}.GovernanceTypeId");
+            query.LeftJoin("IntakeTypes as IT", "IT.Id", $"{TableAlias}.IntakeTypeId");
+            query.LeftJoin("People as HT", "HT.Id", $"{TableAlias}.HeadTeacherId");
+            query.LeftJoin("LocalAuthorities as LA", "LA.Id", $"{TableAlias}.LocalAuthorityId");
 
             return query;
         }
@@ -81,7 +83,7 @@ namespace MyPortal.Database.Repositories
 
             query.Select("A.Name");
 
-            query.Where($"{TblAlias}.Local", true);
+            query.Where($"{TableAlias}.Local", true);
 
             return await ExecuteQueryStringResult(query);
         }
@@ -90,7 +92,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.Local", true);
+            query.Where($"{TableAlias}.Local", true);
 
             return (await ExecuteQuery(query)).First();
         }

@@ -20,11 +20,13 @@ namespace MyPortal.Database.Repositories
         public StaffMemberRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StaffMembers";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("StaffMembers as LM", "LM.Id", $"{TblAlias}.LineManagerId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("StaffMembers as LM", "LM.Id", $"{TableAlias}.LineManagerId");
 
             return query;
         }

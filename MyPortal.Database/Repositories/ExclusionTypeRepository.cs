@@ -10,5 +10,7 @@ namespace MyPortal.Database.Repositories
         public ExclusionTypeRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExclusionTypes";
     }
 }

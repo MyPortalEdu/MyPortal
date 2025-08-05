@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public ExamSessionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamSessions";
 
         public async Task Update(ExamSession entity)
         {

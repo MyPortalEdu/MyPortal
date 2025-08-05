@@ -17,6 +17,8 @@ public class SessionPeriodRepository : BaseReadWriteRepository<SessionPeriod>, I
     public SessionPeriodRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "SessionPeriods";
 
     public async Task<IEnumerable<SessionPeriodDetailModel>> GetPeriodDetailsBySession(Guid sessionId,
         DateTime dateFrom, DateTime dateTo)

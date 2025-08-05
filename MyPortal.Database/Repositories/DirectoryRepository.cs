@@ -20,6 +20,8 @@ namespace MyPortal.Database.Repositories
         public DirectoryRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Directories";
 
         protected override Query JoinRelated(Query query)
         {
@@ -54,11 +56,11 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.ParentId", "=", directoryId);
+            query.Where($"{TableAlias}.ParentId", "=", directoryId);
 
             if (!includeRestricted)
             {
-                query.Where($"{TblAlias}.Restricted", false);
+                query.Where($"{TableAlias}.Restricted", false);
             }
 
             return await ExecuteQuery(query);

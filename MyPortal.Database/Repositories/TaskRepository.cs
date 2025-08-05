@@ -18,27 +18,29 @@ namespace MyPortal.Database.Repositories
         public TaskRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Tasks";
 
         protected override Query GetDefaultQuery(bool includeSoftDeleted = false)
         {
-            var query = new Query($"{TblName} as {TblAlias}");
+            var query = new Query($"{TableName} as {TableAlias}");
 
             query.LeftJoin("HomeworkSubmissions as HS", "T.Id", "HS.TaskId");
             query.LeftJoin("HomeworkItems as HI", "HS.HomeworkId", "HI.Id");
 
-            query.Select($"{TblAlias}.Id");
-            query.Select($"{TblAlias}.TypeId");
-            query.Select($"{TblAlias}.Id");
-            query.Select($"{TblAlias}.AssignedToId");
-            query.Select($"{TblAlias}.CreatedById");
-            query.Select($"{TblAlias}.CreatedDate");
-            query.Select($"{TblAlias}.DueDate");
-            query.Select($"{TblAlias}.CompletedDate");
-            query.SelectRaw($"COALESCE(HI.Title, {TblAlias}.Title) as [Title]");
-            query.SelectRaw($"COALESCE(HI.Description, {TblAlias}.Description) as [Description]");
-            query.Select($"{TblAlias}.Completed");
-            query.Select($"{TblAlias}.AllowEdit");
-            query.Select($"{TblAlias}.System");
+            query.Select($"{TableAlias}.Id");
+            query.Select($"{TableAlias}.TypeId");
+            query.Select($"{TableAlias}.Id");
+            query.Select($"{TableAlias}.AssignedToId");
+            query.Select($"{TableAlias}.CreatedById");
+            query.Select($"{TableAlias}.CreatedDate");
+            query.Select($"{TableAlias}.DueDate");
+            query.Select($"{TableAlias}.CompletedDate");
+            query.SelectRaw($"COALESCE(HI.Title, {TableAlias}.Title) as [Title]");
+            query.SelectRaw($"COALESCE(HI.Description, {TableAlias}.Description) as [Description]");
+            query.Select($"{TableAlias}.Completed");
+            query.Select($"{TableAlias}.AllowEdit");
+            query.Select($"{TableAlias}.System");
 
             JoinRelated(query);
             SelectAllRelated(query);
@@ -48,9 +50,9 @@ namespace MyPortal.Database.Repositories
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("People as AT", "AT.Id", $"{TblAlias}.AssignedToId");
-            query.LeftJoin("Users as AB", "AB.Id", $"{TblAlias}.CreatedById");
-            query.LeftJoin("TaskTypes as TT", "TT.Id", $"{TblAlias}.TypeId");
+            query.LeftJoin("People as AT", "AT.Id", $"{TableAlias}.AssignedToId");
+            query.LeftJoin("Users as AB", "AB.Id", $"{TableAlias}.CreatedById");
+            query.LeftJoin("TaskTypes as TT", "TT.Id", $"{TableAlias}.TypeId");
 
             return query;
         }
@@ -86,7 +88,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.AssignedToId", personId);
+            query.Where($"{TableAlias}.AssignedToId", personId);
 
             if (searchOptions != null)
             {
@@ -100,18 +102,18 @@ namespace MyPortal.Database.Repositories
         {
             if (searchOptions.Status == TaskStatus.Overdue)
             {
-                query.Where($"{TblAlias}.Completed", false);
-                query.Where($"{TblAlias}.DueDate", "<", DateTime.Today);
+                query.Where($"{TableAlias}.Completed", false);
+                query.Where($"{TableAlias}.DueDate", "<", DateTime.Today);
             }
 
             else if (searchOptions.Status == TaskStatus.Active)
             {
-                query.Where($"{TblAlias}.Completed", false);
+                query.Where($"{TableAlias}.Completed", false);
             }
 
             else if (searchOptions.Status == TaskStatus.Completed)
             {
-                query.Where($"{TblAlias}.Completed", true);
+                query.Where($"{TableAlias}.Completed", true);
             }
         }
 

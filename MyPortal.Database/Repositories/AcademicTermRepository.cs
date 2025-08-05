@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using MyPortal.Database.Constants;
 using MyPortal.Database.Exceptions;
 using MyPortal.Database.Helpers;
 using MyPortal.Database.Interfaces.Repositories;
@@ -22,9 +21,11 @@ namespace MyPortal.Database.Repositories
         {
         }
 
+        protected override string TableName => "AcademicTerms";
+
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TblAlias}.AcademicYearId");
+            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TableAlias}.AcademicYearId");
 
             return query;
         }
@@ -73,7 +74,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.AcademicYearId", academicYearId);
+            query.Where($"{TableAlias}.AcademicYearId", academicYearId);
 
             return await ExecuteQuery(query);
         }

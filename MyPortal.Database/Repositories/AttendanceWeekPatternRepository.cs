@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public AttendanceWeekPatternRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AttendanceWeekPatterns";
 
         public async Task Update(AttendanceWeekPattern entity)
         {

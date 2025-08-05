@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public MedicalEventRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "MedicalEvents";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
 
             return query;
         }

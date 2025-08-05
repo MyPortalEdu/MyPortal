@@ -21,10 +21,12 @@ namespace MyPortal.Database.Repositories
         public AttendancePeriodRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AttendancePeriods";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AttendanceWeekPatterns as AWP", "AWP.Id", $"{TblAlias}.WeekPatternId");
+            query.LeftJoin("AttendanceWeekPatterns as AWP", "AWP.Id", $"{TableAlias}.WeekPatternId");
 
             return query;
         }

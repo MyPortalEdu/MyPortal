@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public ExamSpecialArrangementRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamSpecialArrangements";
 
         public async Task Update(ExamSpecialArrangement entity)
         {

@@ -15,11 +15,13 @@ namespace MyPortal.Database.Repositories
         public RegGroupRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "RegGroups";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TblAlias}.StudentGroupId");
-            query.LeftJoin("YearGroups as YG", "YG.Id", $"{TblAlias}.YearGroupId");
+            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TableAlias}.StudentGroupId");
+            query.LeftJoin("YearGroups as YG", "YG.Id", $"{TableAlias}.YearGroupId");
 
             return query;
         }

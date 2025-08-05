@@ -47,7 +47,7 @@ namespace MyPortal.Database.Helpers
                 { typeof(IBillDiscountRepository), dbUser => new BillDiscountRepository(dbUser) },
                 { typeof(IBillItemRepository), dbUser => new BillItemRepository(dbUser) },
                 { typeof(IBillRepository), dbUser => new BillRepository(dbUser) },
-                { typeof(IBillStudentChargeRepository), dbUser => new BillStudentStudentChargeRepository(dbUser) },
+                { typeof(IBillStudentChargeRepository), dbUser => new BillStudentChargeRepository(dbUser) },
                 { typeof(IBoarderStatusRepository), dbUser => new BoarderStatusRepository(dbUser) },
                 { typeof(IBuildingFloorRepository), dbUser => new BuildingFloorRepository(dbUser) },
                 { typeof(IBuildingRepository), dbUser => new BuildingRepository(dbUser) },

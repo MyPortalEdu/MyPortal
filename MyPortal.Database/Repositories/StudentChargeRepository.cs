@@ -19,12 +19,14 @@ namespace MyPortal.Database.Repositories
         public StudentChargeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StudentCharges";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("Charges as C", "C.Id", $"{TblAlias}.ChargeId");
-            query.LeftJoin("ChargeBillingPeriods as CBP", "CBP.Id", $"{TblAlias}.ChargeBillingPeriodId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("Charges as C", "C.Id", $"{TableAlias}.ChargeId");
+            query.LeftJoin("ChargeBillingPeriods as CBP", "CBP.Id", $"{TableAlias}.ChargeBillingPeriodId");
 
             return query;
         }

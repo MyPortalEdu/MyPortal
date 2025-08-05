@@ -18,13 +18,15 @@ namespace MyPortal.Database.Repositories
         public CoverArrangementRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "CoverArrangements";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TblAlias}.WeekId");
-            query.LeftJoin("Sessions as S", "S.Id", $"{TblAlias}.SessionId");
-            query.LeftJoin("StaffMembers as T", "T.Id", $"{TblAlias}.TeacherId");
-            query.LeftJoin("Rooms as R", "R.Id", $"{TblAlias}.RoomId");
+            query.LeftJoin("AttendanceWeeks as AW", "AW.Id", $"{TableAlias}.WeekId");
+            query.LeftJoin("Sessions as S", "S.Id", $"{TableAlias}.SessionId");
+            query.LeftJoin("StaffMembers as T", "T.Id", $"{TableAlias}.TeacherId");
+            query.LeftJoin("Rooms as R", "R.Id", $"{TableAlias}.RoomId");
 
             return query;
         }

@@ -13,6 +13,8 @@ public class BehaviourRoleTypeRepository : BaseReadWriteRepository<BehaviourRole
     public BehaviourRoleTypeRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "BehaviourRoleTypes";
 
     public async Task Update(BehaviourRoleType entity)
     {

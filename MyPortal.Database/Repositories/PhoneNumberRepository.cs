@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public PhoneNumberRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "PhoneNumbers";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("PhoneNumberTypes as PNT", "PNT.Id", $"{TblAlias}.TypeId");
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("Agencies as A", "A.Id", $"{TblAlias}.AgencyId");
+            query.LeftJoin("PhoneNumberTypes as PNT", "PNT.Id", $"{TableAlias}.TypeId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("Agencies as A", "A.Id", $"{TableAlias}.AgencyId");
 
             return query;
         }

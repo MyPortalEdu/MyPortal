@@ -19,10 +19,12 @@ namespace MyPortal.Database.Repositories
         public AttendanceCodeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AttendanceCodes";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AttendanceCodeMeanings as ACM", "ACM.Id", $"{TblAlias}.MeaningId");
+            query.LeftJoin("AttendanceCodeMeanings as ACM", "ACM.Id", $"{TableAlias}.MeaningId");
 
             return query;
         }
@@ -54,7 +56,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.Code", "=", code);
+            query.Where($"{TableAlias}.Code", "=", code);
 
             return (await ExecuteQuery(query)).FirstOrDefault();
         }
@@ -65,12 +67,12 @@ namespace MyPortal.Database.Repositories
 
             if (activeOnly)
             {
-                query.Where($"{TblAlias}.Active", true);
+                query.Where($"{TableAlias}.Active", true);
             }
 
             if (!includeRestricted)
             {
-                query.Where($"{TblAlias}.Restricted", false);
+                query.Where($"{TableAlias}.Restricted", false);
             }
 
             return await ExecuteQuery<AttendanceCode>(query);

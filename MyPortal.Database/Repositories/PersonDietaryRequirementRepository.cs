@@ -16,11 +16,13 @@ namespace MyPortal.Database.Repositories
         public PersonDietaryRequirementRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "PersonDietaryRequirements";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("DietaryRequirements as DR", "DR.Id", $"{TblAlias}.DietaryRequirementId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("DietaryRequirements as DR", "DR.Id", $"{TableAlias}.DietaryRequirementId");
 
             return query;
         }

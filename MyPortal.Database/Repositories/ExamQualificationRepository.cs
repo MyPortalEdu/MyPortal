@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public ExamQualificationRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamQualifications";
 
         public async Task Update(ExamQualification entity)
         {

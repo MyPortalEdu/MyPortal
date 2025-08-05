@@ -19,12 +19,14 @@ namespace MyPortal.Database.Repositories
         public AgencyRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Agencies";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AgencyTypes as AT", "AT.Id", $"{TblAlias}.TypeId");
-            query.LeftJoin("Addresses as AD", "AD.Id", $"{TblAlias}.AddressId");
-            query.LeftJoin("Directory as D", "D.Id", $"{TblAlias}.DirectoryId");
+            query.LeftJoin("AgencyTypes as AT", "AT.Id", $"{TableAlias}.TypeId");
+            query.LeftJoin("Addresses as AD", "AD.Id", $"{TableAlias}.AddressId");
+            query.LeftJoin("Directory as D", "D.Id", $"{TableAlias}.DirectoryId");
 
             return query;
         }
@@ -75,12 +77,12 @@ namespace MyPortal.Database.Repositories
 
             if (!string.IsNullOrWhiteSpace(searchOptions.Name))
             {
-                query.WhereStarts($"{TblAlias}.Name", searchOptions.Name);
+                query.WhereStarts($"{TableAlias}.Name", searchOptions.Name);
             }
 
             if (searchOptions.AgencyTypeId != null)
             {
-                query.Where($"{TblAlias}.TypeId", searchOptions.AgencyTypeId);
+                query.Where($"{TableAlias}.TypeId", searchOptions.AgencyTypeId);
             }
 
             return await ExecuteQuery(query);

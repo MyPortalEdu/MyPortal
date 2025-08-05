@@ -15,11 +15,13 @@ public class CommentBankAreaRepository : BaseReadWriteRepository<CommentBankArea
     public CommentBankAreaRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "CommentBankAreas";
 
     protected override Query JoinRelated(Query query)
     {
-        query.LeftJoin("CommentBanks as CB", "CB.Id", $"{TblAlias}.CommentBankId");
-        query.LeftJoin("Courses as C", "C.Id", $"{TblAlias}.CourseId");
+        query.LeftJoin("CommentBanks as CB", "CB.Id", $"{TableAlias}.CommentBankId");
+        query.LeftJoin("Courses as C", "C.Id", $"{TableAlias}.CourseId");
 
         return query;
     }

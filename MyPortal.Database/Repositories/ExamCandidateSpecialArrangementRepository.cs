@@ -16,11 +16,13 @@ namespace MyPortal.Database.Repositories
         public ExamCandidateSpecialArrangementRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamCandidateSpecialArrangements";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ExamCandidates as EC", "EC.Id", $"{TblAlias}.CandidateId");
-            query.LeftJoin("ExamSpecialArrangements as ESM", "ESM.Id", $"{TblAlias}.SpecialArrangementId");
+            query.LeftJoin("ExamCandidates as EC", "EC.Id", $"{TableAlias}.CandidateId");
+            query.LeftJoin("ExamSpecialArrangements as ESM", "ESM.Id", $"{TableAlias}.SpecialArrangementId");
 
             return query;
         }

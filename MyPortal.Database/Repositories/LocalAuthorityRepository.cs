@@ -12,12 +12,14 @@ namespace MyPortal.Database.Repositories
         public LocalAuthorityRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "LocalAuthorities";
 
         public async Task<LocalAuthority> GetCurrent()
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("Schools as School", "School.LocalAuthorityId", $"{TblAlias}.Id");
+            query.LeftJoin("Schools as School", "School.LocalAuthorityId", $"{TableAlias}.Id");
 
             query.Where("School.Local", true);
 

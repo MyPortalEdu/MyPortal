@@ -20,6 +20,8 @@ public class TaskReminderRepository : BaseReadWriteRepository<TaskReminder>, ITa
     public TaskReminderRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "TaskReminders";
 
     protected override Query JoinRelated(Query query)
     {

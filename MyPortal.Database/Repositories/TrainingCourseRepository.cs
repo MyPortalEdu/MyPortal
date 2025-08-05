@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public TrainingCourseRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "TrainingCourses";
 
         public async Task Update(TrainingCourse entity)
         {

@@ -19,13 +19,15 @@ namespace MyPortal.Database.Repositories
         public LogNoteRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "LogNotes";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TblAlias}.AcademicYearId");
-            query.LeftJoin("LogNoteTypes as LNT", "LNT.Id", $"{TblAlias}.TypeId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("AcademicYears as AY", "AY.Id", $"{TableAlias}.AcademicYearId");
+            query.LeftJoin("LogNoteTypes as LNT", "LNT.Id", $"{TableAlias}.TypeId");
 
             return query;
         }
@@ -65,12 +67,12 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.StudentId", studentId);
-            query.Where($"{TblAlias}.AcademicYearId", academicYearId);
+            query.Where($"{TableAlias}.StudentId", studentId);
+            query.Where($"{TableAlias}.AcademicYearId", academicYearId);
 
             if (!includePrivate)
             {
-                query.Where($"{TblAlias}.Private", false);
+                query.Where($"{TableAlias}.Private", false);
             }
 
             return ExecuteQuery(query);

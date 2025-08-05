@@ -17,12 +17,14 @@ namespace MyPortal.Database.Repositories
         public StudentDetentionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StudentDetentions";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("StudentIncidents as SI", "SI.Id", $"{TblAlias}.LinkedIncidentId");
-            query.LeftJoin("Detentions as D", "D.Id", $"{TblAlias}.DetentionId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("StudentIncidents as SI", "SI.Id", $"{TableAlias}.LinkedIncidentId");
+            query.LeftJoin("Detentions as D", "D.Id", $"{TableAlias}.DetentionId");
 
             return query;
         }
@@ -80,7 +82,7 @@ namespace MyPortal.Database.Repositories
 
             query.LeftJoin("DiaryEvents as DE", "DE.Id", "D.EventId");
 
-            query.WhereIn($"{TblAlias}.StudentId", studentIds);
+            query.WhereIn($"{TableAlias}.StudentId", studentIds);
             query.WhereDate("DE.StartTime", date);
 
             return await ExecuteQuery(query);

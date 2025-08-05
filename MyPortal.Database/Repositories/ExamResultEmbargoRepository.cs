@@ -19,10 +19,12 @@ namespace MyPortal.Database.Repositories
         public ExamResultEmbargoRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamResultEmbargoes";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ResultSets as RS", "RS.Id", $"{TblAlias}.ResultSetId");
+            query.LeftJoin("ResultSets as RS", "RS.Id", $"{TableAlias}.ResultSetId");
 
             return query;
         }
@@ -67,7 +69,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.ResultSetId", resultSetId);
+            query.Where($"{TableAlias}.ResultSetId", resultSetId);
 
             return await ExecuteQueryFirstOrDefault(query);
         }

@@ -17,6 +17,8 @@ namespace MyPortal.Database.Repositories
         public DocumentTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "DocumentTypes";
 
         public async Task<IEnumerable<DocumentType>> Get(DocumentTypeFilter filter)
         {
@@ -24,32 +26,32 @@ namespace MyPortal.Database.Repositories
 
             if (filter.Active)
             {
-                query.Where($"{TblAlias}.Active", true);
+                query.Where($"{TableAlias}.Active", true);
             }
 
             if (filter.Staff)
             {
-                query.Where($"{TblAlias}.Staff", true);
+                query.Where($"{TableAlias}.Staff", true);
             }
 
             if (filter.Student)
             {
-                query.Where($"{TblAlias}.Student", true);
+                query.Where($"{TableAlias}.Student", true);
             }
 
             if (filter.Contact)
             {
-                query.Where($"{TblAlias}.Contact", true);
+                query.Where($"{TableAlias}.Contact", true);
             }
 
             if (filter.General)
             {
-                query.Where($"{TblAlias}.General", true);
+                query.Where($"{TableAlias}.General", true);
             }
 
             if (filter.Sen)
             {
-                query.Where($"{TblAlias}.Sen", true);
+                query.Where($"{TableAlias}.Sen", true);
             }
 
             return await ExecuteQuery(query);

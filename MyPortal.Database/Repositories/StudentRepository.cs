@@ -22,6 +22,8 @@ namespace MyPortal.Database.Repositories
         public StudentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Students";
 
         private static Query HouseCte
         {
@@ -76,11 +78,11 @@ namespace MyPortal.Database.Repositories
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("SenStatus as SS", "SS.Id", $"{TblAlias}.SenStatusId");
-            query.LeftJoin("SenTypes as ST", "ST.Id", $"{TblAlias}.SenTypeId");
-            query.LeftJoin("EnrolmentStatus as ES", "ES.Id", $"{TblAlias}.EnrolmentStatusId");
-            query.LeftJoin("BoarderStatus as BS", "BS.Id", $"{TblAlias}.BoarderStatusId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("SenStatus as SS", "SS.Id", $"{TableAlias}.SenStatusId");
+            query.LeftJoin("SenTypes as ST", "ST.Id", $"{TableAlias}.SenTypeId");
+            query.LeftJoin("EnrolmentStatus as ES", "ES.Id", $"{TableAlias}.EnrolmentStatusId");
+            query.LeftJoin("BoarderStatus as BS", "BS.Id", $"{TableAlias}.BoarderStatusId");
 
             return query;
         }
@@ -175,7 +177,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            ApplySearch(query, searchParams, TblAlias, "P");
+            ApplySearch(query, searchParams, TableAlias, "P");
 
             return await ExecuteQuery(query);
         }
@@ -194,7 +196,7 @@ namespace MyPortal.Database.Repositories
 
             query.Select("S.Id", "P.FirstName", "P.PreferredFirstName", "P.MiddleName", "P.LastName",
                 "P.PreferredLastName", "P.Gender", "SH.HouseName", "SR.RegGroupName", "SY.YearGroupName");
-            ApplySearch(query, searchOptions, TblAlias, "P", "SH", "SR", "SY");
+            ApplySearch(query, searchOptions, TableAlias, "P", "SH", "SR", "SY");
             return await ExecuteQuery<StudentSearchResult>(query);
         }
 

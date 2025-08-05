@@ -16,11 +16,13 @@ namespace MyPortal.Database.Repositories
         public ChargeDiscountRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ChargeDiscounts";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Charges as C", "C.Id", $"{TblAlias}.ChargeId");
-            query.LeftJoin("Discounts as D", "D.Id", $"{TblAlias}.DiscountId");
+            query.LeftJoin("Charges as C", "C.Id", $"{TableAlias}.ChargeId");
+            query.LeftJoin("Discounts as D", "D.Id", $"{TableAlias}.DiscountId");
 
             return query;
         }
@@ -55,7 +57,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.DiscountId", discountId);
+            query.Where($"{TableAlias}.DiscountId", discountId);
 
             return await ExecuteQuery(query);
         }
@@ -64,7 +66,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Join("StudentChargeDiscounts as SCD", "SCD.ChargeDiscountId", $"{TblAlias}.Id");
+            query.Join("StudentChargeDiscounts as SCD", "SCD.ChargeDiscountId", $"{TableAlias}.Id");
 
             query.Where("SCD.StudentId", studentId);
 

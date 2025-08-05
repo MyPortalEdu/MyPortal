@@ -20,12 +20,14 @@ namespace MyPortal.Database.Repositories
         public DetentionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Detentions";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("DetentionTypes as DT", "DT.Id", $"{TblAlias}.DetentionTypeId");
-            query.LeftJoin("DiaryEvent as DE", "DE.Id", $"{TblAlias}.EventId");
-            query.LeftJoin("StaffMembers as S", "S.Id", $"{TblAlias}.SupervisorId");
+            query.LeftJoin("DetentionTypes as DT", "DT.Id", $"{TableAlias}.DetentionTypeId");
+            query.LeftJoin("DiaryEvent as DE", "DE.Id", $"{TableAlias}.EventId");
+            query.LeftJoin("StaffMembers as S", "S.Id", $"{TableAlias}.SupervisorId");
 
             return query;
         }
@@ -63,7 +65,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("IncidentDetention", "IncidentDetention.DetentionId", $"{TblAlias}.Id");
+            query.LeftJoin("IncidentDetention", "IncidentDetention.DetentionId", $"{TableAlias}.Id");
             query.LeftJoin("Incident", "Incident.Id", "IncidentDetention.IncidentId");
 
             query.Where("Incident.StudentId", studentId);
@@ -79,7 +81,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("IncidentDetention", "IncidentDetention.DetentionId", $"{TblAlias}.Id");
+            query.LeftJoin("IncidentDetention", "IncidentDetention.DetentionId", $"{TableAlias}.Id");
             query.LeftJoin("Incident", "Incident.Id", "IncidentDetention.IncidentId");
 
             query.Where("Incident.StudentId", studentId);
@@ -93,7 +95,7 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.LeftJoin("IncidentDetention", "IncidentDetention.DetentionId", $"{TblAlias}.Id");
+            query.LeftJoin("IncidentDetention", "IncidentDetention.DetentionId", $"{TableAlias}.Id");
             query.LeftJoin("Incident", "Incident.Id", "IncidentDetention.IncidentId");
 
             query.Where("Incident.Id", incidentId);

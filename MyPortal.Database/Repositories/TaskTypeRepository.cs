@@ -16,6 +16,8 @@ namespace MyPortal.Database.Repositories
         public TaskTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "TaskTypes";
 
         public async Task<IEnumerable<TaskType>> GetAll(bool personalOnly, bool activeOnly, bool includeSystem)
         {
@@ -23,15 +25,15 @@ namespace MyPortal.Database.Repositories
 
             if (personalOnly)
             {
-                query.Where($"{TblAlias}.Personal", true);
+                query.Where($"{TableAlias}.Personal", true);
             }
 
             if (activeOnly)
             {
-                query.Where($"{TblAlias}.Active", true);
+                query.Where($"{TableAlias}.Active", true);
             }
 
-            query.Where($"{TblAlias}.System", includeSystem);
+            query.Where($"{TableAlias}.System", includeSystem);
 
             return await ExecuteQuery(query);
         }

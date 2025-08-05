@@ -17,8 +17,8 @@ namespace MyPortal.Database.Repositories.Base
     public abstract class BaseReadWriteRepository<TEntity> : BaseReadRepository<TEntity>, IReadWriteRepository<TEntity>
         where TEntity : class, IEntity
     {
-        protected BaseReadWriteRepository(DbUserWithContext dbUserWithContext, string tblAlias = null) : base(
-            dbUserWithContext, tblAlias)
+        protected BaseReadWriteRepository(DbUserWithContext dbUserWithContext, string tableAlias = null) : base(
+            dbUserWithContext, tableAlias)
         {
         }
 

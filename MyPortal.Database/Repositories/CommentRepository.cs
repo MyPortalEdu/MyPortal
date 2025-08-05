@@ -18,10 +18,12 @@ namespace MyPortal.Database.Repositories
         public CommentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Comments";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("CommentBanks as CB", "CB.Id", $"{TblAlias}.CommentBankId");
+            query.LeftJoin("CommentBanks as CB", "CB.Id", $"{TableAlias}.CommentBankId");
 
             return query;
         }

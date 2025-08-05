@@ -16,6 +16,8 @@ public class SessionExtraNameRepository : BaseReadWriteRepository<SessionExtraNa
     public SessionExtraNameRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "SessionExtraNames";
 
     protected override Query JoinRelated(Query query)
     {

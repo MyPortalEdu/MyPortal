@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public YearGroupRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "YearGroups";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TblAlias}.StudentGroupId");
-            query.LeftJoin("CurriculumYearGroups as CYG", "CYG.Id", $"{TblAlias}.CurriculumYearGroupId");
+            query.LeftJoin("StudentGroups as SG", "SG.Id", $"{TableAlias}.StudentGroupId");
+            query.LeftJoin("CurriculumYearGroups as CYG", "CYG.Id", $"{TableAlias}.CurriculumYearGroupId");
 
             return query;
         }

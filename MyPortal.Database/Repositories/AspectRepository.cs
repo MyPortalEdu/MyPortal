@@ -19,6 +19,8 @@ namespace MyPortal.Database.Repositories
         public AspectRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Aspects";
 
         protected override Query JoinRelated(Query query)
         {

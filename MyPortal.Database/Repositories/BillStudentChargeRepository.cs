@@ -10,17 +10,19 @@ using SqlKata;
 
 namespace MyPortal.Database.Repositories
 {
-    public class BillStudentStudentChargeRepository : BaseReadWriteRepository<BillStudentCharge>,
+    public class BillStudentChargeRepository : BaseReadWriteRepository<BillStudentCharge>,
         IBillStudentChargeRepository
     {
-        public BillStudentStudentChargeRepository(DbUserWithContext dbUser) : base(dbUser)
+        public BillStudentChargeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "BillStudentCharges";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Bills as B", "B.Id", $"{TblAlias}.BillId");
-            query.LeftJoin("StudentCharges as SC", "SC.Id", $"{TblAlias}.StudentChargeId");
+            query.LeftJoin("Bills as B", "B.Id", $"{TableAlias}.BillId");
+            query.LeftJoin("StudentCharges as SC", "SC.Id", $"{TableAlias}.StudentChargeId");
 
             return query;
         }

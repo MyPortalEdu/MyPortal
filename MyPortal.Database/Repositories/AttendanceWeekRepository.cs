@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public AttendanceWeekRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AttendanceWeeks";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("AcademicTerms as AT", "AT.Id", $"{TblAlias}.AcademicTermId");
-            query.LeftJoin("AttendanceWeekPatters as AWP", "AWP.Id", $"{TblAlias}.WeekPatternId");
+            query.LeftJoin("AcademicTerms as AT", "AT.Id", $"{TableAlias}.AcademicTermId");
+            query.LeftJoin("AttendanceWeekPatters as AWP", "AWP.Id", $"{TableAlias}.WeekPatternId");
 
             return query;
         }

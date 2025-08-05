@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public EmailAddressRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "EmailAddresses";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Agencies as A", "A.Id", $"{TblAlias}.AgencyId");
-            query.LeftJoin("People as P", "P.Id", $"{TblAlias}.PersonId");
-            query.LeftJoin("EmailAddressTypes as EAT", "EAT.Id", $"{TblAlias}.TypeId");
+            query.LeftJoin("Agencies as A", "A.Id", $"{TableAlias}.AgencyId");
+            query.LeftJoin("People as P", "P.Id", $"{TableAlias}.PersonId");
+            query.LeftJoin("EmailAddressTypes as EAT", "EAT.Id", $"{TableAlias}.TypeId");
 
             return query;
         }

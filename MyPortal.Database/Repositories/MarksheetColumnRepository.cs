@@ -19,12 +19,14 @@ namespace MyPortal.Database.Repositories
         public MarksheetColumnRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "MarksheetColumns";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("MarksheetTemplates as MT", "MT.Id", $"{TblAlias}.TemplateId");
-            query.LeftJoin("Aspects as A", "A.Id", $"{TblAlias}.AspectId");
-            query.LeftJoin("ResultSets as RS", "RS.Id", $"{TblAlias}.ResultSetId");
+            query.LeftJoin("MarksheetTemplates as MT", "MT.Id", $"{TableAlias}.TemplateId");
+            query.LeftJoin("Aspects as A", "A.Id", $"{TableAlias}.AspectId");
+            query.LeftJoin("ResultSets as RS", "RS.Id", $"{TableAlias}.ResultSetId");
 
             return query;
         }

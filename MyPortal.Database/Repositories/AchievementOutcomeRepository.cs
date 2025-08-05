@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MyPortal.Database.Constants;
 using MyPortal.Database.Exceptions;
 using MyPortal.Database.Interfaces.Repositories;
 using MyPortal.Database.Models.Connection;
@@ -16,6 +15,8 @@ namespace MyPortal.Database.Repositories
         public AchievementOutcomeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "AchievementOutcomes";
 
         public async Task Update(AchievementOutcome entity)
         {

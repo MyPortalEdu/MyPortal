@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public CurriculumBandBlockAssignmentRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "CurriculumBandBlockAssignments";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("CurriculumBlocks as CB", "CB.Id", $"{TblAlias}.BlockId");
-            query.LeftJoin("CurriculumBands as B", "B.Id", $"{TblAlias}.BandId");
+            query.LeftJoin("CurriculumBlocks as CB", "CB.Id", $"{TableAlias}.BlockId");
+            query.LeftJoin("CurriculumBands as B", "B.Id", $"{TableAlias}.BandId");
 
             return query;
         }

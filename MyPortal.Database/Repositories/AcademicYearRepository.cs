@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using MyPortal.Database.Constants;
 using MyPortal.Database.Exceptions;
 using MyPortal.Database.Helpers;
 using MyPortal.Database.Interfaces.Repositories;
@@ -20,18 +19,20 @@ namespace MyPortal.Database.Repositories
         {
         }
 
+        protected override string TableName => "AcademicYears";
+
         public async Task<AcademicYear> GetCurrentAcademicYear()
         {
             var sql = GetDefaultQuery();
 
-            sql.LeftJoin("AcademicTerms AS AT", $"{TblAlias}.Id", "AT.AcademicYearId");
+            sql.LeftJoin("AcademicTerms AS AT", $"{TableAlias}.Id", "AT.AcademicYearId");
 
             var dateToday = DateTime.Today;
 
             sql.Where("AT.StartDate", "<=", dateToday);
             sql.Where("AT.EndDate", ">=", dateToday);
 
-            sql.GroupByEntityColumns(typeof(AcademicYear), TblAlias);
+            sql.GroupByEntityColumns(typeof(AcademicYear), TableAlias);
 
             return await ExecuteQueryFirstOrDefault(sql);
         }
@@ -40,9 +41,9 @@ namespace MyPortal.Database.Repositories
         {
             var sql = GetDefaultQuery();
 
-            sql.LeftJoin("AcademicTerms AS AT", $"{TblAlias}.Id", "AT.AcademicYearId");
+            sql.LeftJoin("AcademicTerms AS AT", $"{TableAlias}.Id", "AT.AcademicYearId");
             sql.OrderByDesc("AT.FirstDate");
-            sql.GroupByEntityColumns(typeof(AcademicYear), TblAlias);
+            sql.GroupByEntityColumns(typeof(AcademicYear), TableAlias);
             sql.Limit(1);
 
             return await ExecuteQueryFirstOrDefault(sql);
@@ -52,7 +53,7 @@ namespace MyPortal.Database.Repositories
         {
             var sql = GetDefaultQuery();
 
-            sql.LeftJoin("AcademicTerms as AT", $"{TblAlias}.Id", "AT.AcademicYearId");
+            sql.LeftJoin("AcademicTerms as AT", $"{TableAlias}.Id", "AT.AcademicYearId");
             sql.LeftJoin("AcademicWeeks as AW", "AT.Id", "AW.AcademicTermId");
 
             sql.Where("AW.Id", attendanceWeekId);
@@ -64,7 +65,7 @@ namespace MyPortal.Database.Repositories
         {
             var sql = GetDefaultQuery();
 
-            sql.LeftJoin("AcademicTerms AS AT", $"{TblAlias}.Id", "AT.AcademicYearId");
+            sql.LeftJoin("AcademicTerms AS AT", $"{TableAlias}.Id", "AT.AcademicYearId");
 
             var dateToday = DateTime.Today;
 
@@ -79,7 +80,7 @@ namespace MyPortal.Database.Repositories
 
             query.Select("Locked");
 
-            query.Where($"{TblAlias}.Id", academicYearId);
+            query.Where($"{TableAlias}.Id", academicYearId);
 
             return await ExecuteQueryFirstOrDefault<bool>(query);
         }

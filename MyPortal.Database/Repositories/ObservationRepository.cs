@@ -18,12 +18,14 @@ namespace MyPortal.Database.Repositories
         public ObservationRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Observations";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("StaffMembers as OE", "OE.Id", $"{TblAlias}.ObserveeId");
-            query.LeftJoin("StaffMembers as OR", "OR.Id", $"{TblAlias}.ObserverId");
-            query.LeftJoin("ObservationOutcomes as OO", "OO.Id", $"{TblAlias}.OutcomeId");
+            query.LeftJoin("StaffMembers as OE", "OE.Id", $"{TableAlias}.ObserveeId");
+            query.LeftJoin("StaffMembers as OR", "OR.Id", $"{TableAlias}.ObserverId");
+            query.LeftJoin("ObservationOutcomes as OO", "OO.Id", $"{TableAlias}.OutcomeId");
 
             return query;
         }

@@ -17,9 +17,11 @@ namespace MyPortal.Database.Repositories
         {
         }
 
+        protected override string TableName => "AccountTransactions";
+
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
 
             return query;
         }

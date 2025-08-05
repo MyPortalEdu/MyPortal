@@ -11,5 +11,7 @@ namespace MyPortal.Database.Repositories
         public NextOfKinRelationshipTypeRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "NextOfKinRelationshipTypes";
     }
 }

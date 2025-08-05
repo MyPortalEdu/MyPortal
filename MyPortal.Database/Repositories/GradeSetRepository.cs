@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public GradeSetRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "GradeSets";
 
         public async Task Update(GradeSet entity)
         {

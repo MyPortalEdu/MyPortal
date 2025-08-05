@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public DiscountRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Discounts";
 
         public async Task Update(Discount entity)
         {

@@ -14,6 +14,8 @@ public class ChargeBillingPeriodRepository : BaseReadWriteRepository<ChargeBilli
     public ChargeBillingPeriodRepository(DbUserWithContext dbUser) : base(dbUser)
     {
     }
+    
+    protected override string TableName => "ChargeBillingPeriods";
 
     public async Task Update(ChargeBillingPeriod entity)
     {

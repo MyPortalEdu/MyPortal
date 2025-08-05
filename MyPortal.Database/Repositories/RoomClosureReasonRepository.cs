@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public RoomClosureReasonRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "RoomClosureReasons";
 
         public async Task Update(RoomClosureReason entity)
         {

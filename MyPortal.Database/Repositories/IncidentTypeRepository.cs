@@ -13,6 +13,8 @@ namespace MyPortal.Database.Repositories
         public IncidentTypeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "IncidentTypes";
 
         public async Task Update(IncidentType entity)
         {

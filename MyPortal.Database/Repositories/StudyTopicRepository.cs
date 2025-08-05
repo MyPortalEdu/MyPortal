@@ -18,10 +18,12 @@ namespace MyPortal.Database.Repositories
         public StudyTopicRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "StudyTopics";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Courses as C", "C.Id", $"{TblAlias}.CourseId");
+            query.LeftJoin("Courses as C", "C.Id", $"{TableAlias}.CourseId");
 
             return query;
         }

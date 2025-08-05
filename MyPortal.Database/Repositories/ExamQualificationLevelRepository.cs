@@ -19,11 +19,13 @@ namespace MyPortal.Database.Repositories
         public ExamQualificationLevelRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ExamQualificationLevels";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("GradeSets as GS", "GS.Id", $"{TblAlias}.DefaultGradeSetId");
-            query.LeftJoin("ExamQualifications as EQ", "EQ.Id", $"{TblAlias}.QualificationId");
+            query.LeftJoin("GradeSets as GS", "GS.Id", $"{TableAlias}.DefaultGradeSetId");
+            query.LeftJoin("ExamQualifications as EQ", "EQ.Id", $"{TableAlias}.QualificationId");
 
             return query;
         }

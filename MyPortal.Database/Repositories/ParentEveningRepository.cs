@@ -18,10 +18,12 @@ namespace MyPortal.Database.Repositories
         public ParentEveningRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "ParentEvenings";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("DiaryEvents as DE", "DE.Id", $"{TblAlias}.EventId");
+            query.LeftJoin("DiaryEvents as DE", "DE.Id", $"{TableAlias}.EventId");
 
             return query;
         }

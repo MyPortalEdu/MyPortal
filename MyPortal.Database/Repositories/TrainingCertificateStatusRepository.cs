@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public TrainingCertificateStatusRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "TrainingCertificateStatus";
 
         public async Task Update(TrainingCertificateStatus entity)
         {

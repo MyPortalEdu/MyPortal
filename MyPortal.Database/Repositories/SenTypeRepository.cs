@@ -10,5 +10,7 @@ namespace MyPortal.Database.Repositories
         public SenTypeRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "SenTypes";
     }
 }

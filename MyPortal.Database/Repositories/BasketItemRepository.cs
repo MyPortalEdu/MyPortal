@@ -18,11 +18,13 @@ namespace MyPortal.Database.Repositories
         public BasketItemRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "BasketItems";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("Products as P", "P.Id", $"{TblAlias}.ProductId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("Products as P", "P.Id", $"{TableAlias}.ProductId");
 
             return query;
         }

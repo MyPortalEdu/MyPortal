@@ -14,6 +14,8 @@ namespace MyPortal.Database.Repositories
         public LessonPlanTemplateRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "LessonPlanTemplates";
 
         public async Task Update(LessonPlanTemplate entity)
         {

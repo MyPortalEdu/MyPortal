@@ -10,5 +10,7 @@ namespace MyPortal.Database.Repositories
         public EthnicityRepository(DbUser dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Ethnicities";
     }
 }

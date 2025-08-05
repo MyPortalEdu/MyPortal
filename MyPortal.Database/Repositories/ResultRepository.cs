@@ -21,6 +21,8 @@ namespace MyPortal.Database.Repositories
         public ResultRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Results";
 
         private Query WithResults(Query query, string alias)
         {
@@ -59,11 +61,11 @@ namespace MyPortal.Database.Repositories
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("ResultSets as RS", "RS.Id", $"{TblAlias}.ResultSetId");
-            query.LeftJoin("Aspects as A", "A.Id", $"{TblAlias}.AspectId");
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("Grades as G", "G.Id", $"{TblAlias}.GradeId");
-            query.LeftJoin("Users as U", "U.Id", $"{TblAlias}.CreatedById");
+            query.LeftJoin("ResultSets as RS", "RS.Id", $"{TableAlias}.ResultSetId");
+            query.LeftJoin("Aspects as A", "A.Id", $"{TableAlias}.AspectId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("Grades as G", "G.Id", $"{TableAlias}.GradeId");
+            query.LeftJoin("Users as U", "U.Id", $"{TableAlias}.CreatedById");
 
             return query;
         }
@@ -134,9 +136,9 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.StudentId", studentId);
-            query.Where($"{TblAlias}.AspectId", aspectId);
-            query.Where($"{TblAlias}.ResultSetId", resultSetId);
+            query.Where($"{TableAlias}.StudentId", studentId);
+            query.Where($"{TableAlias}.AspectId", aspectId);
+            query.Where($"{TableAlias}.ResultSetId", resultSetId);
 
             var result = await ExecuteQueryFirstOrDefault(query);
 
@@ -147,9 +149,9 @@ namespace MyPortal.Database.Repositories
         {
             var query = GetDefaultQuery();
 
-            query.Where($"{TblAlias}.StudentId", studentId);
-            query.Where($"{TblAlias}.AspectId", aspectId);
-            query.Where($"{TblAlias}.Date", "<", dateTo);
+            query.Where($"{TableAlias}.StudentId", studentId);
+            query.Where($"{TableAlias}.AspectId", aspectId);
+            query.Where($"{TableAlias}.Date", "<", dateTo);
 
             var results = await ExecuteQuery(query);
 

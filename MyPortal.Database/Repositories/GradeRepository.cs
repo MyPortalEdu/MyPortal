@@ -19,10 +19,12 @@ namespace MyPortal.Database.Repositories
         public GradeRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "Grades";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("GradeSets as GS", "GS.Id", $"{TblAlias}.GradeSetId");
+            query.LeftJoin("GradeSets as GS", "GS.Id", $"{TableAlias}.GradeSetId");
 
             return query;
         }

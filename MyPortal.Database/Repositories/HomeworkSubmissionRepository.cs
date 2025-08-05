@@ -20,13 +20,15 @@ namespace MyPortal.Database.Repositories
         public HomeworkSubmissionRepository(DbUserWithContext dbUser) : base(dbUser)
         {
         }
+        
+        protected override string TableName => "HomeworkSubmissions";
 
         protected override Query JoinRelated(Query query)
         {
-            query.LeftJoin("HomeworkItems", "HI.Id", $"{TblAlias}.HomeworkId");
-            query.LeftJoin("Students as S", "S.Id", $"{TblAlias}.StudentId");
-            query.LeftJoin("Tasks as T", "T.Id", $"{TblAlias}.TaskId");
-            query.LeftJoin("Documents as D", "D.Id", $"{TblAlias}.DocumentId");
+            query.LeftJoin("HomeworkItems", "HI.Id", $"{TableAlias}.HomeworkId");
+            query.LeftJoin("Students as S", "S.Id", $"{TableAlias}.StudentId");
+            query.LeftJoin("Tasks as T", "T.Id", $"{TableAlias}.TaskId");
+            query.LeftJoin("Documents as D", "D.Id", $"{TableAlias}.DocumentId");
 
             return query;
         }
