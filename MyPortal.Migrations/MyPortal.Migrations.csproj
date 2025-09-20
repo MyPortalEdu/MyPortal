@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Sql\StoredProcedures\" />
+    <Folder Include="Sql\Updates\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Sql\Scripts\db_create_tables.sql" />
+    <EmbeddedResource Include="Sql\Scripts\db_create_tables.sql" />
+    <None Remove="Sql\Functions\fn_diary_event_get_overlapping.sql" />
+    <EmbeddedResource Include="Sql\Functions\fn_diary_event_get_overlapping.sql" />
+    <None Remove="Sql\Functions\fn_person_get_name.sql" />
+    <EmbeddedResource Include="Sql\Functions\fn_person_get_name.sql" />
+    <None Remove="Sql\Views\vw_attendance_period_instances.sql" />
+    <EmbeddedResource Include="Sql\Views\vw_attendance_period_instances.sql" />
+    <None Remove="Sql\Views\vw_session_period_metadata.sql" />
+    <EmbeddedResource Include="Sql\Views\vw_session_period_metadata.sql" />
+    <None Remove="Sql\Updates\0001_test_update.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
