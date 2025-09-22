@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="Sql\StoredProcedures\" />
-    <Folder Include="Sql\Updates\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +37,8 @@
     <None Remove="Sql\Views\vw_session_period_metadata.sql" />
     <EmbeddedResource Include="Sql\Views\vw_session_period_metadata.sql" />
     <None Remove="Sql\Updates\0001_test_update.sql" />
+    <None Remove="Sql\Updates\0001_add_identity.sql" />
+    <EmbeddedResource Include="Sql\Updates\0001_add_identity.sql" />
   </ItemGroup>
 
   <ItemGroup>

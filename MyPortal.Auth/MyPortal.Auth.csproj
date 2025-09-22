@@ -11,4 +11,9 @@
     <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="OpenIddict.Core" Version="7.1.0" />
+  </ItemGroup>
+
 </Project>

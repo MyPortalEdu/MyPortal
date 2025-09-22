@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Identity;
+using MyPortal.Auth.Models;
+using MyPortal.Auth.Stores;
 using MyPortal.Common.Options;
 using MyPortal.Data.Factories;
 using QueryKit.Dialects;
@@ -18,10 +21,22 @@ builder.Services.AddOptions<StorageOptions>()
 
 var db = builder.Configuration.GetSection("Database").Get<DatabaseOptions>()!;
 QueryKit.Extensions.ConnectionExtensions.UseDialect(Dialect.SQLServer);
+
 builder.Services.AddScoped<IConnectionFactory, SqlConnectionFactory>();
 
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        options.Password.RequiredLength = 8;
+    })
+    .AddRoles<ApplicationRole>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IUserStore<ApplicationUser>, SqlUserStore>();
+builder.Services.AddScoped<IRoleStore<ApplicationRole>, SqlRoleStore>();
+
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
