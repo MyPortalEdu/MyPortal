@@ -6,7 +6,8 @@ namespace MyPortal.WebApi.Controllers;
 
 [Authorize]
 [ApiController]
-public class BaseApiController : ControllerBase
+[Route("api/[controller]")]
+public abstract class BaseApiController : ControllerBase
 {
     protected CancellationToken CancellationToken => HttpContext.RequestAborted;
     

@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using MyPortal.Auth.Models;
 using MyPortal.Auth.Stores;
 using MyPortal.Common.Options;
 using MyPortal.Data.Factories;
+using MyPortal.Services.Configuration;
+using MyPortal.WebApi.Infrastructure;
+using MyPortal.WebApi.Services;
 using QueryKit.Dialects;
 using QueryKit.Repositories.Interfaces;
 
@@ -12,7 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOptions<DatabaseOptions>()
     .Bind(builder.Configuration.GetSection("Database"))
-    .Validate(o => !string.IsNullOrWhiteSpace(o.ConnectionString), "Connection string must be provided.")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.ConnectionString), 
+        "Connection string must be provided.")
     .ValidateOnStart();
 
 builder.Services.AddOptions<StorageOptions>()
@@ -36,11 +41,61 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.AddScoped<IUserStore<ApplicationUser>, SqlUserStore>();
 builder.Services.AddScoped<IRoleStore<ApplicationRole>, SqlRoleStore>();
 
+builder.Services.AddRepositories();
+
+builder.Services.AddMyPortalServices();
+
+builder.Services.AddOpenIddict()
+    .AddCore(o =>
+    {
+
+    })
+    .AddServer(o =>
+    {
+        o.SetAuthorizationEndpointUris("/connect/authorize")
+            .SetTokenEndpointUris("/connect/token")
+            .SetUserInfoEndpointUris("/connect/userinfo")
+            .SetEndSessionEndpointUris("/connect/endsession");
+
+        o.AllowAuthorizationCodeFlow().AllowRefreshTokenFlow();
+
+        o.RegisterScopes("api", "offline_access", "email", "profile");
+
+        o.AddDevelopmentEncryptionCertificate()
+            .AddDevelopmentSigningCertificate();
+
+        o.UseAspNetCore()
+            .EnableAuthorizationEndpointPassthrough()
+            .EnableTokenEndpointPassthrough()
+            .EnableUserInfoEndpointPassthrough();
+    })
+    .AddValidation(o =>
+    {
+        o.UseLocalServer();
+        o.UseAspNetCore();
+    });
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = OpenIddict.Validation.AspNetCore
+        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = OpenIddict.Validation.AspNetCore
+        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+});
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddTransient<ExceptionMiddleware>();
+
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -51,6 +106,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

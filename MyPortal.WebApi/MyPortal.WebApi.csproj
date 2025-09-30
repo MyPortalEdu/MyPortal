@@ -7,13 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="OpenIddict.Server.AspNetCore" Version="7.1.0" />
+    <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="7.1.0" />
+    <PackageReference Include="OpenIddict.Validation.ServerIntegration" Version="7.1.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MyPortal.Auth\MyPortal.Auth.csproj" />
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
-    <ProjectReference Include="..\MyPortal.Core\MyPortal.Core.csproj" />
     <ProjectReference Include="..\MyPortal.Data\MyPortal.Data.csproj" />
     <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
   </ItemGroup>

@@ -8,13 +8,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
+    <ProjectReference Include="..\MyPortal.Contracts\MyPortal.Contracts.csproj" />
     <ProjectReference Include="..\MyPortal.Core\MyPortal.Core.csproj" />
     <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
-    <PackageReference Include="Rowan.QueryKit.Repositories" Version="0.9.4" />
+    <PackageReference Include="Rowan.QueryKit.Repositories" Version="0.9.7" />
   </ItemGroup>
 
 </Project>

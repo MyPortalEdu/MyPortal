@@ -1,9 +1,8 @@
 ﻿using MyPortal.Core.Interfaces;
 
-namespace MyPortal.Core
+namespace MyPortal.Core;
+
+public abstract class Entity : IEntity
 {
-    public abstract class Entity : IEntity
-    {
-        public Guid Id { get; set; }
-    }
+    public Guid Id { get; set; }
 }
