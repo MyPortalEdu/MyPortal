@@ -43,6 +43,8 @@
     <EmbeddedResource Include="Sql\Updates\0002_add_permissions.sql" />
     <None Remove="Sql\Updates\0003_add_auth.sql" />
     <EmbeddedResource Include="Sql\Updates\0003_add_auth.sql" />
+    <None Remove="Sql\Updates\0004_seed_uk_data.sql" />
+    <EmbeddedResource Include="Sql\Updates\0004_seed_uk_data.sql" />
   </ItemGroup>
 
   <ItemGroup>

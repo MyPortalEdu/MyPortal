@@ -49,7 +49,7 @@ public static class Seed
         var roleNames = new[] { "Admin" };
         foreach (var rn in roleNames)
             if (!await roles.RoleExistsAsync(rn))
-                await roles.CreateAsync(new ApplicationRole { Id = Guid.NewGuid(), Name = rn });
+                await roles.CreateAsync(new ApplicationRole { Id = Guid.NewGuid(), Name = rn, IsSystem = true });
         
         var email = "admin@myportal.local";
         var admin = await users.FindByEmailAsync(email);
