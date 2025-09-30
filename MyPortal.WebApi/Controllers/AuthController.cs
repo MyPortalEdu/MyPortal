@@ -5,8 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using MyPortal.Auth;
+using MyPortal.Auth.Attributes;
+using MyPortal.Auth.Enums;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
+using MyPortal.Common.Enums;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 

@@ -8,9 +8,12 @@ public class PermissionService : IPermissionService
     private readonly IRolePermissionProvider _provider;
 
     public PermissionService(ICurrentUser user, IRolePermissionProvider provider)
-        => (_user, _provider) = (user, provider);
+    {
+        _user = user;
+        _provider = provider;
+    }
 
-    public async Task<bool> HasAsync(Guid userId, string permission, CancellationToken ct = default)
+    public async Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct = default)
     {
         if (_user.UserId != userId) return false;
         var roles = await _user.GetRolesAsync(ct);

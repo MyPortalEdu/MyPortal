@@ -4,5 +4,5 @@ namespace MyPortal.Services.Interfaces.Services;
 
 public interface ISchoolService
 {
-    Task<SchoolDetailsDto> GetLocalSchool(CancellationToken cancellationToken);
+    Task<SchoolDetailsDto?> GetLocalSchool(CancellationToken cancellationToken);
 }

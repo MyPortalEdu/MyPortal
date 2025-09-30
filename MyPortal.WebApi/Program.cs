@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using MyPortal.Auth.Handlers;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
+using MyPortal.Auth.Providers;
 using MyPortal.Auth.Stores;
 using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
@@ -10,12 +12,10 @@ using MyPortal.Data.Factories;
 using MyPortal.Data.Interfaces;
 using MyPortal.Data.Security;
 using MyPortal.Services.Configuration;
-using MyPortal.Services.Security;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure;
 using MyPortal.WebApi.Services;
 using QueryKit.Dialects;
-using QueryKit.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,7 +68,9 @@ builder.Services.AddOpenIddict()
         o.SetEndSessionEndpointUris("/connect/endsession");
         o.SetUserInfoEndpointUris("/connect/userinfo");
 
+        // TODO: remove once client applications can use authorization code flow
         o.AllowPasswordFlow();
+        
         o.AcceptAnonymousClients();
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowRefreshTokenFlow();
@@ -98,6 +100,11 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, UserTypeHandler>();
+
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, ApplicationPolicyProvider>();
 
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IRoleAccessor, SqlRoleAccessor>();

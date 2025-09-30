@@ -14,7 +14,7 @@ public class SchoolService : ISchoolService
     }
 
 
-    public async Task<SchoolDetailsDto> GetLocalSchool(CancellationToken cancellationToken)
+    public async Task<SchoolDetailsDto?> GetLocalSchool(CancellationToken cancellationToken)
     {
         return await _schoolRepository.GetLocalSchool(cancellationToken);
     }
