@@ -2,7 +2,7 @@
 
 **MyPortal** is a modern, open-source, cloud-based **School Information Management System (MIS)** designed for schools of all sizes. From attendance and assessments to communication and contact management, MyPortal brings the whole school community together — staff, students, parents, and administrators.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ---
 
