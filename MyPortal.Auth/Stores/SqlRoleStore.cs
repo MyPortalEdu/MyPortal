@@ -1,16 +1,17 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Identity;
 using MyPortal.Auth.Models;
+using MyPortal.Common.Interfaces;
 using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Auth.Stores;
 
 public class SqlRoleStore : IRoleStore<ApplicationRole>
 {
-    private readonly IConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
     private static string? Normalize(string? value) => value?.ToUpperInvariant();
 
-    public SqlRoleStore(IConnectionFactory connectionFactory)
+    public SqlRoleStore(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }

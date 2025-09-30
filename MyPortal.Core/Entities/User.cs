@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MyPortal.Common.Enums;
 
 namespace MyPortal.Core.Entities
 {
@@ -10,7 +11,7 @@ namespace MyPortal.Core.Entities
 
         public Guid? PersonId { get; set; }
         
-        public int UserType { get; set; }
+        public UserType UserType { get; set; }
 
         public bool IsEnabled { get; set; }
 

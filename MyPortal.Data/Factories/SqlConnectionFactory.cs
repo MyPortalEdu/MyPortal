@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
 using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
 
@@ -9,9 +10,9 @@ public class SqlConnectionFactory : IDbConnectionFactory
 {
     private readonly DatabaseOptions _db;
 
-    public SqlConnectionFactory(DatabaseOptions db)
+    public SqlConnectionFactory(IOptions<DatabaseOptions> db)
     {
-        _db = db;
+        _db = db.Value;
     }
 
 

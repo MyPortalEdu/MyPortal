@@ -35,9 +35,9 @@ public class DbUpdateService : IDbUpdateService
 
     public async Task CreateOrUpdateDatabaseAsync(CancellationToken cancellationToken)
     {
-        var created = await EnsureDatabaseExistsAsync(cancellationToken);
+        var brandNewDb = await EnsureDatabaseExistsAsync(cancellationToken);
 
-        if (created)
+        if (brandNewDb)
         {
             await ConfigureDatabaseAsync(cancellationToken);
             await ApplySchemaScriptAsync("MyPortal.Migrations.Sql.Scripts.db_create_tables.sql", cancellationToken);

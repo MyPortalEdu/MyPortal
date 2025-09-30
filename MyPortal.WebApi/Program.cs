@@ -1,18 +1,23 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Auth.Stores;
+using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
 using MyPortal.Data.Factories;
+using MyPortal.Data.Interfaces;
+using MyPortal.Data.Security;
 using MyPortal.Services.Configuration;
+using MyPortal.Services.Security;
+using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure;
 using MyPortal.WebApi.Services;
 using QueryKit.Dialects;
 using QueryKit.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services.AddOptions<DatabaseOptions>()
     .Bind(builder.Configuration.GetSection("Database"))
@@ -24,10 +29,16 @@ builder.Services.AddOptions<StorageOptions>()
     .Bind(builder.Configuration.GetSection("Storage"))
     .ValidateOnStart();
 
-var db = builder.Configuration.GetSection("Database").Get<DatabaseOptions>()!;
 QueryKit.Extensions.ConnectionExtensions.UseDialect(Dialect.SQLServer);
 
-builder.Services.AddScoped<IConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddScoped<IDbConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
+
+builder.Services.AddDbContext<AuthDbContext>(o =>
+{
+    o.UseSqlServer(builder.Configuration.GetSection("Database:ConnectionString").Value);
+});
 
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
@@ -35,38 +46,41 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
         options.Password.RequiredLength = 8;
     })
     .AddRoles<ApplicationRole>()
+    .AddUserStore<SqlUserStore>()
+    .AddRoleStore<SqlRoleStore>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
-
-builder.Services.AddScoped<IUserStore<ApplicationUser>, SqlUserStore>();
-builder.Services.AddScoped<IRoleStore<ApplicationRole>, SqlRoleStore>();
-
-builder.Services.AddRepositories();
-
-builder.Services.AddMyPortalServices();
 
 builder.Services.AddOpenIddict()
     .AddCore(o =>
     {
-
+        o.UseEntityFrameworkCore()
+            .UseDbContext<AuthDbContext>()
+            .ReplaceDefaultEntities<Guid>();
     })
     .AddServer(o =>
     {
-        o.SetAuthorizationEndpointUris("/connect/authorize")
-            .SetTokenEndpointUris("/connect/token")
-            .SetUserInfoEndpointUris("/connect/userinfo")
-            .SetEndSessionEndpointUris("/connect/endsession");
+        o.SetAccessTokenLifetime(TimeSpan.FromMinutes(60));
+        o.SetRefreshTokenLifetime(TimeSpan.FromDays(14));
+        
+        o.SetTokenEndpointUris("/connect/token");
+        o.SetAuthorizationEndpointUris("/connect/authorize");
+        o.SetEndSessionEndpointUris("/connect/endsession");
+        o.SetUserInfoEndpointUris("/connect/userinfo");
 
-        o.AllowAuthorizationCodeFlow().AllowRefreshTokenFlow();
+        o.AllowPasswordFlow();
+        o.AcceptAnonymousClients();
+        o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
+        o.AllowRefreshTokenFlow();
 
-        o.RegisterScopes("api", "offline_access", "email", "profile");
+        o.RegisterScopes("api", "email", "profile", "offline_access");
 
-        o.AddDevelopmentEncryptionCertificate()
-            .AddDevelopmentSigningCertificate();
+        o.AddDevelopmentEncryptionCertificate();
+        o.AddDevelopmentSigningCertificate();
 
         o.UseAspNetCore()
-            .EnableAuthorizationEndpointPassthrough()
             .EnableTokenEndpointPassthrough()
+            .EnableAuthorizationEndpointPassthrough()
             .EnableUserInfoEndpointPassthrough();
     })
     .AddValidation(o =>
@@ -85,15 +99,23 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddScoped<IRoleAccessor, SqlRoleAccessor>();
+builder.Services.AddScoped<IRolePermissionCache, RolePermissionCache>();
+builder.Services.AddScoped<IRolePermissionProvider, SqlRolePermissionProvider>();
+
+builder.Services.AddRepositories();
+builder.Services.AddMyPortalServices();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHttpContextAccessor();
-
 builder.Services.AddTransient<ExceptionMiddleware>();
 
 var app = builder.Build();
+
+await Seed.RunAsync(app.Services);
 
 app.UseMiddleware<ExceptionMiddleware>();
 
@@ -105,7 +127,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 

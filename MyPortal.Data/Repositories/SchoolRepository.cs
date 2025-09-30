@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Schools.Queries;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Repositories.Base;
@@ -10,7 +11,7 @@ namespace MyPortal.Data.Repositories;
 
 public class SchoolRepository : EntityRepository<School>, ISchoolRepository
 {
-    protected SchoolRepository(IConnectionFactory factory) : base(factory)
+    public SchoolRepository(IDbConnectionFactory factory) : base(factory)
     {
     }
 

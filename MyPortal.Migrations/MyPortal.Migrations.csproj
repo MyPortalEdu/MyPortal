@@ -39,6 +39,10 @@
     <None Remove="Sql\Updates\0001_test_update.sql" />
     <None Remove="Sql\Updates\0001_add_identity.sql" />
     <EmbeddedResource Include="Sql\Updates\0001_add_identity.sql" />
+    <None Remove="Sql\Updates\0002_add_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\0002_add_permissions.sql" />
+    <None Remove="Sql\Updates\0003_add_auth.sql" />
+    <EmbeddedResource Include="Sql\Updates\0003_add_auth.sql" />
   </ItemGroup>
 
   <ItemGroup>

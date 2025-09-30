@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MyPortal.Auth\MyPortal.Auth.csproj" />
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
     <ProjectReference Include="..\MyPortal.Contracts\MyPortal.Contracts.csproj" />
     <ProjectReference Include="..\MyPortal.Core\MyPortal.Core.csproj" />

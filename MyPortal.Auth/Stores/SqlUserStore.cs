@@ -2,7 +2,7 @@
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using MyPortal.Auth.Models;
-using QueryKit.Repositories.Interfaces;
+using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Auth.Stores;
 
@@ -10,10 +10,10 @@ public class SqlUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Appl
     IUserEmailStore<ApplicationUser>, IUserRoleStore<ApplicationUser>, IUserClaimStore<ApplicationUser>,
     IUserSecurityStampStore<ApplicationUser>
 {
-    private readonly IConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
     private static string? Normalize(string? value) => value?.ToUpperInvariant();
 
-    public SqlUserStore(IConnectionFactory connectionFactory)
+    public SqlUserStore(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }

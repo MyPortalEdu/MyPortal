@@ -1898,6 +1898,7 @@ CREATE TABLE [dbo].[Permissions] (
     [Id] uniqueidentifier NOT NULL,
     [Name] nvarchar(256) NOT NULL,
     [FriendlyName] nvarchar(256) NOT NULL,
+    [Area] nvarchar(50) NOT NULL,
     CONSTRAINT PK_Permissions PRIMARY KEY CLUSTERED ([Id])
     );
 END
