@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using MyPortal.Auth.Handlers;
 using MyPortal.Auth.Interfaces;
@@ -15,6 +16,7 @@ using MyPortal.Services.Configuration;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure;
 using MyPortal.WebApi.Services;
+using MyPortal.WebApi.Transformers;
 using QueryKit.Dialects;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -114,7 +116,10 @@ builder.Services.AddScoped<IRolePermissionProvider, SqlRolePermissionProvider>()
 builder.Services.AddRepositories();
 builder.Services.AddMyPortalServices();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(o =>
+{
+    o.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

@@ -8,13 +8,13 @@ public sealed class PermissionAttribute : AuthorizeAttribute
 {
     private const string Prefix = "perm:";
     
-    public PermissionRequirement Requirement { get; }
+    public PermissionMode Mode { get; }
     public string[] Permissions { get; }
 
-    public PermissionAttribute(PermissionRequirement requirement, params string[] permissions)
+    public PermissionAttribute(PermissionMode mode, params string[] permissions)
     {
-        Requirement = requirement;
+        Mode = mode;
         Permissions = permissions;
-        Policy = $"{Prefix}{requirement}:{string.Join(',', Permissions)}";
+        Policy = $"{Prefix}{mode}:{string.Join(',', Permissions)}";
     }
 }

@@ -15,7 +15,7 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
     {
     }
 
-    public async Task<SchoolDetailsDto?> GetLocalSchool(CancellationToken cancellationToken)
+    public async Task<SchoolDetailsDto?> GetLocalSchoolAsync(CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
 
@@ -23,6 +23,16 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
         var result =
             await conn.ExecuteStoredProcedureAsync<SchoolDetailsDto>(sql, cancellationToken: cancellationToken);
 
+        return result.FirstOrDefault();
+    }
+
+    public async Task<SchoolDetailsDto?> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+
+        var sql = @"[dbo].[usp_school_get_details_by_id]";
+        var result = await conn.ExecuteStoredProcedureAsync<SchoolDetailsDto>(sql, cancellationToken: cancellationToken);
+        
         return result.FirstOrDefault();
     }
 }
