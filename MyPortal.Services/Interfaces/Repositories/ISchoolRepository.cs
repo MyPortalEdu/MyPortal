@@ -6,5 +6,6 @@ namespace MyPortal.Services.Interfaces.Repositories;
 
 public interface ISchoolRepository : IEntityRepository<School>
 {
-    Task<SchoolDetailsDto?> GetLocalSchool(CancellationToken cancellationToken);
+    Task<SchoolDetailsDto?> GetLocalSchoolAsync(CancellationToken cancellationToken);
+    Task<SchoolDetailsDto?> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken);
 }

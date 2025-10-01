@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MyPortal.Services.Interfaces;
 
 namespace MyPortal.WebApi.Controllers;
 
@@ -9,7 +10,19 @@ namespace MyPortal.WebApi.Controllers;
 [Route("api/[controller]")]
 public abstract class BaseApiController : ControllerBase
 {
+    private readonly IValidationService _validationService;
+
+    public BaseApiController(IValidationService validationService)
+    {
+        _validationService = validationService;
+    }
+    
     protected CancellationToken CancellationToken => HttpContext.RequestAborted;
+
+    protected async Task ValidateAsync<T>(T model)
+    {
+        await _validationService.ValidateAsync(model);
+    }
     
     protected IActionResult Error(int statusCode, string message)
     {
