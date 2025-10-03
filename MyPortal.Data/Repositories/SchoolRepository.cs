@@ -19,19 +19,21 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[usp_school_get_local]";
+        var sql = @"[dbo].[sp_school_get_local]";
         var result =
             await conn.ExecuteStoredProcedureAsync<SchoolDetailsDto>(sql, cancellationToken: cancellationToken);
 
         return result.FirstOrDefault();
     }
 
-    public async Task<SchoolDetailsDto?> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<SchoolDetailsDto?> GetDetailsByIdAsync(Guid schoolId, CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[usp_school_get_details_by_id]";
-        var result = await conn.ExecuteStoredProcedureAsync<SchoolDetailsDto>(sql, cancellationToken: cancellationToken);
+        var sql = @"[dbo].[sp_school_get_details_by_id]";
+        var p = new { schoolId };
+        var result =
+            await conn.ExecuteStoredProcedureAsync<SchoolDetailsDto>(sql, p, cancellationToken: cancellationToken);
         
         return result.FirstOrDefault();
     }

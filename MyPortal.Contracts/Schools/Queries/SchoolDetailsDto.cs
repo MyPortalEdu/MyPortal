@@ -8,6 +8,7 @@ public class SchoolDetailsDto
     public Guid AgencyId { get; set; }
     public string Name { get; set; } = "";
     public string? Website { get; set; }
+    public Guid AgencyTypeId { get; set; }
     public string AgencyType { get; set; } = "";
 
     // School bits
