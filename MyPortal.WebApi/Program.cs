@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using MyPortal.Auth.Constants;
 using MyPortal.Auth.Handlers;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Auth.Managers;
 using MyPortal.Auth.Models;
 using MyPortal.Auth.Providers;
 using MyPortal.Auth.Stores;
@@ -45,12 +48,17 @@ builder.Services.AddDbContext<AuthDbContext>(o =>
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
         options.User.RequireUniqueEmail = true;
-        options.Password.RequiredLength = 8;
+        
+        options.Password.RequiredLength = PasswordRequirements.RequiredLength;
+        options.Password.RequireNonAlphanumeric = PasswordRequirements.RequireNonAlphanumeric;
+        options.Password.RequireLowercase = PasswordRequirements.RequireLowercase;
+        options.Password.RequireUppercase = PasswordRequirements.RequireUppercase;
+        options.Password.RequireDigit = PasswordRequirements.RequireDigit;
     })
     .AddRoles<ApplicationRole>()
     .AddUserStore<SqlUserStore>()
     .AddRoleStore<SqlRoleStore>()
-    .AddSignInManager()
+    .AddSignInManager<ApplicationSignInManager>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddOpenIddict()
@@ -70,8 +78,9 @@ builder.Services.AddOpenIddict()
         o.SetEndSessionEndpointUris("/connect/endsession");
         o.SetUserInfoEndpointUris("/connect/userinfo");
 
-        // TODO: remove once client applications can use authorization code flow
-        o.AllowPasswordFlow();
+        
+        // DEV ONLY:
+        //o.AllowPasswordFlow();
         
         o.AcceptAnonymousClients();
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
@@ -94,12 +103,31 @@ builder.Services.AddOpenIddict()
     });
 
 builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = OpenIddict.Validation.AspNetCore
-        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIddict.Validation.AspNetCore
-        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-});
+    {
+        options.DefaultAuthenticateScheme = OpenIddict.Validation.AspNetCore
+            .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = OpenIddict.Validation.AspNetCore
+            .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    })
+    .AddCookie(IdentityConstants.ApplicationScheme, o =>
+    {
+        o.LoginPath = "/account/login";
+        o.LogoutPath = "/account/logout";
+        o.Cookie.HttpOnly = true;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        o.Cookie.SameSite = SameSiteMode.Lax;
+        o.SlidingExpiration = true;
+        o.Events.OnValidatePrincipal = async ctx =>
+        {
+            var userManager = ctx.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.GetUserAsync(ctx.Principal);
+            if (user is null || !user.IsEnabled)
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            }
+        };
+    });
 
 builder.Services.AddAuthorization();
 
@@ -120,6 +148,9 @@ builder.Services.AddControllers(o =>
 {
     o.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
 });
+
+builder.Services.AddRazorPages();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -139,9 +170,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapRazorPages();
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

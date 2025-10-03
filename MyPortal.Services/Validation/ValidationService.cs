@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
 using MyPortal.Services.Interfaces;
 
@@ -12,22 +13,19 @@ public class ValidationService : IValidationService
     {
         _serviceProvider = serviceProvider;
     }
-
-
+    
     public async Task ValidateAsync<T>(T model)
     {
         var validator = _serviceProvider.GetRequiredService<IValidator<T>>();
-
-        if (validator == null)
-        {
-            throw new ValidationException($"No validator found for type {typeof(T).Name}");
-        }
-        
+        await validator.ValidateAndThrowAsync(model);
+    }
+    
+    public async Task<IList<ValidationFailure>> TryValidateAsync<T>(T model)
+    {
+        var validator = _serviceProvider.GetService<IValidator<T>>();
+        if (validator == null) return new List<ValidationFailure>();
+    
         var result = await validator.ValidateAsync(model);
-
-        if (!result.IsValid)
-        {
-            throw new ValidationException(result.Errors);
-        }
+        return result.IsValid ? [] : result.Errors;
     }
 }

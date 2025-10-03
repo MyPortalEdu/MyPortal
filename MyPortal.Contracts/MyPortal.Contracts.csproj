@@ -10,4 +10,8 @@
       <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Models\" />
+    </ItemGroup>
+
 </Project>

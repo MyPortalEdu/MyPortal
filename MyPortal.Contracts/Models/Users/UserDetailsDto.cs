@@ -1,6 +1,6 @@
 ﻿using MyPortal.Common.Enums;
 
-namespace MyPortal.Contracts.Users;
+namespace MyPortal.Contracts.Models.Users;
 
 public class UserDetailsDto
 {

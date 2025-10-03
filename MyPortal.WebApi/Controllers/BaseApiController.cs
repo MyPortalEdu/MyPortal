@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyPortal.Services.Interfaces;
@@ -22,6 +23,11 @@ public abstract class BaseApiController : ControllerBase
     protected async Task ValidateAsync<T>(T model)
     {
         await _validationService.ValidateAsync(model);
+    }
+    
+    protected async Task<IList<ValidationFailure>> TryValidateAsync<T>(T model)
+    {
+        return await _validationService.TryValidateAsync(model);
     }
     
     protected IActionResult Error(int statusCode, string message)

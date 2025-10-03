@@ -3,7 +3,7 @@ using MyPortal.Auth;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Exceptions;
-using MyPortal.Contracts.Users;
+using MyPortal.Contracts.Models.Users;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
@@ -29,7 +29,7 @@ public class UserService : BaseService, IUserService
         return await _userRepository.GetDetailsByIdAsync(id, cancellationToken);
     }
 
-    public async Task<IdentityResult> ChangePasswordAsync(UserChangePasswordDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> SetPasswordAsync(UserSetPasswordDto model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
         
@@ -44,8 +44,30 @@ public class UserService : BaseService, IUserService
         return await _userManager.AddPasswordAsync(user, model.NewPassword);
     }
 
+    public async Task<IdentityResult> ChangePasswordAsync(UserChangePasswordDto model,
+        CancellationToken cancellationToken)
+    {
+        var currentUserId = _authorizationService.GetCurrentUserId();
+
+        if (currentUserId == null || currentUserId != model.UserId)
+        {
+            throw new ForbiddenException("You can only change your own password.");
+        }
+
+        var user = await _userManager.FindByIdAsync(model.UserId.ToString());
+
+        if (user == null)
+        {
+            throw new NotFoundException("User not found.");
+        }
+
+        return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+    }
+
     public async Task<IdentityResult> CreateUserAsync(CreateUserDto model, CancellationToken cancellationToken)
     {
+        await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        
         await _userManager.CreateAsync(new ApplicationUser
         {
             Id = SqlConvention.SequentialGuid(),
@@ -62,11 +84,40 @@ public class UserService : BaseService, IUserService
 
     public async Task<IdentityResult> UpdateUserAsync(UpdateUserDto model, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        
+        var user = await _userManager.FindByIdAsync(model.Id.ToString());
+        
+        if (user == null)
+        {
+            throw new NotFoundException("User not found.");
+        }
+        
+        bool userDisabled = user.IsEnabled && !model.IsEnabled;
+
+        user.PersonId = model.PersonId;
+        user.IsEnabled = model.IsEnabled;
+        user.UserType = model.UserType;
+
+        if (userDisabled)
+        {
+            return await _userManager.UpdateSecurityStampAsync(user);
+        }
+        
+        return await _userManager.UpdateAsync(user);
     }
 
     public async Task<IdentityResult> DeleteUserAsync(Guid id, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        
+        if (user == null)
+        {
+            throw new NotFoundException("User not found.");
+        }
+        
+        return await _userManager.DeleteAsync(user);
     }
 }
