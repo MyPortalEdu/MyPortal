@@ -1,6 +1,6 @@
 ﻿using MyPortal.Auth;
 using MyPortal.Auth.Interfaces;
-using MyPortal.Contracts.Schools.Queries;
+using MyPortal.Contracts.Models.Schools.Queries;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 

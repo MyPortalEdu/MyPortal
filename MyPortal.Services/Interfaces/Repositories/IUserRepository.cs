@@ -1,4 +1,4 @@
-﻿using MyPortal.Contracts.Users;
+﻿using MyPortal.Contracts.Models.Users;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Repositories.Base;
 

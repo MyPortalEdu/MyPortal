@@ -1,5 +1,5 @@
 ﻿using MyPortal.Common.Interfaces;
-using MyPortal.Contracts.Users;
+using MyPortal.Contracts.Models.Users;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Services.Interfaces.Repositories;

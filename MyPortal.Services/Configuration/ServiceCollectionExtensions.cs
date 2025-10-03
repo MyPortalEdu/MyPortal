@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthorizationService, AuthorizationService>();
         
         services.AddScoped<ISchoolService, SchoolService>();
+        services.AddScoped<IUserService, UserService>();
         
         services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
 

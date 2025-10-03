@@ -37,7 +37,7 @@ public class ExceptionMiddleware : IMiddleware
 
             await WriteProblemAsync(context, problem);
         }
-        catch (PermissionException pex)
+        catch (ForbiddenException pex)
         {
             await WriteProblemAsync(context,
                 _problemFactory.CreateProblemDetails(context,

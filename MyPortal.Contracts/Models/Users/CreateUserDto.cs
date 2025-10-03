@@ -1,8 +1,9 @@
 ﻿using MyPortal.Common.Enums;
+using MyPortal.Contracts.Interfaces.Users;
 
-namespace MyPortal.Contracts.Users;
+namespace MyPortal.Contracts.Models.Users;
 
-public class CreateUserDto
+public class CreateUserDto : IUserUpsertDto, IUserPasswordDto
 {
     public CreateUserDto()
     {
