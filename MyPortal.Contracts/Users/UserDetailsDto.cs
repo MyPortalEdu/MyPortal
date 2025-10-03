@@ -32,8 +32,6 @@ public class UserDetailsDto
 
     public bool EmailConfirmed { get; set; }
 
-    public string? PasswordHash { get; set; }
-
     public string? SecurityStamp { get; set; }
 
     public string? ConcurrencyStamp { get; set; }

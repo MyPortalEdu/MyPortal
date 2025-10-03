@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Sql\StoredProcedures\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.9" />
@@ -45,6 +41,16 @@
     <EmbeddedResource Include="Sql\Updates\0003_add_auth.sql" />
     <None Remove="Sql\Updates\0004_seed_uk_data.sql" />
     <EmbeddedResource Include="Sql\Updates\0004_seed_uk_data.sql" />
+    <None Remove="Sql\Updates\0005_add_guid_list_type.sql" />
+    <EmbeddedResource Include="Sql\Updates\0005_add_guid_list_type.sql" />
+    <None Remove="Sql\StoredProcedures\sp_role_get_names_by_ids.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_role_get_names_by_ids.sql" />
+    <None Remove="Sql\StoredProcedures\sp_school_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_school_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_school_get_details_local.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_school_get_details_local.sql" />
+    <None Remove="Sql\StoredProcedures\sp_user_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_user_get_details_by_id.sql" />
   </ItemGroup>
 
   <ItemGroup>
