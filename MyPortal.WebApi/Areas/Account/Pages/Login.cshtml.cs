@@ -23,7 +23,17 @@ public class LoginModel : PageModel
         public bool RememberMe { get; set; }
     }
 
-    public void OnGet(string? returnUrl = "/") => ReturnUrl = returnUrl;
+    public IActionResult OnGet(string? returnUrl = "/")
+    {
+        ReturnUrl = returnUrl;
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
+        }
+
+        return Page();
+    }
 
     public async Task<IActionResult> OnPostAsync(string? returnUrl = "/")
     {
