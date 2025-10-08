@@ -1,6 +1,7 @@
 import {NgModule} from '@angular/core';
 import {PreloadAllModules, RouterModule, Routes} from '@angular/router';
 import {AuthGuard} from './core/guards/auth.guard';
+import {PortalRedirectComponent} from './core/components/portal-redirect/portal-redirect.component';
 
 const routes: Routes = [
   {
@@ -10,7 +11,8 @@ const routes: Routes = [
   },
   {
     path: 'portal',
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    component: PortalRedirectComponent
   },
   {
     path: 'staff',
@@ -26,10 +28,6 @@ const routes: Routes = [
     path: 'parent',
     canActivate: [AuthGuard],
     loadChildren: () => import('./features/parent/parent.module').then(m => m.ParentModule)
-  },
-  {
-    path: '**',
-    redirectTo: 'portal'
   }
 ];
 

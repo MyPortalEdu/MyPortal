@@ -1,11 +1,13 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { MeService } from '../../services/me.service';
+import {Component, OnInit} from '@angular/core';
+import {Router} from '@angular/router';
+import {MeService} from '../../services/me.service';
 import {Me} from '../../interfaces/me';
+import {UserType} from '../../enums/user-type';
 
 @Component({
   selector: 'app-portal-redirect',
-  template: `<p class="text-center text-gray-500 mt-10">Redirecting...</p>`
+  template: `<p class="text-center text-gray-500 mt-10">Redirecting...</p>`,
+  standalone: false
 })
 export class PortalRedirectComponent implements OnInit {
   constructor(private me: MeService, private router: Router) {}
@@ -23,13 +25,13 @@ export class PortalRedirectComponent implements OnInit {
     });
   }
 
-  private mapUserType(userType: string): string {
-    switch (userType?.toLowerCase()) {
-      case 'student':
+  private mapUserType(userType: UserType): string {
+    switch (userType) {
+      case UserType.Student:
         return 'student';
-      case 'parent':
+      case UserType.Parent:
         return 'parent';
-      case 'staff':
+      case UserType.Staff:
       default:
         return 'staff';
     }

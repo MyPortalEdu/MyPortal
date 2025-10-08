@@ -1,8 +1,10 @@
+import {UserType} from '../enums/user-type';
+
 export interface Me {
   id: string;
   userName: string;
   email?: string;
-  userType: 'Staff' | 'Student' | 'Parent';
+  userType: UserType;
   isEnabled: boolean;
   permissions: string[];
 }
