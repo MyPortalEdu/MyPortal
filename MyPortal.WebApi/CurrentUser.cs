@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
-using OpenIddict.Abstractions;
 
 namespace MyPortal.WebApi;
 
@@ -21,16 +20,21 @@ public class CurrentUser : ICurrentUser
         _cache = cache;
     }
     
-    public Guid? UserId => 
-        Guid.TryParse(Principal?.FindFirstValue(OpenIddictConstants.Claims.Subject), out var userId) 
-            ? userId 
-            : null;
+    public Guid? UserId
+    {
+        get
+        {
+            return Guid.TryParse(Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
+                ? userId
+                : null;
+        }
+    }
 
     public UserType UserType
     {
         get
         {
-            var raw = Principal?.FindFirstValue("ut");
+            var raw = Principal?.FindFirstValue(Auth.Constants.ClaimTypes.UserType);
             return Enum.TryParse<UserType>(raw, true, out var t) ? t : UserType.Unknown;
         }
     }

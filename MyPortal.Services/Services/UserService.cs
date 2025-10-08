@@ -14,12 +14,14 @@ public class UserService : BaseService, IUserService
 {
     private readonly IUserRepository  _userRepository;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
 
     public UserService(IAuthorizationService authorizationService, IUserRepository userRepository,
-        UserManager<ApplicationUser> userManager) : base(authorizationService)
+        UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager) : base(authorizationService)
     {
         _userRepository = userRepository;
         _userManager = userManager;
+        _roleManager = roleManager;
     }
 
     public async Task<UserDetailsDto?> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -67,8 +69,8 @@ public class UserService : BaseService, IUserService
     public async Task<IdentityResult> CreateUserAsync(CreateUserDto model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
-        
-        await _userManager.CreateAsync(new ApplicationUser
+
+        var newUser = new ApplicationUser
         {
             Id = SqlConvention.SequentialGuid(),
             UserName = model.Username,
@@ -77,9 +79,12 @@ public class UserService : BaseService, IUserService
             IsEnabled = model.IsEnabled,
             UserType = model.UserType,
             PersonId = model.PersonId
-        }, model.Password);
-        
-        return IdentityResult.Success;
+        };
+
+
+        await _userManager.CreateAsync(newUser, model.Password);
+
+        return await UpdateUserRoles(newUser, model.RoleIds);
     }
 
     public async Task<IdentityResult> UpdateUserAsync(UpdateUserDto model, CancellationToken cancellationToken)
@@ -98,6 +103,8 @@ public class UserService : BaseService, IUserService
         user.PersonId = model.PersonId;
         user.IsEnabled = model.IsEnabled;
         user.UserType = model.UserType;
+
+        await UpdateUserRoles(user, model.RoleIds);
 
         if (userDisabled)
         {
@@ -119,5 +126,44 @@ public class UserService : BaseService, IUserService
         }
         
         return await _userManager.DeleteAsync(user);
+    }
+
+    private async Task<IdentityResult> UpdateUserRoles(ApplicationUser user, IList<Guid> roleIds)
+    {
+        var userRoles = await _userManager.GetRolesAsync(user);
+
+        var newRoles = new List<string>();
+
+        foreach (var roleId in roleIds)
+        {
+            var role = await _roleManager.FindByIdAsync(roleId.ToString());
+
+            if (role == null)
+            {
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "RoleNotFound",
+                    Description = $"Role with ID {roleId} not found."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(role.Name))
+            {
+                continue;
+            }
+
+            await _userManager.AddToRoleAsync(user, role.Name);
+            newRoles.Add(role.Name);
+        }
+
+        foreach (var userRole in userRoles)
+        {
+            if (!newRoles.Contains(userRole))
+            {
+                await _userManager.RemoveFromRoleAsync(user, userRole);
+            }
+        }
+
+        return IdentityResult.Success;
     }
 }

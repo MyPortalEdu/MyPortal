@@ -42,7 +42,7 @@ public class ExceptionMiddleware : IMiddleware
             await WriteProblemAsync(context,
                 _problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status403Forbidden,
-                    title: "Forbidden",
+                    title: "Forbidden.",
                     detail: pex.Message));
         }
         catch (AcademicYearLockedException aex)
@@ -50,7 +50,7 @@ public class ExceptionMiddleware : IMiddleware
             await WriteProblemAsync(context,
                 _problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status409Conflict,
-                    title: "Academic year locked",
+                    title: "Academic year locked.",
                     detail: aex.Message));
         }
         catch (NotFoundException nex)
@@ -58,7 +58,7 @@ public class ExceptionMiddleware : IMiddleware
             await WriteProblemAsync(context,
                 _problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status404NotFound,
-                    title: "Not found",
+                    title: "Not found.",
                     detail: nex.Message));
         }
         catch (SystemEntityException sex)
@@ -66,7 +66,7 @@ public class ExceptionMiddleware : IMiddleware
             await WriteProblemAsync(context,
                 _problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status400BadRequest,
-                    title: "Invalid operation",
+                    title: "Invalid operation.",
                     detail: sex.Message));
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)

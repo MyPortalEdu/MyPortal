@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using MyPortal.Auth.Constants;
+using MyPortal.Auth.Factories;
 using MyPortal.Auth.Handlers;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Managers;
@@ -62,6 +63,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddUserStore<SqlUserStore>()
     .AddRoleStore<SqlRoleStore>()
     .AddSignInManager<ApplicationSignInManager>()
+    .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipalFactory>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddOpenIddict()
@@ -131,6 +133,7 @@ builder.Services.AddAuthentication(options =>
         o.Cookie.HttpOnly = true;
         o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         o.Cookie.SameSite = SameSiteMode.Lax;
+        o.ExpireTimeSpan = TimeSpan.FromDays(14);
         o.SlidingExpiration = true;
         o.Events.OnValidatePrincipal = async ctx =>
         {

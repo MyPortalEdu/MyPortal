@@ -4,13 +4,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using MyPortal.Auth;
-using MyPortal.Auth.Attributes;
-using MyPortal.Auth.Enums;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
-using MyPortal.Common.Enums;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 
@@ -33,55 +28,65 @@ public sealed class AuthController : ControllerBase
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Token()
     {
-        var request = HttpContext.GetOpenIddictServerRequest()
-                      ?? throw new InvalidOperationException("OIDC request missing.");
-        
+        var request = HttpContext.GetOpenIddictServerRequest() ??
+                      throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+
+        const string oidcScheme = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme;
+
         if (request.IsPasswordGrantType())
         {
-            var user = await _userManager.FindByNameAsync(request.Username!)
-                       ?? await _userManager.FindByEmailAsync(request.Username!);
+            var user = await _userManager.FindByNameAsync(request.Username) ?? await _userManager.FindByEmailAsync(request.Username);
 
-            if (user is null)
-                return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-
-            var pwd = await _signInManager.CheckPasswordSignInAsync(user, request.Password!, lockoutOnFailure: false);
-            if (!pwd.Succeeded)
-                return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-
-            var id = new ClaimsIdentity(TokenValidationParameters.DefaultAuthenticationType);
-            id.AddClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString(),
-                OpenIddictConstants.Destinations.AccessToken);
-            id.AddClaim("ut", user.UserType.ToString(), OpenIddictConstants.Destinations.AccessToken);
-            if (!string.IsNullOrEmpty(user.SecurityStamp))
-                id.AddClaim("usrver", user.SecurityStamp, OpenIddictConstants.Destinations.AccessToken);
-
-            var principal = new ClaimsPrincipal(id);
-            
-            principal.SetScopes(request.GetScopes());
-
-            principal.SetDestinations(claim => claim.Type switch
+            if (user == null || !await _signInManager.CanSignInAsync(user))
             {
-                OpenIddictConstants.Claims.Subject => new[] { OpenIddictConstants.Destinations.AccessToken },
-                "ut" => new[] { OpenIddictConstants.Destinations.AccessToken },
-                "usrver" => new[] { OpenIddictConstants.Destinations.AccessToken },
-                _ => Array.Empty<string>()
+                return Forbid(oidcScheme);
+            }
+
+            var pwd = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+
+            if (!pwd.Succeeded || pwd.IsLockedOut)
+            {
+                return Forbid(oidcScheme);
+            }
+
+            var principal = await _signInManager.CreateUserPrincipalAsync(user);
+
+            principal.SetScopes(new[]
+            {
+                OpenIddictConstants.Scopes.OpenId,
+                OpenIddictConstants.Scopes.Email,
+                OpenIddictConstants.Scopes.Profile,
+                OpenIddictConstants.Scopes.OfflineAccess,
+                "api"
+            }.Intersect(request.GetScopes()));
+
+            principal.SetResources("api");
+
+            principal.SetDestinations(claim =>
+            {
+                return claim.Type switch
+                {
+                    ClaimTypes.NameIdentifier => new[] { OpenIddictConstants.Destinations.AccessToken },
+                    Auth.Constants.ClaimTypes.UserType => new[] { OpenIddictConstants.Destinations.AccessToken },
+                };
             });
 
-            return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            return SignIn(principal, oidcScheme);
         }
 
         // AUTHORIZATION CODE or REFRESH TOKEN:
         if (request.IsAuthorizationCodeGrantType() || request.IsRefreshTokenGrantType())
         {
-            var result = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            var result = await HttpContext.AuthenticateAsync(oidcScheme);
             if (!result.Succeeded || result.Principal is null)
-                return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+                return Forbid(oidcScheme);
 
-            var principal = result.Principal;
+            // optionally re-check user.Enabled here by loading the user id from NameIdentifier
+            // and forbidding if disabled, depending on token invalidation strategy.
 
-            return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            return SignIn(result.Principal, oidcScheme);
         }
-        
+
         return BadRequest(new { error = OpenIddictConstants.Errors.UnsupportedGrantType });
     }
     

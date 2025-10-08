@@ -19,7 +19,7 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_school_get_local]";
+        var sql = @"[dbo].[sp_school_get_details_local]";
         var result =
             await conn.ExecuteStoredProcedureAsync<SchoolDetailsDto>(sql, cancellationToken: cancellationToken);
 
