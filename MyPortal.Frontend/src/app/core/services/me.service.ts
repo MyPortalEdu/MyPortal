@@ -13,7 +13,7 @@ export class MeService {
 
   me(): Observable<Me> {
     if (!this.me$) {
-      this.me$ = this.http.get<Me>('api/me').pipe(shareReplay(1));
+      this.me$ = this.http.get<Me>('/api/me').pipe(shareReplay(1));
     }
     return this.me$;
   }

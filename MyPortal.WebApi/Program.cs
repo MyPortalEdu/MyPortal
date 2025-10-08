@@ -24,13 +24,30 @@ using MyPortal.WebApi.Services;
 using MyPortal.WebApi.Transformers;
 using QueryKit.Dialects;
 
+static bool IsApiRequest(HttpRequest req)
+{
+    // treat JSON/XHR or /api paths as API calls
+    if (req.Path.StartsWithSegments("/api") || req.Path.StartsWithSegments("/connect"))
+        return true;
+
+    var accept = req.Headers["Accept"].ToString();
+    if (accept.Contains("application/json", StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    var xrw = req.Headers["X-Requested-With"].ToString();
+    if (xrw.Equals("XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    return false;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddOptions<DatabaseOptions>()
     .Bind(builder.Configuration.GetSection("Database"))
-    .Validate(o => !string.IsNullOrWhiteSpace(o.ConnectionString), 
+    .Validate(o => !string.IsNullOrWhiteSpace(o.ConnectionString),
         "Connection string must be provided.")
     .ValidateOnStart();
 
@@ -52,7 +69,7 @@ builder.Services.AddDbContext<AuthDbContext>(o =>
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
         options.User.RequireUniqueEmail = true;
-        
+
         options.Password.RequiredLength = PasswordRequirements.RequiredLength;
         options.Password.RequireNonAlphanumeric = PasswordRequirements.RequireNonAlphanumeric;
         options.Password.RequireLowercase = PasswordRequirements.RequireLowercase;
@@ -77,16 +94,16 @@ builder.Services.AddOpenIddict()
     {
         o.SetAccessTokenLifetime(TimeSpan.FromMinutes(60));
         o.SetRefreshTokenLifetime(TimeSpan.FromDays(14));
-        
+
         o.SetTokenEndpointUris("/connect/token");
         o.SetAuthorizationEndpointUris("/connect/authorize");
         o.SetEndSessionEndpointUris("/connect/endsession");
         o.SetUserInfoEndpointUris("/connect/userinfo");
 
-        
+
         // DEV ONLY:
         //o.AllowPasswordFlow();
-        
+
         o.AcceptAnonymousClients();
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowRefreshTokenFlow();
@@ -144,6 +161,28 @@ builder.Services.AddAuthentication(options =>
                 ctx.RejectPrincipal();
                 await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
             }
+        };
+        o.Events.OnRedirectToLogin = ctx =>
+        {
+            if (IsApiRequest(ctx.Request))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            }
+
+            ctx.Response.Redirect(ctx.RedirectUri);
+
+            return Task.CompletedTask;
+        };
+        o.Events.OnRedirectToAccessDenied = ctx =>
+        {
+            if (IsApiRequest(ctx.Request))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
+            ctx.Response.Redirect(ctx.RedirectUri);
+            return Task.CompletedTask;
         };
     });
 

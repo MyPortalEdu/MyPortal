@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import {NgModule, Optional, SkipSelf} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PortalRedirectComponent } from './components/portal-redirect/portal-redirect.component';
 
@@ -10,6 +10,13 @@ import { PortalRedirectComponent } from './components/portal-redirect/portal-red
   ],
   imports: [
     CommonModule
+  ],
+  exports: [
+    PortalRedirectComponent
   ]
 })
-export class CoreModule { }
+export class CoreModule {
+  constructor(@Optional() @SkipSelf() parent?: CoreModule) {
+    if (parent) throw new Error('CoreModule should only be imported once.');
+  }
+}
