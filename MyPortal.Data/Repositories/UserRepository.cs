@@ -9,7 +9,7 @@ namespace MyPortal.Data.Repositories;
 
 public class UserRepository : EntityRepository<User>, IUserRepository
 {
-    protected UserRepository(IDbConnectionFactory factory) : base(factory)
+    public UserRepository(IDbConnectionFactory factory) : base(factory)
     {
     }
 

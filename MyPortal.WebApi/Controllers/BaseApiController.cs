@@ -9,6 +9,7 @@ namespace MyPortal.WebApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
+[AutoValidateAntiforgeryToken]
 public abstract class BaseApiController : ControllerBase
 {
     private readonly IValidationService _validationService;
