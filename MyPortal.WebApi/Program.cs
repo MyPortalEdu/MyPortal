@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +24,8 @@ using MyPortal.WebApi.Transformers;
 using QueryKit.Dialects;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddUserSecrets<Program>();
 
 builder.Services.AddOptions<DatabaseOptions>()
     .Bind(builder.Configuration.GetSection("Database"))
@@ -104,10 +107,22 @@ builder.Services.AddOpenIddict()
 
 builder.Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = OpenIddict.Validation.AspNetCore
-            .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = OpenIddict.Validation.AspNetCore
-            .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+        options.DefaultScheme = Schemes.SmartScheme;
+        options.DefaultChallengeScheme = Schemes.SmartScheme;
+    })
+    .AddPolicyScheme(Schemes.SmartScheme, "Cookie or Bearer", o =>
+    {
+        o.ForwardDefaultSelector = ctx =>
+        {
+            var auth = ctx.Request.Headers["Authorization"].ToString();
+
+            if (!string.IsNullOrWhiteSpace(auth) && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                return Schemes.BearerScheme;
+            }
+
+            return Schemes.CookieScheme;
+        };
     })
     .AddCookie(IdentityConstants.ApplicationScheme, o =>
     {
@@ -130,6 +145,12 @@ builder.Services.AddAuthentication(options =>
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddAntiforgery(o =>
+{
+    o.Cookie.Name = "XSRF-TOKEN";
+    o.HeaderName = "X-XSRF-TOKEN";
+});
 
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, UserTypeHandler>();
@@ -173,6 +194,21 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (ctx, next) =>
+{
+    if (HttpMethods.IsGet(ctx.Request.Method) && ctx.Request.Path == "/")
+    {
+        var anti = ctx.RequestServices.GetRequiredService<IAntiforgery>();
+        var tokens = anti.GetAndStoreTokens(ctx);
+        ctx.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
+        {
+            HttpOnly = false, Secure = true, SameSite = SameSiteMode.Lax
+        });
+    }
+
+    await next();
+});
 
 app.MapControllers();
 app.MapRazorPages();
