@@ -1,0 +1,53 @@
+:host ::ng-deep .sidebar {
+  /* Base */
+  .p-panelmenu,
+  .p-panelmenu-panel,
+  .p-panelmenu-content {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* Section headers */
+  .p-panelmenu-header .p-panelmenu-header-content {
+    color: var(--p-surface-300);
+    border-radius: .5rem;
+    padding: .5rem .625rem;
+    transition: background 0.15s;
+  }
+
+  .p-panelmenu-header .p-panelmenu-header-content:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--p-surface-0);
+  }
+
+  /* Menu items */
+  .p-menuitem-link {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    border-radius: .5rem;
+    padding: .5rem .625rem;
+    color: var(--p-surface-200); /* lighter, but not white */
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .p-menuitem-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--p-surface-0);
+  }
+
+  /* Active item */
+  .p-menuitem-active > .p-menuitem-content,
+  .p-menuitem-link[aria-current="page"] {
+    background: rgba(255, 255, 255, 0.10);
+    color: var(--p-surface-0);
+    box-shadow: inset 3px 0 0 0 var(--p-primary-color);
+  }
+
+  /* Submenu padding */
+  .p-submenu-list {
+    padding-left: .75rem;
+    border: none;
+  }
+}

@@ -6,5 +6,6 @@ export interface Me {
   email?: string;
   userType: UserType;
   isEnabled: boolean;
-  permissions: string[];
+  displayName: string;
+  permissions?: string[];
 }

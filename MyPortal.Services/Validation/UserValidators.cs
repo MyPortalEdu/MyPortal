@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using MyPortal.Auth.Constants;
 using MyPortal.Contracts.Interfaces.Users;
-using MyPortal.Contracts.Models.Users;
+using MyPortal.Contracts.Models.System.Users;
 
 namespace MyPortal.Services.Validation;
 

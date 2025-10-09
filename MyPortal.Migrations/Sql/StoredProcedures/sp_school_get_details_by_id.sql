@@ -32,14 +32,14 @@ SELECT
     [S].[IsLocal]
 
 FROM [dbo].[Schools] [S]
-    INNER JOIN [Agencies] [A] ON [S].[AgencyId] = [A].[Id]
-    INNER JOIN [AgencyTypes] [AT] ON [A].[AgencyTypeId] = [AT].[Id]
-    LEFT JOIN [LocalAuthorities] [LA] ON [S].[LocalAuthorityId] = [LA].[Id]
-    INNER JOIN [SchoolPhases] [SP] ON [S].[SchoolPhaseId] = [SP].[Id]
-    INNER JOIN [SchoolTypes] [ST] ON [S].[SchoolTypeId] = [ST].[Id]
-    INNER JOIN [GovernanceTypes] [GT] ON [S].[GovernanceTypeId] = [GT].[Id]
-    INNER JOIN [IntakeTypes] [IT] ON [S].[IntakeTypeId] = [IT].[Id]
-    CROSS APPLY [fn_person_get_name]([S].[HeadTeacherId], 2, 0 ,1) HT
+    INNER JOIN [dbo].[Agencies] [A] ON [S].[AgencyId] = [A].[Id]
+    INNER JOIN [dbo].[AgencyTypes] [AT] ON [A].[AgencyTypeId] = [AT].[Id]
+    LEFT JOIN [dbo].[LocalAuthorities] [LA] ON [S].[LocalAuthorityId] = [LA].[Id]
+    INNER JOIN [dbo].[SchoolPhases] [SP] ON [S].[SchoolPhaseId] = [SP].[Id]
+    INNER JOIN [dbo].[SchoolTypes] [ST] ON [S].[SchoolTypeId] = [ST].[Id]
+    INNER JOIN [dbo].[GovernanceTypes] [GT] ON [S].[GovernanceTypeId] = [GT].[Id]
+    INNER JOIN [dbo].[IntakeTypes] [IT] ON [S].[IntakeTypeId] = [IT].[Id]
+    CROSS APPLY [dbo].[fn_person_get_name]([S].[HeadTeacherId], 2, 0 ,1) HT
 
 WHERE [S].[Id] = @schoolId
 END

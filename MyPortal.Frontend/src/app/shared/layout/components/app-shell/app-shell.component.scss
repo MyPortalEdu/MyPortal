@@ -1,0 +1,45 @@
+.shell { display: flex; flex-direction: column; height: 100dvh; }
+
+/* make content scroll, keep header fixed */
+.shell-body { display: flex; flex: 1; min-height: 0; }
+
+.shell-content {
+  flex: 1;
+  background: var(--surface-ground);
+  padding: 1rem;
+  overflow: auto;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--surface-0);
+  border-right: 1px solid var(--surface-200);
+  transition: transform .2s ease, width .2s ease;
+  overflow: auto;
+}
+
+/* Mobile drawer */
+.sidebar--overlay {
+  position: fixed;
+  top: 3.5rem;
+  bottom: 0; left: 0;
+  transform: translateX(-100%);
+  z-index: 1002;
+}
+.sidebar--overlay.sidebar--open { transform: translateX(0); }
+
+@media (min-width: 992px) {
+  .sidebar--overlay { position: static; transform: none; }
+}
+
+/* Dimmer for mobile */
+.overlay-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 1001;
+}
+
+/* smoother feel in dark themes too */
+:root {
+  --app-card-pad: 1rem;
+}

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 @Component({
-    selector: 'app-student',
+    selector: 'mp-student',
     templateUrl: './student.component.html',
     styleUrl: './student.component.scss',
     standalone: false

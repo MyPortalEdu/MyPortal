@@ -5,7 +5,7 @@ import {Me} from '../../interfaces/me';
 import {UserType} from '../../enums/user-type';
 
 @Component({
-  selector: 'app-portal-redirect',
+  selector: 'mp-portal-redirect',
   template: `<p class="text-center text-gray-500 mt-10">Redirecting...</p>`,
   standalone: false
 })
