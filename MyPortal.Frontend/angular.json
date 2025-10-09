@@ -82,7 +82,10 @@
             "assets": [
               { "glob": "**/*", "input": "public" }
             ],
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "node_modules/primeflex/primeflex.css",
+              "src/styles.scss"
+            ],
             "scripts": []
           }
         }

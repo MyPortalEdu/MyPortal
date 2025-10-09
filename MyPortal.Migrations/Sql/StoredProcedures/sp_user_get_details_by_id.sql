@@ -28,7 +28,7 @@ SELECT
     [U].[LockoutEnd],
     [U].[LockoutEnabled],
     [U].[AccessFailedCount]
-FROM [Users] [U]
-CROSS APPLY [fn_person_get_name](U.PersonId, 3, 1, 0) AS P
+FROM [dbo].[Users] [U]
+CROSS APPLY [dbo].[fn_person_get_name](U.PersonId, 3, 1, 0) AS P
 WHERE [U].[Id] = @userId
 END;

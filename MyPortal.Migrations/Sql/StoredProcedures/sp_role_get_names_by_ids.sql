@@ -10,6 +10,6 @@ BEGIN
 
 SELECT
     R.[Name]
-FROM [Roles] [R]
+FROM [dbo].[Roles] [R]
     INNER JOIN @roleIds RI ON RI.[Value] = R.[Id]
 END;

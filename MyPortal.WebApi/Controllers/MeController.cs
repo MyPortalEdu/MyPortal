@@ -1,40 +1,35 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using MyPortal.Auth.Models;
+using MyPortal.Auth.Interfaces;
 using MyPortal.Services.Interfaces;
+using MyPortal.Services.Interfaces.Services;
 
 namespace MyPortal.WebApi.Controllers
 {
     [Route("api/me")]
     public class MeController : BaseApiController
     {
-        private readonly UserManager<ApplicationUser> _users;
+        private readonly IUserService _userService;
+        private readonly ICurrentUser _user;
 
-        public MeController(IValidationService validationService, UserManager<ApplicationUser> users) : base(validationService)
+        public MeController(IValidationService validationService, IUserService userService, ICurrentUser user) : base(validationService)
         {
-            _users = users;
+            _userService = userService;
+            _user = user;
         }
 
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Get()
         {
-            var user = await _users.GetUserAsync(User);
-
-            if (user is null)
+            if (!_user.UserId.HasValue)
             {
                 return Unauthorized();
             }
 
-            return Ok(new
-            {
-                user.Id,
-                user.UserName,
-                user.Email,
-                user.UserType,
-                user.IsEnabled
-            });
+            var userInfo = await _userService.GetInfoByIdAsync(_user.UserId.Value, CancellationToken);
+
+            return Ok(userInfo);
         }
     }
 }

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 @Component({
-    selector: 'app-parent',
+    selector: 'mp-parent',
     templateUrl: './parent.component.html',
     styleUrl: './parent.component.scss',
     standalone: false

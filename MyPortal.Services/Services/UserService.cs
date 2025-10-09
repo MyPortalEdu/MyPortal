@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MyPortal.Auth;
+using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Exceptions;
-using MyPortal.Contracts.Models.Users;
+using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
@@ -13,22 +13,48 @@ namespace MyPortal.Services.Services;
 public class UserService : BaseService, IUserService
 {
     private readonly IUserRepository  _userRepository;
+    private readonly IPermissionRepository _permissionRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
 
     public UserService(IAuthorizationService authorizationService, IUserRepository userRepository,
-        UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager) : base(authorizationService)
+        IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager) : base(authorizationService)
     {
         _userRepository = userRepository;
+        _permissionRepository = permissionRepository;
         _userManager = userManager;
         _roleManager = roleManager;
     }
 
-    public async Task<UserDetailsDto?> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<UserDetailsDto?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
         
-        return await _userRepository.GetDetailsByIdAsync(id, cancellationToken);
+        return await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
+    }
+
+    public async Task<UserInfoDto?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var currentUserId = _authorizationService.GetCurrentUserId();
+
+        if (currentUserId == null || currentUserId != userId)
+        {
+            await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+        }
+
+        var userInfo = await _userRepository.GetInfoByIdAsync(userId, cancellationToken);
+
+        if (userInfo == null)
+        {
+            return null;
+        }
+
+        var permissions = await _permissionRepository.GetPermissionsByUserIdAsync(userId, cancellationToken);
+
+        userInfo.Permissions = permissions.Select(p => p.Name).ToArray();
+
+        return userInfo;
     }
 
     public async Task<IdentityResult> SetPasswordAsync(UserSetPasswordDto model, CancellationToken cancellationToken)

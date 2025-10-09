@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MyPortal.Contracts.Models.Users;
+using MyPortal.Contracts.Models.System.Users;
 
 namespace MyPortal.Services.Interfaces.Services;
 
 public interface IUserService
 {
-    Task<UserDetailsDto?> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<UserDetailsDto?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<UserInfoDto?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<IdentityResult> ChangePasswordAsync(UserChangePasswordDto model,
         CancellationToken cancellationToken);
