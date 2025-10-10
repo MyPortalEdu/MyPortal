@@ -12,6 +12,7 @@ import {TooltipModule} from 'primeng/tooltip';
 import {RippleModule} from 'primeng/ripple';
 import {SkeletonModule} from 'primeng/skeleton';
 import {ProgressSpinnerModule} from 'primeng/progressspinner';
+import { PageHeaderComponent } from './components/page-header/page-header.component';
 
 const UI_MODULES= [
   ButtonModule,
@@ -28,7 +29,9 @@ const UI_MODULES= [
 ]
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    PageHeaderComponent
+  ],
   imports: [
     CommonModule,
     FormsModule,
@@ -39,7 +42,8 @@ const UI_MODULES= [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    ...UI_MODULES
+    ...UI_MODULES,
+    PageHeaderComponent
   ]
 })
 export class SharedModule { }

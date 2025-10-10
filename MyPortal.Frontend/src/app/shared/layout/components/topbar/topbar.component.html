@@ -1,22 +1,22 @@
 <div
-  class="sticky top-0 z-[1003] h-14 w-full bg-white/95 backdrop-blur
-            border-b border-neutral-200 shadow-[0_1px_0_rgba(0,0,0,0.03)]
-            px-3 md:px-4 flex items-center justify-between">
-  <!-- left: burger + brand -->
+  class="sticky top-0 z-[1003] h-14 w-full
+         bg-[var(--p-surface-0)]/95 backdrop-blur
+         border-b border-[var(--p-surface-200)] [box-shadow:0_1px_0_rgba(0,0,0,0.03)]
+         px-3 md:px-4 flex items-center justify-between">
+  <!-- left -->
   <div class="flex items-center gap-3">
-    <button pButton type="button" class="p-button-text lg:hidden" (click)="menuToggle.emit()">
+    <button pButton type="button" class="p-button-text p-button-sm lg:hidden" (click)="menuToggle.emit()">
       <i pButtonIcon class="pi pi-bars"></i>
     </button>
     <a routerLink="/portal" class="flex items-center gap-2 select-none">
-      <!-- tiny logo/mark -->
-      <span class="text-base md:text-lg font-semibold text-neutral-700 tracking-tight">MyPortal</span>
+      <span class="text-base md:text-lg font-semibold tracking-tight text-[var(--p-surface-700)]">MyPortal</span>
     </a>
   </div>
 
-  <!-- right: user -->
-  <div class="flex items-center gap-2 md:gap-3">
+  <!-- right -->
+  <div class="flex items-center gap-2 sm:gap-3">
     <ng-container *ngIf="me$ | async as me">
-      <span class="hidden sm:inline text-sm text-neutral-500">{{ me.displayName }}</span>
+      <span class="hidden sm:inline text-sm text-[var(--p-surface-500)]">{{ me.displayName }}</span>
       <p-avatar label="{{ (me.displayName||'')[0] | uppercase }}" shape="circle"></p-avatar>
       <button pButton label="Logout" class="hidden sm:inline-flex p-button-sm p-button-outlined" (click)="logout()"></button>
       <button class="sm:hidden" pButton type="button" icon="pi pi-sign-out" (click)="logout()"></button>
