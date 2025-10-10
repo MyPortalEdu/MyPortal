@@ -1,6 +1,4 @@
 import { Component } from '@angular/core';
-import {HttpClient} from '@angular/common/http';
-import {MeService} from './core/services/me.service';
 
 @Component({
     selector: 'mp-root',
@@ -11,14 +9,7 @@ import {MeService} from './core/services/me.service';
 export class AppComponent {
   title = 'MyPortal';
 
-  constructor(private http: HttpClient, private me: MeService) {
+  constructor() {
 
-  }
-
-  logout(): void {
-    this.http.post('/account/logout', {}).subscribe(() => {
-      this.me.clearCache();
-      location.href = "/";
-    });
   }
 }

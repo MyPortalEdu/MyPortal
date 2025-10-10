@@ -21,9 +21,7 @@ export class TopbarComponent implements OnInit {
   }
 
   logout() {
-    this.http.post('/account/logout', {}).subscribe(() => {
-      this.me.clearCache();
-      location.href = '/';
-    });
+    this.me.clearCache();
+    location.href = '/account/logout';
   }
 }
