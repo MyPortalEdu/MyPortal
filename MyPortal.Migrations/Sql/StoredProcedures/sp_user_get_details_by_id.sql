@@ -14,6 +14,7 @@ SELECT
     [U].[PersonId],
     [U].[UserType],
     [U].[IsEnabled],
+    [U].[IsSystem],
     [P].[Name] AS [PersonFullName],
     [U].[UserName] AS [Username],
     [U].[NormalizedUserName] AS [NormalizedUsername],

@@ -12,6 +12,7 @@ SELECT
     [U].[Id],
     [U].[UserType],
     [U].[IsEnabled],
+    [U].[IsSystem],
     COALESCE([P].[Name], [U].UserName) AS [DisplayName],
     [U].[UserName] AS [Username],
     [U].[Email]

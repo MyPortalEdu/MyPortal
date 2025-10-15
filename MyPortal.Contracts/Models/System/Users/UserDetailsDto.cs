@@ -19,6 +19,8 @@ public class UserDetailsDto
 
     public bool IsEnabled { get; set; }
 
+    public bool IsSystem { get; set; }
+
     public string? PersonFullName { get; set; }
         
     // Identity
