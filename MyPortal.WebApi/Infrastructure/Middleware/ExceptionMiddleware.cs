@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MyPortal.Common.Exceptions;
 
-namespace MyPortal.WebApi.Infrastructure;
+namespace MyPortal.WebApi.Infrastructure.Middleware;
 
 public class ExceptionMiddleware : IMiddleware
 {

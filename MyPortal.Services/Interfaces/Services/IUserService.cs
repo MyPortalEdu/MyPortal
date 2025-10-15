@@ -9,14 +9,14 @@ public interface IUserService
 
     Task<UserInfoDto?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken);
 
-    Task<IdentityResult> ChangePasswordAsync(UserChangePasswordDto model,
+    Task<IdentityResult> ChangePasswordAsync(Guid userId, UserChangePasswordDto model,
         CancellationToken cancellationToken);
     
-    Task<IdentityResult> SetPasswordAsync(UserSetPasswordDto model,  CancellationToken cancellationToken);
+    Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordDto model,  CancellationToken cancellationToken);
     
-    Task<IdentityResult> CreateUserAsync(CreateUpsertUserDto model, CancellationToken cancellationToken);
+    Task<IdentityResult> CreateUserAsync(UserUpsertDto model, CancellationToken cancellationToken);
     
-    Task<IdentityResult> UpdateUserAsync(UpdateUpsertUserDto model, CancellationToken cancellationToken);
+    Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertDto model, CancellationToken cancellationToken);
     
     Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken);
 }

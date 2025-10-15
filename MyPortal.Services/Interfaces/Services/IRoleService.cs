@@ -6,7 +6,7 @@ namespace MyPortal.Services.Interfaces.Services;
 public interface IRoleService
 {
     Task<RoleDetailsDto?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken);
-    Task<IdentityResult> CreateRoleAsync(CreateRoleDto model, CancellationToken cancellationToken);
-    Task<IdentityResult> UpdateRoleAsync(UpdateRoleDto model, CancellationToken cancellationToken);
+    Task<IdentityResult> CreateRoleAsync(RoleUpsertDto model, CancellationToken cancellationToken);
+    Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertDto model, CancellationToken cancellationToken);
     Task<IdentityResult> DeleteRoleAsync(Guid roleId, CancellationToken cancellationToken);
 }
