@@ -146,11 +146,10 @@ public class UserServiceTests
 
         var dto = new UserSetPasswordDto
         {
-            UserId = Guid.NewGuid(),
             NewPassword = "NewP@ssw0rd!"
         };
 
-        Assert.That(async () => await _userService.SetPasswordAsync(dto, CancellationToken.None),
+        Assert.That(async () => await _userService.SetPasswordAsync(Guid.NewGuid(), dto, CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("User not found."));
     }
 
@@ -167,9 +166,8 @@ public class UserServiceTests
         _userManager.Setup(m => m.RemovePasswordAsync(user)).ReturnsAsync(IdentityResult.Success);
         _userManager.Setup(m => m.AddPasswordAsync(user, "X")).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.SetPasswordAsync(new UserSetPasswordDto
+        var res = await _userService.SetPasswordAsync(user.Id, new UserSetPasswordDto
         {
-            UserId = user.Id,
             NewPassword = "X"
         }, CancellationToken.None);
 
@@ -185,12 +183,11 @@ public class UserServiceTests
 
         var dto = new UserChangePasswordDto
         {
-            UserId = target,
             CurrentPassword = "old",
             NewPassword = "new"
         };
 
-        Assert.That(async () => await _userService.ChangePasswordAsync(dto, CancellationToken.None),
+        Assert.That(async () => await _userService.ChangePasswordAsync(target, dto, CancellationToken.None),
             Throws.TypeOf<ForbiddenException>().With.Message.EqualTo("You can only change your own password."));
     }
 
@@ -205,9 +202,8 @@ public class UserServiceTests
         _userManager.Setup(m => m.ChangePasswordAsync(user, "old", "new"))
             .ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.ChangePasswordAsync(new UserChangePasswordDto
+        var res = await _userService.ChangePasswordAsync(id, new UserChangePasswordDto
         {
-            UserId = id,
             CurrentPassword = "old",
             NewPassword = "new"
         }, CancellationToken.None);
@@ -235,7 +231,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Success);
 
-        var result = await _userService.CreateUserAsync(new CreateUpsertUserDto
+        var result = await _userService.CreateUserAsync(new UserUpsertDto
         {
             Username = "staff",
             Email = "staff@test.com",
@@ -263,9 +259,8 @@ public class UserServiceTests
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(Array.Empty<string>());
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(new UpdateUpsertUserDto
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto
         {
-            Id = id,
             PersonId = Guid.NewGuid(),
             Username = "student",
             UserType = UserType.Student,
@@ -301,9 +296,8 @@ public class UserServiceTests
 
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(new UpdateUpsertUserDto
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto
         {
-            Id = id,
             PersonId = Guid.NewGuid(),
             Username = "student",
             UserType = UserType.Student,
@@ -338,9 +332,8 @@ public class UserServiceTests
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(new UpdateUpsertUserDto
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto()
         {
-            Id = id,
             PersonId = Guid.NewGuid(),
             Username = "student",
             UserType = UserType.Student,
@@ -376,9 +369,8 @@ public class UserServiceTests
         // No add/remove expected; since no other changes, UpdateAsync should be called
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(new UpdateUpsertUserDto
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto()
         {
-            Id = id,
             PersonId = Guid.NewGuid(),
             Username = "student",
             UserType = UserType.Student,
@@ -408,9 +400,8 @@ public class UserServiceTests
         _roleManager.Setup(r => r.FindByIdAsync(missingRoleId.ToString()))
             .ReturnsAsync((ApplicationRole?)null);
 
-        var dto = new UpdateUpsertUserDto
+        var dto = new UserUpsertDto()
         {
-            Id = id,
             Username = "student",
             PersonId = Guid.NewGuid(),
             UserType = UserType.Student,
@@ -418,7 +409,7 @@ public class UserServiceTests
             RoleIds = new List<Guid> { missingRoleId }
         };
 
-        Assert.That(async () => await _userService.UpdateUserAsync(dto, CancellationToken.None),
+        Assert.That(async () => await _userService.UpdateUserAsync(id, dto, CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("Role not found."));
     }
 

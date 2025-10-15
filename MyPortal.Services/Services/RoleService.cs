@@ -35,7 +35,7 @@ namespace MyPortal.Services.Services
             return await _roleRepository.GetDetailsByIdAsync(roleId, cancellationToken);
         }
 
-        public async Task<IdentityResult> CreateRoleAsync(CreateRoleDto model, CancellationToken cancellationToken)
+        public async Task<IdentityResult> CreateRoleAsync(RoleUpsertDto model, CancellationToken cancellationToken)
         {
             await _authorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
 
@@ -54,11 +54,11 @@ namespace MyPortal.Services.Services
             return result;
         }
 
-        public async Task<IdentityResult> UpdateRoleAsync(UpdateRoleDto model, CancellationToken cancellationToken)
+        public async Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertDto model, CancellationToken cancellationToken)
         {
             await _authorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
 
-            var role = await _roleManager.FindByIdAsync(model.Id.ToString());
+            var role = await _roleManager.FindByIdAsync(roleId.ToString());
 
             if (role == null)
             {

@@ -1,14 +1,13 @@
 ﻿using FluentValidation;
-using MyPortal.Contracts.Interfaces.System.Roles;
 using MyPortal.Contracts.Models.System.Roles;
 
 namespace MyPortal.Services.Validation.System
 {
     public class RoleValidators
     {
-        public class RoleUpsertValidator<T> : AbstractValidator<T> where T : IUpsertRoleDto
+        public class UpsertRoleDtoValidator : AbstractValidator<RoleUpsertDto>
         {
-            public RoleUpsertValidator()
+            public UpsertRoleDtoValidator()
             {
                 RuleFor(x => x.Name)
                     .NotEmpty().WithMessage("Name is required")
@@ -25,23 +24,6 @@ namespace MyPortal.Services.Validation.System
 
                 RuleForEach(x => x.PermissionIds)
                     .NotEmpty().WithMessage("PermissionId cannot be an empty GUID.");
-            }
-        }
-
-        public class CreateRoleDtoValidator : AbstractValidator<CreateRoleDto>
-        {
-            public CreateRoleDtoValidator()
-            {
-                Include(new RoleUpsertValidator<CreateRoleDto>());
-            }
-        }
-
-        public class UpdateRoleDtoValidator : AbstractValidator<UpdateRoleDto>
-        {
-            public UpdateRoleDtoValidator()
-            {
-                Include(new RoleUpsertValidator<UpdateRoleDto>());
-                Include(new GenericValidators.UpdateValidator<UpdateRoleDto>());
             }
         }
     }

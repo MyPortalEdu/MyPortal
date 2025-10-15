@@ -1,15 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MyPortal.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Services.Interfaces.Services;
 
 namespace MyPortal.WebApi.Controllers;
 
-public class SchoolsController : BaseApiController
+public class SchoolsController : BaseApiController<SchoolsController>
 {
     private readonly ISchoolService _schoolService;
 
-    public SchoolsController(IValidationService validationService, ISchoolService schoolService) : base(
-        validationService)
+    public SchoolsController(ProblemDetailsFactory problemFactory, ILogger<SchoolsController> logger,
+        ISchoolService schoolService) : base(problemFactory, logger)
     {
         _schoolService = schoolService;
     }

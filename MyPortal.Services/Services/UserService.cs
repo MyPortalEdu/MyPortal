@@ -57,11 +57,11 @@ public class UserService : BaseService, IUserService
         return userInfo;
     }
 
-    public async Task<IdentityResult> SetPasswordAsync(UserSetPasswordDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordDto model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
         
-        var user = await _userManager.FindByIdAsync(model.UserId.ToString());
+        var user = await _userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
         {
@@ -72,17 +72,17 @@ public class UserService : BaseService, IUserService
         return await _userManager.AddPasswordAsync(user, model.NewPassword);
     }
 
-    public async Task<IdentityResult> ChangePasswordAsync(UserChangePasswordDto model,
+    public async Task<IdentityResult> ChangePasswordAsync(Guid userId, UserChangePasswordDto model,
         CancellationToken cancellationToken)
     {
         var currentUserId = _authorizationService.GetCurrentUserId();
 
-        if (currentUserId == null || currentUserId != model.UserId)
+        if (currentUserId == null || currentUserId != userId)
         {
             throw new ForbiddenException("You can only change your own password.");
         }
 
-        var user = await _userManager.FindByIdAsync(model.UserId.ToString());
+        var user = await _userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
         {
@@ -92,7 +92,7 @@ public class UserService : BaseService, IUserService
         return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
     }
 
-    public async Task<IdentityResult> CreateUserAsync(CreateUpsertUserDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateUserAsync(UserUpsertDto model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
@@ -115,11 +115,11 @@ public class UserService : BaseService, IUserService
         return result;
     }
 
-    public async Task<IdentityResult> UpdateUserAsync(UpdateUpsertUserDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertDto model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
         
-        var user = await _userManager.FindByIdAsync(model.Id.ToString());
+        var user = await _userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {

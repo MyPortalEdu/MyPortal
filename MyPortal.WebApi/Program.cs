@@ -20,6 +20,7 @@ using MyPortal.Data.Security;
 using MyPortal.Services.Configuration;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure;
+using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Services;
 using MyPortal.WebApi.Transformers;
 using QueryKit.Dialects;
