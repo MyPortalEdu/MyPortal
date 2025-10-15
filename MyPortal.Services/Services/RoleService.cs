@@ -28,7 +28,7 @@ namespace MyPortal.Services.Services
             _roleManager = roleManager;
         }
 
-        public async Task<RoleDetailsDto> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken)
+        public async Task<RoleDetailsDto?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken)
         {
             await _authorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
 

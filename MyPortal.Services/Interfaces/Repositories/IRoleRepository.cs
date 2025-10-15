@@ -6,6 +6,6 @@ namespace MyPortal.Services.Interfaces.Repositories
 {
     public interface IRoleRepository : IEntityRepository<Role>
     {
-        Task<RoleDetailsDto> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken);
+        Task<RoleDetailsDto?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken);
     }
 }

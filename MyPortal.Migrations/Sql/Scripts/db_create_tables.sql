@@ -2814,6 +2814,7 @@ CREATE TABLE [dbo].[Users] (
     [PersonId] uniqueidentifier NULL,
     [UserType] int NOT NULL,
     [IsEnabled] bit NOT NULL,
+    [IsSystem] bit NOT NULL,
     CONSTRAINT PK_Users PRIMARY KEY CLUSTERED ([Id])
     );
 END

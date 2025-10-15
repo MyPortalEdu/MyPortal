@@ -9,6 +9,7 @@ namespace MyPortal.Contracts.Models.System.Users
         public string? Email { get; set; }
         public UserType UserType { get; set; }
         public bool IsEnabled { get; set; }
+        public bool IsSystem { get; set; }
         public string DisplayName { get; set; }
         public string[] Permissions { get; set; }
     }

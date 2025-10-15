@@ -70,7 +70,7 @@ public static class AuthSeeder
         }
 
         using var conn = connFactory.Create();
-        var allPerms = (await conn.QueryAsync<Guid>("SELECT Id FROM PermissionIds")).ToArray();
+        var allPerms = (await conn.QueryAsync<Guid>("SELECT Id FROM Permissions")).ToArray();
         var adminRoleId = await conn.QuerySingleAsync<Guid>("SELECT Id FROM Roles WHERE Name = @name", new { name = "System Administrator" });
 
         foreach (var perm in allPerms)
