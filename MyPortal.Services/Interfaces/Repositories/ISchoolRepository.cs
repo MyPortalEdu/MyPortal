@@ -1,4 +1,4 @@
-﻿using MyPortal.Contracts.Models.Schools.Queries;
+﻿using MyPortal.Contracts.Models.Schools;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Repositories.Base;
 

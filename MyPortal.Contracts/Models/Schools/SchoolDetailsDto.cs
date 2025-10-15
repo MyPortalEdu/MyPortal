@@ -1,4 +1,4 @@
-﻿namespace MyPortal.Contracts.Models.Schools.Queries;
+﻿namespace MyPortal.Contracts.Models.Schools;
 
 public class SchoolDetailsDto
 {

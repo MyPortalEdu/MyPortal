@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
-using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Data.Security;
 
@@ -39,7 +38,7 @@ public class SqlRolePermissionProvider : IRolePermissionProvider
                 SELECT DISTINCT P.Name
                 FROM Roles R
                 JOIN RolePermissions RP ON RP.RoleId = R.Id
-                JOIN Permissions P ON P.Id = RP.PermissionId
+                JOIN PermissionIds P ON P.Id = RP.PermissionId
                 WHERE R.Id = @roleId;";
             var perms = (await conn.QueryAsync<string>(sql, new { roleId = role })).ToArray();
             _cache.Set(role, perms);

@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using Microsoft.AspNetCore.Identity;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Enums;
@@ -8,12 +7,12 @@ using OpenIddict.Abstractions;
 
 namespace MyPortal.WebApi;
 
-public static class Seed
+public static class AuthSeeder
 {
+    // Re-runnable seeder to populate auth data
     public static async Task RunAsync(IServiceProvider sp)
     {
         using var scope = sp.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
         var users   = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roles   = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
@@ -46,7 +45,7 @@ public static class Seed
         
         var connFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
         
-        var roleNames = new[] { "Admin" };
+        var roleNames = new[] { "System Administrator" };
         foreach (var rn in roleNames)
             if (!await roles.RoleExistsAsync(rn))
                 await roles.CreateAsync(new ApplicationRole { Id = Guid.NewGuid(), Name = rn, IsSystem = true });
@@ -63,15 +62,16 @@ public static class Seed
                 EmailConfirmed = true,
                 UserType = UserType.Staff,
                 IsEnabled = true,
+                IsSystem = true,
                 CreatedAt = DateTime.UtcNow
             };
             await users.CreateAsync(admin, "Passw0rd!");
-            await users.AddToRoleAsync(admin, "Admin");
+            await users.AddToRoleAsync(admin, "System Administrator");
         }
 
         using var conn = connFactory.Create();
-        var allPerms = (await conn.QueryAsync<Guid>("SELECT Id FROM Permissions")).ToArray();
-        var adminRoleId = await conn.QuerySingleAsync<Guid>("SELECT Id FROM Roles WHERE Name = @name", new { name = "Admin" });
+        var allPerms = (await conn.QueryAsync<Guid>("SELECT Id FROM PermissionIds")).ToArray();
+        var adminRoleId = await conn.QuerySingleAsync<Guid>("SELECT Id FROM Roles WHERE Name = @name", new { name = "System Administrator" });
 
         foreach (var perm in allPerms)
         {

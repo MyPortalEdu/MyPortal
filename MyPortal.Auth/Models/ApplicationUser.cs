@@ -12,4 +12,6 @@ public class ApplicationUser : IdentityUser<Guid>
     public UserType UserType { get; set; }
 
     public bool IsEnabled { get; set; }
+    
+    public bool IsSystem { get; set; }
 }

@@ -92,7 +92,7 @@ public class UserService : BaseService, IUserService
         return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
     }
 
-    public async Task<IdentityResult> CreateUserAsync(CreateUserDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateUserAsync(CreateUpsertUserDto model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
@@ -108,12 +108,14 @@ public class UserService : BaseService, IUserService
         };
 
 
-        await _userManager.CreateAsync(newUser, model.Password);
+        var result = await _userManager.CreateAsync(newUser, model.Password);
 
-        return await UpdateUserRoles(newUser, model.RoleIds);
+        await UpdateUserRoles(newUser, model.RoleIds);
+
+        return result;
     }
 
-    public async Task<IdentityResult> UpdateUserAsync(UpdateUserDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> UpdateUserAsync(UpdateUpsertUserDto model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
         
@@ -130,9 +132,9 @@ public class UserService : BaseService, IUserService
         user.IsEnabled = model.IsEnabled;
         user.UserType = model.UserType;
 
-        await UpdateUserRoles(user, model.RoleIds);
+        var rolesChanged = await UpdateUserRoles(user, model.RoleIds);
 
-        if (userDisabled)
+        if (userDisabled || rolesChanged)
         {
             return await _userManager.UpdateSecurityStampAsync(user);
         }
@@ -140,11 +142,11 @@ public class UserService : BaseService, IUserService
         return await _userManager.UpdateAsync(user);
     }
 
-    public async Task<IdentityResult> DeleteUserAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
         
-        var user = await _userManager.FindByIdAsync(id.ToString());
+        var user = await _userManager.FindByIdAsync(userId.ToString());
         
         if (user == null)
         {
@@ -154,8 +156,10 @@ public class UserService : BaseService, IUserService
         return await _userManager.DeleteAsync(user);
     }
 
-    private async Task<IdentityResult> UpdateUserRoles(ApplicationUser user, IList<Guid> roleIds)
+    private async Task<bool> UpdateUserRoles(ApplicationUser user, IList<Guid> roleIds)
     {
+        var changesMade = false;
+
         var userRoles = await _userManager.GetRolesAsync(user);
 
         var newRoles = new List<string>();
@@ -166,11 +170,7 @@ public class UserService : BaseService, IUserService
 
             if (role == null)
             {
-                return IdentityResult.Failed(new IdentityError
-                {
-                    Code = "RoleNotFound",
-                    Description = $"Role with ID {roleId} not found."
-                });
+                throw new NotFoundException("Role not found.");
             }
 
             if (string.IsNullOrWhiteSpace(role.Name))
@@ -179,17 +179,21 @@ public class UserService : BaseService, IUserService
             }
 
             await _userManager.AddToRoleAsync(user, role.Name);
+            changesMade = true;
             newRoles.Add(role.Name);
         }
 
         foreach (var userRole in userRoles)
         {
-            if (!newRoles.Contains(userRole))
+            if (newRoles.Contains(userRole))
             {
-                await _userManager.RemoveFromRoleAsync(user, userRole);
+                continue;
             }
+
+            await _userManager.RemoveFromRoleAsync(user, userRole);
+            changesMade = true;
         }
 
-        return IdentityResult.Success;
+        return changesMade;
     }
 }

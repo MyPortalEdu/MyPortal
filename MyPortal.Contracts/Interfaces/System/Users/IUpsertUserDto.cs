@@ -1,8 +1,8 @@
 ﻿using MyPortal.Common.Enums;
 
-namespace MyPortal.Contracts.Interfaces.Users;
+namespace MyPortal.Contracts.Interfaces.System.Users;
 
-public interface IUserUpsertDto
+public interface IUpsertUserDto
 {
     Guid? PersonId { get; }
     UserType UserType { get; }

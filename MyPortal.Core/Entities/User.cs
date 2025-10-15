@@ -1,11 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MyPortal.Common.Enums;
+using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
     [Table("Users")]
-    public class User : Entity
+    public class User : Entity, ISystemEntity
     {
         public DateTime CreatedAt { get; set; }
 
@@ -14,6 +15,8 @@ namespace MyPortal.Core.Entities
         public UserType UserType { get; set; }
 
         public bool IsEnabled { get; set; }
+        
+        public bool IsSystem { get; set; }
 
         public Person? Person { get; set; }
         

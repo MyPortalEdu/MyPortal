@@ -40,7 +40,6 @@
     <None Remove="Sql\Updates\0001_add_identity.sql" />
     <EmbeddedResource Include="Sql\Updates\0001_add_identity.sql" />
     <None Remove="Sql\Updates\0002_add_permissions.sql" />
-    <EmbeddedResource Include="Sql\Updates\0002_add_permissions.sql" />
     <None Remove="Sql\Updates\0003_add_auth.sql" />
     <EmbeddedResource Include="Sql\Updates\0003_add_auth.sql" />
     <None Remove="Sql\Updates\0004_seed_uk_data.sql" />
@@ -55,6 +54,8 @@
     <EmbeddedResource Include="Sql\StoredProcedures\sp_school_get_details_local.sql" />
     <None Remove="Sql\StoredProcedures\sp_user_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_user_get_details_by_id.sql" />
+    <None Remove="Sql\Updates\0002_add_user_management_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\0002_add_user_management_permissions.sql" />
   </ItemGroup>
 
   <ItemGroup>

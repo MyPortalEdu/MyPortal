@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MyPortal.Auth.Enums;
-using MyPortal.Auth.Models;
 using MyPortal.Auth.Requirements;
 
 namespace MyPortal.Auth.Providers;
