@@ -160,9 +160,9 @@ public class UserService : BaseService, IUserService
     {
         var changesMade = false;
 
-        var userRoles = await _userManager.GetRolesAsync(user);
+        var currentRoleNames = await _userManager.GetRolesAsync(user);
 
-        var newRoles = new List<string>();
+        var newRoleNames = new List<string>();
 
         foreach (var roleId in roleIds)
         {
@@ -172,20 +172,26 @@ public class UserService : BaseService, IUserService
             {
                 throw new NotFoundException("Role not found.");
             }
-
+            
             if (string.IsNullOrWhiteSpace(role.Name))
+            {
+                continue;
+            }
+            
+            newRoleNames.Add(role.Name);
+
+            if (currentRoleNames.Contains(role.Name))
             {
                 continue;
             }
 
             await _userManager.AddToRoleAsync(user, role.Name);
             changesMade = true;
-            newRoles.Add(role.Name);
         }
 
-        foreach (var userRole in userRoles)
+        foreach (var userRole in currentRoleNames)
         {
-            if (newRoles.Contains(userRole))
+            if (newRoleNames.Contains(userRole))
             {
                 continue;
             }
