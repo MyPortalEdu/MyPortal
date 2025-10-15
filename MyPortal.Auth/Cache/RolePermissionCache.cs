@@ -1,12 +1,16 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-using MyPortal.Data.Interfaces;
+using MyPortal.Auth.Interfaces;
 
-namespace MyPortal.Data.Security;
+namespace MyPortal.Auth.Cache;
 
 public class RolePermissionCache : IRolePermissionCache
 {
     private readonly IMemoryCache _cache;
-    public RolePermissionCache(IMemoryCache cache) => _cache = cache;
+
+    public RolePermissionCache(IMemoryCache cache)
+    {
+        _cache = cache;
+    }
 
     public Task<IReadOnlyCollection<string>> GetAsync(Guid roleId, CancellationToken ct = default)
         => Task.FromResult(_cache.Get<IReadOnlyCollection<string>>(Key(roleId)) ?? Array.Empty<string>());

@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IAuthorizationService, AuthorizationService>();
         
+        services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ISchoolService, SchoolService>();
         services.AddScoped<IUserService, UserService>();
         

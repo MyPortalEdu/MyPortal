@@ -1,4 +1,4 @@
-﻿namespace MyPortal.Contracts.Interfaces.Users;
+﻿namespace MyPortal.Contracts.Interfaces.System.Users;
 
 public interface IUserPasswordDto
 {

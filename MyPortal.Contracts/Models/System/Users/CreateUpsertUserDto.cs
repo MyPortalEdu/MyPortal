@@ -1,11 +1,11 @@
 ﻿using MyPortal.Common.Enums;
-using MyPortal.Contracts.Interfaces.Users;
+using MyPortal.Contracts.Interfaces.System.Users;
 
 namespace MyPortal.Contracts.Models.System.Users;
 
-public class CreateUserDto : IUserUpsertDto, IUserPasswordDto
+public class CreateUpsertUserDto : IUpsertUserDto, IUserPasswordDto
 {
-    public CreateUserDto()
+    public CreateUpsertUserDto()
     {
         RoleIds = new List<Guid>();
     }

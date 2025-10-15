@@ -1,12 +1,12 @@
 ﻿using MyPortal.Common.Enums;
 using MyPortal.Contracts.Interfaces;
-using MyPortal.Contracts.Interfaces.Users;
+using MyPortal.Contracts.Interfaces.System.Users;
 
 namespace MyPortal.Contracts.Models.System.Users;
 
-public class UpdateUserDto : IUserUpsertDto, IUpdateDto
+public class UpdateUpsertUserDto : IUpsertUserDto, IUpdateDto
 {
-    public UpdateUserDto()
+    public UpdateUpsertUserDto()
     {
         RoleIds = new List<Guid>();
     }

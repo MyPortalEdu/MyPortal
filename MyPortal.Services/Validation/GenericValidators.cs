@@ -10,8 +10,8 @@ public class GenericValidators
         public UpdateValidator()
         {
             RuleFor(x => x.Id)
-                .NotEmpty().WithMessage("Id is required")
-                .Must(id => id != Guid.Empty).WithMessage("Id cannot be an empty GUID");
+                .NotEmpty().WithMessage("Id is required.")
+                .Must(id => id != Guid.Empty).WithMessage("Id cannot be an empty GUID.");
         }
     }
 }

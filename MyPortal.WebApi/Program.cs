@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using MyPortal.Auth.Cache;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Factories;
 using MyPortal.Auth.Handlers;
@@ -15,7 +16,6 @@ using MyPortal.Auth.Stores;
 using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
 using MyPortal.Data.Factories;
-using MyPortal.Data.Interfaces;
 using MyPortal.Data.Security;
 using MyPortal.Services.Configuration;
 using MyPortal.WebApi;
@@ -198,10 +198,10 @@ builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, UserTypeHandler>();
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, ApplicationPolicyProvider>();
+builder.Services.AddSingleton<IRolePermissionCache, RolePermissionCache>();
 
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IRoleAccessor, SqlRoleAccessor>();
-builder.Services.AddScoped<IRolePermissionCache, RolePermissionCache>();
 builder.Services.AddScoped<IRolePermissionProvider, SqlRolePermissionProvider>();
 
 builder.Services.AddRepositories();
@@ -221,7 +221,7 @@ builder.Services.AddTransient<ExceptionMiddleware>();
 
 var app = builder.Build();
 
-await Seed.RunAsync(app.Services);
+await AuthSeeder.RunAsync(app.Services);
 
 app.UseMiddleware<ExceptionMiddleware>();
 

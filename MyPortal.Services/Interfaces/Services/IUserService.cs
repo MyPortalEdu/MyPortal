@@ -14,9 +14,9 @@ public interface IUserService
     
     Task<IdentityResult> SetPasswordAsync(UserSetPasswordDto model,  CancellationToken cancellationToken);
     
-    Task<IdentityResult> CreateUserAsync(CreateUserDto model, CancellationToken cancellationToken);
+    Task<IdentityResult> CreateUserAsync(CreateUpsertUserDto model, CancellationToken cancellationToken);
     
-    Task<IdentityResult> UpdateUserAsync(UpdateUserDto model, CancellationToken cancellationToken);
+    Task<IdentityResult> UpdateUserAsync(UpdateUpsertUserDto model, CancellationToken cancellationToken);
     
-    Task<IdentityResult> DeleteUserAsync(Guid id, CancellationToken cancellationToken);
+    Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken);
 }

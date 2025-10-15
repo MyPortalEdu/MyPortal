@@ -1,6 +1,6 @@
 ﻿using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
-using MyPortal.Contracts.Models.Schools.Queries;
+using MyPortal.Contracts.Models.Schools;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 
@@ -18,8 +18,6 @@ public class SchoolService : BaseService, ISchoolService
 
     public async Task<SchoolDetailsDto?> GetLocalSchoolAsync(CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.ViewSchoolDetails, cancellationToken);
-        
         return await _schoolRepository.GetLocalSchoolAsync(cancellationToken);
     }
 

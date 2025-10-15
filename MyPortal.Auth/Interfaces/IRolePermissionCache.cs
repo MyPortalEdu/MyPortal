@@ -1,4 +1,4 @@
-﻿namespace MyPortal.Data.Interfaces;
+﻿namespace MyPortal.Auth.Interfaces;
 
 public interface IRolePermissionCache
 {
