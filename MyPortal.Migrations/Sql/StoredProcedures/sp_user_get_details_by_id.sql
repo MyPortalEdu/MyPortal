@@ -16,20 +16,12 @@ SELECT
     [U].[IsEnabled],
     [U].[IsSystem],
     [P].[Name] AS [PersonFullName],
-    [U].[UserName] AS [Username],
-    [U].[NormalizedUserName] AS [NormalizedUsername],
-    [U].[Email],
-    [U].[NormalizedEmail],
-    [U].[EmailConfirmed],
-    [U].[SecurityStamp],
-    [U].[ConcurrencyStamp],
+    [U].[UserName] AS [Username],    
+    [U].[Email],            
     [U].[PhoneNumber],
-    [U].[PhoneNumberConfirmed],
-    [U].[TwoFactorEnabled],
-    [U].[LockoutEnd],
-    [U].[LockoutEnabled],
-    [U].[AccessFailedCount]
+    [U].[TwoFactorEnabled],    
+    [U].[LockoutEnabled]    
 FROM [dbo].[Users] [U]
-CROSS APPLY [dbo].[fn_person_get_name](U.PersonId, 3, 1, 0) AS P
+CROSS APPLY [dbo].[fn_person_get_name](U.PersonId, 3, 0, 0) AS P
 WHERE [U].[Id] = @userId
 END;

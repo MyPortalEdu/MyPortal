@@ -2,13 +2,8 @@
 
 namespace MyPortal.Contracts.Models.System.Users;
 
-public class UserDetailsDto
+public class UserSummaryDto
 {
-    public UserDetailsDto()
-    {
-        RoleIds =  new List<Guid>();
-    }
-    
     public Guid Id { get; set; }
     
     public DateTime CreatedAt { get; set; }
@@ -33,6 +28,4 @@ public class UserDetailsDto
     public bool TwoFactorEnabled { get; set; }
 
     public bool LockoutEnabled { get; set; }
-
-    public IList<Guid> RoleIds { get; set; }
 }
