@@ -22,7 +22,7 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             throw new SystemEntityException("You cannot modify a system entity.");
         }
 
-        return await base.UpdateAsync(entityInDb, cancellationToken);
+        return await base.UpdateAsync(entity, cancellationToken);
     }
 
     public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)

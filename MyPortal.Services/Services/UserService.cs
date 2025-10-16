@@ -6,13 +6,16 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 
 namespace MyPortal.Services.Services;
 
 public class UserService : BaseService, IUserService
 {
-    private readonly IUserRepository  _userRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IPermissionRepository _permissionRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
@@ -30,7 +33,7 @@ public class UserService : BaseService, IUserService
     public async Task<UserDetailsDto?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
-        
+
         return await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
     }
 
@@ -57,10 +60,21 @@ public class UserService : BaseService, IUserService
         return userInfo;
     }
 
-    public async Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordDto model, CancellationToken cancellationToken)
+    public async Task<PageResult<UserSummaryDto>> GetUsersAsync(FilterOptions? filter = null,
+        SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default)
+    {
+        await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+
+        var result = await _userRepository.GetUsersAsync(filter, sort, paging, cancellationToken);
+        
+        return result;
+    }
+
+    public async Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordDto model,
+        CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
-        
+
         var user = await _userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
@@ -115,22 +129,24 @@ public class UserService : BaseService, IUserService
         return result;
     }
 
-    public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertDto model,
+        CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
-        
+
         var user = await _userManager.FindByIdAsync(userId.ToString());
-        
+
         if (user == null)
         {
             throw new NotFoundException("User not found.");
         }
-        
+
         bool userDisabled = user.IsEnabled && !model.IsEnabled;
 
         user.PersonId = model.PersonId;
         user.IsEnabled = model.IsEnabled;
         user.UserType = model.UserType;
+        user.UserName = model.Username;
 
         var rolesChanged = await UpdateUserRoles(user, model.RoleIds);
 
@@ -138,21 +154,21 @@ public class UserService : BaseService, IUserService
         {
             return await _userManager.UpdateSecurityStampAsync(user);
         }
-        
+
         return await _userManager.UpdateAsync(user);
     }
 
     public async Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
-        
+
         var user = await _userManager.FindByIdAsync(userId.ToString());
-        
+
         if (user == null)
         {
             throw new NotFoundException("User not found.");
         }
-        
+
         return await _userManager.DeleteAsync(user);
     }
 
@@ -172,12 +188,12 @@ public class UserService : BaseService, IUserService
             {
                 throw new NotFoundException("Role not found.");
             }
-            
+
             if (string.IsNullOrWhiteSpace(role.Name))
             {
                 continue;
             }
-            
+
             newRoleNames.Add(role.Name);
 
             if (currentRoleNames.Contains(role.Name))
