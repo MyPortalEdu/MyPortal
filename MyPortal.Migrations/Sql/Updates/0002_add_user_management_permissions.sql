@@ -1,10 +1,10 @@
 ﻿MERGE INTO [dbo].[Permissions] AS Target
     USING (VALUES
     -- System
-    (N'System.ViewUsers',               N'View Users',                N'System'),
-    (N'System.EditUsers',               N'Edit Users',                N'System'),
-    (N'System.ViewRoles',              N'View Roles',               N'System'),
-    (N'System.EditRoles',              N'Edit Roles',               N'System')
+    (N'System.ViewUsers',               N'View Users',                N'System.Users'),
+    (N'System.EditUsers',               N'Edit Users',                N'System.Users'),
+    (N'System.ViewRoles',              N'View Roles',               N'System.Users'),
+    (N'System.EditRoles',              N'Edit Roles',               N'System.Users')
     ) AS Source ([Name], [FriendlyName], [Area])
     ON Target.[Name] = Source.[Name]
 

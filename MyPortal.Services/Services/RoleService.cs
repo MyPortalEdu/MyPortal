@@ -7,6 +7,9 @@ using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 
 namespace MyPortal.Services.Services
@@ -33,6 +36,16 @@ namespace MyPortal.Services.Services
             await _authorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
 
             return await _roleRepository.GetDetailsByIdAsync(roleId, cancellationToken);
+        }
+
+        public async Task<PageResult<RoleSummaryDto>> GetRolesAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+            CancellationToken cancellationToken = default)
+        {
+            await _authorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
+
+            var result = await _roleRepository.GetRolesAsync(filter, sort, paging, cancellationToken);
+
+            return result;
         }
 
         public async Task<IdentityResult> CreateRoleAsync(RoleUpsertDto model, CancellationToken cancellationToken)

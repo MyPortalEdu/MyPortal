@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using System.Security.Authentication;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -36,6 +37,14 @@ public class ExceptionMiddleware : IMiddleware
                 title: "Validation failed.");
 
             await WriteProblemAsync(context, problem);
+        }
+        catch (AuthenticationException aex)
+        {
+            await WriteProblemAsync(context,
+                _problemFactory.CreateProblemDetails(context,
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "Not authenticated.",
+                    detail: aex.Message));
         }
         catch (ForbiddenException pex)
         {
