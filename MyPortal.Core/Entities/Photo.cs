@@ -4,10 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MyPortal.Core.Entities
 {
     [Table("Photos")]
-    public class Photo : Entity
+    public class Photo : AuditableEntity
     {
-        [Required]
-        public required byte[] Data { get; set; }
+        public Guid FileId { get; set; }
 
         public DateTime PhotoDate { get; set; }
 

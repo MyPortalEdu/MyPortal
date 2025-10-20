@@ -12,9 +12,7 @@ SELECT
     R.[Id],
     R.[Description],
     R.[IsSystem],
-    R.[Name],
-    R.[NormalizedName],
-    R.[ConcurrencyStamp]
+    R.[Name],        
 FROM Roles [R]
 WHERE R.[Id] = @roleId;
 

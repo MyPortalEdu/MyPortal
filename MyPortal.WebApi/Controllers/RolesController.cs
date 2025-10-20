@@ -7,6 +7,9 @@ using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Services.Interfaces.Services;
 using MyPortal.WebApi.Infrastructure.Attributes;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
@@ -32,6 +35,16 @@ public class RolesController : BaseApiController<RolesController>
             return NotFoundProblem("Role not found.");
         }
         
+        return Ok(result);
+    }
+
+    [HttpGet]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.System.ViewRoles)]
+    public async Task<IActionResult> GetRolesAsync(FilterOptions? filter, SortOptions? sort, PageOptions? paging)
+    {
+        var result = await _roleService.GetRolesAsync(filter, sort, paging, CancellationToken);
+
         return Ok(result);
     }
 

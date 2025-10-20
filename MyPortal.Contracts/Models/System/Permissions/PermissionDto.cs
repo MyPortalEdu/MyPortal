@@ -4,6 +4,8 @@ namespace MyPortal.Contracts.Models.System.Permissions
 {
     public class PermissionDto
     {
+        public Guid Id { get; set; }
+
         public required string Name { get; set; }
 
         public required string FriendlyName { get; set; }

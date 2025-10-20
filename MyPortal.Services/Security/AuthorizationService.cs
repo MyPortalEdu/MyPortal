@@ -1,4 +1,5 @@
-﻿using MyPortal.Auth.Interfaces;
+﻿using System.Security.Authentication;
+using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 
@@ -19,7 +20,7 @@ public class AuthorizationService : IAuthorizationService
 
     public async Task RequirePermissionAsync(string permission, CancellationToken ct = default)
     {
-        var id = _user.UserId ?? throw new ForbiddenException("Not authenticated.");
+        var id = _user.UserId ?? throw new AuthenticationException("Not authenticated.");
         if (!await _perms.HasPermissionAsync(id, permission, ct))
             throw new ForbiddenException($"You do not have permission to perform this action.");
     }
