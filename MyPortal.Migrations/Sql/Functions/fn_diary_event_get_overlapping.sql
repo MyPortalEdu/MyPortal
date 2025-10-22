@@ -6,9 +6,9 @@ GO
 -- All-day events are treated as [StartTime, EndDate + 1 day] so they cover the whole calendar day.
 CREATE OR ALTER FUNCTION dbo.fn_diary_event_get_overlapping
     (
-    @StartTime      datetime2(7),
-    @EndTime        datetime2(7),
-    @EventTypeFilter uniqueidentifier = NULL
+        @StartTime      datetime2(7),
+        @EndTime        datetime2(7),
+        @EventTypeFilter uniqueidentifier = NULL
     )
     RETURNS TABLE
     WITH SCHEMABINDING

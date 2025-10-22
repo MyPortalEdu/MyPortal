@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - MyPortal</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <!-- Tailwind or your chosen CSS framework -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center">
+<main class="w-full max-w-md p-6">
+    <div class="text-center mb-6">
+        <!-- Your logo -->
+        @* <img src="~/assets/logo.png" alt="MyPortal Logo" class="mx-auto h-12 w-auto" /> *@
+        <h1 class="text-2xl font-semibold text-gray-900 mt-2">MyPortal</h1>
+        <p class="text-sm text-gray-500">Sign in to continue</p>
+    </div>
+
+    @RenderBody()
+
+    <footer class="mt-8 text-center text-xs text-gray-400">
+        &copy; @DateTime.UtcNow.Year MyPortal. All rights reserved.
+    </footer>
+</main>
+
+@RenderSection("Scripts", required: false)
+</body>
+</html>

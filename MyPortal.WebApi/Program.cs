@@ -1,27 +1,54 @@
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using MyPortal.Auth.Cache;
+using MyPortal.Auth.Constants;
+using MyPortal.Auth.Factories;
 using MyPortal.Auth.Handlers;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Auth.Managers;
 using MyPortal.Auth.Models;
 using MyPortal.Auth.Providers;
 using MyPortal.Auth.Stores;
 using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
 using MyPortal.Data.Factories;
-using MyPortal.Data.Interfaces;
 using MyPortal.Data.Security;
 using MyPortal.Services.Configuration;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure;
+using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Services;
+using MyPortal.WebApi.Transformers;
 using QueryKit.Dialects;
+
+static bool IsApiRequest(HttpRequest req)
+{
+    // treat JSON/XHR or /api paths as API calls
+    if (req.Path.StartsWithSegments("/api") || req.Path.StartsWithSegments("/connect"))
+        return true;
+
+    var accept = req.Headers["Accept"].ToString();
+    if (accept.Contains("application/json", StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    var xrw = req.Headers["X-Requested-With"].ToString();
+    if (xrw.Equals("XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    return false;
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddUserSecrets<Program>();
+
 builder.Services.AddOptions<DatabaseOptions>()
     .Bind(builder.Configuration.GetSection("Database"))
-    .Validate(o => !string.IsNullOrWhiteSpace(o.ConnectionString), 
+    .Validate(o => !string.IsNullOrWhiteSpace(o.ConnectionString),
         "Connection string must be provided.")
     .ValidateOnStart();
 
@@ -43,12 +70,18 @@ builder.Services.AddDbContext<AuthDbContext>(o =>
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
         options.User.RequireUniqueEmail = true;
-        options.Password.RequiredLength = 8;
+
+        options.Password.RequiredLength = PasswordRequirements.RequiredLength;
+        options.Password.RequireNonAlphanumeric = PasswordRequirements.RequireNonAlphanumeric;
+        options.Password.RequireLowercase = PasswordRequirements.RequireLowercase;
+        options.Password.RequireUppercase = PasswordRequirements.RequireUppercase;
+        options.Password.RequireDigit = PasswordRequirements.RequireDigit;
     })
     .AddRoles<ApplicationRole>()
     .AddUserStore<SqlUserStore>()
     .AddRoleStore<SqlRoleStore>()
-    .AddSignInManager()
+    .AddSignInManager<ApplicationSignInManager>()
+    .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipalFactory>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddOpenIddict()
@@ -62,15 +95,16 @@ builder.Services.AddOpenIddict()
     {
         o.SetAccessTokenLifetime(TimeSpan.FromMinutes(60));
         o.SetRefreshTokenLifetime(TimeSpan.FromDays(14));
-        
+
         o.SetTokenEndpointUris("/connect/token");
         o.SetAuthorizationEndpointUris("/connect/authorize");
         o.SetEndSessionEndpointUris("/connect/endsession");
         o.SetUserInfoEndpointUris("/connect/userinfo");
 
-        // TODO: remove once client applications can use authorization code flow
-        o.AllowPasswordFlow();
-        
+
+        // DEV ONLY:
+        //o.AllowPasswordFlow();
+
         o.AcceptAnonymousClients();
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowRefreshTokenFlow();
@@ -92,29 +126,95 @@ builder.Services.AddOpenIddict()
     });
 
 builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = OpenIddict.Validation.AspNetCore
-        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIddict.Validation.AspNetCore
-        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-});
+    {
+        options.DefaultScheme = Schemes.SmartScheme;
+        options.DefaultChallengeScheme = Schemes.SmartScheme;
+    })
+    .AddPolicyScheme(Schemes.SmartScheme, "Cookie or Bearer", o =>
+    {
+        o.ForwardDefaultSelector = ctx =>
+        {
+            var auth = ctx.Request.Headers["Authorization"].ToString();
+
+            if (!string.IsNullOrWhiteSpace(auth) && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                return Schemes.BearerScheme;
+            }
+
+            return Schemes.CookieScheme;
+        };
+    })
+    .AddCookie(IdentityConstants.ApplicationScheme, o =>
+    {
+        o.LoginPath = "/account/login";
+        o.LogoutPath = "/account/logout";
+        o.Cookie.HttpOnly = true;
+        o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        o.Cookie.SameSite = SameSiteMode.Lax;
+        o.ExpireTimeSpan = TimeSpan.FromDays(14);
+        o.SlidingExpiration = true;
+        o.Events.OnValidatePrincipal = async ctx =>
+        {
+            var userManager = ctx.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.GetUserAsync(ctx.Principal);
+            if (user is null || !user.IsEnabled)
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            }
+        };
+        o.Events.OnRedirectToLogin = ctx =>
+        {
+            if (IsApiRequest(ctx.Request))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            }
+
+            ctx.Response.Redirect(ctx.RedirectUri);
+
+            return Task.CompletedTask;
+        };
+        o.Events.OnRedirectToAccessDenied = ctx =>
+        {
+            if (IsApiRequest(ctx.Request))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
+            ctx.Response.Redirect(ctx.RedirectUri);
+            return Task.CompletedTask;
+        };
+    });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddAntiforgery(o =>
+{
+    o.Cookie.Name = "XSRF-TOKEN";
+    o.HeaderName = "X-XSRF-TOKEN";
+});
 
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, UserTypeHandler>();
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, ApplicationPolicyProvider>();
+builder.Services.AddSingleton<IRolePermissionCache, RolePermissionCache>();
 
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IRoleAccessor, SqlRoleAccessor>();
-builder.Services.AddScoped<IRolePermissionCache, RolePermissionCache>();
 builder.Services.AddScoped<IRolePermissionProvider, SqlRolePermissionProvider>();
 
 builder.Services.AddRepositories();
 builder.Services.AddMyPortalServices();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(o =>
+{
+    o.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+});
+
+builder.Services.AddRazorPages();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -122,7 +222,7 @@ builder.Services.AddTransient<ExceptionMiddleware>();
 
 var app = builder.Build();
 
-await Seed.RunAsync(app.Services);
+await AuthSeeder.RunAsync(app.Services);
 
 app.UseMiddleware<ExceptionMiddleware>();
 
@@ -134,9 +234,28 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.Use(async (ctx, next) =>
+{
+    if (HttpMethods.IsGet(ctx.Request.Method) && ctx.Request.Path == "/")
+    {
+        var anti = ctx.RequestServices.GetRequiredService<IAntiforgery>();
+        var tokens = anti.GetAndStoreTokens(ctx);
+        ctx.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
+        {
+            HttpOnly = false, Secure = true, SameSite = SameSiteMode.Lax
+        });
+    }
+
+    await next();
+});
+
 app.MapControllers();
+app.MapRazorPages();
+
+app.MapFallbackToFile("index.html");
 
 app.Run();

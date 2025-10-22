@@ -1,0 +1,10 @@
+@import "primeicons/primeicons.css";
+@import "tailwindcss-primeui";
+@import "tailwindcss";
+@custom-variant dark (&:where(.mp-dark, .mp-dark *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+html, body { height: 100%; }
