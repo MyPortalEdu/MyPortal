@@ -18,5 +18,5 @@ SELECT
     [U].[Email]
 FROM [dbo].[Users] [U]
 OUTER APPLY [dbo].[fn_person_get_name](U.PersonId, 3, 1, 0) AS P
-WHERE [U].[Id] = '00F1044E-33DF-4A21-8E54-6A481979FD1E'
+WHERE [U].[Id] = @userId
 END;

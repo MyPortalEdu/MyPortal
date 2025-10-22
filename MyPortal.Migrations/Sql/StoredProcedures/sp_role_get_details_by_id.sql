@@ -12,7 +12,7 @@ SELECT
     R.[Id],
     R.[Description],
     R.[IsSystem],
-    R.[Name],        
+    R.[Name]        
 FROM Roles [R]
 WHERE R.[Id] = @roleId;
 
