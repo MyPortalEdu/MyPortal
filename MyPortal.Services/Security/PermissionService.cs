@@ -2,18 +2,16 @@
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Repositories;
-using MyPortal.Services.Services;
 
 namespace MyPortal.Services.Security;
 
-public class PermissionService : BaseService, IPermissionService
+public class PermissionService : IPermissionService
 {
     private readonly ICurrentUser _user;
     private readonly IRolePermissionProvider _provider;
     private readonly IPermissionRepository _permissionRepository;
 
-    public PermissionService(IAuthorizationService authorizationService, ICurrentUser user,
-        IRolePermissionProvider provider, IPermissionRepository permissionRepository) : base(authorizationService)
+    public PermissionService(ICurrentUser user, IRolePermissionProvider provider, IPermissionRepository permissionRepository)
     {
         _user = user;
         _provider = provider;

@@ -41,7 +41,7 @@ public class UsersController : BaseApiController<UsersController>
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewUsers)]
-    public async Task<IActionResult> GetUsersAsync(FilterOptions filter, SortOptions sort, PageOptions paging)
+    public async Task<IActionResult> GetUsersAsync([FromQuery] FilterOptions filter, [FromQuery] SortOptions sort, [FromQuery] PageOptions paging)
     {
         var result = await _userService.GetUsersAsync(filter, sort, paging, CancellationToken);
         

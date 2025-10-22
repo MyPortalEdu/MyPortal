@@ -1,0 +1,53 @@
+<!-- Topbar -->
+<mp-topbar (menuToggle)="toggleSidebar()"></mp-topbar>
+
+<!-- MOBILE: Drawer with sidebar -->
+<p-drawer
+  [visible]="!isDesktop && sidebarOpen"
+  (onHide)="closeSidebar()"
+  position="left"
+  [modal]="true"
+  [closable]="false"
+>
+<!-- Headless content -->
+<ng-template #headless>
+  <div class="flex h-full flex-col
+                bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-900)]
+                text-[var(--p-text-color)]">
+
+    <!-- your custom header -->
+    <div class="flex items-center justify-between px-4 py-3
+                  border-b border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]">
+      <span class="font-semibold text-lg">MyPortal</span>
+      <button pButton class="p-button-text p-button-sm" icon="pi pi-times" (click)="closeSidebar()"></button>
+    </div>
+
+    <!-- scrollable nav -->
+    <div class="flex-1 overflow-auto">
+      <mp-sidebar></mp-sidebar>
+    </div>
+  </div>
+</ng-template>
+</p-drawer>
+
+
+<!-- DESKTOP: sidebar + main content -->
+<div class="flex min-h-[calc(100dvh-3.5rem)] overflow-hidden">
+  <!-- static sidebar -->
+  <aside
+    class="hidden lg:flex w-72 shrink-0 flex-col
+         bg-[var(--p-surface-100)] dark:bg-[var(--p-surface-900)]
+         border-r border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]
+         text-[var(--p-text-color)] transition-colors"
+  >
+    <mp-sidebar></mp-sidebar>
+  </aside>
+
+
+  <!-- main area -->
+  <main
+    class="flex-1 overflow-auto bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-800)] text-[var(--p-text-color)] p-4 lg:p-6 transition-colors"
+  >
+    <router-outlet></router-outlet>
+  </main>
+</div>

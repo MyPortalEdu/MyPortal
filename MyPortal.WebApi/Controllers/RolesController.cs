@@ -41,7 +41,7 @@ public class RolesController : BaseApiController<RolesController>
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewRoles)]
-    public async Task<IActionResult> GetRolesAsync(FilterOptions? filter, SortOptions? sort, PageOptions? paging)
+    public async Task<IActionResult> GetRolesAsync([FromQuery] FilterOptions? filter, [FromQuery] SortOptions? sort, [FromQuery] PageOptions? paging)
     {
         var result = await _roleService.GetRolesAsync(filter, sort, paging, CancellationToken);
 
