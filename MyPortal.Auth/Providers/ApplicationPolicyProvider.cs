@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MyPortal.Auth.Enums;
-using MyPortal.Auth.Models;
+using MyPortal.Auth.Requirements;
 
 namespace MyPortal.Auth.Providers;
 
@@ -35,8 +35,8 @@ public sealed class ApplicationPolicyProvider : IAuthorizationPolicyProvider
             var payload = policyName[PermPrefix.Length..];
             var parts = payload.Split(':', 2);
 
-            var mode = Enum.TryParse(parts[0], ignoreCase: true, out PermissionRequirement req)
-                ? req : PermissionRequirement.Any;
+            var mode = Enum.TryParse(parts[0], ignoreCase: true, out PermissionMode req)
+                ? req : PermissionMode.RequireAny;
 
             var perms = (parts.Length > 1 && !string.IsNullOrWhiteSpace(parts[1]))
                 ? parts[1].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -44,7 +44,7 @@ public sealed class ApplicationPolicyProvider : IAuthorizationPolicyProvider
 
             var policy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new PermissionRequirementModel(mode, perms))
+                .AddRequirements(new PermissionRequirement(mode, perms))
                 .Build();
 
             _cache.TryAdd(policyName, policy);
@@ -58,7 +58,7 @@ public sealed class ApplicationPolicyProvider : IAuthorizationPolicyProvider
 
             var policy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new UserTypeRequirementModel(allowed))
+                .AddRequirements(new UserTypeRequirement(allowed))
                 .Build();
 
             _cache.TryAdd(policyName, policy);

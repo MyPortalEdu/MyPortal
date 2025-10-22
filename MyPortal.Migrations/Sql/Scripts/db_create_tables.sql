@@ -2220,7 +2220,7 @@ CREATE TABLE [dbo].[Schools] (
     [Uprn] nvarchar(128) NOT NULL,
     [SchoolPhaseId] uniqueidentifier NOT NULL,
     [SchoolTypeId] uniqueidentifier NOT NULL,
-    [vernanceTypeId] uniqueidentifier NOT NULL,
+    [GovernanceTypeId] uniqueidentifier NOT NULL,
     [IntakeTypeId] uniqueidentifier NOT NULL,
     [HeadTeacherId] uniqueidentifier NULL,
     [IsLocal] bit NOT NULL,
@@ -2814,6 +2814,7 @@ CREATE TABLE [dbo].[Users] (
     [PersonId] uniqueidentifier NULL,
     [UserType] int NOT NULL,
     [IsEnabled] bit NOT NULL,
+    [IsSystem] bit NOT NULL,
     CONSTRAINT PK_Users PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -5847,16 +5848,16 @@ CREATE INDEX [IX_Schools_SchoolTypeId] ON [dbo].[Schools]([SchoolTypeId]);
 END
 
 
-IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Schools_vernanceTypeId_GovernanceTypes' AND parent_object_id = OBJECT_ID(N'[dbo].[Schools]'))
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Schools_GovernanceTypeId_GovernanceTypes' AND parent_object_id = OBJECT_ID(N'[dbo].[Schools]'))
 BEGIN
 ALTER TABLE [dbo].[Schools]
-    ADD CONSTRAINT [FK_Schools_vernanceTypeId_GovernanceTypes] FOREIGN KEY ([vernanceTypeId]) REFERENCES [dbo].[GovernanceTypes]([Id]);
+    ADD CONSTRAINT [FK_Schools_GovernanceTypeId_GovernanceTypes] FOREIGN KEY ([GovernanceTypeId]) REFERENCES [dbo].[GovernanceTypes]([Id]);
 END
 
 
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Schools_vernanceTypeId' AND object_id = OBJECT_ID(N'[dbo].[Schools]'))
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Schools_GovernanceTypeId' AND object_id = OBJECT_ID(N'[dbo].[Schools]'))
 BEGIN
-CREATE INDEX [IX_Schools_vernanceTypeId] ON [dbo].[Schools]([vernanceTypeId]);
+CREATE INDEX [IX_Schools_GovernanceTypeId] ON [dbo].[Schools]([GovernanceTypeId]);
 END
 
 

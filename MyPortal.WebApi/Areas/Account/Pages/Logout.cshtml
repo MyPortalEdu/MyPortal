@@ -1,0 +1,6 @@
+﻿@page
+@model MyPortal.WebApi.Areas.Account.Pages.LogoutModel
+<form id="f" method="post">
+    @Html.AntiForgeryToken()
+</form>
+<script>document.getElementById('f').submit();</script>

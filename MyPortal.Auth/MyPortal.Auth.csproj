@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
+    <ProjectReference Include="..\MyPortal.Contracts\MyPortal.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

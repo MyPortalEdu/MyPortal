@@ -66,7 +66,7 @@ WHERE
     i.ActualStartTime >= i.TermStartDate
   AND i.ActualEndTime < DATEADD(DAY, 1, i.TermEndDate)
   AND (
-    (OE.Id IS NULL AND i.IsNonTimetable = 0)  -- exclude periods overlapped by events unless week is “non-timetable”
+    (OE.Id IS NULL AND i.IsNonTimetable = 0)  -- include all lesson periods unless week is “non-timetable”
    OR i.IsAmReg = 1
    OR i.IsPmReg = 1
     );

@@ -34,12 +34,12 @@ public class SqlUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Appl
 
         const string sql = @"
 INSERT INTO dbo.Users
-(Id, CreatedAt, PersonId, UserType, IsEnabled,
+(Id, CreatedAt, PersonId, UserType, IsEnabled, IsSystem,
  UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
  PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
  TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount)
 VALUES
-(@Id, @CreatedAt, @PersonId, @UserType, @IsEnabled,
+(@Id, @CreatedAt, @PersonId, @UserType, @IsEnabled, @IsSystem,
  @UserName, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed,
  @PasswordHash, @SecurityStamp, @ConcurrencyStamp, @PhoneNumber, @PhoneNumberConfirmed,
  @TwoFactorEnabled, @LockoutEnd, @LockoutEnabled, @AccessFailedCount);";
@@ -65,7 +65,7 @@ UPDATE dbo.Users SET
  ConcurrencyStamp=@NewConcurrencyStamp, PhoneNumber=@PhoneNumber,
  PhoneNumberConfirmed=@PhoneNumberConfirmed, TwoFactorEnabled=@TwoFactorEnabled,
  LockoutEnd=@LockoutEnd, LockoutEnabled=@LockoutEnabled, AccessFailedCount=@AccessFailedCount,
- PersonId=@PersonId, UserType=@UserType, IsEnabled=@IsEnabled
+ PersonId=@PersonId, UserType=@UserType, IsEnabled=@IsEnabled, IsSystem=@IsSystem
 WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
 
         using var connection = _connectionFactory.Create();
@@ -89,7 +89,8 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
                 user.AccessFailedCount,
                 user.PersonId,
                 user.UserType,
-                IsEnabled = user.IsEnabled,
+                user.IsEnabled,
+                user.IsSystem,
                 user.ConcurrencyStamp
             }, cancellationToken: cancellationToken));
 

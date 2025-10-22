@@ -13,7 +13,7 @@ namespace MyPortal.Migrations.Services;
 public class DbUpdateService : IDbUpdateService
 {
     private static readonly Regex GoSplitter = new(
-        pattern: @"^\s*GO(?:\s+\d+)?\s*(?:--.*)?$",
+        pattern: @"(?im)^\s*GO(?:\s+\d+)?\s*(?:--[^\r\n]*)?$",
         options: RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
 
     private static readonly Regex DbLevelDetector = new(

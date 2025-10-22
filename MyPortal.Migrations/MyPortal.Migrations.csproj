@@ -5,14 +5,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>9576cb8d-5401-4cfc-959b-0836346c9676</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Sql\StoredProcedures\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,18 +18,23 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="Sql\Scripts\db_create_tables.sql" />
+    <None Remove="Sql\StoredProcedures\sp_permission_get_by_user_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_user_get_info_by_id.sql" />
     <EmbeddedResource Include="Sql\Scripts\db_create_tables.sql" />
     <None Remove="Sql\Functions\fn_diary_event_get_overlapping.sql" />
     <EmbeddedResource Include="Sql\Functions\fn_diary_event_get_overlapping.sql" />
     <None Remove="Sql\Functions\fn_person_get_name.sql" />
     <EmbeddedResource Include="Sql\Functions\fn_person_get_name.sql" />
     <None Remove="Sql\Views\vw_attendance_period_instances.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_permission_get_by_user_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_user_get_info_by_id.sql" />
     <EmbeddedResource Include="Sql\Views\vw_attendance_period_instances.sql" />
     <None Remove="Sql\Views\vw_session_period_metadata.sql" />
     <EmbeddedResource Include="Sql\Views\vw_session_period_metadata.sql" />
@@ -40,11 +42,24 @@
     <None Remove="Sql\Updates\0001_add_identity.sql" />
     <EmbeddedResource Include="Sql\Updates\0001_add_identity.sql" />
     <None Remove="Sql\Updates\0002_add_permissions.sql" />
-    <EmbeddedResource Include="Sql\Updates\0002_add_permissions.sql" />
     <None Remove="Sql\Updates\0003_add_auth.sql" />
     <EmbeddedResource Include="Sql\Updates\0003_add_auth.sql" />
     <None Remove="Sql\Updates\0004_seed_uk_data.sql" />
     <EmbeddedResource Include="Sql\Updates\0004_seed_uk_data.sql" />
+    <None Remove="Sql\Updates\0005_add_guid_list_type.sql" />
+    <EmbeddedResource Include="Sql\Updates\0005_add_guid_list_type.sql" />
+    <None Remove="Sql\StoredProcedures\sp_role_get_names_by_ids.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_role_get_names_by_ids.sql" />
+    <None Remove="Sql\StoredProcedures\sp_school_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_school_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_school_get_details_local.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_school_get_details_local.sql" />
+    <None Remove="Sql\StoredProcedures\sp_user_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_user_get_details_by_id.sql" />
+    <None Remove="Sql\Updates\0002_add_user_management_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\0002_add_user_management_permissions.sql" />
+    <None Remove="Sql\StoredProcedures\sp_role_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_role_get_details_by_id.sql" />
   </ItemGroup>
 
   <ItemGroup>

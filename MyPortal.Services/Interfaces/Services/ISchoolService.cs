@@ -1,8 +1,9 @@
-﻿using MyPortal.Contracts.Schools.Queries;
+﻿using MyPortal.Contracts.Models.Schools;
 
 namespace MyPortal.Services.Interfaces.Services;
 
 public interface ISchoolService
 {
-    Task<SchoolDetailsDto?> GetLocalSchool(CancellationToken cancellationToken);
+    Task<SchoolDetailsDto?> GetLocalSchoolAsync(CancellationToken cancellationToken);
+    Task<SchoolDetailsDto?> GetSchoolByIdAsync(Guid id, CancellationToken cancellationToken);
 }

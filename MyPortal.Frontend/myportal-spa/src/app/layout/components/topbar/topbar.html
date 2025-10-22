@@ -1,0 +1,33 @@
+<div
+  class="sticky top-0 z-[1003] h-14 w-full
+         flex items-center justify-between px-3 md:px-4
+         backdrop-blur
+         bg-[var(--p-surface-0)]/95 dark:bg-[var(--p-surface-900)]/95
+         border-b border-[var(--p-surface-200)] dark:border-[var(--p-surface-800)]
+         text-[var(--p-text-color)] transition-colors"
+>
+  <!-- left -->
+  <div class="flex items-center gap-3">
+    <button pButton type="button" class="p-button-text p-button-sm lg:hidden" (click)="menuToggle.emit()">
+      <i pButtonIcon class="pi pi-bars"></i>
+    </button>
+
+    <a routerLink="/portal" class="flex items-center gap-2 select-none">
+      <span class="text-base md:text-lg font-semibold tracking-tight">MyPortal</span>
+    </a>
+  </div>
+
+  <!-- right -->
+  <div class="flex items-center gap-2 sm:gap-3">
+    <ng-container *ngIf="me$ | async as me">
+      <span class="hidden sm:inline text-sm opacity-70">{{ me.displayName }}</span>
+
+      <!-- popup user menu -->
+      <p-menu #menu [model]="userMenu" [popup]="true"></p-menu>
+
+      <button pButton class="!p-0 !rounded-full w-9 h-9" (click)="menu.toggle($event)" aria-label="User menu">
+        <p-avatar shape="circle" [label]="(me.displayName || 'U').slice(0,1) | uppercase"></p-avatar>
+      </button>
+    </ng-container>
+  </div>
+</div>

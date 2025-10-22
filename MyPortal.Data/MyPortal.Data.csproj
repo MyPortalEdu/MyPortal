@@ -7,6 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Sql\People\GetPersonSummaries.sql" />
+    <None Remove="Sql\System\Roles\GetRoleSummaries.sql" />
+    <None Remove="Sql\System\Users\GetUserSummaries.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Sql\People\GetPersonSummaries.sql" />
+    <EmbeddedResource Include="Sql\System\Roles\GetRoleSummaries.sql" />
+    <EmbeddedResource Include="Sql\System\Users\GetUserSummaries.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MyPortal.Auth\MyPortal.Auth.csproj" />
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
     <ProjectReference Include="..\MyPortal.Contracts\MyPortal.Contracts.csproj" />
@@ -16,7 +28,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
-    <PackageReference Include="Rowan.QueryKit.Repositories" Version="0.9.7" />
+    <PackageReference Include="Rowan.QueryKit.Repositories" Version="0.9.8" />
   </ItemGroup>
 
 </Project>

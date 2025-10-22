@@ -1,0 +1,26 @@
+﻿@page
+@model MyPortal.WebApi.Areas.Account.Pages.LoginModel
+@{
+    Layout = "/Pages/Shared/_AuthLayout.cshtml";
+    ViewData["Title"] = "Login";
+}
+<form method="post" class="space-y-4">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+    <div>
+        <label class="block text-sm font-medium">Username</label>
+        <input asp-for="Input.Username" class="mt-1 block w-full rounded border px-3 py-2" autofocus />
+    </div>
+    <div>
+        <label class="block text-sm font-medium">Password</label>
+        <input asp-for="Input.Password" type="password" class="mt-1 block w-full rounded border px-3 py-2" />
+    </div>
+    <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2 text-sm">
+            <input asp-for="Input.RememberMe" type="checkbox" /> Remember me
+        </label>
+        <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Sign in</button>
+    </div>
+
+    <span asp-validation-summary="All" class="text-red-600 text-sm"></span>
+</form>
