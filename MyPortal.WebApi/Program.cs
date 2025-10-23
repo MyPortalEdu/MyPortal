@@ -19,10 +19,10 @@ using MyPortal.Data.Factories;
 using MyPortal.Data.Security;
 using MyPortal.Services.Configuration;
 using MyPortal.WebApi;
-using MyPortal.WebApi.Infrastructure;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Services;
 using MyPortal.WebApi.Transformers;
+using OpenIddict.Validation.AspNetCore;
 using QueryKit.Dialects;
 
 static bool IsApiRequest(HttpRequest req)
@@ -138,10 +138,10 @@ builder.Services.AddAuthentication(options =>
 
             if (!string.IsNullOrWhiteSpace(auth) && auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             {
-                return Schemes.BearerScheme;
+                return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
             }
 
-            return Schemes.CookieScheme;
+            return IdentityConstants.ApplicationScheme;
         };
     })
     .AddCookie(IdentityConstants.ApplicationScheme, o =>
@@ -235,21 +235,28 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.Use(async (ctx, next) =>
 {
-    if (HttpMethods.IsGet(ctx.Request.Method) && ctx.Request.Path == "/")
+    if (HttpMethods.IsGet(ctx.Request.Method) &&
+        ctx.Request.Path == "/" &&
+        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN"))
     {
         var anti = ctx.RequestServices.GetRequiredService<IAntiforgery>();
         var tokens = anti.GetAndStoreTokens(ctx);
         ctx.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
         {
-            HttpOnly = false, Secure = true, SameSite = SameSiteMode.Lax
+            HttpOnly = false,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Path = "/"
         });
     }
-
     await next();
 });
 

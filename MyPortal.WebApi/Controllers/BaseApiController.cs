@@ -1,19 +1,16 @@
-﻿using System.Net;
-using FluentValidation.Results;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MyPortal.Contracts.Models.System.Users;
-using MyPortal.Services.Interfaces;
 
 namespace MyPortal.WebApi.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-[AutoValidateAntiforgeryToken]
+[IgnoreAntiforgeryToken] // <-- Clients may be using bearer auth
 public abstract class BaseApiController<TSelf> : ControllerBase
 {
     private readonly ProblemDetailsFactory _problemFactory;
