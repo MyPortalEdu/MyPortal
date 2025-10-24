@@ -38,7 +38,7 @@ public class SqlRolePermissionProvider : IRolePermissionProvider
                 SELECT DISTINCT P.Name
                 FROM Roles R
                 JOIN RolePermissions RP ON RP.RoleId = R.Id
-                JOIN PermissionIds P ON P.Id = RP.PermissionId
+                JOIN Permissions P ON P.Id = RP.PermissionId
                 WHERE R.Id = @roleId;";
             var perms = (await conn.QueryAsync<string>(sql, new { roleId = role })).ToArray();
             _cache.Set(role, perms);

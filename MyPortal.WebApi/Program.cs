@@ -5,12 +5,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using MyPortal.Auth.Cache;
+using MyPortal.Auth.Certificates;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Factories;
 using MyPortal.Auth.Handlers;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Managers;
 using MyPortal.Auth.Models;
+using MyPortal.Auth.Policies;
 using MyPortal.Auth.Providers;
 using MyPortal.Auth.Stores;
 using MyPortal.Common.Interfaces;
@@ -27,17 +29,29 @@ using QueryKit.Dialects;
 
 static bool IsApiRequest(HttpRequest req)
 {
+    if (req.Path.StartsWithSegments("/connect/authorize") ||
+        req.Path.StartsWithSegments("/connect/endsession"))
+    {
+        return false;
+    }
+
     // treat JSON/XHR or /api paths as API calls
     if (req.Path.StartsWithSegments("/api") || req.Path.StartsWithSegments("/connect"))
+    {
         return true;
+    }
 
     var accept = req.Headers["Accept"].ToString();
     if (accept.Contains("application/json", StringComparison.OrdinalIgnoreCase))
+    {
         return true;
+    }
 
     var xrw = req.Headers["X-Requested-With"].ToString();
     if (xrw.Equals("XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+    {
         return true;
+    }
 
     return false;
 }
@@ -54,7 +68,10 @@ builder.Services.AddOptions<DatabaseOptions>()
 
 builder.Services.AddOptions<StorageOptions>()
     .Bind(builder.Configuration.GetSection("Storage"))
-    .ValidateOnStart();
+.ValidateOnStart();
+
+builder.Services.Configure<CertificateOptions>(
+    builder.Configuration.GetSection("Certificates"));
 
 QueryKit.Extensions.ConnectionExtensions.UseDialect(Dialect.SQLServer);
 
@@ -84,6 +101,9 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipalFactory>()
     .AddDefaultTokenProviders();
 
+var certOpts = new CertificateOptions();
+builder.Configuration.GetSection("Certificates").Bind(certOpts);
+
 builder.Services.AddOpenIddict()
     .AddCore(o =>
     {
@@ -101,23 +121,31 @@ builder.Services.AddOpenIddict()
         o.SetEndSessionEndpointUris("/connect/endsession");
         o.SetUserInfoEndpointUris("/connect/userinfo");
 
-
-        // DEV ONLY:
-        //o.AllowPasswordFlow();
-
-        o.AcceptAnonymousClients();
+        //o.AcceptAnonymousClients();
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowRefreshTokenFlow();
 
         o.RegisterScopes("api", "email", "profile", "offline_access");
 
-        o.AddDevelopmentEncryptionCertificate();
-        o.AddDevelopmentSigningCertificate();
+        if (builder.Environment.IsDevelopment())
+        {
+            o.AddDevelopmentEncryptionCertificate();
+            o.AddDevelopmentSigningCertificate();
+        }
+        else
+        {
+            var prodSign = CertLoader.Load(certOpts.Signing);
+            var prodEnc = CertLoader.Load(certOpts.Encryption);
+
+            o.AddSigningCertificate(prodSign);
+            o.AddEncryptionCertificate(prodEnc);
+        }
 
         o.UseAspNetCore()
             .EnableTokenEndpointPassthrough()
             .EnableAuthorizationEndpointPassthrough()
-            .EnableUserInfoEndpointPassthrough();
+            .EnableUserInfoEndpointPassthrough()
+            .EnableEndSessionEndpointPassthrough();
     })
     .AddValidation(o =>
     {
@@ -187,7 +215,10 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(o =>
+{
+    o.AddPolicy(ScopePolicy.PolicyName, ScopePolicy.ConfigurePolicy);
+});
 
 builder.Services.AddAntiforgery(o =>
 {
