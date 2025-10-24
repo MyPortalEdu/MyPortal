@@ -114,8 +114,8 @@ namespace MyPortal.Services.Services
                 await _rolePermissionRepository.DeleteAsync(rolePermission.Id, cancellationToken);
             }
 
-            _rolePermissionCache.Invalidate(role.Id); var result = await _roleManager.DeleteAsync(role);
-
+            _rolePermissionCache.Invalidate(role.Id); 
+            
             return await _roleManager.DeleteAsync(role);
         }
 

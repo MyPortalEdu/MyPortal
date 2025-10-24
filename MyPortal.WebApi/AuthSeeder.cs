@@ -19,28 +19,33 @@ public static class AuthSeeder
         
         if (await manager.FindByClientIdAsync("myportal-client") is null)
         {
-            await manager.CreateAsync(new OpenIddictApplicationDescriptor
+            var desc = new OpenIddictApplicationDescriptor
             {
                 ClientId = "myportal-client",
                 DisplayName = "MyPortal Public Client",
-                RedirectUris =
-                {
-                    
-                },
+                ClientType = OpenIddictConstants.ClientTypes.Public,
+                ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
                 Permissions =
                 {
                     OpenIddictConstants.Permissions.Endpoints.Token,
                     OpenIddictConstants.Permissions.Endpoints.Authorization,
-                    OpenIddictConstants.Permissions.GrantTypes.Password,
                     OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
                     OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
                     OpenIddictConstants.Permissions.ResponseTypes.Code,
                     OpenIddictConstants.Permissions.Scopes.Email,
                     OpenIddictConstants.Permissions.Scopes.Profile,
-                    "scp:offline_access",
-                    "scp:api"
+                    $"{OpenIddictConstants.Permissions.Prefixes.Scope}{OpenIddictConstants.Scopes.OfflineAccess}",
+                    $"{OpenIddictConstants.Permissions.Prefixes.Scope}api"
+                },
+                Requirements =
+                {
+                    OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange
                 }
-            });
+            };
+
+            desc.RedirectUris.Add(new Uri("https://oauth.pstmn.io/v1/callback"));
+
+            await manager.CreateAsync(desc);
         }
         
         var connFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();

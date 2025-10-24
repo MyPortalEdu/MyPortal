@@ -115,7 +115,7 @@ public class UserService : BaseService, IUserService
             Id = SqlConvention.SequentialGuid(),
             UserName = model.Username,
             Email = model.Email,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             IsEnabled = model.IsEnabled,
             UserType = model.UserType,
             PersonId = model.PersonId

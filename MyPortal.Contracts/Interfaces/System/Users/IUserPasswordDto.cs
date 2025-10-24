@@ -2,5 +2,5 @@
 
 public interface IUserPasswordDto
 {
-    string Password { get; set; }
+    string? Password { get; set; }
 }

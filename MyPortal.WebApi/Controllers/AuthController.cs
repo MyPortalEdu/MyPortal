@@ -1,9 +1,9 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using MyPortal.Auth.Extensions;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using OpenIddict.Abstractions;
@@ -12,6 +12,7 @@ using OpenIddict.Server.AspNetCore;
 namespace MyPortal.WebApi.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("connect")]
 public sealed class AuthController : ControllerBase
 {
@@ -24,6 +25,48 @@ public sealed class AuthController : ControllerBase
         _signInManager = signInManager;
     }
 
+    [HttpGet("authorize")]
+    public async Task<IActionResult> GetAuthorize()
+    {
+        return User.Identity?.IsAuthenticated == true
+            ? await PostAuthorize()
+            : Challenge(IdentityConstants.ApplicationScheme);
+    }
+
+    [HttpPost("authorize")]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> PostAuthorize()
+    {
+        if (!User.Identity?.IsAuthenticated ?? true)
+        {
+            return Challenge(IdentityConstants.ApplicationScheme);
+        }
+
+        var request = HttpContext.GetOpenIddictServerRequest()
+                      ?? throw new InvalidOperationException("OIDC request missing.");
+
+        var user = await _userManager.GetUserAsync(User)
+                   ?? throw new InvalidOperationException("User not found.");
+
+        var principal = await _signInManager.CreateUserPrincipalAsync(user);
+
+        if (principal.GetClaim(OpenIddictConstants.Claims.Subject) is null)
+            principal.SetClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString());
+
+        principal.SetScopes(new[]
+        {
+            OpenIddictConstants.Scopes.OpenId,
+            OpenIddictConstants.Scopes.Profile,
+            OpenIddictConstants.Scopes.Email,
+            OpenIddictConstants.Scopes.OfflineAccess,
+            "api"
+        }.Intersect(request.GetScopes()));
+
+        principal.SetDestinations();
+
+        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
     [HttpPost("token")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Token()
@@ -32,47 +75,6 @@ public sealed class AuthController : ControllerBase
                       throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
         const string oidcScheme = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme;
-
-        if (request.IsPasswordGrantType())
-        {
-            var user = await _userManager.FindByNameAsync(request.Username) ?? await _userManager.FindByEmailAsync(request.Username);
-
-            if (user == null || !await _signInManager.CanSignInAsync(user))
-            {
-                return Forbid(oidcScheme);
-            }
-
-            var pwd = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
-
-            if (!pwd.Succeeded || pwd.IsLockedOut)
-            {
-                return Forbid(oidcScheme);
-            }
-
-            var principal = await _signInManager.CreateUserPrincipalAsync(user);
-
-            principal.SetScopes(new[]
-            {
-                OpenIddictConstants.Scopes.OpenId,
-                OpenIddictConstants.Scopes.Email,
-                OpenIddictConstants.Scopes.Profile,
-                OpenIddictConstants.Scopes.OfflineAccess,
-                "api"
-            }.Intersect(request.GetScopes()));
-
-            principal.SetResources("api");
-
-            principal.SetDestinations(claim =>
-            {
-                return claim.Type switch
-                {
-                    ClaimTypes.NameIdentifier => new[] { OpenIddictConstants.Destinations.AccessToken },
-                    Auth.Constants.ClaimTypes.UserType => new[] { OpenIddictConstants.Destinations.AccessToken },
-                };
-            });
-
-            return SignIn(principal, oidcScheme);
-        }
 
         // AUTHORIZATION CODE or REFRESH TOKEN:
         if (request.IsAuthorizationCodeGrantType() || request.IsRefreshTokenGrantType())
@@ -89,11 +91,38 @@ public sealed class AuthController : ControllerBase
 
         return BadRequest(new { error = OpenIddictConstants.Errors.UnsupportedGrantType });
     }
-    
-    [Authorize]
+
+    [Authorize(AuthenticationSchemes = OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
     [HttpGet("userinfo")]
     public IActionResult UserInfo([FromServices] ICurrentUser me)
     {
+        if (!User.HasClaim(c => c.Type == "scope" && c.Value.Split(' ').Contains(OpenIddictConstants.Scopes.OpenId)))
+            return Forbid();
+
         return Ok(new { userId = me.UserId, userType = me.UserType.ToString() });
+    }
+
+    [HttpGet("endsession")]
+    public Task<IActionResult> GetEndSession() => HandleEndSessionAsync();
+
+    [HttpPost("endsession")]
+    [IgnoreAntiforgeryToken]
+    public Task<IActionResult> PostEndSession() => HandleEndSessionAsync();
+
+    private async Task<IActionResult> HandleEndSessionAsync()
+    {
+        var request = HttpContext.GetOpenIddictServerRequest()
+                      ?? throw new InvalidOperationException("OIDC request missing.");
+
+        // Sign out the local cookie session
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+
+        // Hand control back to OpenIddict to complete end-session + redirect
+        var props = new AuthenticationProperties
+        {
+            RedirectUri = request.PostLogoutRedirectUri ?? "/"
+        };
+
+        return SignOut(props, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 }
