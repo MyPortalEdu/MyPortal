@@ -2,7 +2,7 @@
 
 internal static class SqlResourceLoader
 {
-    private const string SqlDir = "MyPortal.Data.Sql.System";
+    private const string SqlDir = "MyPortal.Data.Sql";
     
     internal static string Load(string resourceName)
     {
@@ -11,7 +11,7 @@ internal static class SqlResourceLoader
 
         if (stream == null)
         {
-            throw new InvalidOperationException($"Could not find resource: {resourceName}");
+            throw new InvalidOperationException($"Could not find resource: {SqlDir}.{resourceName}");
         }
         
         using var reader = new StreamReader(stream);

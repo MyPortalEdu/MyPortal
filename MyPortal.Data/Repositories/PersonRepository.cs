@@ -12,7 +12,7 @@ namespace MyPortal.Data.Repositories
 {
     public class PersonRepository : EntityRepository<Person>, IPersonRepository
     {
-        protected PersonRepository(IDbConnectionFactory factory) : base(factory)
+        public PersonRepository(IDbConnectionFactory factory) : base(factory)
         {
         }
 

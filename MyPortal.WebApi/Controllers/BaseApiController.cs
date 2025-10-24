@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using MyPortal.Auth.Policies;
 using MyPortal.Contracts.Models.System.Users;
 
 namespace MyPortal.WebApi.Controllers;
 
-[Authorize]
+
 [ApiController]
+[Authorize(Policy = ScopePolicy.PolicyName)]
 [Route("api/[controller]")]
 [IgnoreAntiforgeryToken] // <-- Clients may be using bearer auth
 public abstract class BaseApiController<TSelf> : ControllerBase
