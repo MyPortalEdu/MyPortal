@@ -6,7 +6,7 @@ import {Drawer} from 'primeng/drawer';
 import {NgIf} from '@angular/common';
 
 @Component({
-  selector: 'app-app-shell',
+  selector: 'mp-app-shell',
   imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, NgIf],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'

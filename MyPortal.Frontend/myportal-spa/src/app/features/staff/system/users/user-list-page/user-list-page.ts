@@ -19,7 +19,7 @@ export class UserListPage implements OnInit {
 
   ngOnInit(): void {
     this.headerActions = [
-      {icon: 'pi pi-plus', label: 'New'},
+      { icon: 'pi pi-plus', label: 'New', severity: 'primary' }
     ];
   }
 }
