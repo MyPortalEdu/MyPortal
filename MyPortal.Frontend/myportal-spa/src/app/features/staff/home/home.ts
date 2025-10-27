@@ -4,7 +4,7 @@ import {PageHeader} from '../../../shared/components/page-header/page-header';
 import {HeaderAction} from '../../../shared/types/header-action.type';
 
 @Component({
-  selector: 'app-home',
+  selector: 'mp-home',
   imports: [
     Card,
     PageHeader
