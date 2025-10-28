@@ -1,14 +1,12 @@
 import {Component, Input} from '@angular/core';
 import {HeaderAction} from '../../types/header-action.type';
-import {Button} from 'primeng/button';
-import {NgForOf, NgIf} from '@angular/common';
+import {Button, ButtonDirective} from 'primeng/button';
 
 @Component({
   selector: 'mp-page-header',
   imports: [
     Button,
-    NgIf,
-    NgForOf
+    ButtonDirective
   ],
   templateUrl: './page-header.html',
   styleUrl: './page-header.scss'

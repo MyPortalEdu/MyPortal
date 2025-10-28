@@ -1,10 +1,9 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import {Button} from 'primeng/button';
 
 @Component({
   selector: 'mp-root',
-  imports: [RouterOutlet, Button],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

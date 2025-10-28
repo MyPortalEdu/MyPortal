@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import {Card} from 'primeng/card';
-import {PageHeader} from '../../../shared/components/page-header/page-header';
-import {HeaderAction} from '../../../shared/types/header-action.type';
+import { Card } from 'primeng/card';
+import { PageHeader } from '../../../shared/components/page-header/page-header';
 
 @Component({
   selector: 'mp-home',
