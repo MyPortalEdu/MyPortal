@@ -2,10 +2,4 @@
 
 namespace MyPortal.WebApi.Pages.Shared;
 
-public class _AuthLayout : PageModel
-{
-    public void OnGet()
-    {
-        
-    }
-}
+public class _AuthLayout : PageModel;

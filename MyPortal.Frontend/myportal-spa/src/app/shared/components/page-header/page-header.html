@@ -1,25 +1,29 @@
 <header class="flex items-center justify-between gap-3 bg-[var(--p-card-background)]
                    rounded-xl shadow-sm px-4 py-3 mb-3">
   <div class="flex items-center gap-2 min-w-0">
-    <i *ngIf="icon" [class]="icon + ' text-base opacity-80'"></i>
+    @if (icon) {
+      <i [class]="icon + ' text-primary opacity-80 mr-2'"></i>
+    }
     <div>
-      <h1 class="text-xl font-medium leading-tight truncate">{{ title }}</h1>
-      <p *ngIf="subtitle" class="text-sm opacity-70">{{ subtitle }}</p>
+      <span class="text-xl font-medium leading-tight truncate pb-1">{{ title }}</span>
+      @if (subtitle) {
+        <span class="text-xl opacity-70 ml-3">{{ subtitle }}</span>
+      }
     </div>
   </div>
 
   <div class="flex flex-wrap items-center gap-2">
-    <p-button
-      *ngFor="let a of actions"
-      size="small"
-      type="button"
-      pButton
-      [label]="a.label"
-      [icon]="a.icon"
-      [outlined]="a.outlined"
-      [severity]="a.severity ?? 'primary'"
-      [disabled]="a.disabled"
-      (click)="a.command?.()">
-    </p-button>
+    @for (a of actions; track a) {
+      <p-button
+        size="small"
+        type="button"
+        [label]="a.label"
+        [icon]="a.icon ?? ''"
+        [outlined]="a.outlined"
+        [severity]="a.severity ?? 'primary'"
+        [disabled]="a.disabled"
+        (click)="a.command?.()">
+      </p-button>
+    }
   </div>
 </header>

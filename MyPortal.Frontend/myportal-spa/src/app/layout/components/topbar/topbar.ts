@@ -6,12 +6,14 @@ import {Observable} from 'rxjs';
 import {MeService} from '../../../core/services/me-service';
 import {HttpClient} from '@angular/common/http';
 import {Me} from '../../../core/interfaces/me';
-import {AsyncPipe, NgIf, UpperCasePipe} from '@angular/common';
+import {AsyncPipe, UpperCasePipe} from '@angular/common';
+import {ButtonDirective, ButtonIcon} from 'primeng/button';
+import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'mp-topbar',
   standalone: true,
-  imports: [Menu, Avatar, UpperCasePipe, AsyncPipe, NgIf],
+  imports: [Menu, Avatar, UpperCasePipe, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss'
 })
