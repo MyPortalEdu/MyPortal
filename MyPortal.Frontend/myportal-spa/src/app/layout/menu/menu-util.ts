@@ -42,6 +42,5 @@ export function buildMenu(
     .filter((x): x is MenuItem => !!x);
 
   menu.push(...categoryItems);
-  console.log(menu);
   return menu;
 }
