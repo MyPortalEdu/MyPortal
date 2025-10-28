@@ -2,11 +2,10 @@ import {Component, OnInit} from '@angular/core';
 import {MenuItem} from 'primeng/api';
 import {MenuService} from '../../services/menu-service';
 import {PanelMenuModule} from 'primeng/panelmenu';
-import {RouterLink} from '@angular/router';
 
 @Component({
   selector: 'mp-sidebar',
-  imports: [PanelMenuModule, RouterLink],
+  imports: [PanelMenuModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss'
 })

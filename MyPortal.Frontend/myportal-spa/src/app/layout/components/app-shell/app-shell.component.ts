@@ -1,21 +1,21 @@
-import {Component, NgZone} from '@angular/core';
-import {RouterOutlet} from '@angular/router';
-import {SidebarComponent} from '../sidebar/sidebar';
-import {Topbar} from '../topbar/topbar';
-import {Drawer} from 'primeng/drawer';
-import {NgIf} from '@angular/common';
+import {Component, NgZone, OnDestroy, OnInit} from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { SidebarComponent } from '../sidebar/sidebar';
+import { Topbar } from '../topbar/topbar';
+import { Drawer } from 'primeng/drawer';
+import { ButtonDirective } from 'primeng/button';
 
 @Component({
   selector: 'mp-app-shell',
-  imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, NgIf],
+  imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, ButtonDirective],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })
-export class AppShell {
+export class AppShell implements OnInit, OnDestroy {
   isDesktop = false;
   sidebarOpen = false;
 
-  private mq = window.matchMedia('(min-width: 1024px)'); // lg breakpoint
+  private mq = window.matchMedia('(min-width: 1024px)');
   private mqHandler = (e: MediaQueryListEvent) => {
     this.zone.run(() => this.setDesktop(e.matches));
   };

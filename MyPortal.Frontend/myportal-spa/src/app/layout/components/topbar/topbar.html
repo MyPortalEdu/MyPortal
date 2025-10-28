@@ -19,7 +19,7 @@
 
   <!-- right -->
   <div class="flex items-center gap-2 sm:gap-3">
-    <ng-container *ngIf="me$ | async as me">
+    @if (me$ | async; as me) {
       <span class="hidden sm:inline text-sm opacity-70">{{ me.displayName }}</span>
 
       <!-- popup user menu -->
@@ -28,6 +28,6 @@
       <button pButton class="!p-0 !rounded-full w-9 h-9" (click)="menu.toggle($event)" aria-label="User menu">
         <p-avatar shape="circle" [label]="(me.displayName || 'U').slice(0,1) | uppercase"></p-avatar>
       </button>
-    </ng-container>
+    }
   </div>
 </div>
