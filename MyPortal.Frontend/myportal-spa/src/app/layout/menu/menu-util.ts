@@ -41,7 +41,6 @@ export function buildMenu(
     })
     .filter((x): x is MenuItem => !!x);
 
-  // 👇 3️⃣ Combine and return
   menu.push(...categoryItems);
   return menu;
 }
