@@ -16,7 +16,8 @@ public static class AuthSeeder
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
         var users   = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roles   = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-        
+        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+
         if (await manager.FindByClientIdAsync("myportal-client") is null)
         {
             var desc = new OpenIddictApplicationDescriptor
@@ -43,7 +44,10 @@ public static class AuthSeeder
                 }
             };
 
-            desc.RedirectUris.Add(new Uri("https://oauth.pstmn.io/v1/callback"));
+            if (env.IsDevelopment())
+            {
+                desc.RedirectUris.Add(new Uri("https://oauth.pstmn.io/v1/callback"));
+            }
 
             await manager.CreateAsync(desc);
         }

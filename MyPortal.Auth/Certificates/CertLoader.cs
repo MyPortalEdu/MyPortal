@@ -48,7 +48,7 @@ namespace MyPortal.Auth.Certificates
             return new X509Certificate2(
                 p.Path,
                 p.Password,
-                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.EphemeralKeySet);
+                X509KeyStorageFlags.MachineKeySet);
         }
 
         private static string NormalizeThumbprint(string tp)

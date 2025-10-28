@@ -96,8 +96,10 @@ public sealed class AuthController : ControllerBase
     [HttpGet("userinfo")]
     public IActionResult UserInfo([FromServices] ICurrentUser me)
     {
-        if (!User.HasClaim(c => c.Type == "scope" && c.Value.Split(' ').Contains(OpenIddictConstants.Scopes.OpenId)))
+        if (!User.HasScope(OpenIddictConstants.Scopes.OpenId))
+        {
             return Forbid();
+        }
 
         return Ok(new { userId = me.UserId, userType = me.UserType.ToString() });
     }
