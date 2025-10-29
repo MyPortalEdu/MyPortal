@@ -7,7 +7,9 @@ public static class RepositoryRegistry
 {
     public static void AddRepositories(this IServiceCollection services)
     {
+        services.AddScoped<IBulletinRepository, BulletinRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();

@@ -18,6 +18,22 @@ public class AuthorizationService : IAuthorizationService
         return _user.UserId;
     }
 
+    public string? GetCurrentUserIpAddress()
+    {
+        return _user.IpAddress;
+    }
+
+    public UserType GetCurrentUserType()
+    {
+        return _user.UserType;
+    }
+
+    public async Task<bool> HasPermissionAsync(string permission, CancellationToken cancellationToken)
+    {
+        var id = _user.UserId ?? throw new AuthenticationException("Not authenticated.");
+        return await _perms.HasPermissionAsync(id, permission, cancellationToken);
+    }
+
     public async Task RequirePermissionAsync(string permission, CancellationToken ct = default)
     {
         var id = _user.UserId ?? throw new AuthenticationException("Not authenticated.");

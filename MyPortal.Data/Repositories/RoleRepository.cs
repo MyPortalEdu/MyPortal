@@ -1,4 +1,5 @@
-﻿using MyPortal.Common.Interfaces;
+﻿using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Repositories.Base;
@@ -13,7 +14,8 @@ namespace MyPortal.Data.Repositories
 {
     public class RoleRepository : EntityRepository<Role>, IRoleRepository
     {
-        public RoleRepository(IDbConnectionFactory factory) : base(factory)
+        protected RoleRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
+            factory, authorizationService)
         {
         }
 

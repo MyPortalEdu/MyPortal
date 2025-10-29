@@ -10,12 +10,12 @@ namespace MyPortal.Core.Entities
         public Guid DirectoryId { get; set; }
 
         public DateTime? ExpiresAt { get; set; }
-        
-        [Required, StringLength(50)]
-        public required string Title { get; set; }
+
+        [Required, StringLength(50)] 
+        public string Title { get; set; } = "";
 
         [Required] 
-        public required string Detail { get; set; }
+        public string Detail { get; set; } = "";
 
         public bool IsPrivate { get; set; }
 

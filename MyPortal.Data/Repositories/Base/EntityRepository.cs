@@ -1,4 +1,6 @@
-﻿using MyPortal.Common.Exceptions;
+﻿using System.Security.Authentication;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Interfaces;
 using MyPortal.Services.Interfaces.Repositories.Base;
@@ -9,8 +11,35 @@ namespace MyPortal.Data.Repositories.Base;
 public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IEntityRepository<TEntity>
     where TEntity : class, IEntity
 {
-    protected EntityRepository(IDbConnectionFactory factory) : base(factory)
+    private readonly IAuthorizationService _authorizationService;
+    
+    protected EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
     {
+        _authorizationService = authorizationService;
+    }
+
+    public override Task<TEntity> InsertAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        if (entity is IAuditableEntity auditable)
+        {
+            var userId = _authorizationService.GetCurrentUserId();
+
+            if (!userId.HasValue)
+            {
+                throw new AuthenticationException("Not authenticated.");
+            }
+            
+            var ipAddress = _authorizationService.GetCurrentUserIpAddress() ?? "";
+            
+            auditable.CreatedAt = DateTime.UtcNow;
+            auditable.CreatedById = userId.Value;
+            auditable.CreatedByIpAddress = ipAddress;
+            auditable.LastModifiedByIpAddress = ipAddress;
+            auditable.LastModifiedAt = DateTime.UtcNow;
+            auditable.LastModifiedById = userId.Value;
+        }
+        
+        return base.InsertAsync(entity, cancellationToken);
     }
 
     public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
@@ -20,6 +49,22 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
         if (entityInDb is ISystemEntity { IsSystem: true })
         {
             throw new SystemEntityException("You cannot modify a system entity.");
+        }
+
+        if (entity is IAuditableEntity auditable)
+        {
+            var userId = _authorizationService.GetCurrentUserId();
+
+            if (!userId.HasValue)
+            {
+                throw new AuthenticationException("Not authenticated.");
+            }
+            
+            var ipAddress = _authorizationService.GetCurrentUserIpAddress() ?? "";
+            
+            auditable.LastModifiedById = userId.Value;
+            auditable.LastModifiedAt = DateTime.UtcNow;
+            auditable.LastModifiedByIpAddress = ipAddress;
         }
 
         return await base.UpdateAsync(entity, cancellationToken);

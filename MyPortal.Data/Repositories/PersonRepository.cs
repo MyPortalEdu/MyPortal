@@ -1,4 +1,5 @@
-﻿using MyPortal.Common.Interfaces;
+﻿using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Repositories.Base;
@@ -12,7 +13,8 @@ namespace MyPortal.Data.Repositories
 {
     public class PersonRepository : EntityRepository<Person>, IPersonRepository
     {
-        public PersonRepository(IDbConnectionFactory factory) : base(factory)
+        protected PersonRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
+            factory, authorizationService)
         {
         }
 

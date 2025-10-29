@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Schools;
 using MyPortal.Core.Entities;
@@ -11,7 +12,8 @@ namespace MyPortal.Data.Repositories;
 
 public class SchoolRepository : EntityRepository<School>, ISchoolRepository
 {
-    public SchoolRepository(IDbConnectionFactory factory) : base(factory)
+    protected SchoolRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
+        authorizationService)
     {
     }
 

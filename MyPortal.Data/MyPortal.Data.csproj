@@ -16,6 +16,8 @@
     <EmbeddedResource Include="Sql\People\GetPersonSummaries.sql" />
     <EmbeddedResource Include="Sql\System\Roles\GetRoleSummaries.sql" />
     <EmbeddedResource Include="Sql\System\Users\GetUserSummaries.sql" />
+    <None Remove="Sql\Bulletins\GetBulletinSummaries.sql" />
+    <EmbeddedResource Include="Sql\Bulletins\GetBulletinSummaries.sql" />
   </ItemGroup>
 
   <ItemGroup>

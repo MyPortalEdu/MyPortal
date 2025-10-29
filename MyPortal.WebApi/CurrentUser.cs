@@ -20,6 +20,8 @@ public class CurrentUser : ICurrentUser
         _cache = cache;
     }
     
+    public string? IpAddress => _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+    
     public Guid? UserId
     {
         get
