@@ -30,14 +30,14 @@ public class UserService : BaseService, IUserService
         _roleManager = roleManager;
     }
 
-    public async Task<UserDetailsDto?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
 
         return await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
     }
 
-    public async Task<UserInfoDto?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<UserInfoResponse?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         var currentUserId = _authorizationService.GetCurrentUserId();
 
@@ -60,7 +60,7 @@ public class UserService : BaseService, IUserService
         return userInfo;
     }
 
-    public async Task<PageResult<UserSummaryDto>> GetUsersAsync(FilterOptions? filter = null,
+    public async Task<PageResult<UserSummaryResponse>> GetUsersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
@@ -70,7 +70,7 @@ public class UserService : BaseService, IUserService
         return result;
     }
 
-    public async Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordDto model,
+    public async Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordRequest model,
         CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
@@ -83,10 +83,10 @@ public class UserService : BaseService, IUserService
         }
 
         await _userManager.RemovePasswordAsync(user);
-        return await _userManager.AddPasswordAsync(user, model.NewPassword);
+        return await _userManager.AddPasswordAsync(user, model.Password);
     }
 
-    public async Task<IdentityResult> ChangePasswordAsync(Guid userId, UserChangePasswordDto model,
+    public async Task<IdentityResult> ChangePasswordAsync(Guid userId, UserChangePasswordRequest model,
         CancellationToken cancellationToken)
     {
         var currentUserId = _authorizationService.GetCurrentUserId();
@@ -103,10 +103,10 @@ public class UserService : BaseService, IUserService
             throw new NotFoundException("User not found.");
         }
 
-        return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+        return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.Password);
     }
 
-    public async Task<IdentityResult> CreateUserAsync(UserUpsertDto model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateUserAsync(UserUpsertRequest model, CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
@@ -129,7 +129,7 @@ public class UserService : BaseService, IUserService
         return result;
     }
 
-    public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertDto model,
+    public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);

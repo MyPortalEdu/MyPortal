@@ -2,7 +2,7 @@
 
 namespace MyPortal.Contracts.Models.People
 {
-    public class PersonSummaryDto
+    public class PersonSummaryResponse
     {
         public Guid Id { get; set; }
 

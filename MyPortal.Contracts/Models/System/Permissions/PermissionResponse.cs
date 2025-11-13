@@ -2,7 +2,7 @@
 
 namespace MyPortal.Contracts.Models.System.Permissions
 {
-    public class PermissionDto
+    public class PermissionResponse
     {
         public Guid Id { get; set; }
 

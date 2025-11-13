@@ -1,9 +1,9 @@
 ﻿
 namespace MyPortal.Contracts.Models.System.Roles
 {
-    public class RoleUpsertDto
+    public class RoleUpsertRequest
     {
-        public RoleUpsertDto()
+        public RoleUpsertRequest()
         {
             PermissionIds = new List<Guid>();
         }

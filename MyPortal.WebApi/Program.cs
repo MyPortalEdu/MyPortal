@@ -19,7 +19,8 @@ using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
 using MyPortal.Data.Factories;
 using MyPortal.Data.Security;
-using MyPortal.Services.Configuration;
+using MyPortal.FileStorage.Extensions;
+using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Services;
@@ -66,9 +67,11 @@ builder.Services.AddOptions<DatabaseOptions>()
         "Connection string must be provided.")
     .ValidateOnStart();
 
-builder.Services.AddOptions<StorageOptions>()
-    .Bind(builder.Configuration.GetSection("Storage"))
+builder.Services.AddOptions<FileStorageOptions>()
+    .Bind(builder.Configuration.GetSection("FileStorage"))
 .ValidateOnStart();
+
+builder.Services.AddFileStorage(builder.Configuration);
 
 builder.Services.Configure<CertificateOptions>(
     builder.Configuration.GetSection("Certificates"));

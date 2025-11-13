@@ -11,6 +11,7 @@
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
     <ProjectReference Include="..\MyPortal.Contracts\MyPortal.Contracts.csproj" />
     <ProjectReference Include="..\MyPortal.Core\MyPortal.Core.csproj" />
+    <ProjectReference Include="..\MyPortal.FileStorage\MyPortal.FileStorage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

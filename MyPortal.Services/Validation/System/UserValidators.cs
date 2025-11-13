@@ -7,7 +7,7 @@ namespace MyPortal.Services.Validation.System;
 
 public class UserValidators
 {
-    public class UserPasswordValidator<T> : AbstractValidator<T> where T : IUserPasswordDto
+    public class UserPasswordValidator<T> : AbstractValidator<T> where T : IUserPasswordRequest
     {
         public UserPasswordValidator()
         {
@@ -33,11 +33,11 @@ public class UserValidators
         }
     }
     
-    public class UpsertUserDtoValidator : AbstractValidator<UserUpsertDto>
+    public class UpsertUserDtoValidator : AbstractValidator<UserUpsertRequest>
     {
         public UpsertUserDtoValidator()
         {
-            Include(new UserPasswordValidator<UserUpsertDto>());
+            Include(new UserPasswordValidator<UserUpsertRequest>());
             
             RuleFor(x => x.PersonId)
                 .Must(id => id == null || id.Value != Guid.Empty)

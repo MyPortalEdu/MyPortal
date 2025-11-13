@@ -7,7 +7,7 @@ using MyPortal.Services.Security;
 using MyPortal.Services.Services;
 using MyPortal.Services.Validation;
 
-namespace MyPortal.Services.Configuration;
+namespace MyPortal.Services.Extensions;
 
 public static class ServiceCollectionExtensions
 {

@@ -1,6 +1,6 @@
 ﻿namespace MyPortal.Contracts.Models.System.Roles
 {
-    public class RoleSummaryDto
+    public class RoleSummaryResponse
     {
         public Guid Id { get; set; }
 

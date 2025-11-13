@@ -5,7 +5,7 @@ namespace MyPortal.Services.Validation.System
 {
     public class RoleValidators
     {
-        public class UpsertRoleDtoValidator : AbstractValidator<RoleUpsertDto>
+        public class UpsertRoleDtoValidator : AbstractValidator<RoleUpsertRequest>
         {
             public UpsertRoleDtoValidator()
             {

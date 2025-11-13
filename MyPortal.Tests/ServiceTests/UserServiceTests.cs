@@ -51,7 +51,7 @@ public class UserServiceTests
     public async Task GetDetailsByIdAsync_RequiresPermission_ThenReturnsUserDetails()
     {
         var id = Guid.NewGuid();
-        var dto = new UserDetailsDto { Id = id };
+        var dto = new UserDetailsResponse { Id = id };
 
         _userRepository.Setup(r => r.GetDetailsByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(dto);
@@ -72,15 +72,15 @@ public class UserServiceTests
 
         _authorizationService.Setup(a => a.GetCurrentUserId()).Returns(id);
 
-        var info = new UserInfoDto { Id = id, Permissions = [] };
+        var info = new UserInfoResponse { Id = id, Permissions = [] };
 
         _userRepository.Setup(r => r.GetInfoByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(info);
 
         var perms = new[]
         {
-            new PermissionDto { Name = "A", FriendlyName = "A", Area = "A" },
-            new PermissionDto { Name = "B", FriendlyName = "B", Area = "B" }
+            new PermissionResponse { Name = "A", FriendlyName = "A", Area = "A" },
+            new PermissionResponse { Name = "B", FriendlyName = "B", Area = "B" }
         };
 
         _permissionRepository.Setup(p => p.GetPermissionsByUserIdAsync(id, It.IsAny<CancellationToken>()))
@@ -105,12 +105,12 @@ public class UserServiceTests
             .Setup(a => a.RequirePermissionAsync(Permissions.System.ViewUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var info = new UserInfoDto { Id = requestedId, Permissions = [] };
+        var info = new UserInfoResponse { Id = requestedId, Permissions = [] };
         _userRepository.Setup(r => r.GetInfoByIdAsync(requestedId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(info);
 
         _permissionRepository.Setup(p => p.GetPermissionsByUserIdAsync(requestedId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<PermissionDto>());
+            .ReturnsAsync(Array.Empty<PermissionResponse>());
 
         var result = await _userService.GetInfoByIdAsync(requestedId, CancellationToken.None);
 
@@ -127,7 +127,7 @@ public class UserServiceTests
         _authorizationService.Setup(a => a.GetCurrentUserId()).Returns(id);
 
         _userRepository.Setup(r => r.GetInfoByIdAsync(id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserInfoDto?)null);
+            .ReturnsAsync((UserInfoResponse?)null);
 
         var result = await _userService.GetInfoByIdAsync(id, CancellationToken.None);
 
@@ -144,9 +144,9 @@ public class UserServiceTests
         _userManager.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        var dto = new UserSetPasswordDto
+        var dto = new UserSetPasswordRequest
         {
-            NewPassword = "NewP@ssw0rd!"
+            Password = "NewP@ssw0rd!"
         };
 
         Assert.That(async () => await _userService.SetPasswordAsync(Guid.NewGuid(), dto, CancellationToken.None),
@@ -166,9 +166,9 @@ public class UserServiceTests
         _userManager.Setup(m => m.RemovePasswordAsync(user)).ReturnsAsync(IdentityResult.Success);
         _userManager.Setup(m => m.AddPasswordAsync(user, "X")).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.SetPasswordAsync(user.Id, new UserSetPasswordDto
+        var res = await _userService.SetPasswordAsync(user.Id, new UserSetPasswordRequest
         {
-            NewPassword = "X"
+            Password = "X"
         }, CancellationToken.None);
 
         Assert.That(res.Succeeded, Is.True);
@@ -181,10 +181,10 @@ public class UserServiceTests
         var target = Guid.NewGuid();
         _authorizationService.Setup(a => a.GetCurrentUserId()).Returns(current);
 
-        var dto = new UserChangePasswordDto
+        var dto = new UserChangePasswordRequest
         {
             CurrentPassword = "old",
-            NewPassword = "new"
+            Password = "new"
         };
 
         Assert.That(async () => await _userService.ChangePasswordAsync(target, dto, CancellationToken.None),
@@ -202,10 +202,10 @@ public class UserServiceTests
         _userManager.Setup(m => m.ChangePasswordAsync(user, "old", "new"))
             .ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.ChangePasswordAsync(id, new UserChangePasswordDto
+        var res = await _userService.ChangePasswordAsync(id, new UserChangePasswordRequest
         {
             CurrentPassword = "old",
-            NewPassword = "new"
+            Password = "new"
         }, CancellationToken.None);
 
         Assert.That(res.Succeeded, Is.True);
@@ -231,7 +231,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Success);
 
-        var result = await _userService.CreateUserAsync(new UserUpsertDto
+        var result = await _userService.CreateUserAsync(new UserUpsertRequest
         {
             Username = "staff",
             Email = "staff@test.com",
@@ -259,7 +259,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(Array.Empty<string>());
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -296,7 +296,7 @@ public class UserServiceTests
 
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -332,7 +332,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto()
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest()
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -369,7 +369,7 @@ public class UserServiceTests
         // No add/remove expected; since no other changes, UpdateAsync should be called
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertDto()
+        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest()
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -400,7 +400,7 @@ public class UserServiceTests
         _roleManager.Setup(r => r.FindByIdAsync(missingRoleId.ToString()))
             .ReturnsAsync((ApplicationRole?)null);
 
-        var dto = new UserUpsertDto()
+        var dto = new UserUpsertRequest()
         {
             Username = "student",
             PersonId = Guid.NewGuid(),
