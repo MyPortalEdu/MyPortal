@@ -31,14 +31,14 @@ namespace MyPortal.Services.Services
             _roleManager = roleManager;
         }
 
-        public async Task<RoleDetailsDto?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken)
+        public async Task<RoleDetailsResponse?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken)
         {
             await _authorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
 
             return await _roleRepository.GetDetailsByIdAsync(roleId, cancellationToken);
         }
 
-        public async Task<PageResult<RoleSummaryDto>> GetRolesAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+        public async Task<PageResult<RoleSummaryResponse>> GetRolesAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
             CancellationToken cancellationToken = default)
         {
             await _authorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
@@ -48,7 +48,7 @@ namespace MyPortal.Services.Services
             return result;
         }
 
-        public async Task<IdentityResult> CreateRoleAsync(RoleUpsertDto model, CancellationToken cancellationToken)
+        public async Task<IdentityResult> CreateRoleAsync(RoleUpsertRequest model, CancellationToken cancellationToken)
         {
             await _authorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
 
@@ -67,7 +67,7 @@ namespace MyPortal.Services.Services
             return result;
         }
 
-        public async Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertDto model, CancellationToken cancellationToken)
+        public async Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken)
         {
             await _authorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
 

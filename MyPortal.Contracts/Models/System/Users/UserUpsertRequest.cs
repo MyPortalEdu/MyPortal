@@ -3,9 +3,9 @@ using MyPortal.Contracts.Interfaces.System.Users;
 
 namespace MyPortal.Contracts.Models.System.Users;
 
-public class UserUpsertDto : IUserPasswordDto
+public class UserUpsertRequest : IUserPasswordRequest
 {
-    public UserUpsertDto()
+    public UserUpsertRequest()
     {
         RoleIds = new List<Guid>();
     }

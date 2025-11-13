@@ -2,7 +2,7 @@
 
 namespace MyPortal.Contracts.Models.System.Roles
 {
-    public class RoleDetailsDto
+    public class RoleDetailsResponse
     {
         public Guid Id { get; set; }
         

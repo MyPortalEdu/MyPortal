@@ -1,6 +1,6 @@
 ﻿namespace MyPortal.Contracts.Models.Schools;
 
-public class SchoolDetailsDto
+public class SchoolDetailsResponse
 {
     public Guid Id { get; set; }
 

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\MyPortal.Auth\MyPortal.Auth.csproj" />
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
     <ProjectReference Include="..\MyPortal.Data\MyPortal.Data.csproj" />
+    <ProjectReference Include="..\MyPortal.FileStorage\MyPortal.FileStorage.csproj" />
     <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
   </ItemGroup>
 

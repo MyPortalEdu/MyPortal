@@ -26,16 +26,16 @@ public class PermissionService : IPermissionService
         return perms.Contains(permission, StringComparer.OrdinalIgnoreCase);
     }
 
-    public async Task<IList<PermissionDto>> GetAllPermissionsAsync(CancellationToken cancellationToken)
+    public async Task<IList<PermissionResponse>> GetAllPermissionsAsync(CancellationToken cancellationToken)
     {
         var perms = await _permissionRepository.GetListAsync(cancellationToken: cancellationToken);
 
         return perms.Select(MapPermissionToDto).ToList();
     }
 
-    public PermissionDto MapPermissionToDto(Permission permission)
+    public PermissionResponse MapPermissionToDto(Permission permission)
     {
-        return new PermissionDto
+        return new PermissionResponse
         {
             Id = permission.Id,
             Name = permission.Name,

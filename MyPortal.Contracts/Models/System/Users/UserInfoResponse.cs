@@ -2,7 +2,7 @@
 
 namespace MyPortal.Contracts.Models.System.Users
 {
-    public class UserInfoDto
+    public class UserInfoResponse
     {
         public Guid Id { get; set; }
         public string? Username { get; set; }

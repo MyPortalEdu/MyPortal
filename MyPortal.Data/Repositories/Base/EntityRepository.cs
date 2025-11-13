@@ -9,7 +9,7 @@ namespace MyPortal.Data.Repositories.Base;
 public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IEntityRepository<TEntity>
     where TEntity : class, IEntity
 {
-    protected EntityRepository(IDbConnectionFactory factory) : base(factory)
+    public EntityRepository(IDbConnectionFactory factory) : base(factory)
     {
     }
 

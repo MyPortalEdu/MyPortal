@@ -16,14 +16,14 @@ namespace MyPortal.Data.Repositories
         {
         }
 
-        public async Task<PageResult<PersonSummaryDto>> GetPeople(FilterOptions? filter = null,
+        public async Task<PageResult<PersonSummaryResponse>> GetPeople(FilterOptions? filter = null,
             SortOptions? sort = null, PageOptions? paging = null,
             bool includeDeleted = false, CancellationToken cancellationToken = default)
         {
             var sql = SqlResourceLoader.Load("People.GetPersonSummaries.sql");
 
             var result =
-                await GetListPagedAsync<PersonSummaryDto>(sql, null, filter, sort, paging, includeDeleted, cancellationToken);
+                await GetListPagedAsync<PersonSummaryResponse>(sql, null, filter, sort, paging, includeDeleted, cancellationToken);
 
             return result;
         }
