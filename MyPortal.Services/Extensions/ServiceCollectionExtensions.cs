@@ -13,10 +13,13 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMyPortalServices(this IServiceCollection services)
     {
+        services.AddScoped<IAuthorizationService, AuthorizationService>();
         services.AddScoped<IValidationService, ValidationService>();
         services.AddScoped<IPermissionService, PermissionService>();
-        services.AddScoped<IAuthorizationService, AuthorizationService>();
-        
+
+        services.AddScoped<IDirectoryService, DirectoryService>();
+        services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ISchoolService, SchoolService>();
         services.AddScoped<IUserService, UserService>();

@@ -97,6 +97,7 @@ namespace MyPortal.Services.Services
             return response!;
         }
 
+        // TODO: Add a non-soft delete overload for maintenance routines
         public async Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken)
         {
             var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
