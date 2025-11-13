@@ -8,7 +8,7 @@
         public string? Description { get; set; }
         public bool IsPrivate { get; set; }
 
-        // File storage params - populated by controller
+        // File storage params - not required from UI, populated by controller from IFormFile
         public string FileName { get; set; }
         public Stream? Content { get; set; }
         public string ContentType { get; set; }

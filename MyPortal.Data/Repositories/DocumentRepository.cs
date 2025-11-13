@@ -25,7 +25,7 @@ namespace MyPortal.Data.Repositories
             return result.FirstOrDefault();
         }
 
-        public async Task<IList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId, CancellationToken cancellationToken)
         {
             using var conn = _factory.Create();
 
@@ -34,7 +34,7 @@ namespace MyPortal.Data.Repositories
             var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, new { directoryId },
                 cancellationToken: cancellationToken);
 
-            return result;
+            return result.ToList();
         }
     }
 }

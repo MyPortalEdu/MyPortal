@@ -18,6 +18,11 @@ public class AuthorizationService : IAuthorizationService
         return _user.UserId;
     }
 
+    public UserType GetCurrentUserType()
+    {
+        return _user.UserType;
+    }
+
     public async Task RequirePermissionAsync(string permission, CancellationToken ct = default)
     {
         var id = _user.UserId ?? throw new AuthenticationException("Not authenticated.");
