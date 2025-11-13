@@ -930,10 +930,10 @@ CREATE TABLE [dbo].[Documents] (
     [Id] uniqueidentifier NOT NULL,
     [CreatedById] uniqueidentifier NOT NULL,
     [CreatedByIpAddress] nvarchar(45) NOT NULL,
-    [CreatedAt] datetime2(7) NOT NULL   
+    [CreatedAt] datetime2(7) NOT NULL,   
     [LastModifiedById] uniqueidentifier NOT NULL,
     [LastModifiedByIpAddress] nvarchar(40) NOT NULL,
-    [LastModifiedAt] datetime2(7) NOT NULL    
+    [LastModifiedAt] datetime2(7) NOT NULL,    
 
     -- Classification
     [TypeId] uniqueidentifier NOT NULL,
@@ -4012,19 +4012,6 @@ END
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Documents_TypeId' AND object_id = OBJECT_ID(N'[dbo].[Documents]'))
 BEGIN
 CREATE INDEX [IX_Documents_TypeId] ON [dbo].[Documents]([TypeId]);
-END
-
-
-IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Documents_FileId_Files' AND parent_object_id = OBJECT_ID(N'[dbo].[Documents]'))
-BEGIN
-ALTER TABLE [dbo].[Documents]
-    ADD CONSTRAINT [FK_Documents_FileId_Files] FOREIGN KEY ([FileId]) REFERENCES [dbo].[Files]([Id]);
-END
-
-
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Documents_FileId' AND object_id = OBJECT_ID(N'[dbo].[Documents]'))
-BEGIN
-CREATE INDEX [IX_Documents_FileId] ON [dbo].[Documents]([FileId]);
 END
 
 
