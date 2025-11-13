@@ -25,6 +25,8 @@
 
   <ItemGroup>
     <None Remove="Sql\Scripts\db_create_tables.sql" />
+    <None Remove="Sql\StoredProcedures\sp_document_get_details_by_directory.sql" />
+    <None Remove="Sql\StoredProcedures\sp_document_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_permission_get_by_user_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_user_get_info_by_id.sql" />
     <EmbeddedResource Include="Sql\Scripts\db_create_tables.sql" />
@@ -33,6 +35,8 @@
     <None Remove="Sql\Functions\fn_person_get_name.sql" />
     <EmbeddedResource Include="Sql\Functions\fn_person_get_name.sql" />
     <None Remove="Sql\Views\vw_attendance_period_instances.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_document_get_details_by_directory.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_document_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_permission_get_by_user_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_user_get_info_by_id.sql" />
     <EmbeddedResource Include="Sql\Views\vw_attendance_period_instances.sql" />
