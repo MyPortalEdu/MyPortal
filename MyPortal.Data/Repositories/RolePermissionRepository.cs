@@ -9,7 +9,7 @@ namespace MyPortal.Data.Repositories
 {
     public class RolePermissionRepository : EntityRepository<RolePermission>, IRolePermissionRepository
     {
-        protected RolePermissionRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
+        public RolePermissionRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
             base(factory, authorizationService)
         {
         }

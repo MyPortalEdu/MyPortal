@@ -14,7 +14,7 @@ namespace MyPortal.Data.Repositories
 {
     public class RoleRepository : EntityRepository<Role>, IRoleRepository
     {
-        protected RoleRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
+        public RoleRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
             factory, authorizationService)
         {
         }

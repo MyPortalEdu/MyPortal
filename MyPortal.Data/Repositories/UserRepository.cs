@@ -14,7 +14,7 @@ namespace MyPortal.Data.Repositories;
 
 public class UserRepository : EntityRepository<User>, IUserRepository
 {
-    protected UserRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
+    public UserRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
         authorizationService)
     {
     }

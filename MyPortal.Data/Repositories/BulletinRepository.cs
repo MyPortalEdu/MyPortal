@@ -14,7 +14,7 @@ namespace MyPortal.Data.Repositories;
 
 public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepository
 {
-    protected BulletinRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
+    public BulletinRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
         factory, authorizationService)
     {
     }

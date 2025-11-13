@@ -70,13 +70,6 @@ public class BulletinService : BaseService, IBulletinService
     {
         await _authorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
-        var directory = new Directory
-        {
-            Id = SqlConvention.SequentialGuid(),
-            Name = DirectoryRoots.Bulletin,
-            IsPrivate = false
-        };
-
         var bulletin = new Bulletin
         {
             Id = SqlConvention.SequentialGuid(),

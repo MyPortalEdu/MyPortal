@@ -12,7 +12,7 @@ namespace MyPortal.Data.Repositories;
 
 public class SchoolRepository : EntityRepository<School>, ISchoolRepository
 {
-    protected SchoolRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
+    public SchoolRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
         authorizationService)
     {
     }
