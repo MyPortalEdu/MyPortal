@@ -12,6 +12,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Services
 {
+    /// <inheritdoc cref="IDocumentService"/>
     public class DocumentService : BaseService, IDocumentService
     {
         private readonly IDocumentRepository _documentRepository;
@@ -19,6 +20,14 @@ namespace MyPortal.Services.Services
         private readonly IFileStorageProvider _storageProvider;
         private readonly IValidationService _validationService;
 
+        /// <summary>
+        /// Instantiates a new instance of <see cref="DocumentService"/>.
+        /// </summary>
+        /// <param name="authorizationService">Service used to validate auth requirements.</param>
+        /// <param name="documentRepository">Repository used to retrieve documents from storage.</param>
+        /// <param name="storageKeyGenerator">Service used to generate storage keys.</param>
+        /// <param name="storageProvider">Service used to retrieve document contents from file storage.</param>
+        /// <param name="validationService">Service used to validate reqeusts.</param>
         public DocumentService(IAuthorizationService authorizationService, IDocumentRepository documentRepository,
             IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider,
             IValidationService validationService) : base(authorizationService)
@@ -28,12 +37,14 @@ namespace MyPortal.Services.Services
             _storageProvider = storageProvider;
             _validationService = validationService;
         }
-
-
+        
+        /// <inheritdoc/>
+        /// <exception cref="ArgumentException">Thrown if there is no content to upload.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the document details cannot be loaded after creation.</exception>
         public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model,
             CancellationToken cancellationToken)
         {
-            if (model.Content == null)
+            if (model.Content == null || model.Content.Length == 0)
             {
                 throw new ArgumentException("Document has no content.", nameof(model.Content));
             }
@@ -73,6 +84,9 @@ namespace MyPortal.Services.Services
             return response;
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="NotFoundException">Thrown if a document with the specified identifier is not found.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the document details cannot be loaded after update.</exception>
         public async Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model,
             CancellationToken cancellationToken)
         {
@@ -112,6 +126,8 @@ namespace MyPortal.Services.Services
         }
 
         // TODO: Add a non-soft delete overload for maintenance routines
+        /// <inheritdoc/>
+        /// <exception cref="NotFoundException">Thrown if a document with the specified identifier is not found.</exception>
         public async Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken)
         {
             var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
@@ -130,6 +146,8 @@ namespace MyPortal.Services.Services
             return await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
         }
 
+        /// <inheritdoc/>
+        /// <exception cref="NotFoundException">Thrown if a document with the specified identifier is not found.</exception>
         public async Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId,
             CancellationToken cancellationToken)
         {
