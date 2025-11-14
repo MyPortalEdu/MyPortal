@@ -18,7 +18,7 @@ namespace MyPortal.FileStorage.Helpers
             var id = Guid.NewGuid().ToString("N");
             var year = utcNow.Year.ToString("0000");
             var month = utcNow.Month.ToString("00");
-            var shard = id.Substring(0, 2);
+            var shard = id[..2];
 
             return $"{year}/{month}/{shard}/{id}{ext}";
         }
