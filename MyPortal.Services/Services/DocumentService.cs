@@ -4,6 +4,7 @@ using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.FileStorage.Helpers;
 using MyPortal.FileStorage.Interfaces;
+using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
@@ -16,28 +17,36 @@ namespace MyPortal.Services.Services
         private readonly IDocumentRepository _documentRepository;
         private readonly IStorageKeyGenerator _storageKeyGenerator;
         private readonly IFileStorageProvider _storageProvider;
+        private readonly IValidationService _validationService;
 
         public DocumentService(IAuthorizationService authorizationService, IDocumentRepository documentRepository,
-            IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider) : base(authorizationService)
+            IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider,
+            IValidationService validationService) : base(authorizationService)
         {
             _documentRepository = documentRepository;
             _storageKeyGenerator = storageKeyGenerator;
             _storageProvider = storageProvider;
+            _validationService = validationService;
         }
 
 
-        public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model, CancellationToken cancellationToken)
+        public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model,
+            CancellationToken cancellationToken)
         {
             if (model.Content == null)
             {
                 throw new ArgumentException("Document has no content.", nameof(model.Content));
             }
 
-            var storageKey = _storageKeyGenerator.Generate(model.FileName);
+            await _validationService.ValidateAsync(model);
 
-            var hashedStream = await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
+            var storageKey = _storageKeyGenerator.Generate(model.FileName!);
 
-            await _storageProvider.SaveFileAsync(storageKey, hashedStream.UsableStream, model.ContentType, cancellationToken);
+            await using var hashedStream =
+                await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
+
+            await _storageProvider.SaveFileAsync(storageKey, hashedStream.UsableStream, model.ContentType!,
+                cancellationToken);
 
             var id = SqlConvention.SequentialGuid();
 
@@ -45,8 +54,8 @@ namespace MyPortal.Services.Services
             {
                 Id = id,
                 StorageKey = storageKey,
-                ContentType = model.ContentType,
-                FileName = model.FileName,
+                ContentType = model.ContentType!,
+                FileName = model.FileName!,
                 DirectoryId = model.DirectoryId,
                 SizeBytes = model.SizeBytes,
                 TypeId = model.TypeId,
@@ -61,11 +70,14 @@ namespace MyPortal.Services.Services
             var response = await _documentRepository.GetDetailsByIdAsync(id, cancellationToken)
                            ?? throw new InvalidOperationException("Created document, but could not load details.");
 
-            return response!;
+            return response;
         }
 
-        public async Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model, CancellationToken cancellationToken)
+        public async Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model,
+            CancellationToken cancellationToken)
         {
+            await _validationService.ValidateAsync(model);
+            
             var documentInDb = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
 
             if (documentInDb == null)
@@ -75,10 +87,12 @@ namespace MyPortal.Services.Services
 
             if (model.Content != null)
             {
-                var hashedStream = await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
-                await _storageProvider.SaveFileAsync(documentInDb.StorageKey, hashedStream.UsableStream, model.ContentType, cancellationToken);
-                documentInDb.FileName = model.FileName;
-                documentInDb.ContentType = model.ContentType;
+                await using var hashedStream =
+                    await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
+                await _storageProvider.SaveFileAsync(documentInDb.StorageKey, hashedStream.UsableStream,
+                    model.ContentType!, cancellationToken);
+                documentInDb.FileName = model.FileName!;
+                documentInDb.ContentType = model.ContentType!;
                 documentInDb.SizeBytes = model.SizeBytes;
                 documentInDb.Hash = hashedStream.Hash;
             }
@@ -94,7 +108,7 @@ namespace MyPortal.Services.Services
             var response = await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken)
                            ?? throw new InvalidOperationException("Updated document, but could not load details.");
 
-            return response!;
+            return response;
         }
 
         // TODO: Add a non-soft delete overload for maintenance routines
@@ -110,20 +124,23 @@ namespace MyPortal.Services.Services
             await _documentRepository.DeleteAsync(documentId, cancellationToken);
         }
 
-        public async Task<DocumentDetailsResponse?> GetDocumentByIdAsync(Guid documentId, CancellationToken cancellationToken)
+        public async Task<DocumentDetailsResponse?> GetDocumentByIdAsync(Guid documentId,
+            CancellationToken cancellationToken)
         {
             return await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
         }
 
-        public async Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId, CancellationToken cancellationToken)
+        public async Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId,
+            CancellationToken cancellationToken)
         {
             var documentDetails = await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
-            
+
             if (documentDetails == null)
             {
                 throw new NotFoundException("Document not found.");
             }
 
+            // Do NOT dispose this stream here - it's returned to the caller who must dispose it
             var content = await _storageProvider.OpenReadFileAsync(documentDetails.StorageKey, cancellationToken);
 
             var response = new DocumentContentResponse

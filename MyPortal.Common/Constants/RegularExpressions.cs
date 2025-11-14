@@ -11,8 +11,8 @@
         public const string NationalInsuranceNumber =
             @"^(?!BG)(?!GB)(?!NK)(?!KN)(?!TN)(?!NT)(?!ZZ)(?:[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z])(?:\s*\d\s*){6}([A-D]|\s)$";
 
-        public const string AllowedDirectoryNameChars = @"^[A-Za-z0-9 _\\-\\(\\)]+$";
+        public const string AllowedDirectoryNameChars = @"^[A-Za-z0-9 _\-\(\)]+$";
 
-        public const string AllowedDocumentNameChars = @"^[A-Za-z0-9 _\-\.,:]+$";
+        public const string AllowedDocumentNameChars = @"^[A-Za-z0-9 _\.,:-]+$";
     }
 }

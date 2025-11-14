@@ -2,7 +2,7 @@
 {
     public class DocumentContentResponse
     {
-        public DocumentDetailsResponse Details { get; set; }
-        public Stream Content { get; set; }
+        public required DocumentDetailsResponse Details { get; set; }
+        public required Stream Content { get; set; }
     }
 }
