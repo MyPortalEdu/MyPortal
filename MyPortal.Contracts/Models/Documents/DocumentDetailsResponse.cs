@@ -8,7 +8,7 @@ namespace MyPortal.Contracts.Models.Documents
 
         public Guid TypeId { get; set; }
 
-        public string TypeDescription { get; set; }
+        public string TypeDescription { get; set; } = null!;
 
         public Guid DirectoryId { get; set; }
 

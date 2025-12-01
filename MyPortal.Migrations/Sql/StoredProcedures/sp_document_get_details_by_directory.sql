@@ -3,7 +3,8 @@ SET ANSI_NULLS ON;
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[sp_document_get_details_by_directory]
-    @directoryId UNIQUEIDENTIFIER
+    @directoryId UNIQUEIDENTIFIER,
+    @includeDeleted BIT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -33,10 +34,11 @@ SELECT
     D.[Description],
     D.[IsPrivate],
     D.[IsDeleted]
-FROM [Documents] [D]
+FROM [Documents]
 INNER JOIN dbo.[DocumentTypes] [DT] ON [D].[TypeId] = [DT].[Id]
 INNER JOIN dbo.[Users] [UC] ON [D].[CreatedById] = [UC].[Id]
 INNER JOIN dbo.[Users] [UM] ON [D].[LastModifiedById] = [UM].[Id]
-WHERE D.[DirectoryId] = @directoryId;
+WHERE D.[DirectoryId] = @directoryId
+AND (D.[IsDeleted] = 0 OR @includeDeleted = 1)
 
 END;

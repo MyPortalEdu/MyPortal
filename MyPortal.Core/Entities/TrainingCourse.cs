@@ -8,10 +8,10 @@ namespace MyPortal.Core.Entities
     {
         [Required]
         [StringLength(128)]
-        public required string Code { get; set; }
-        
+        public string Code { get; set; } = null!;
+
         [Required]
         [StringLength(128)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = null!;
     }
 }

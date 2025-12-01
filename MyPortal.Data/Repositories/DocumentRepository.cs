@@ -25,11 +25,26 @@ namespace MyPortal.Data.Repositories
             return result.FirstOrDefault();
         }
 
-        public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId, CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId,
+            CancellationToken cancellationToken, bool includeDeleted = false)
         {
             using var conn = _factory.Create();
 
             var sql = @"[dbo].[sp_document_get_details_by_directory]";
+
+            var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql,
+                new { directoryId, includeDeleted },
+                cancellationToken: cancellationToken);
+
+            return result.ToList();
+        }
+
+        public async Task<IReadOnlyList<DocumentDetailsResponse>> GetChildDocumentsByDirectoryId(Guid directoryId,
+            CancellationToken cancellationToken, bool includeDeleted = false)
+        {
+            using var conn = _factory.Create();
+
+            var sql = @"[dbo].[sp_document_get_tree_by_directory_id]";
 
             var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, new { directoryId },
                 cancellationToken: cancellationToken);

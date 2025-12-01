@@ -7,8 +7,8 @@ namespace MyPortal.Core.Entities
     public class CurriculumBlock : Entity
     {
         [Required]
-        [StringLength(10)] 
-        public required string Code { get; set; }
+        [StringLength(10)]
+        public string Code { get; set; } = null!;
         
         [StringLength(256)]
         public string? Description { get; set; }

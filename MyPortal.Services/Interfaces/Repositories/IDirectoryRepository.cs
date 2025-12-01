@@ -8,5 +8,8 @@ namespace MyPortal.Services.Interfaces.Repositories
     {
         Task<DirectoryDetailsResponse?> GetDetailsByIdAsync(Guid directoryId, CancellationToken cancellationToken);
         Task<IReadOnlyList<DirectoryDetailsResponse>> GetDirectoriesByParentIdAsync(Guid directoryId, CancellationToken cancellationToken);
+
+        Task<IReadOnlyList<DirectoryDetailsResponse>> GetChildDirectoriesAsync(Guid directoryId,
+            CancellationToken cancellationToken);
     }
 }

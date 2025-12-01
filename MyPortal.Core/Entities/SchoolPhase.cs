@@ -7,7 +7,7 @@ namespace MyPortal.Core.Entities
     public class SchoolPhase : LookupEntity
     {
         [Required]
-        [StringLength(10)]
-        public string Code { get; set; }
+        [StringLength(10)] 
+        public string Code { get; set; } = null!;
     }
 }

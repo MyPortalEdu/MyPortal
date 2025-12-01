@@ -8,7 +8,7 @@ namespace MyPortal.Core.Entities
     public class DiaryEventType : LookupEntity, ISystemEntity
     {
         [StringLength(128)]
-        public required string ColourCode { get; set; }
+        public string ColourCode { get; set; } = null!;
 
         public bool IsSystem { get; set; }
     }

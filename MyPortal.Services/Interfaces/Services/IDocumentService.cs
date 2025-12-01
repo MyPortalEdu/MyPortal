@@ -1,5 +1,7 @@
-﻿using MyPortal.Contracts.Models.Documents;
+﻿using MyPortal.Contracts.Models;
+using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
+using MyPortal.Services.Filters;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Interfaces.Services
@@ -35,8 +37,9 @@ namespace MyPortal.Services.Interfaces.Services
         /// </summary>
         /// <param name="documentId">The identifier of the document to delete.</param>
         /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <param name="softDelete">If true, this document will be flagged as deleted instead of removed.</param>
         /// <returns>A <see cref="Task"/> that completes when the deletion is finished.</returns>
-        Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken);
+        Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true);
 
         /// <summary>
         /// Retrieves detailed information for a document by its identifier.
@@ -55,6 +58,15 @@ namespace MyPortal.Services.Interfaces.Services
         /// <param name="cancellationToken">A token to cancel the operation.</param>
         /// <returns>A <see cref="DocumentContentResponse"/> with the document details and its contents.</returns>
         /// <remarks>The stream returned with the <see cref="DocumentContentResponse"/> must be disposed of by the caller.</remarks>
-        Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId, CancellationToken cancellationToken);
+        Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId,
+            CancellationToken cancellationToken);
+        
+        /// <summary>
+        /// Retrieves document types for the given filter.
+        /// </summary>
+        /// <param name="filter">The filer to apply when retrieving document types.</param>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <returns>The list of document types.</returns>
+        Task<IList<LookupResponse>> GetDocumentTypesAsync(DocumentTypeFilter filter, CancellationToken cancellationToken);
     }
 }

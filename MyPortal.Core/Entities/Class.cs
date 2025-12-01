@@ -12,9 +12,9 @@ namespace MyPortal.Core.Entities
         public Guid CurriculumGroupId { get; set; }
 
         public Guid DirectoryId { get; set; }
-        
+
         [Required, StringLength(10)]
-        public required string Code { get; set; }
+        public string Code { get; set; } = null!;
 
         public Course? Course { get; set; }
         public CurriculumGroup? Group { get; set; }

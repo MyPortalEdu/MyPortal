@@ -17,26 +17,26 @@ namespace MyPortal.Core.Entities
         
         [StringLength(256)]
         public string? PreferredLastName { get; set; }
-        
+
         [Required]
         [StringLength(256)]
-        public required string FirstName { get; set; }
+        public string FirstName { get; set; } = null!;
         
         [StringLength(256)]
         public string? MiddleName { get; set; }
-        
+
         [Required]
         [StringLength(256)]
-        public required string LastName { get; set; }
+        public string LastName { get; set; } = null!;
 
         public Guid? PhotoId { get; set; }
         
         [StringLength(10)]
         public string? NhsNumber { get; set; }
-        
+
         [Required]
         [StringLength(1)]
-        public required string Gender { get; set; }
+        public string Gender { get; set; } = null!;
         
         public DateTime? Dob { get; set; }
         

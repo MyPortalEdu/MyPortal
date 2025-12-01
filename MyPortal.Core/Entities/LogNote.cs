@@ -13,8 +13,8 @@ namespace MyPortal.Core.Entities
 
         public Guid AcademicYearId { get; set; }
 
-        [Required] 
-        public required string Message { get; set; }
+        [Required]
+        public string Message { get; set; } = null!;
 
         // Only visible to staff users
         public bool IsPrivate { get; set; }

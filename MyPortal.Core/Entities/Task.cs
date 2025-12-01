@@ -14,9 +14,9 @@ namespace MyPortal.Core.Entities
         public DateTime? DueDate { get; set; }
 
         public DateTime? CompletedDate { get; set; }
-        
-        [Required, StringLength(128)]
-        public required string Title { get; set; }
+
+        [Required, StringLength(128)] 
+        public string Title { get; set; } = null!;
         
         [StringLength(256)]
         public string? Description { get; set; }

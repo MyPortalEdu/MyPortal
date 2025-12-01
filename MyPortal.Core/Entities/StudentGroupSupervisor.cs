@@ -11,7 +11,7 @@ namespace MyPortal.Core.Entities
         public Guid SupervisorId { get; set; }
 
         [Required]
-        public required string Title { get; set; }
+        public string Title { get; set; } = null!;
 
         public StudentGroup? StudentGroup { get; set; }
         public StaffMember? Supervisor { get; set; }

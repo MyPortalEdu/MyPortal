@@ -7,10 +7,10 @@ namespace MyPortal.Core.Entities
     public class AcademicTerm : Entity
     {
         public Guid AcademicYearId { get; set; }
-        
+
         [Required]
         [StringLength(128)]
-        public required string Name { get; set; }   
+        public string Name { get; set; } = null!;   
 
         public DateTime StartDate { get; set; }
 

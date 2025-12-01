@@ -4,5 +4,5 @@ namespace MyPortal.Contracts.Models.System.Users;
 
 public class UserSetPasswordRequest : IUserPasswordRequest
 {
-    public required string Password { get; set; }
+    public string Password { get; set; } = null!;
 }

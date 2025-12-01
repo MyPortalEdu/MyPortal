@@ -6,10 +6,10 @@ namespace MyPortal.Contracts.Models.System.Permissions
     {
         public Guid Id { get; set; }
 
-        public required string Name { get; set; }
+        public string Name { get; set; } = null!;
 
-        public required string FriendlyName { get; set; }
+        public string FriendlyName { get; set; } = null!;
 
-        public required string Area { get; set; }
+        public string Area { get; set; } = null!;
     }
 }

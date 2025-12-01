@@ -11,7 +11,7 @@ namespace MyPortal.Core.Entities
         public Guid CommentBankSectionId { get; set; }
 
         [Required]
-        public required string Value { get; set; }
+        public string Value { get; set; } = null!;
 
         public CommentType? CommentType { get; set; }
         public CommentBankSection? Section { get; set; }

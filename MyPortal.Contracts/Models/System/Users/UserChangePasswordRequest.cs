@@ -4,6 +4,6 @@ namespace MyPortal.Contracts.Models.System.Users;
 
 public class UserChangePasswordRequest : IUserPasswordRequest
 {
-    public required string CurrentPassword { get; set; }
-    public required string Password { get; set; }
+    public string CurrentPassword { get; set; } = null!;
+    public string Password { get; set; } = null!;
 }

@@ -9,6 +9,9 @@ namespace MyPortal.Services.Interfaces.Repositories
         Task<DocumentDetailsResponse?> GetDetailsByIdAsync(Guid documentId, CancellationToken cancellationToken);
 
         Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId,
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken, bool includeDeleted = false);
+
+        Task<IReadOnlyList<DocumentDetailsResponse>> GetChildDocumentsByDirectoryId(Guid directoryId,
+            CancellationToken cancellationToken, bool includeDeleted = false);
     }
 }

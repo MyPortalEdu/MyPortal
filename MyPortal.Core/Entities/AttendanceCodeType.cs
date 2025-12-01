@@ -7,6 +7,6 @@ namespace MyPortal.Core.Entities
     public class AttendanceCodeType : Entity
     {
         [Required, StringLength(256)]
-        public required string Description { get; set; }
+        public string Description { get; set; } = null!;
     }
 }

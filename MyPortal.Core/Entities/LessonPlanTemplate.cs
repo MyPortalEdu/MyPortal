@@ -8,9 +8,9 @@ namespace MyPortal.Core.Entities
     {
         [Required]
         [StringLength(256)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = null!;
 
-        [Required] 
-        public required string PlanTemplate { get; set; }
+        [Required]
+        public string PlanTemplate { get; set; } = null!;
     }
 }

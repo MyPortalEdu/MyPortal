@@ -10,7 +10,7 @@ namespace MyPortal.Contracts.Models.System.Users
         public UserType UserType { get; set; }
         public bool IsEnabled { get; set; }
         public bool IsSystem { get; set; }
-        public string DisplayName { get; set; }
-        public string[] Permissions { get; set; }
+        public string DisplayName { get; set; } = null!;
+        public string[] Permissions { get; set; } = null!;
     }
 }
