@@ -7,30 +7,51 @@ namespace MyPortal.Tests.Mocks;
 
 public static class IdentityMocks
 {
+    
     public static Mock<UserManager<TUser>> MockUserManager<TUser>() where TUser : class
     {
         var store = new Mock<IUserStore<TUser>>();
-        var optionsAccessor = new Mock<OptionsManager<IdentityOptions>>();
+
+        // Use IOptions<IdentityOptions> instead of OptionsManager
+        var optionsAccessor = new Mock<IOptions<IdentityOptions>>();
+        optionsAccessor.Setup(o => o.Value).Returns(new IdentityOptions());
+
         var passwordHasher = new Mock<IPasswordHasher<TUser>>();
-        var userValidators = new Mock<IEnumerable<IUserValidator<TUser>>>();
-        var passwordValidators = new Mock<IEnumerable<IPasswordValidator<TUser>>>();
+        var userValidators = new List<IUserValidator<TUser>> { new Mock<IUserValidator<TUser>>().Object };
+        var passwordValidators = new List<IPasswordValidator<TUser>> { new Mock<IPasswordValidator<TUser>>().Object };
         var lookupNormalizer = new Mock<ILookupNormalizer>();
-        var errorDescriber = new Mock<IdentityErrorDescriber>();
+        var errorDescriber = new IdentityErrorDescriber();
         var serviceProvider = new Mock<IServiceProvider>();
         var logger = new Mock<ILogger<UserManager<TUser>>>();
-        return new Mock<UserManager<TUser>>(store.Object, optionsAccessor.Object, passwordHasher.Object,
-            userValidators.Object, passwordValidators.Object, lookupNormalizer.Object, errorDescriber.Object,
-            serviceProvider.Object, logger.Object);
+
+        return new Mock<UserManager<TUser>>(
+            store.Object,
+            optionsAccessor.Object,
+            passwordHasher.Object,
+            userValidators,
+            passwordValidators,
+            lookupNormalizer.Object,
+            errorDescriber,
+            serviceProvider.Object,
+            logger.Object
+        );
     }
+    
     
     public static Mock<RoleManager<TRole>> MockRoleManager<TRole>() where TRole : class
     {
         var store = new Mock<IRoleStore<TRole>>();
-        var roleValidators = new Mock<IEnumerable<IRoleValidator<TRole>>>();
+        var roleValidators = new List<IRoleValidator<TRole>> { new Mock<IRoleValidator<TRole>>().Object };
         var lookupNormalizer = new Mock<ILookupNormalizer>();
-        var identityErrorDescriber = new Mock<IdentityErrorDescriber>();
-        var logger =  new Mock<ILogger<RoleManager<TRole>>>();
-        return new Mock<RoleManager<TRole>>(store.Object, roleValidators.Object, lookupNormalizer.Object,
-            identityErrorDescriber.Object, logger.Object);
+        var identityErrorDescriber = new IdentityErrorDescriber();
+        var logger = new Mock<ILogger<RoleManager<TRole>>>();
+
+        return new Mock<RoleManager<TRole>>(
+            store.Object,
+            roleValidators,
+            lookupNormalizer.Object,
+            identityErrorDescriber,
+            logger.Object
+        );
     }
 }
