@@ -174,16 +174,27 @@ namespace MyPortal.Services.Services
                 throw new NotFoundException("Document not found.");
             }
 
-            // Do NOT dispose this stream here - it's returned to the caller who must dispose it
-            var content = await _storageProvider.OpenReadFileAsync(documentDetails.StorageKey, cancellationToken);
-
-            var response = new DocumentContentResponse
+            // The caller is responsible for disposing the returned stream.
+            // We use try-catch to ensure proper disposal if an exception occurs after opening the stream.
+            Stream? content = null;
+            try
             {
-                Details = documentDetails,
-                Content = content
-            };
+                content = await _storageProvider.OpenReadFileAsync(documentDetails.StorageKey, cancellationToken);
 
-            return response;
+                return new DocumentContentResponse
+                {
+                    Details = documentDetails,
+                    Content = content
+                };
+            }
+            catch
+            {
+                if (content != null)
+                {
+                    await content.DisposeAsync();
+                }
+                throw;
+            }
         }
 
         /// <inheritdoc/>
