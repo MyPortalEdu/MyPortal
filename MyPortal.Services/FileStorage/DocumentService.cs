@@ -145,7 +145,7 @@ namespace MyPortal.Services.Services
 
             if (document.IsPrivate && _authorizationService.GetCurrentUserType() != UserType.Staff)
             {
-                throw new ForbiddenException("You do not  have permission to delete this document.");
+                throw new ForbiddenException("You do not have permission to delete this document.");
             }
 
             if (!softDelete)
