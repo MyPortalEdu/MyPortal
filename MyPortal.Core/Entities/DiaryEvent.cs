@@ -10,9 +10,9 @@ namespace MyPortal.Core.Entities
         public Guid EventTypeId { get; set; }
 
         public Guid? RoomId { get; set; }
-        
+
         [Required, StringLength(256)]
-        public required string Subject { get; set; }
+        public string Subject { get; set; } = null!;
         
         [StringLength(256)]
         public string? Description { get; set; }

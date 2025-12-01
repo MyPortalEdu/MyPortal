@@ -187,7 +187,7 @@ builder.Services.AddAuthentication(options =>
         o.Events.OnValidatePrincipal = async ctx =>
         {
             var userManager = ctx.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await userManager.GetUserAsync(ctx.Principal);
+            var user = await userManager.GetUserAsync(ctx.Principal!);
             if (user is null || !user.IsEnabled)
             {
                 ctx.RejectPrincipal();

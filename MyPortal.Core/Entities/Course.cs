@@ -8,8 +8,8 @@ namespace MyPortal.Core.Entities
     {
         public Guid SubjectId { get; set; }
 
-        [Required, StringLength(128)]
-        public required string Name { get; set; }
+        [Required, StringLength(128)] 
+        public string Name { get; set; } = null!;
 
         public Subject? Subject { get; set; }
     }

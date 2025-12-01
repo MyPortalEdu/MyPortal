@@ -7,10 +7,10 @@ namespace MyPortal.Core.Entities
     public class LogNoteType : LookupEntity
     {
         [Required]
-        [StringLength(128)]
-        public required string ColourCode { get; set; }
+        [StringLength(128)] 
+        public string ColourCode { get; set; } = null!;
 
-        [Required] 
-        public required string IconClass { get; set; }
+        [Required]
+        public string IconClass { get; set; } = null!;
     }
 }

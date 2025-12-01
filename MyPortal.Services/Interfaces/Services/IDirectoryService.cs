@@ -16,5 +16,7 @@ namespace MyPortal.Services.Interfaces.Services
 
         Task<DirectoryContentsResponse>
             GetDirectoryContentsAsync(Guid directoryId, CancellationToken cancellationToken);
+        
+        Task<DirectoryTreeResponse> GetDirectoryTreeAsync(Guid directoryId, CancellationToken cancellationToken, bool includeDeletedDocs = true);
     }
 }

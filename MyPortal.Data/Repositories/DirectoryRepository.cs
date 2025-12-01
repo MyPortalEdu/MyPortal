@@ -36,5 +36,18 @@ namespace MyPortal.Data.Repositories
 
             return result.ToList();
         }
+
+        public async Task<IReadOnlyList<DirectoryDetailsResponse>> GetChildDirectoriesAsync(Guid directoryId,
+            CancellationToken cancellationToken)
+        {
+            using var conn = _factory.Create();
+
+            var sql = @"[dbo].[sp_directory_get_tree_by_id]";
+
+            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, new { directoryId },
+                cancellationToken: cancellationToken);
+
+            return result.ToList();
+        }
     }
 }

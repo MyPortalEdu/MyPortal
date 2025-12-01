@@ -7,7 +7,7 @@ namespace MyPortal.Core.Entities
     public class GovernanceType : LookupEntity
     {
         [Required]
-        [StringLength(10)]
-        public required string Code { get; set; }
+        [StringLength(10)] 
+        public string Code { get; set; } = null!;
     }
 }

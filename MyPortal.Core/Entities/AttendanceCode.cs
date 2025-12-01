@@ -7,11 +7,11 @@ namespace MyPortal.Core.Entities
     [Table("AttendanceCodes")]
     public class AttendanceCode : Entity, ISystemEntity
     {
-        [Required, StringLength(1)]
-        public required string Code { get; set; }
-        
-        [Required, StringLength(128)]
-        public required string Description { get; set; }
+        [Required, StringLength(1)] 
+        public string Code { get; set; } = null!;
+
+        [Required, StringLength(128)] 
+        public string Description { get; set; } = null!;
 
         public Guid AttendanceCodeTypeId { get; set; }
 

@@ -2,8 +2,8 @@
 
 public class HashedStream : IDisposable, IAsyncDisposable
 {
-    public required string Hash { get; set; }
-    public required Stream UsableStream { get; set; }
+    public string Hash { get; set; } = null!;
+    public Stream UsableStream { get; set; } = null!;
 
     public void Dispose()
     {

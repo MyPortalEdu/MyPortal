@@ -15,13 +15,13 @@ public class UserUpsertRequest : IUserPasswordRequest
     public UserType UserType { get; set; }
 
     public bool IsEnabled { get; set; }
-    
-    public required string Username { get; set; }
+
+    public string Username { get; set; } = null!;
     
     public string? Email { get; set; }
 
     // Only used for user creation
-    public string? Password { get; set; }
+    public string Password { get; set; } = null!;
     
     public IList<Guid> RoleIds { get; set; }
 }

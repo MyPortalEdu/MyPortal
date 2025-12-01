@@ -2,5 +2,5 @@
 
 public interface IUserPasswordRequest
 {
-    string? Password { get; set; }
+    string Password { get; set; }
 }

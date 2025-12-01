@@ -4,8 +4,8 @@ namespace MyPortal.Common.Models
 {
     public class DateRange
     {
-        private DateRange _beforeStart;
-        private DateRange _afterEnd;
+        private DateRange? _beforeStart;
+        private DateRange? _afterEnd;
 
         public static DateRange CurrentWeek
         {
@@ -20,12 +20,12 @@ namespace MyPortal.Common.Models
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
 
-        public DateRange BeforeStart
+        public DateRange? BeforeStart
         {
             get { return _beforeStart; }
         }
 
-        public DateRange AfterEnd
+        public DateRange? AfterEnd
         {
             get { return _afterEnd; }
         }

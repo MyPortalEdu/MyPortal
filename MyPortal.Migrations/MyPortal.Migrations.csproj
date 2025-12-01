@@ -68,6 +68,10 @@
     <EmbeddedResource Include="Sql\Updates\0002_add_user_management_permissions.sql" />
     <None Remove="Sql\StoredProcedures\sp_role_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_role_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_document_get_tree_by_directory_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_document_get_tree_by_directory_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_directory_get_tree_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_directory_get_tree_by_id.sql" />
   </ItemGroup>
 
   <ItemGroup>

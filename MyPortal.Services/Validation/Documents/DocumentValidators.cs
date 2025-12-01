@@ -26,6 +26,7 @@ public class DocumentValidators
                 .MaximumLength(256)
                 .When(x => !string.IsNullOrWhiteSpace(x.Description))
                 .WithMessage("Description must not exceed 256 characters.");
+            
             // File-related rules: only enforced when a file is actually supplied
             When(x => x.Content != null, () =>
             {

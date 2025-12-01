@@ -7,11 +7,11 @@ namespace MyPortal.Core.Entities;
 public class Permission : Entity
 {
     [Required, StringLength(50)]
-    public required string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     [Required, StringLength(100)]
-    public required string FriendlyName { get; set; }
+    public string FriendlyName { get; set; } = null!;
 
     [Required, StringLength(50)]
-    public required string Area { get; set; }
+    public string Area { get; set; } = null!;
 }

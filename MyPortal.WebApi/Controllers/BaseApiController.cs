@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MyPortal.Auth.Policies;
+using MyPortal.Contracts.Models.Documents;
 using MyPortal.Contracts.Models.System.Users;
 
 namespace MyPortal.WebApi.Controllers;

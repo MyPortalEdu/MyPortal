@@ -10,14 +10,14 @@ namespace MyPortal.Core.Entities
         public Guid ProductTypeId { get; set; }
 
         public Guid VatRateId { get; set; }
-        
+
         [Required]
         [StringLength(128)]
-        public required string Name { get; set; }
-        
+        public string Name { get; set; } = null!;
+
         [Required]
         [StringLength(256)]
-        public required string Description { get; set; }
+        public string Description { get; set; } = null!;
         
         public decimal Price { get; set; }
 

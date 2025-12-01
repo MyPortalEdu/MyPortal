@@ -12,13 +12,13 @@ namespace MyPortal.Core.Entities
         public Guid DirectoryId { get; set; }
 
         public int Order { get; set; }
-        
-        [Required]
-        [StringLength(256)]
-        public required string Title { get; set; }
 
         [Required]
-        public required string PlanContent { get; set; }
+        [StringLength(256)]
+        public string Title { get; set; } = null!;
+
+        [Required]
+        public string PlanContent { get; set; } = null!;
 
         public Directory? Directory { get; set; }
         public StudyTopic? StudyTopic { get; set; }

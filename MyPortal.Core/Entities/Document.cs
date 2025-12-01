@@ -13,14 +13,14 @@ namespace MyPortal.Core.Entities
         public Guid DirectoryId { get; set; }
 
         // Storage information
-        [Required, StringLength(512)]
-        public required string StorageKey { get; set; }
+        [Required, StringLength(512)] 
+        public string StorageKey { get; set; } = null!;
 
-        [Required, StringLength(256)]
-        public required string FileName { get; set; }
+        [Required, StringLength(256)] 
+        public string FileName { get; set; } = null!;
 
-        [Required, StringLength(256)]
-        public required string ContentType { get; set; }
+        [Required, StringLength(256)] 
+        public string ContentType { get; set; } = null!;
 
         public long? SizeBytes { get; set; }
 

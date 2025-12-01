@@ -1,9 +1,12 @@
 ﻿using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.FileStorage.Helpers;
 using MyPortal.FileStorage.Interfaces;
+using MyPortal.Services.Filters;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
@@ -16,6 +19,7 @@ namespace MyPortal.Services.Services
     public class DocumentService : BaseService, IDocumentService
     {
         private readonly IDocumentRepository _documentRepository;
+        private readonly IDocumentTypeRepository _documentTypeRepository;
         private readonly IStorageKeyGenerator _storageKeyGenerator;
         private readonly IFileStorageProvider _storageProvider;
         private readonly IValidationService _validationService;
@@ -24,15 +28,18 @@ namespace MyPortal.Services.Services
         /// Instantiates a new instance of <see cref="DocumentService"/>.
         /// </summary>
         /// <param name="authorizationService">Service used to validate auth requirements.</param>
-        /// <param name="documentRepository">Repository used to retrieve documents from storage.</param>
+        /// <param name="documentRepository">Repository used to retrieve documents from the database.</param>
+        /// <param name="documentTypeRepository">Repository used to retrieve document types from the database.</param>
         /// <param name="storageKeyGenerator">Service used to generate storage keys.</param>
         /// <param name="storageProvider">Service used to retrieve document contents from file storage.</param>
-        /// <param name="validationService">Service used to validate reqeusts.</param>
+        /// <param name="validationService">Service used to validate requests.</param>
         public DocumentService(IAuthorizationService authorizationService, IDocumentRepository documentRepository,
+            IDocumentTypeRepository documentTypeRepository,
             IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider,
             IValidationService validationService) : base(authorizationService)
         {
             _documentRepository = documentRepository;
+            _documentTypeRepository = documentTypeRepository;
             _storageKeyGenerator = storageKeyGenerator;
             _storageProvider = storageProvider;
             _validationService = validationService;
@@ -124,11 +131,10 @@ namespace MyPortal.Services.Services
 
             return response;
         }
-
-        // TODO: Add a non-soft delete overload for maintenance routines
+        
         /// <inheritdoc/>
         /// <exception cref="NotFoundException">Thrown if a document with the specified identifier is not found.</exception>
-        public async Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken)
+        public async Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true)
         {
             var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
 
@@ -137,7 +143,17 @@ namespace MyPortal.Services.Services
                 throw new NotFoundException("Document not found.");
             }
 
-            await _documentRepository.DeleteAsync(documentId, cancellationToken);
+            if (document.IsPrivate && _authorizationService.GetCurrentUserType() != UserType.Staff)
+            {
+                throw new ForbiddenException("You do not  have permission to delete this document.");
+            }
+
+            if (!softDelete)
+            {
+                await _storageProvider.DeleteFileAsync(document.StorageKey, cancellationToken);
+            }
+            
+            await _documentRepository.DeleteAsync(documentId, cancellationToken, softDelete);
         }
 
         public async Task<DocumentDetailsResponse?> GetDocumentByIdAsync(Guid documentId,
@@ -168,6 +184,13 @@ namespace MyPortal.Services.Services
             };
 
             return response;
+        }
+
+        /// <inheritdoc/>
+        public async Task<IList<LookupResponse>> GetDocumentTypesAsync(DocumentTypeFilter filter,
+            CancellationToken cancellationToken)
+        {
+            return await _documentTypeRepository.GetDocumentTypes(filter, cancellationToken);
         }
     }
 }

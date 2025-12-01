@@ -6,8 +6,8 @@ namespace MyPortal.Core.Entities
     [Table("SchoolTypes")]
     public class SchoolType : LookupEntity
     {
-        [Required]
-        [StringLength(10)]
-        public required string Code { get; set; }
+        [Required] 
+        [StringLength(10)] 
+        public string Code { get; set; } = null!;
     }
 }
