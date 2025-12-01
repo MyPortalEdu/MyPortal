@@ -187,7 +187,7 @@ namespace MyPortal.Services.Services
                     Content = content
                 };
             }
-            catch
+            catch (Exception)
             {
                 if (content != null)
                 {
