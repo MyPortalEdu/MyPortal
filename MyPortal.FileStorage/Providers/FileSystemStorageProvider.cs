@@ -81,7 +81,7 @@ namespace MyPortal.FileStorage.Providers
             // Ensure the resolved path is within the root directory
             // Check that the full path starts with the root path (with trailing separator)
             // This handles all path separators correctly on all platforms
-            if (!normalizedFullPath.StartsWith(normalizedRootPath, StringComparison.OrdinalIgnoreCase))
+            if (!normalizedFullPath.StartsWith(normalizedRootPath, StringComparison.Ordinal))
             {
                 throw new UnauthorizedAccessException($"Access to path '{storageKey}' is denied. Path traversal detected.");
             }
