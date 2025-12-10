@@ -7,5 +7,10 @@ namespace MyPortal.Common.Constants
         /// This default aligns with industry standards for educational platforms.
         /// </summary>
         public const long MaxFileSizeBytes = 52428800; // 50 MB in bytes
+        
+        /// <summary>
+        /// Number of bytes in one megabyte.
+        /// </summary>
+        public const long BytesPerMegabyte = 1024 * 1024;
     }
 }

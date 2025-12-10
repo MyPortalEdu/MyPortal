@@ -45,7 +45,7 @@ public class DocumentValidators
                 RuleFor(x => x.SizeBytes)
                     .GreaterThan(0).WithMessage("SizeBytes must be greater than zero when file content is provided.")
                     .LessThanOrEqualTo(maxFileSizeBytes)
-                    .WithMessage($"File size must not exceed {maxFileSizeBytes / 1024 / 1024} MB.");
+                    .WithMessage($"File size must not exceed {maxFileSizeBytes / DocumentLimits.BytesPerMegabyte} MB.");
             });
         }
     }
