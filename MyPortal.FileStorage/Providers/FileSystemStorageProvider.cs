@@ -72,9 +72,16 @@ namespace MyPortal.FileStorage.Providers
             var normalizedFullPath = Path.GetFullPath(fullPath);
             var normalizedRootPath = Path.GetFullPath(_rootPath);
             
+            // Ensure the normalized root path ends with a directory separator for proper containment check
+            if (!normalizedRootPath.EndsWith(Path.DirectorySeparatorChar))
+            {
+                normalizedRootPath += Path.DirectorySeparatorChar;
+            }
+            
             // Ensure the resolved path is within the root directory
-            if (!normalizedFullPath.StartsWith(normalizedRootPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-                !normalizedFullPath.Equals(normalizedRootPath, StringComparison.OrdinalIgnoreCase))
+            // Check that the full path starts with the root path (with trailing separator)
+            // This handles all path separators correctly on all platforms
+            if (!normalizedFullPath.StartsWith(normalizedRootPath, StringComparison.OrdinalIgnoreCase))
             {
                 throw new UnauthorizedAccessException($"Access to path '{storageKey}' is denied. Path traversal detected.");
             }
