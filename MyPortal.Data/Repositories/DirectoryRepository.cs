@@ -37,7 +37,7 @@ namespace MyPortal.Data.Repositories
             return result.ToList();
         }
 
-        public async Task<IReadOnlyList<DirectoryDetailsResponse>> GetChildDirectoriesAsync(Guid directoryId,
+        public async Task<IReadOnlyList<DirectoryDetailsResponse>> GetDirectoryTreeAsync(Guid directoryId,
             CancellationToken cancellationToken)
         {
             using var conn = _factory.Create();

@@ -8,7 +8,7 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces.Repositories;
-using MyPortal.Services.Services;
+using MyPortal.Services.System;
 using MyPortal.Tests.Mocks;
 using Task = System.Threading.Tasks.Task;
 

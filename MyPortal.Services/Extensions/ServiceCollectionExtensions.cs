@@ -1,10 +1,13 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.People;
+using MyPortal.Services.School;
 using MyPortal.Services.Security;
-using MyPortal.Services.Services;
+using MyPortal.Services.System;
 using MyPortal.Services.Validation;
 
 namespace MyPortal.Services.Extensions;

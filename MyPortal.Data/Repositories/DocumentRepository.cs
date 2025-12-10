@@ -39,14 +39,14 @@ namespace MyPortal.Data.Repositories
             return result.ToList();
         }
 
-        public async Task<IReadOnlyList<DocumentDetailsResponse>> GetChildDocumentsByDirectoryId(Guid directoryId,
+        public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsInSubtreeAsync(Guid directoryId,
             CancellationToken cancellationToken, bool includeDeleted = false)
         {
             using var conn = _factory.Create();
 
             var sql = @"[dbo].[sp_document_get_tree_by_directory_id]";
 
-            var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, new { directoryId },
+            var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, new { directoryId, includeDeleted },
                 cancellationToken: cancellationToken);
 
             return result.ToList();

@@ -11,7 +11,7 @@ namespace MyPortal.Services.Interfaces.Repositories
         Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId,
             CancellationToken cancellationToken, bool includeDeleted = false);
 
-        Task<IReadOnlyList<DocumentDetailsResponse>> GetChildDocumentsByDirectoryId(Guid directoryId,
+        Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsInSubtreeAsync(Guid directoryId,
             CancellationToken cancellationToken, bool includeDeleted = false);
     }
 }

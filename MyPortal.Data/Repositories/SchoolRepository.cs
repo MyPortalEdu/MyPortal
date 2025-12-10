@@ -1,6 +1,6 @@
 ﻿using Dapper;
 using MyPortal.Common.Interfaces;
-using MyPortal.Contracts.Models.Schools;
+using MyPortal.Contracts.Models.School;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Services.Interfaces.Repositories;

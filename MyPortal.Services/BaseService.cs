@@ -1,6 +1,6 @@
 ﻿using MyPortal.Auth.Interfaces;
 
-namespace MyPortal.Services.Services;
+namespace MyPortal.Services;
 
 public class BaseService
 {
