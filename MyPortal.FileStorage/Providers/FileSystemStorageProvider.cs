@@ -66,7 +66,20 @@ namespace MyPortal.FileStorage.Providers
         private string GetFullPath(string storageKey)
         {
             var safeKey = storageKey.Replace('/', Path.DirectorySeparatorChar);
-            return Path.Combine(_rootPath, safeKey);
+            var fullPath = Path.Combine(_rootPath, safeKey);
+            
+            // Normalize paths to resolve any relative path components
+            var normalizedFullPath = Path.GetFullPath(fullPath);
+            var normalizedRootPath = Path.GetFullPath(_rootPath);
+            
+            // Ensure the resolved path is within the root directory
+            if (!normalizedFullPath.StartsWith(normalizedRootPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                !normalizedFullPath.Equals(normalizedRootPath, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException($"Access to path '{storageKey}' is denied. Path traversal detected.");
+            }
+            
+            return normalizedFullPath;
         }
     }
 }
