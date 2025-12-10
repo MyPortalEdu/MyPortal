@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
+using Microsoft.Extensions.Options;
 using MyPortal.Auth.Constants;
+using MyPortal.Common.Options;
 using MyPortal.Contracts.Interfaces.System.Users;
 using MyPortal.Contracts.Models.System.Users;
 
@@ -9,25 +11,25 @@ public class UserValidators
 {
     public class UserPasswordValidator<T> : AbstractValidator<T> where T : IUserPasswordRequest
     {
-        public UserPasswordValidator()
+        public UserPasswordValidator(IOptions<PasswordOptions> passwordOptions)
         {
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password is required")
-                .MinimumLength(PasswordRequirements.RequiredLength)
-                .WithMessage($"Password must be at least {PasswordRequirements.RequiredLength} characters long.");
+                .MinimumLength(passwordOptions.Value.RequiredLength)
+                .WithMessage($"Password must be at least {passwordOptions.Value.RequiredLength} characters long.");
 
-            if (PasswordRequirements.RequireUppercase)
+            if (passwordOptions.Value.RequireUppercase)
                 RuleFor(x => x.Password).Matches("[A-Z]")
                     .WithMessage("Password must contain at least one uppercase letter.");
 
-            if (PasswordRequirements.RequireLowercase)
+            if (passwordOptions.Value.RequireLowercase)
                 RuleFor(x => x.Password).Matches("[a-z]")
                     .WithMessage("Password must contain at least one lowercase letter.");
 
-            if (PasswordRequirements.RequireDigit)
+            if (passwordOptions.Value.RequireDigit)
                 RuleFor(x => x.Password).Matches("[0-9]").WithMessage("Password must contain at least one digit.");
 
-            if (PasswordRequirements.RequireNonAlphanumeric)
+            if (passwordOptions.Value.RequireNonAlphanumeric)
                 RuleFor(x => x.Password).Matches("[^a-zA-Z0-9]")
                     .WithMessage("Password must contain at least one non-alphanumeric character.");
         }
@@ -35,9 +37,9 @@ public class UserValidators
     
     public class UpsertUserDtoValidator : AbstractValidator<UserUpsertRequest>
     {
-        public UpsertUserDtoValidator()
+        public UpsertUserDtoValidator(IOptions<PasswordOptions> passwordOptions)
         {
-            Include(new UserPasswordValidator<UserUpsertRequest>());
+            Include(new UserPasswordValidator<UserUpsertRequest>(passwordOptions));
             
             RuleFor(x => x.PersonId)
                 .Must(id => id == null || id.Value != Guid.Empty)

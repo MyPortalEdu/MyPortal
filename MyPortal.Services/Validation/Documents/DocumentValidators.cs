@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
+using Microsoft.Extensions.Options;
 using MyPortal.Common.Constants;
+using MyPortal.Common.Options;
 using MyPortal.Contracts.Models.Documents;
 
 namespace MyPortal.Services.Validation.Documents;
@@ -8,7 +10,7 @@ public class DocumentValidators
 {
     public class DocumentUpsertRequestValidator : AbstractValidator<DocumentUpsertRequest>
     {
-        public DocumentUpsertRequestValidator()
+        public DocumentUpsertRequestValidator(IOptions<FileStorageOptions> fileStorageOptions)
         {
             RuleFor(x => x.TypeId)
                 .NotEmpty().WithMessage("TypeId is required.");
@@ -39,7 +41,9 @@ public class DocumentValidators
                     .MaximumLength(256).WithMessage("ContentType must not exceed 256 characters.");
 
                 RuleFor(x => x.SizeBytes)
-                    .GreaterThan(0).WithMessage("SizeBytes must be greater than zero when file content is provided.");
+                    .GreaterThan(0).WithMessage("SizeBytes must be greater than zero when file content is provided.")
+                    .LessThan(fileStorageOptions.Value.MaxFileSizeBytes)
+                    .WithMessage($"File cannot exceed {fileStorageOptions.Value.MaxFileSizeBytes / DocumentLimits.BytesPerMegabyte}MB in size.");
             });
         }
     }
