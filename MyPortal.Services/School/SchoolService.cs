@@ -1,10 +1,9 @@
-﻿using MyPortal.Auth.Constants;
-using MyPortal.Auth.Interfaces;
-using MyPortal.Contracts.Models.Schools;
+﻿using MyPortal.Auth.Interfaces;
+using MyPortal.Contracts.Models.School;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 
-namespace MyPortal.Services.Services;
+namespace MyPortal.Services.School;
 
 public class SchoolService : BaseService, ISchoolService
 {

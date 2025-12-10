@@ -12,7 +12,7 @@ using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 
-namespace MyPortal.Services.Services
+namespace MyPortal.Services.System
 {
     public class RoleService : BaseService, IRoleService
     {

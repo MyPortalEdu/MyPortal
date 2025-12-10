@@ -1,4 +1,4 @@
-﻿namespace MyPortal.Contracts.Models.Schools;
+﻿namespace MyPortal.Contracts.Models.School;
 
 public class SchoolDetailsResponse
 {

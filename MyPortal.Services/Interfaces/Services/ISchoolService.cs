@@ -1,4 +1,4 @@
-﻿using MyPortal.Contracts.Models.Schools;
+﻿using MyPortal.Contracts.Models.School;
 
 namespace MyPortal.Services.Interfaces.Services;
 

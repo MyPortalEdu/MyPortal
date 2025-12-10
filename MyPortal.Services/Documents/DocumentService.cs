@@ -13,7 +13,7 @@ using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Services
+namespace MyPortal.Services.Documents
 {
     /// <inheritdoc cref="IDocumentService"/>
     public class DocumentService : BaseService, IDocumentService
@@ -51,12 +51,17 @@ namespace MyPortal.Services.Services
         public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model,
             CancellationToken cancellationToken)
         {
-            if (model.Content == null || model.Content.Length == 0)
+            if (model.Content == null || model.SizeBytes <= 0 || !model.Content.CanRead)
             {
                 throw new ArgumentException("Document has no content.", nameof(model.Content));
             }
 
             await _validationService.ValidateAsync(model);
+
+            if (model.IsPrivate && _authorizationService.GetCurrentUserType() != UserType.Staff)
+            {
+                throw new ForbiddenException("You do not have permission to create private documents.");
+            }
 
             var storageKey = _storageKeyGenerator.Generate(model.FileName!);
 
@@ -124,6 +129,11 @@ namespace MyPortal.Services.Services
             documentInDb.Description = model.Description;
             documentInDb.IsPrivate = model.IsPrivate;
 
+            if (documentInDb.IsPrivate && _authorizationService.GetCurrentUserType() != UserType.Staff)
+            {
+                throw new ForbiddenException("You do not have permission to create private documents.");
+            }
+
             await _documentRepository.UpdateAsync(documentInDb, cancellationToken);
 
             var response = await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken)
@@ -174,16 +184,35 @@ namespace MyPortal.Services.Services
                 throw new NotFoundException("Document not found.");
             }
 
-            // Do NOT dispose this stream here - it's returned to the caller who must dispose it
-            var content = await _storageProvider.OpenReadFileAsync(documentDetails.StorageKey, cancellationToken);
-
-            var response = new DocumentContentResponse
+            if (documentDetails.IsPrivate && _authorizationService.GetCurrentUserType() != UserType.Staff)
             {
-                Details = documentDetails,
-                Content = content
-            };
+                throw new ForbiddenException("You do not have permission to view this document.");
+            }
 
-            return response;
+            // The caller is responsible for disposing the returned stream
+            // We use try-catch to ensure proper disposal if an exception occurs after opening the stream
+            Stream? content = null;
+            try
+            {
+                content = await _storageProvider.OpenReadFileAsync(documentDetails.StorageKey, cancellationToken);
+                
+                var response = new DocumentContentResponse
+                {
+                    Details = documentDetails,
+                    Content = content
+                };
+
+                return response;
+            }
+            catch (Exception)
+            {
+                if (content != null)
+                {
+                    await content.DisposeAsync();
+                }
+                
+                throw;
+            }
         }
 
         /// <inheritdoc/>

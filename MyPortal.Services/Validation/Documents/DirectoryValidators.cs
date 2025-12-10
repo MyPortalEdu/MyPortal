@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿
+using FluentValidation;
 using MyPortal.Common.Constants;
 using MyPortal.Contracts.Models.Documents;
 
@@ -11,6 +12,7 @@ namespace MyPortal.Services.Validation.Documents
             public DirectoryUpsertRequestValidator()
             {
                 RuleFor(x => x.ParentId)
+                    .NotEmpty().WithMessage("ParentId is required.")
                     .Must(id => id != Guid.Empty)
                     .WithMessage("ParentId cannot be an empty GUID.");
 

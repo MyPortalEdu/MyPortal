@@ -8,7 +8,7 @@ using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Directory = MyPortal.Core.Entities.Directory;
 
-namespace MyPortal.Services.Services;
+namespace MyPortal.Services.Documents;
 
 public class DirectoryService : BaseService, IDirectoryService
 {
@@ -58,7 +58,7 @@ public class DirectoryService : BaseService, IDirectoryService
 
         if (_authorizationService.GetCurrentUserType() != UserType.Staff && model.IsPrivate)
         {
-            throw new ForbiddenException("You do not have permission to make private directories.");
+            throw new ForbiddenException("You do not have permission to create private directories.");
         }
 
         directory.IsPrivate = model.IsPrivate;
@@ -73,6 +73,13 @@ public class DirectoryService : BaseService, IDirectoryService
 
     public async Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken)
     {
+        var directory = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
+
+        if (directory == null)
+        {
+            throw new NotFoundException("Directory not found.");
+        }
+        
         if (_authorizationService.GetCurrentUserType() != UserType.Staff)
         {
             var tree = await GetDirectoryTreeAsync(directoryId, cancellationToken);
@@ -83,12 +90,7 @@ public class DirectoryService : BaseService, IDirectoryService
             }
         }
         
-        var directory = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
-
-        if (directory == null)
-        {
-            throw new NotFoundException("Directory not found.");
-        }
+        await DeleteDirectoryContentsAsync(directoryId, cancellationToken);
 
         await _directoryRepository.DeleteAsync(directoryId, cancellationToken);
     }
@@ -136,44 +138,85 @@ public class DirectoryService : BaseService, IDirectoryService
     public async Task<DirectoryTreeResponse> GetDirectoryTreeAsync(
         Guid directoryId,
         CancellationToken cancellationToken,
-        bool includeDeletedDocs = true)
+        bool includeDeletedDocs = false)
     {
-        var directories = await _directoryRepository.GetChildDirectoriesAsync(directoryId, cancellationToken);
+        var flatTree = await GetFlatDirectoryTreeAsync(directoryId, cancellationToken, includeDeletedDocs);
+        return BuildTree(directoryId, flatTree);
+    }
 
-        IReadOnlyList<DocumentDetailsResponse> documents = Array.Empty<DocumentDetailsResponse>();
-        if (includeDeletedDocs)
+    public async Task<DirectoryContentsResponse> GetFlatDirectoryTreeAsync(Guid directoryId,
+        CancellationToken cancellationToken, bool includeDeletedDocs = false)
+    {
+        var directory = await GetDirectoryByIdAsync(directoryId, cancellationToken);
+
+        if (directory == null)
         {
-            documents = await _documentRepository.GetChildDocumentsByDirectoryId(directoryId, cancellationToken,
-                includeDeletedDocs);
+            throw new NotFoundException("Directory not found.");
+        }
+        
+        var directories = await _directoryRepository.GetDirectoryTreeAsync(directoryId, cancellationToken);
+
+        var documents = await _documentRepository.GetDocumentsInSubtreeAsync(directoryId, cancellationToken,
+            includeDeletedDocs);
+
+        return new DirectoryContentsResponse(directory, directories, documents);
+    }
+
+    private async Task DeleteDirectoryContentsAsync(Guid directoryId, CancellationToken cancellationToken)
+    {
+        var contents = await GetDirectoryContentsAsync(directoryId, cancellationToken);
+
+        foreach (var subdirectory in contents.Directories)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            await DeleteDirectoryContentsAsync(subdirectory.Id, cancellationToken);
+            
+            await _directoryRepository.DeleteAsync(subdirectory.Id, cancellationToken);
         }
 
-        var directoriesByParent = directories
+        foreach (var document in contents.Documents)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            await _documentRepository.DeleteAsync(document.Id, cancellationToken);
+        }
+    }
+
+   
+    private DirectoryTreeResponse BuildTree(Guid rootDirectoryId, DirectoryContentsResponse flatTree)
+    {
+        var directoriesById = flatTree.Directories.ToDictionary(d => d.Id);
+        var directoriesByParent = flatTree.Directories
             .GroupBy(d => d.ParentId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var documentsByDirectory = documents
+        var documentsByDirectory = flatTree.Documents
             .GroupBy(d => d.DirectoryId)
             .ToDictionary(g => g.Key, g => g.ToList());
-
-        DirectoryTreeResponse BuildTree(Guid rootDirectoryId)
+        
+        DirectoryTreeResponse Build(Guid dirId, HashSet<Guid> visited)
         {
-            var dir = directories.FirstOrDefault(d => d.Id == rootDirectoryId)
-                      ?? throw new InvalidOperationException($"Directory {rootDirectoryId} not found.");
+            if (!visited.Add(dirId))
+                throw new InvalidOperationException($"Cycle detected at directory {dirId}");
 
-            directoriesByParent.TryGetValue(rootDirectoryId, out var childDirs);
-            documentsByDirectory.TryGetValue(rootDirectoryId, out var childDocs);
+            if (!directoriesById.TryGetValue(dirId, out var dir))
+                throw new InvalidOperationException($"Directory {dirId} not found.");
+
+            directoriesByParent.TryGetValue(dirId, out var childDirs);
+            documentsByDirectory.TryGetValue(dirId, out var childDocs);
 
             childDirs ??= new List<DirectoryDetailsResponse>();
             childDocs ??= new List<DocumentDetailsResponse>();
 
             return new DirectoryTreeResponse(
                 dir,
-                childDirs.Select(d => BuildTree(d.Id)).ToList(),
+                childDirs.Select(d => Build(d.Id, visited)).ToList(),
                 childDocs
             );
         }
 
-        return BuildTree(directoryId);
+        return Build(rootDirectoryId, new HashSet<Guid>());
     }
 
 }
