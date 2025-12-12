@@ -24,15 +24,7 @@ namespace MyPortal.Services.Documents
         private readonly IFileStorageProvider _storageProvider;
         private readonly IValidationService _validationService;
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="DocumentService"/>.
-        /// </summary>
-        /// <param name="authorizationService">Service used to validate auth requirements.</param>
-        /// <param name="documentRepository">Repository used to retrieve documents from the database.</param>
-        /// <param name="documentTypeRepository">Repository used to retrieve document types from the database.</param>
-        /// <param name="storageKeyGenerator">Service used to generate storage keys.</param>
-        /// <param name="storageProvider">Service used to retrieve document contents from file storage.</param>
-        /// <param name="validationService">Service used to validate requests.</param>
+        
         public DocumentService(IAuthorizationService authorizationService, IDocumentRepository documentRepository,
             IDocumentTypeRepository documentTypeRepository,
             IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider,
@@ -45,9 +37,6 @@ namespace MyPortal.Services.Documents
             _validationService = validationService;
         }
         
-        /// <inheritdoc/>
-        /// <exception cref="ArgumentException">Thrown if there is no content to upload.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the document details cannot be loaded after creation.</exception>
         public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model,
             CancellationToken cancellationToken)
         {
@@ -96,9 +85,6 @@ namespace MyPortal.Services.Documents
             return response;
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="NotFoundException">Thrown if a document with the specified identifier is not found.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the document details cannot be loaded after update.</exception>
         public async Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model,
             CancellationToken cancellationToken)
         {
@@ -142,8 +128,6 @@ namespace MyPortal.Services.Documents
             return response;
         }
         
-        /// <inheritdoc/>
-        /// <exception cref="NotFoundException">Thrown if a document with the specified identifier is not found.</exception>
         public async Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true)
         {
             var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
@@ -172,8 +156,6 @@ namespace MyPortal.Services.Documents
             return await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="NotFoundException">Thrown if a document with the specified identifier is not found.</exception>
         public async Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId,
             CancellationToken cancellationToken)
         {
@@ -215,7 +197,6 @@ namespace MyPortal.Services.Documents
             }
         }
 
-        /// <inheritdoc/>
         public async Task<IList<LookupResponse>> GetDocumentTypesAsync(DocumentTypeFilter filter,
             CancellationToken cancellationToken)
         {

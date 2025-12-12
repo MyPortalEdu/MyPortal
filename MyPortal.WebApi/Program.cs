@@ -72,7 +72,7 @@ builder.Services.AddOptions<FileStorageOptions>()
     .Bind(builder.Configuration.GetSection("FileStorage"))
     .ValidateOnStart();
 
-builder.Services.AddFileStorage(builder.Configuration);
+builder.Services.AddFileStorage();
 
 builder.Services.AddOptions<CertificateOptions>()
     .Bind(builder.Configuration.GetSection("Certificates"));

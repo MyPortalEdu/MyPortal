@@ -1,72 +1,80 @@
 ﻿using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Documents;
-using MyPortal.Core.Entities;
 using MyPortal.Services.Filters;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Interfaces.Services
 {
     /// <summary>
-    /// Service used to manage <see cref="Document"/> entities.
+    /// Defines operations for creating, updating, deleting, and retrieving documents and document types within the
+    /// system.
     /// </summary>
+    /// <remarks>Implementations of this interface should ensure thread safety if accessed concurrently.
+    /// Methods support cancellation via <see cref="CancellationToken"/> to allow responsive and robust client
+    /// applications. Returned streams from <see cref="GetDocumentWithContentByIdAsync"/> must be disposed of by the
+    /// caller to avoid resource leaks.</remarks>
     public interface IDocumentService
     {
         /// <summary>
-        /// Creates a new document from the provided upsert model.
+        /// Creates a new document asynchronously using the specified request model.
         /// </summary>
-        /// <param name="model">The document data used to create the document.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <returns>
-        /// A <see cref="DocumentDetailsResponse"/> containing the created document's details.
-        /// </returns>
+        /// <param name="model">The request containing the document data to create or update. Cannot be null.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the details of the created or
+        /// updated document.</returns>
         Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Updates an existing document identified by <paramref name="documentId"/> with the provided model.
+        /// Asynchronously updates the specified document with new data and returns the updated document details.
         /// </summary>
-        /// <param name="documentId">The identifier of the document to update.</param>
-        /// <param name="model">The document data to apply to the existing document.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <returns>
-        /// A <see cref="DocumentDetailsResponse"/> containing the updated document's details.
-        /// </returns>
+        /// <param name="documentId">The unique identifier of the document to update.</param>
+        /// <param name="model">An object containing the updated values for the document. Cannot be null.</param>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests. Passing a canceled token will attempt to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the details of the updated
+        /// document.</returns>
         Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Deletes the document with the specified identifier.
+        /// Asynchronously deletes the specified document by its unique identifier. Supports both soft and hard deletion
+        /// based on the provided option.
         /// </summary>
-        /// <param name="documentId">The identifier of the document to delete.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <param name="softDelete">If true, this document will be flagged as deleted instead of removed.</param>
-        /// <returns>A <see cref="Task"/> that completes when the deletion is finished.</returns>
+        /// <remarks>If soft deletion is enabled, the document remains in storage and may be recoverable
+        /// depending on system capabilities. Hard deletion permanently removes the document and its data. The operation
+        /// is idempotent; attempting to delete a non-existent document has no effect.</remarks>
+        /// <param name="documentId">The unique identifier of the document to delete.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the delete operation.</param>
+        /// <param name="softDelete">If <see langword="true"/>, performs a soft delete by marking the document as deleted without removing it
+        /// from storage; if <see langword="false"/>, permanently removes the document.</param>
+        /// <returns>A task that represents the asynchronous delete operation.</returns>
         Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true);
 
         /// <summary>
-        /// Retrieves detailed information for a document by its identifier.
+        /// Asynchronously retrieves the details of a document by its unique identifier.
         /// </summary>
-        /// <param name="documentId">The identifier of the document to retrieve.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <returns>
-        /// A <see cref="DocumentDetailsResponse"/> with the document details if found; otherwise <c>null</c>.
-        /// </returns>
+        /// <param name="documentId">The unique identifier of the document to retrieve.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see
+        /// cref="DocumentDetailsResponse"/> with the document details if found; otherwise, <see langword="null"/>.</returns>
         Task<DocumentDetailsResponse?> GetDocumentByIdAsync(Guid documentId, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Retrieves a document including its contents by its identifier.
+        /// Asynchronously retrieves a document and its associated content by the specified document identifier.
         /// </summary>
-        /// <param name="documentId">The identifier of the document to retrieve.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <returns>A <see cref="DocumentContentResponse"/> with the document details and its contents.</returns>
-        /// <remarks>The stream returned with the <see cref="DocumentContentResponse"/> must be disposed of by the caller.</remarks>
+        /// <param name="documentId">The unique identifier of the document to retrieve.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see
+        /// cref="DocumentContentResponse"/> with the document and its content if found; otherwise, the result may
+        /// indicate that the document does not exist.</returns>
         Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId,
             CancellationToken cancellationToken);
         
         /// <summary>
-        /// Retrieves document types for the given filter.
+        /// Asynchronously retrieves a list of document types that match the specified filter criteria.
         /// </summary>
-        /// <param name="filter">The filer to apply when retrieving document types.</param>
-        /// <param name="cancellationToken">A token to cancel the operation.</param>
-        /// <returns>The list of document types.</returns>
+        /// <param name="filter">An object containing the criteria used to filter the document types. Cannot be null.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of document types
+        /// matching the filter. The list will be empty if no document types are found.</returns>
         Task<IList<LookupResponse>> GetDocumentTypesAsync(DocumentTypeFilter filter, CancellationToken cancellationToken);
     }
 }

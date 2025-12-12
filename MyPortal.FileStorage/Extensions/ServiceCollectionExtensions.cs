@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Options;
@@ -11,7 +10,7 @@ namespace MyPortal.FileStorage.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddFileStorage(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddFileStorage(this IServiceCollection services)
         {
             services.AddSingleton<IStorageKeyGenerator, DefaultStorageKeyGenerator>();
 
