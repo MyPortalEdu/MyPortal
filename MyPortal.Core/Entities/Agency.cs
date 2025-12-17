@@ -11,9 +11,9 @@ namespace MyPortal.Core.Entities
 
         public Guid DirectoryId { get; set; }
 
-        
-        [Required, StringLength(256)]
-        public required string Name { get; set; }
+
+        [Required, StringLength(256)] 
+        public string Name { get; set; } = null!;
 
         [Url, StringLength(100)]
         public string? Website { get; set; }

@@ -9,9 +9,9 @@ namespace MyPortal.Core.Entities
         public Guid WeekPatternId { get; set; }
 
         public DayOfWeek Weekday { get; set; }
-        
+
         [Required, StringLength(128)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = null!;
         
         public TimeSpan StartTime { get; set; }
         

@@ -6,9 +6,9 @@ namespace MyPortal.Core.Entities;
 [Table("ChargeBillingPeriods")]
 public class ChargeBillingPeriod : Entity
 {
-    [Required]
-    [StringLength(128)]
-    public required string Name { get; set; }
+    [Required] 
+    [StringLength(128)] 
+    public string Name { get; set; } = null!;
 
     public DateTime StartDate { get; set; }
 

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace MyPortal.Logic.Constants
+﻿namespace MyPortal.Common.Constants
 {
     public static class Genders
     {
@@ -17,11 +15,9 @@ namespace MyPortal.Logic.Constants
             { Unknown, "Unknown" }
         };
 
-        internal static string GetGenderLabel(string gender)
+        public static string? GetGenderLabel(string gender)
         {
-            var result = GenderLabels.TryGetValue(gender, out string genderLabel);
-
-            return genderLabel;
+            return GenderLabels.GetValueOrDefault(gender);
         }
     }
 }

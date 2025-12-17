@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.13.35913.81 d17.13
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPortal.WebApi", "MyPortal.WebApi\MyPortal.WebApi.csproj", "{7B67EB57-8142-4273-81D3-AC81A33A4D9E}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPortal.Tests", "MyPortal.Tests\MyPortal.Tests.csproj", "{2E2ECFF1-BD9F-429A-86A9-6CAFA6D13D6C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPortal.Contracts", "MyPortal.Contracts\MyPortal.Contracts.csproj", "{0D6CDDF9-49DD-447E-B48E-DD8CC595850E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPortal.FileStorage", "MyPortal.FileStorage\MyPortal.FileStorage.csproj", "{0F1D0E24-5648-40AE-B7D7-444152420C91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{0D6CDDF9-49DD-447E-B48E-DD8CC595850E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D6CDDF9-49DD-447E-B48E-DD8CC595850E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D6CDDF9-49DD-447E-B48E-DD8CC595850E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F1D0E24-5648-40AE-B7D7-444152420C91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F1D0E24-5648-40AE-B7D7-444152420C91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F1D0E24-5648-40AE-B7D7-444152420C91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F1D0E24-5648-40AE-B7D7-444152420C91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

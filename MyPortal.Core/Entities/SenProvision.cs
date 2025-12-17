@@ -14,8 +14,8 @@ namespace MyPortal.Core.Entities
 
         public DateTime EndDate { get; set; }
 
-        [Required] 
-        public required string Note { get; set; }
+        [Required]
+        public string Note { get; set; } = null!;
 
         public Student? Student { get; set; }
 

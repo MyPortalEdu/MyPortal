@@ -9,7 +9,7 @@ namespace MyPortal.Services.Interfaces.Repositories
 {
     public interface IPersonRepository : IEntityRepository<Person>
     {
-        Task<PageResult<PersonSummaryDto>> GetPeople(FilterOptions? filter = null, SortOptions? sort = null,
+        Task<PageResult<PersonSummaryResponse>> GetPeople(FilterOptions? filter = null, SortOptions? sort = null,
             PageOptions? paging = null, bool includeDeleted = false,
             CancellationToken cancellationToken = default);
     }

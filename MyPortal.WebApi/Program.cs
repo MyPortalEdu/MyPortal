@@ -19,13 +19,15 @@ using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
 using MyPortal.Data.Factories;
 using MyPortal.Data.Security;
-using MyPortal.Services.Configuration;
+using MyPortal.FileStorage.Extensions;
+using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Services;
 using MyPortal.WebApi.Transformers;
 using OpenIddict.Validation.AspNetCore;
 using QueryKit.Dialects;
+using PasswordOptions = MyPortal.Common.Options.PasswordOptions;
 
 static bool IsApiRequest(HttpRequest req)
 {
@@ -66,12 +68,14 @@ builder.Services.AddOptions<DatabaseOptions>()
         "Connection string must be provided.")
     .ValidateOnStart();
 
-builder.Services.AddOptions<StorageOptions>()
-    .Bind(builder.Configuration.GetSection("Storage"))
-.ValidateOnStart();
+builder.Services.AddOptions<FileStorageOptions>()
+    .Bind(builder.Configuration.GetSection("FileStorage"))
+    .ValidateOnStart();
 
-builder.Services.Configure<CertificateOptions>(
-    builder.Configuration.GetSection("Certificates"));
+builder.Services.AddFileStorage();
+
+builder.Services.AddOptions<CertificateOptions>()
+    .Bind(builder.Configuration.GetSection("Certificates"));
 
 QueryKit.Extensions.ConnectionExtensions.UseDialect(Dialect.SQLServer);
 
@@ -84,15 +88,18 @@ builder.Services.AddDbContext<AuthDbContext>(o =>
     o.UseSqlServer(builder.Configuration.GetSection("Database:ConnectionString").Value);
 });
 
+var passwordOpts = new PasswordOptions();
+builder.Configuration.GetSection("PasswordRequirements").Bind(passwordOpts);
+
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
     {
         options.User.RequireUniqueEmail = true;
 
-        options.Password.RequiredLength = PasswordRequirements.RequiredLength;
-        options.Password.RequireNonAlphanumeric = PasswordRequirements.RequireNonAlphanumeric;
-        options.Password.RequireLowercase = PasswordRequirements.RequireLowercase;
-        options.Password.RequireUppercase = PasswordRequirements.RequireUppercase;
-        options.Password.RequireDigit = PasswordRequirements.RequireDigit;
+        options.Password.RequiredLength = passwordOpts.RequiredLength;
+        options.Password.RequireNonAlphanumeric = passwordOpts.RequireNonAlphanumeric;
+        options.Password.RequireLowercase = passwordOpts.RequireLowercase;
+        options.Password.RequireUppercase = passwordOpts.RequireUppercase;
+        options.Password.RequireDigit = passwordOpts.RequireDigit;
     })
     .AddRoles<ApplicationRole>()
     .AddUserStore<SqlUserStore>()
@@ -184,7 +191,7 @@ builder.Services.AddAuthentication(options =>
         o.Events.OnValidatePrincipal = async ctx =>
         {
             var userManager = ctx.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await userManager.GetUserAsync(ctx.Principal);
+            var user = await userManager.GetUserAsync(ctx.Principal!);
             if (user is null || !user.IsEnabled)
             {
                 ctx.RejectPrincipal();

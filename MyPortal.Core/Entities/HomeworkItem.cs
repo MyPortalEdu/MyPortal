@@ -8,10 +8,10 @@ namespace MyPortal.Core.Entities
     public class HomeworkItem : Entity, IDirectoryEntity
     {
         public Guid DirectoryId { get; set; }
-        
-        [Required]
-        [StringLength(128)]
-        public required string Title { get; set; }
+
+        [Required] 
+        [StringLength(128)] 
+        public string Title { get; set; } = null!;
         
         [StringLength(256)]
         public string? Description { get; set; }

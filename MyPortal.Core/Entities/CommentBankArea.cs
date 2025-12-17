@@ -11,7 +11,7 @@ public class CommentBankArea : Entity
     public Guid CourseId { get; set; }
 
     [Required, StringLength(256)]
-    public required string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     public CommentBank? CommentBank { get; set; }
     public Course? Course { get; set; }

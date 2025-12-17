@@ -8,14 +8,14 @@ namespace MyPortal.Core.Entities
     public class Subject : Entity, ISoftDeleteEntity
     {
         public Guid SubjectCodeId { get; set; }
-        
+
         [Required]
         [StringLength(256)]
-        public required string Name { get; set; }
-        
+        public string Name { get; set; } = null!;
+
         [Required]
         [StringLength(5)]
-        public required string Code { get; set; }
+        public string Code { get; set; } = null!;
 
         public bool IsDeleted { get; set; }
 

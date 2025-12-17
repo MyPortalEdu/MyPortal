@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MyPortal.Auth.Policies;
+using MyPortal.Contracts.Models.Documents;
 using MyPortal.Contracts.Models.System.Users;
 
 namespace MyPortal.WebApi.Controllers;
@@ -76,11 +77,11 @@ public abstract class BaseApiController<TSelf> : ControllerBase
         {
             var key = e.Code switch
             {
-                "DuplicateUserName" or "InvalidUserName" => nameof(UserUpsertDto.Username),
-                "DuplicateEmail" or "InvalidEmail" => nameof(UserUpsertDto.Email),
+                "DuplicateUserName" or "InvalidUserName" => nameof(UserUpsertRequest.Username),
+                "DuplicateEmail" or "InvalidEmail" => nameof(UserUpsertRequest.Email),
                 "PasswordTooShort" or "PasswordRequiresNonAlphanumeric" or
                     "PasswordRequiresDigit" or "PasswordRequiresLower" or
-                    "PasswordRequiresUpper" or "PasswordMismatch" => nameof(UserUpsertDto.Password),
+                    "PasswordRequiresUpper" or "PasswordMismatch" => nameof(UserUpsertRequest.Password),
                 _ => string.Empty // model-level error
             };
 

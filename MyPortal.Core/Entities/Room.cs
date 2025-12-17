@@ -10,10 +10,10 @@ namespace MyPortal.Core.Entities
 
         [StringLength(10)] 
         public string? Code { get; set; }
-        
-        [Required]
-        [StringLength(256)]
-        public required string Name { get; set; }
+
+        [Required] 
+        [StringLength(256)] 
+        public string Name { get; set; } = null!;
 
         public int MaxGroupSize { get; set; }
 

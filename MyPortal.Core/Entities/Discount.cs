@@ -8,7 +8,7 @@ namespace MyPortal.Core.Entities
     {
         [Required]
         [StringLength(128)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = null!;
         
         public decimal Amount { get; set; }
 

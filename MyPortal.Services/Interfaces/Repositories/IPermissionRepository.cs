@@ -6,6 +6,6 @@ namespace MyPortal.Services.Interfaces.Repositories
 {
     public interface IPermissionRepository : IEntityReadRepository<Permission>
     {
-        Task<IList<PermissionDto>> GetPermissionsByUserIdAsync(Guid userId, CancellationToken cancellationToken);
+        Task<IList<PermissionResponse>> GetPermissionsByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     }
 }

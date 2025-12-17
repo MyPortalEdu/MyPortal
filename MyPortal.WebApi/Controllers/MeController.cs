@@ -35,7 +35,7 @@ namespace MyPortal.WebApi.Controllers
 
         [HttpPut("password")]
         [ValidateModel]
-        public async Task<IActionResult> ChangePasswordAsync([FromBody] UserChangePasswordDto model)
+        public async Task<IActionResult> ChangePasswordAsync([FromBody] UserChangePasswordRequest model)
         {
             if (!_user.UserId.HasValue)
             {
