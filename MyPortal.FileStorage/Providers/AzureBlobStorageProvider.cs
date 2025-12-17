@@ -35,7 +35,7 @@ namespace MyPortal.FileStorage.Providers
                 ContentType = contentType
             };
 
-            await blobClient.UploadAsync(content, headers, cancellationToken: cancellationToken);
+            await blobClient.UploadAsync(content, new BlobUploadOptions {HttpHeaders = headers }, cancellationToken);
         }
 
         public async Task<Stream> OpenReadFileAsync(string storageKey, CancellationToken cancellationToken)

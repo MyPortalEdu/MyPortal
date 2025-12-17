@@ -119,7 +119,14 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid entityId, Guid documentId, DocumentUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        if (await CanEditDocumentsAsync(entityId, documentId, cancellationToken))
+        var entity = await GetByIdAsync(entityId, cancellationToken);
+
+        if (entity == null)
+        {
+            throw new NotFoundException("Directory owner not found.");
+        }
+
+        if (await CanEditDocumentsAsync(entityId, entity.DirectoryId, cancellationToken))
         {
             return await _documentService.UpdateDocumentAsync(documentId, model, cancellationToken);
         }
@@ -130,7 +137,14 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task DeleteDocumentAsync(Guid entityId, Guid documentId, CancellationToken cancellationToken,
         bool softDelete = true)
     {
-        if (await CanEditDocumentsAsync(entityId, documentId, cancellationToken))
+        var entity = await GetByIdAsync(entityId, cancellationToken);
+
+        if (entity == null)
+        {
+            throw new NotFoundException("Directory owner not found.");
+        }
+
+        if (await CanEditDocumentsAsync(entityId, entity.DirectoryId, cancellationToken))
         {
             await _documentService.DeleteDocumentAsync(documentId, cancellationToken);
         }
@@ -143,7 +157,14 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task<DocumentDetailsResponse?> GetDocumentByIdAsync(Guid entityId, Guid documentId,
         CancellationToken cancellationToken)
     {
-        if (await CanViewDocumentsAsync(entityId, documentId, cancellationToken))
+        var entity = await GetByIdAsync(entityId, cancellationToken);
+
+        if (entity == null)
+        {
+            throw new NotFoundException("Directory owner not found.");
+        }
+
+        if (await CanViewDocumentsAsync(entityId, entity.DirectoryId, cancellationToken))
         {
             return await _documentService.GetDocumentByIdAsync(documentId, cancellationToken);
         }
@@ -154,7 +175,14 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid entityId, Guid documentId,
         CancellationToken cancellationToken)
     {
-        if (await CanViewDocumentsAsync(entityId, documentId, cancellationToken))
+        var entity = await GetByIdAsync(entityId, cancellationToken);
+
+        if (entity == null)
+        {
+            throw new NotFoundException("Directory owner not found.");
+        }
+
+        if (await CanViewDocumentsAsync(entityId, entity.DirectoryId, cancellationToken))
         {
             return await _documentService.GetDocumentWithContentByIdAsync(documentId, cancellationToken);
         }
@@ -169,7 +197,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
 
         if (entity == null)
         {
-            throw new NotFoundException("Entity not found.");
+            throw new NotFoundException("Directory owner not found.");
         }
         
         var rootTree = await _directoryService.GetFlatDirectoryTreeAsync(entity.DirectoryId, cancellationToken);
