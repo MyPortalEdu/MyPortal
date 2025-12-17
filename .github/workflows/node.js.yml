@@ -1,4 +1,4 @@
-name: MyPortal Frontend (SPA)
+name: MyPortal Frontend (Node CI)
 
 on:
   push:
@@ -22,16 +22,16 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-          cache-dependency-path: MyPortal.FrontEnd/myportal-spa/package-lock.json
+          cache-dependency-path: MyPortal.Frontend/myportal-spa/package-lock.json
 
-      - name: Install
-        working-directory: MyPortal.FrontEnd/myportal-spa
+      - name: Install dependencies
+        working-directory: MyPortal.Frontend/myportal-spa
         run: npm ci
 
-      - name: Build
-        working-directory: MyPortal.FrontEnd/myportal-spa
+      - name: Build Angular app
+        working-directory: MyPortal.Frontend/myportal-spa
         run: npm run build
 
-      - name: Test
-        working-directory: MyPortal.FrontEnd/myportal-spa
+      - name: Run tests (if present)
+        working-directory: MyPortal.Frontend/myportal-spa
         run: npm test --if-present
