@@ -100,7 +100,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         if (await CanViewDocumentsAsync(entityId, directoryId, cancellationToken))
         {
-            return await _directoryService.GetDirectoryTreeAsync(directoryId, cancellationToken);
+            return await _directoryService.GetDirectoryTreeAsync(directoryId, cancellationToken, includeDeletedDocs);
         }
         
         throw new ForbiddenException("You do not have permission to view this directory.");

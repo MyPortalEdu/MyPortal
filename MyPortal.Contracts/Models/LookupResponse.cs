@@ -3,5 +3,5 @@
 public class LookupResponse
 {
     public Guid Id { get; set; }
-    public string Description { get; set; }
+    public string Description { get; set; } = null!;
 }

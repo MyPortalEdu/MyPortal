@@ -12,8 +12,8 @@ BEGIN
 WITH RecursiveDirectories AS
          (
              -- Start with the root directory
-             SELECT Id, ParentId, Name, IsPrivate
-             FROM dbo.Directories
+             SELECT r.Id, r.ParentId, r.Name, r.IsPrivate
+             FROM dbo.Directories r
              WHERE Id = @rootDirectoryId
 
              UNION ALL

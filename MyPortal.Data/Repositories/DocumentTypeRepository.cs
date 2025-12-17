@@ -21,8 +21,8 @@ public class DocumentTypeRepository : EntityRepository<DocumentType>, IDocumentT
         var query = result.Where(t => t.Active);
 
         query = query.Where(t =>
-            (!filter.General || t.General) && (!filter.Student || t.Student) && (!filter.Contact || t.Contact) &&
-            (!filter.Send || t.IsSend) && (!filter.Staff || t.Staff));
+            (filter.General && t.General) || (filter.Student && t.Student) || (filter.Contact && t.Contact) ||
+            (filter.Send && t.IsSend) || (filter.Staff && t.Staff));
 
         return query.Select(t => t.ToResponseModel()).ToList();
     }

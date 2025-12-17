@@ -117,7 +117,7 @@ namespace MyPortal.Services.Documents
 
             if (documentInDb.IsPrivate && _authorizationService.GetCurrentUserType() != UserType.Staff)
             {
-                throw new ForbiddenException("You do not have permission to create private documents.");
+                throw new ForbiddenException("You do not have permission to make documents private.");
             }
 
             await _documentRepository.UpdateAsync(documentInDb, cancellationToken);

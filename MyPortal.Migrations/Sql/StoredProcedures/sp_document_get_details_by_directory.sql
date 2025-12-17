@@ -34,7 +34,7 @@ SELECT
     D.[Description],
     D.[IsPrivate],
     D.[IsDeleted]
-FROM [Documents]
+FROM [dbo].[Documents] [D]
 INNER JOIN dbo.[DocumentTypes] [DT] ON [D].[TypeId] = [DT].[Id]
 INNER JOIN dbo.[Users] [UC] ON [D].[CreatedById] = [UC].[Id]
 INNER JOIN dbo.[Users] [UM] ON [D].[LastModifiedById] = [UM].[Id]

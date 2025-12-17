@@ -58,7 +58,7 @@ public class DirectoryService : BaseService, IDirectoryService
 
         if (_authorizationService.GetCurrentUserType() != UserType.Staff && model.IsPrivate)
         {
-            throw new ForbiddenException("You do not have permission to create private directories.");
+            throw new ForbiddenException("You do not have permission to make directories private.");
         }
 
         directory.IsPrivate = model.IsPrivate;
