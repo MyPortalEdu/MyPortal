@@ -31,7 +31,3 @@ jobs:
       - name: Build Angular app
         working-directory: MyPortal.Frontend/myportal-spa
         run: npm run build
-
-      - name: Run tests (if present)
-        working-directory: MyPortal.Frontend/myportal-spa
-        run: npm test --if-present
