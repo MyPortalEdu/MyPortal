@@ -14,25 +14,25 @@ namespace MyPortal.Core.Entities
         
         [StringLength(128)]
         public string? Apartment { get; set; }
-        
+
         [Required]
         [StringLength(256)]
-        public required string Street { get; set; }
+        public string Street { get; set; } = null!;
         
         [StringLength(256)]
         public string? District { get; set; }
-        
+
         [Required, StringLength(256)]
-        public required string Town { get; set; }
-        
+        public string Town { get; set; } = null!;
+
         [Required, StringLength(256)]
-        public required string County { get; set; }
+        public string County { get; set; } = null!;
 
         [Required, StringLength(128)]
-        public required string Postcode { get; set; }
-        
+        public string Postcode { get; set; } = null!;
+
         [Required, StringLength(128)]
-        public required string Country { get; set; }
+        public string Country { get; set; } = null!;
 
         public bool IsValidated { get; set; }
     }

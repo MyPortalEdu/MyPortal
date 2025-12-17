@@ -11,13 +11,13 @@ namespace MyPortal.Core.Entities
         public Guid ExamSeasonId { get; set; }
 
         [Required]
-        public required string SeriesCode { get; set; }
+        public string SeriesCode { get; set; } = null!;
 
         [Required]
-        public required string Code { get; set; }
+        public string Code { get; set; } = null!;
 
         [Required]
-        public required string Title { get; set; }
+        public string Title { get; set; } = null!;
 
         public ExamSeason? Season { get; set; }
         public ExamBoard? ExamBoard { get; set; }

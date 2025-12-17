@@ -7,10 +7,10 @@ namespace MyPortal.Core.Entities
     public class StudyTopic : LookupEntity
     {
         public Guid CourseId { get; set; }
-        
+
         [Required]
         [StringLength(128)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         public int Order { get; set; }
 

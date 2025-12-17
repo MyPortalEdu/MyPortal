@@ -11,7 +11,7 @@ namespace MyPortal.Core.Entities
         public DateTime Date { get; set; }
 
         [Required] 
-        public required string Note { get; set; }
+        public string Note { get; set; } = null!;
 
         public Person? Person { get; set; }
     }

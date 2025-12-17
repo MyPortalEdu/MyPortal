@@ -11,14 +11,14 @@ namespace MyPortal.Core.Entities
         public Guid? LocalAuthorityId { get; set; }
 
         public int EstablishmentNumber { get; set; }
-        
+
         [Required]
         [StringLength(128)]
-        public required string Urn { get; set; }
-        
+        public string Urn { get; set; } = null!;
+
         [Required]
         [StringLength(128)]
-        public required string Uprn { get; set; }
+        public string Uprn { get; set; } = null!;
 
         public Guid SchoolPhaseId { get; set; }
 

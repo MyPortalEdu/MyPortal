@@ -7,9 +7,8 @@ namespace MyPortal.Core.Entities
     [Table("StudentGroups")]
     public class StudentGroup : LookupEntity, ISystemEntity
     {
-        [Required]
-        [StringLength(10)]
-        public required string Code { get; set; }
+        [Required] [StringLength(10)] 
+        public string Code { get; set; } = null!;
 
         public Guid? PromoteToGroupId { get; set; }
 

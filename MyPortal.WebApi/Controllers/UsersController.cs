@@ -54,7 +54,7 @@ public class UsersController : BaseApiController<UsersController>
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.EditUsers)]
-    public async Task<IActionResult> CreateUserAsync([FromBody] UserUpsertDto model)
+    public async Task<IActionResult> CreateUserAsync([FromBody] UserUpsertRequest model)
     {
         var result = await _userService.CreateUserAsync(model, CancellationToken);
         
@@ -65,7 +65,7 @@ public class UsersController : BaseApiController<UsersController>
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.EditUsers)]
-    public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid userId, [FromBody] UserUpsertDto model)
+    public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid userId, [FromBody] UserUpsertRequest model)
     {
         var result = await _userService.UpdateUserAsync(userId, model, CancellationToken);
         
@@ -76,7 +76,7 @@ public class UsersController : BaseApiController<UsersController>
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.EditUsers)]
-    public async Task<IActionResult> SetPasswordAsync([FromRoute] Guid userId, [FromBody] UserSetPasswordDto model)
+    public async Task<IActionResult> SetPasswordAsync([FromRoute] Guid userId, [FromBody] UserSetPasswordRequest model)
     {
         var result = await _userService.SetPasswordAsync(userId, model, CancellationToken);
         

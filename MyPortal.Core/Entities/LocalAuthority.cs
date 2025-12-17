@@ -7,10 +7,10 @@ namespace MyPortal.Core.Entities
     public class LocalAuthority : Entity
     {
         public int LeaCode { get; set; }
-        
+
         [Required]
-        [StringLength(128)]
-        public required string Name { get; set; }
+        [StringLength(128)] 
+        public string Name { get; set; } = null!;
 
         [Url, StringLength(100)]
         public string? Website { get; set; }

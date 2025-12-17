@@ -11,8 +11,8 @@ namespace MyPortal.Core
         }
 
         [Required]
-        [StringLength(256)]
-        public required string Description { get; set; }
+        [StringLength(256)] 
+        public string Description { get; set; } = null!;
 
         public bool Active { get; set; }
     }

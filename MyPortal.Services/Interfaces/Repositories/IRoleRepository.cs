@@ -9,9 +9,9 @@ namespace MyPortal.Services.Interfaces.Repositories
 {
     public interface IRoleRepository : IEntityRepository<Role>
     {
-        Task<RoleDetailsDto?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken);
+        Task<RoleDetailsResponse?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken);
 
-        Task<PageResult<RoleSummaryDto>> GetRolesAsync(FilterOptions? filter = null, SortOptions? sort = null,
+        Task<PageResult<RoleSummaryResponse>> GetRolesAsync(FilterOptions? filter = null, SortOptions? sort = null,
             PageOptions? paging = null, CancellationToken cancellationToken = default);
     }
 }

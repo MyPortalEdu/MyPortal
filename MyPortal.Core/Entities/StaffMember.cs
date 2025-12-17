@@ -10,10 +10,10 @@ namespace MyPortal.Core.Entities
         public Guid? LineManagerId { get; set; }
 
         public Guid PersonId { get; set; }
-        
-        [Required]
-        [StringLength(128)]
-        public required string Code { get; set; }
+
+        [Required] 
+        [StringLength(128)] 
+        public string Code { get; set; } = null!;
 
         [StringLength(50)]
         public string? BankName { get; set; }

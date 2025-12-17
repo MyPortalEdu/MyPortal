@@ -6,8 +6,8 @@ namespace MyPortal.Core.Entities
     [Table("SenStatus")]
     public class SenStatus : LookupEntity
     {
-        [Required]
-        [StringLength(1)]
-        public required string Code { get; set; }
+        [Required] 
+        [StringLength(1)] 
+        public string Code { get; set; } = null!;
     }
 }

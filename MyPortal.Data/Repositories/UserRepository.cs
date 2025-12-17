@@ -19,36 +19,36 @@ public class UserRepository : EntityRepository<User>, IUserRepository
     {
     }
 
-    public async Task<UserDetailsDto?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
         
         var sql = @"[dbo].[sp_user_get_details_by_id]";
         
-        var result = await conn.ExecuteStoredProcedureAsync<UserDetailsDto>(sql, new { userId }, 
+        var result = await conn.ExecuteStoredProcedureAsync<UserDetailsResponse>(sql, new { userId }, 
             cancellationToken: cancellationToken);
 
         return result.FirstOrDefault();
     }
 
-    public async Task<UserInfoDto?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<UserInfoResponse?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
 
         var sql = @"[dbo].[sp_user_get_info_by_id]";
 
-        var result = await conn.ExecuteStoredProcedureAsync<UserInfoDto>(sql, new { userId }, 
+        var result = await conn.ExecuteStoredProcedureAsync<UserInfoResponse>(sql, new { userId }, 
             cancellationToken: cancellationToken);
         return result.FirstOrDefault();
     }
 
-    public async Task<PageResult<UserSummaryDto>> GetUsersAsync(FilterOptions? filter = null, SortOptions? sort = null,
+    public async Task<PageResult<UserSummaryResponse>> GetUsersAsync(FilterOptions? filter = null, SortOptions? sort = null,
         PageOptions? paging = null,
         CancellationToken cancellationToken = default)
     {
         var sql = SqlResourceLoader.Load("System.Users.GetUsers.sql");
 
-        var result = await GetListPagedAsync<UserSummaryDto>(sql, null, filter, sort, paging, false, cancellationToken);
+        var result = await GetListPagedAsync<UserSummaryResponse>(sql, null, filter, sort, paging, false, cancellationToken);
         
         return result;
     }

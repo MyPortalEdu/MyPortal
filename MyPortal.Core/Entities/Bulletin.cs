@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MyPortal.Core.Interfaces;
 
@@ -12,10 +12,10 @@ namespace MyPortal.Core.Entities
         public DateTime? ExpiresAt { get; set; }
 
         [Required, StringLength(50)] 
-        public string Title { get; set; } = "";
+        public string Title { get; set; } = null!;
 
         [Required] 
-        public string Detail { get; set; } = "";
+        public string Detail { get; set; } = null!;
 
         public bool IsPrivate { get; set; }
 

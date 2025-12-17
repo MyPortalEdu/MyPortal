@@ -926,20 +926,32 @@ END
 IF OBJECT_ID(N'[dbo].[Documents]', N'U') IS NULL
 BEGIN
 CREATE TABLE [dbo].[Documents] (
+    -- Audit
     [Id] uniqueidentifier NOT NULL,
     [CreatedById] uniqueidentifier NOT NULL,
     [CreatedByIpAddress] nvarchar(45) NOT NULL,
-    [CreatedAt] datetime2(7) NOT NULL CONSTRAINT DF_Documents_CreatedAt DEFAULT SYSUTCDATETIME(),
+    [CreatedAt] datetime2(7) NOT NULL,   
     [LastModifiedById] uniqueidentifier NOT NULL,
     [LastModifiedByIpAddress] nvarchar(40) NOT NULL,
-    [LastModifiedAt] datetime2(7) NOT NULL CONSTRAINT DF_Documents_LastModifiedAt DEFAULT SYSUTCDATETIME(),
+    [LastModifiedAt] datetime2(7) NOT NULL,    
+
+    -- Classification
     [TypeId] uniqueidentifier NOT NULL,
     [DirectoryId] uniqueidentifier NOT NULL,
-    [FileId] uniqueidentifier NULL,
+
+    -- File-related columns       
+    [StorageKey] nvarchar(512) NOT NULL,
+    [FileName] nvarchar(256) NOT NULL,
+    [ContentType] nvarchar(256) NOT NULL,
+    [SizeBytes] bigint NULL,
+    [Hash] nvarchar(128) NULL,
+
+    -- Document-level metadata
     [Title] nvarchar(256) NOT NULL,
     [Description] nvarchar(256) NULL,
     [IsPrivate] bit NOT NULL,
     [IsDeleted] bit NOT NULL,
+
     CONSTRAINT PK_Documents PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1417,18 +1429,6 @@ CREATE TABLE [dbo].[Exclusions] (
     [AppealResultDate] datetime2(7) NULL,
     [AppealResultId] uniqueidentifier NULL,
     CONSTRAINT PK_Exclusions PRIMARY KEY CLUSTERED ([Id])
-    );
-END
-
-
-IF OBJECT_ID(N'[dbo].[Files]', N'U') IS NULL
-BEGIN
-CREATE TABLE [dbo].[Files] (
-    [Id] uniqueidentifier NOT NULL,
-    [FileId] nvarchar(256) NOT NULL,
-    [FileName] nvarchar(256) NOT NULL,
-    [ContentType] nvarchar(256) NOT NULL,
-    CONSTRAINT PK_Files PRIMARY KEY CLUSTERED ([Id])
     );
 END
 
@@ -4012,19 +4012,6 @@ END
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Documents_TypeId' AND object_id = OBJECT_ID(N'[dbo].[Documents]'))
 BEGIN
 CREATE INDEX [IX_Documents_TypeId] ON [dbo].[Documents]([TypeId]);
-END
-
-
-IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Documents_FileId_Files' AND parent_object_id = OBJECT_ID(N'[dbo].[Documents]'))
-BEGIN
-ALTER TABLE [dbo].[Documents]
-    ADD CONSTRAINT [FK_Documents_FileId_Files] FOREIGN KEY ([FileId]) REFERENCES [dbo].[Files]([Id]);
-END
-
-
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Documents_FileId' AND object_id = OBJECT_ID(N'[dbo].[Documents]'))
-BEGIN
-CREATE INDEX [IX_Documents_FileId] ON [dbo].[Documents]([FileId]);
 END
 
 

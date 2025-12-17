@@ -7,10 +7,10 @@ namespace MyPortal.Core.Entities
     public class Grade : Entity
     {
         public Guid GradeSetId { get; set; }
-        
+
         [Required]
         [StringLength(25)]
-        public required string Code { get; set; }
+        public string Code { get; set; } = null!;
 
         [StringLength(50)] 
         public string? Description { get; set; }

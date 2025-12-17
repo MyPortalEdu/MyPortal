@@ -1,11 +1,10 @@
-﻿using MyPortal.Contracts.Models.Schools;
-using MyPortal.Core.Entities;
+﻿using MyPortal.Contracts.Models.School;
 using MyPortal.Services.Interfaces.Repositories.Base;
 
 namespace MyPortal.Services.Interfaces.Repositories;
 
-public interface ISchoolRepository : IEntityRepository<School>
+public interface ISchoolRepository : IEntityRepository<Core.Entities.School>
 {
-    Task<SchoolDetailsDto?> GetLocalSchoolAsync(CancellationToken cancellationToken);
-    Task<SchoolDetailsDto?> GetDetailsByIdAsync(Guid schoolId, CancellationToken cancellationToken);
+    Task<SchoolDetailsResponse?> GetLocalSchoolAsync(CancellationToken cancellationToken);
+    Task<SchoolDetailsResponse?> GetDetailsByIdAsync(Guid schoolId, CancellationToken cancellationToken);
 }

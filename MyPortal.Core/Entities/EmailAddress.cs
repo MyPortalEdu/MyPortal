@@ -11,11 +11,11 @@ namespace MyPortal.Core.Entities
         public Guid? PersonId { get; set; }
 
         public Guid? AgencyId { get; set; }
-        
+
         [Required]
         [EmailAddress]
         [StringLength(128)]
-        public required string Address { get; set; }
+        public string Address { get; set; } = null!;
 
         public bool IsMain { get; set; }
 

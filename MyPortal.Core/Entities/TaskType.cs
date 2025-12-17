@@ -9,8 +9,8 @@ namespace MyPortal.Core.Entities
     {
         public bool IsPersonal { get; set; }
 
-        [Required] 
-        public required string ColourCode { get; set; }
+        [Required]
+        public string ColourCode { get; set; } = null!;
 
         public bool IsSystem { get; set; }
     }

@@ -14,12 +14,12 @@ namespace MyPortal.Core.Entities
         public decimal? MinMark { get; set; }
         
         public decimal? MaxMark { get; set; }
-        
-        [Required, StringLength(128)]
-        public required string Name { get; set; }
-        
-        [Required, StringLength(50)]
-        public required string ColumnHeading { get; set; }
+
+        [Required, StringLength(128)] 
+        public string Name { get; set; } = null!;
+
+        [Required, StringLength(50)] 
+        public string ColumnHeading { get; set; } = null!;
 
         // Only visible to staff users
         public bool IsPrivate { get; set; }

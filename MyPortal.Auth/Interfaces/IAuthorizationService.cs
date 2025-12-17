@@ -1,4 +1,4 @@
-﻿using MyPortal.Common.Enums;
+using MyPortal.Common.Enums;
 
 namespace MyPortal.Auth.Interfaces;
 

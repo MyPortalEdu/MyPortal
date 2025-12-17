@@ -1,4 +1,4 @@
-﻿using System.Security.Authentication;
+using System.Security.Authentication;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;

@@ -1,4 +1,4 @@
-﻿using System.Security.Authentication;
+using System.Security.Authentication;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
@@ -70,7 +70,7 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
         return await base.UpdateAsync(entity, cancellationToken);
     }
 
-    public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default, bool softDelete = true)
     {
         var entity = await GetByIdAsync(id, cancellationToken);
 
@@ -79,6 +79,6 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             throw new SystemEntityException("You cannot delete a system entity.");
         }
 
-        return await base.DeleteAsync(id, cancellationToken);
+        return await base.DeleteAsync(id, cancellationToken, softDelete);
     }
 }

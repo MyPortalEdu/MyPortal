@@ -52,7 +52,7 @@ public class RolesController : BaseApiController<RolesController>
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.EditRoles)]
-    public async Task<IActionResult> CreateRoleAsync([FromBody] RoleUpsertDto model)
+    public async Task<IActionResult> CreateRoleAsync([FromBody] RoleUpsertRequest model)
     {
         var result = await _roleService.CreateRoleAsync(model, CancellationToken);
 
@@ -63,7 +63,7 @@ public class RolesController : BaseApiController<RolesController>
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.EditRoles)]
-    public async Task<IActionResult> UpdateRoleAsync([FromRoute] Guid roleId, [FromBody] RoleUpsertDto model)
+    public async Task<IActionResult> UpdateRoleAsync([FromRoute] Guid roleId, [FromBody] RoleUpsertRequest model)
     {
         var result = await _roleService.UpdateRoleAsync(roleId, model, CancellationToken);
 
