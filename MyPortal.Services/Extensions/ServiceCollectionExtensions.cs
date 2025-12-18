@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Core.Entities;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Services;
@@ -27,6 +28,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ISchoolService, SchoolService>();
         services.AddScoped<IUserService, UserService>();
+
+        services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
         
         services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
 

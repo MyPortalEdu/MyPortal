@@ -183,18 +183,21 @@ public class DirectoryService : BaseService, IDirectoryService
         }
     }
 
-   
+
     private DirectoryTreeResponse BuildTree(Guid rootDirectoryId, DirectoryContentsResponse flatTree)
     {
         var directoriesById = flatTree.Directories.ToDictionary(d => d.Id);
+
+        // Key by non-null ParentId (Guid), ignore roots (ParentId == null)
         var directoriesByParent = flatTree.Directories
-            .GroupBy(d => d.ParentId)
+            .Where(d => d.ParentId.HasValue)
+            .GroupBy(d => d.ParentId!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var documentsByDirectory = flatTree.Documents
             .GroupBy(d => d.DirectoryId)
             .ToDictionary(g => g.Key, g => g.ToList());
-        
+
         DirectoryTreeResponse Build(Guid dirId, HashSet<Guid> visited)
         {
             if (!visited.Add(dirId))
@@ -209,14 +212,17 @@ public class DirectoryService : BaseService, IDirectoryService
             childDirs ??= new List<DirectoryDetailsResponse>();
             childDocs ??= new List<DocumentDetailsResponse>();
 
+            // IMPORTANT: don't reuse the same visited set across siblings
+            // or we'll get false "cycle detected" when different branches share an ancestor
             return new DirectoryTreeResponse(
                 dir,
-                childDirs.Select(d => Build(d.Id, visited)).ToList(),
+                childDirs.Select(d => Build(d.Id, new HashSet<Guid>(visited))).ToList(),
                 childDocs
             );
         }
 
         return Build(rootDirectoryId, new HashSet<Guid>());
     }
+
 
 }

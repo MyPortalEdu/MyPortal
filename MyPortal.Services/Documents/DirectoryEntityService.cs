@@ -7,7 +7,7 @@ using MyPortal.Services.Interfaces.Services;
 
 namespace MyPortal.Services.Documents;
 
-public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, IDirectoryEntityService where TDirectoryEntity : IDirectoryEntity
+public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntity : IDirectoryEntity
 {
     protected readonly IDirectoryService DirectoryService;
     private readonly IDocumentService _documentService;
@@ -66,6 +66,18 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         if (await CanEditDocumentsAsync(entityId, directoryId, cancellationToken))
         {
+            var entity = await GetByIdAsync(entityId, cancellationToken);
+
+            if (entity == null)
+            {
+                throw new NotFoundException("Directory owner not found.");
+            }
+
+            if (entity.DirectoryId == directoryId)
+            {
+                throw new ForbiddenException("You cannot delete the root directory of this entity.");
+            }
+
             await DirectoryService.DeleteDirectoryAsync(directoryId, cancellationToken);
         }
         else

@@ -1,4 +1,5 @@
 ﻿using MyPortal.Contracts.Models.Documents;
+using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Services.Interfaces.Services;
 
@@ -11,7 +12,7 @@ namespace MyPortal.Services.Interfaces.Services;
 /// updating directories and documents, retrieving details and contents, and deleting items with options for soft
 /// deletion. All methods accept a cancellation token to support cooperative cancellation of asynchronous operations.
 /// Thread safety and transactional guarantees depend on the specific implementation.</remarks>
-public interface IDirectoryEntityService
+public interface IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntity : IDirectoryEntity
 {
     /// <summary>
     /// Creates a new directory for the specified entity asynchronously using the provided details.

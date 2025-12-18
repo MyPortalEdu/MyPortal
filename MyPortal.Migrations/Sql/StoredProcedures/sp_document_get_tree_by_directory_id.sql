@@ -3,7 +3,7 @@ SET ANSI_NULLS ON;
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[sp_document_get_tree_by_directory_id] 
-    @rootDirectoryId UNIQUEIDENTIFIER,
+    @directoryId UNIQUEIDENTIFIER,
     @includeDeleted BIT
 AS
 BEGIN
@@ -14,7 +14,7 @@ WITH RecursiveDirectories AS
              -- Start with the root directory
              SELECT r.Id, r.ParentId, r.Name, r.IsPrivate
              FROM dbo.Directories r
-             WHERE Id = @rootDirectoryId
+             WHERE Id = @directoryId
 
              UNION ALL
 
@@ -25,19 +25,11 @@ WITH RecursiveDirectories AS
          )
 SELECT [D].Id,
     [D].CreatedById,
-    CASE
-    WHEN UC.PersonId IS NOT NULL
-    THEN dbo.[fn_person_get_name](UC.PersonId, 3, 0 ,1)
-    ELSE UC.Username
-END AS CreatedByName,
+    COALESCE(UCN.[Name], UC.[UserName]) AS CreatedByName,
     [D].CreatedByIpAddress,
     [D].CreatedAt,
     [D].LastModifiedById,
-    CASE
-       WHEN UM.PersonId IS NOT NULL
-           THEN dbo.[fn_person_get_name](UM.PersonId, 3, 0 ,1)
-       ELSE UM.Username
-END AS LastModifiedByName,
+    COALESCE(UMN.[Name], UM.[UserName]) AS LastModifiedByName,
     [D].LastModifiedByIpAddress,
     [D].LastModifiedAt,
     [D].TypeId,
@@ -57,6 +49,8 @@ INNER JOIN RecursiveDirectories dir ON [D].DirectoryId = dir.Id
 INNER JOIN dbo.[DocumentTypes] [DT] ON [D].[TypeId] = [DT].[Id]
 INNER JOIN dbo.[Users] [UC] ON [D].[CreatedById] = [UC].[Id]
 INNER JOIN dbo.[Users] [UM] ON [D].[LastModifiedById] = [UM].[Id]
+OUTER APPLY dbo.fn_person_get_name (UC.[PersonId], 3, 0, 1) AS UCN
+OUTER APPLY dbo.fn_person_get_name (UM.[PersonId], 3, 0, 1) AS UMN
 WHERE ([D].IsDeleted = 0 OR @includeDeleted = 1)
 ORDER BY dir.Name, [D].Title
 

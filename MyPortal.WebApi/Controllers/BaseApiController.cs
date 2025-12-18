@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MyPortal.Auth.Policies;
 using MyPortal.Contracts.Models.System.Users;
+using MyPortal.WebApi.Models.Listing;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
@@ -107,4 +111,24 @@ public abstract class BaseApiController<TSelf> : ControllerBase
 
     protected IActionResult UnauthorizedProblem(string detail, string? type = null) =>
         Problem(StatusCodes.Status401Unauthorized, "Unauthorized", detail, type);
+
+    protected ListingOptions GetListingOptions(int page, int pageSize, FilterOptions? filter, SortOptions? sort)
+    {
+        var options = new ListingOptions();
+
+        options.PageOptions = PageOptions.Create(page, pageSize);
+
+        if (sort?.Criteria is { Length: > 0 })
+        {
+            options.SortOptions = sort;
+        }
+
+        if (filter?.Groups is { Length: > 0 } &&
+            filter.Groups.Any(g => g.Criteria is { Length: > 0 }))
+        {
+            options.FilterOptions = filter;
+        }
+
+        return options;
+    }
 }

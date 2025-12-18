@@ -136,9 +136,9 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             throw new NotFoundException("Bulletin not found.");
         }
 
-        await DirectoryService.DeleteDirectoryAsync(bulletin.DirectoryId, cancellationToken);
-
         await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken);
+
+        await DirectoryService.DeleteDirectoryAsync(bulletin.DirectoryId, cancellationToken);
     }
 
     public async Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, CancellationToken cancellationToken)
@@ -191,6 +191,21 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         ApplyFilterCriteria(filter, BoolJoin.And, excludePrivate);
 
         return filter!;
+
+        var filterOptions = new FilterOptions
+        {
+            Groups = new[]
+            {
+                new FilterGroup
+                {
+                    Criteria = new[]
+                    {
+                        new FilterCriterion
+                            { ColumnName = "IsPrivate", Value = false, Operator = FilterOperator.Equals }
+                    }
+                }
+            }
+        };
     }
 
     public override async Task<Bulletin?> GetByIdAsync(Guid entityId, CancellationToken cancellationToken)

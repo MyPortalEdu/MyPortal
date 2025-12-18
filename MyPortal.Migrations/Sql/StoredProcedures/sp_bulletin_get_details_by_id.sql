@@ -27,7 +27,7 @@ SELECT
 FROM dbo.Bulletins B
          INNER JOIN dbo.Users CBU ON CBU.Id = B.CreatedById
          INNER JOIN dbo.Users MBU ON MBU.Id = B.LastModifiedById
-    OUTER APPLY dbo.fn_person_get_name (CBU.PersonId, 2, 0, 0) AS CBUN
+OUTER APPLY dbo.fn_person_get_name (CBU.PersonId, 2, 0, 0) AS CBUN
 OUTER APPLY dbo.fn_person_get_name (MBU.PersonId, 2, 0, 0) AS MBUN
 WHERE B.Id = @bulletinId
 END;

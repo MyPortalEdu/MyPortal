@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using MyPortal.Auth.Cache;
 using MyPortal.Auth.Certificates;
 using MyPortal.Auth.Constants;
@@ -23,10 +24,13 @@ using MyPortal.FileStorage.Extensions;
 using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure.Middleware;
+using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
 using MyPortal.WebApi.Transformers;
 using OpenIddict.Validation.AspNetCore;
 using QueryKit.Dialects;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Sorting;
 using PasswordOptions = MyPortal.Common.Options.PasswordOptions;
 
 static bool IsApiRequest(HttpRequest req)
@@ -249,12 +253,25 @@ builder.Services.AddMyPortalServices();
 builder.Services.AddControllers(o =>
 {
     o.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+
+    o.ModelBinderProviders.Insert(0, new Base64JsonBinderProvider<FilterOptions>());
+    o.ModelBinderProviders.Insert(0, new Base64JsonBinderProvider<SortOptions>());
 });
 
 builder.Services.AddRazorPages();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "MyPortal Web API",
+        Version = "v1"
+    });
+
+    c.OperationFilter<AuthorizeCheckOperationFilter>();
+});
 
 builder.Services.AddTransient<ExceptionMiddleware>();
 

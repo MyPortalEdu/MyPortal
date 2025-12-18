@@ -7,6 +7,6 @@
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public bool IsPrivate { get; set; }
-        public IFormFile File { get; set; }
+        public IFormFile? File { get; set; }
     }
 }

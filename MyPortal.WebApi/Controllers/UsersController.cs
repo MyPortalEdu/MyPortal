@@ -43,13 +43,17 @@ public class UsersController : BaseApiController<UsersController>
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewUsers)]
     [ProducesResponseType(typeof(PageResult<UserSummaryResponse>), 200)]
-    public async Task<IActionResult> GetUsersAsync([FromQuery] FilterOptions filter, [FromQuery] SortOptions sort, [FromQuery] PageOptions paging)
+    public async Task<IActionResult> GetUsersAsync([FromQuery] int page, [FromQuery] int pageSize,
+        [FromQuery] FilterOptions filter, [FromQuery] SortOptions sort)
     {
-        var result = await _userService.GetUsersAsync(filter, sort, paging, CancellationToken);
-        
+        var options = GetListingOptions(page, pageSize, filter, sort);
+
+        var result = await _userService.GetUsersAsync(options.FilterOptions, options.SortOptions, options.PageOptions,
+            CancellationToken);
+
         return Ok(result);
     }
-    
+
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]

@@ -1,10 +1,14 @@
-using System.Security.Authentication;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Interfaces;
 using MyPortal.Services.Interfaces.Repositories.Base;
 using QueryKit.Repositories;
+using QueryKit.Repositories.Enums;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
+using System.Security.Authentication;
 
 namespace MyPortal.Data.Repositories.Base;
 
@@ -16,6 +20,33 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
     public EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
     {
         _authorizationService = authorizationService;
+    }
+
+    private SortOptions DefaultSort = new SortOptions
+    {
+        Criteria = new[] { new SortCriterion { ColumnName = "Id", Direction = SortDirection.Ascending } }
+    };
+
+    protected override Task<PageResult<T>> GetListPagedAsync<T>(string sql, object? parameters, FilterOptions? filter, SortOptions? sort, PageOptions? paging,
+        bool includeDeleted = false, CancellationToken cancellationToken = new CancellationToken())
+    {
+        if (paging != null && sort == null)
+        {
+            sort = DefaultSort;
+        }
+
+        return base.GetListPagedAsync<T>(sql, parameters, filter, sort, paging, includeDeleted, cancellationToken);
+    }
+
+    public override Task<PageResult<TEntity>> GetListPagedAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+        bool includeDeleted = false, CancellationToken cancellationToken = new CancellationToken())
+    {
+        if (paging != null && sort == null)
+        {
+            sort = DefaultSort;
+        }
+
+        return base.GetListPagedAsync(filter, sort, paging, includeDeleted, cancellationToken);
     }
 
     public override Task<TEntity> InsertAsync(TEntity entity, CancellationToken cancellationToken = default)

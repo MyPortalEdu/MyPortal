@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MyPortal.Core.Interfaces;
+using QueryKit.Repositories.Attributes;
 
 namespace MyPortal.Core.Entities
 {
@@ -37,6 +38,7 @@ namespace MyPortal.Core.Entities
         // Only visible to staff users who have access to the directory
         public bool IsPrivate { get; set; }
 
+        [SoftDelete]
         public bool IsDeleted { get; set; }
 
         public Directory? Directory { get; set; }

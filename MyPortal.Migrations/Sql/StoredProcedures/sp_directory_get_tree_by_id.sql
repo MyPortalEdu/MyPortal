@@ -3,7 +3,7 @@ SET ANSI_NULLS ON;
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[sp_directory_get_tree_by_id] 
-    @rootDirectoryId UNIQUEIDENTIFIER
+    @directoryId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -13,7 +13,7 @@ WITH RecursiveDirectories AS
              -- Start with the root directory
              SELECT Id, ParentId, Name, IsPrivate
              FROM dbo.Directories
-             WHERE Id = @rootDirectoryId
+             WHERE Id = @directoryId
 
              UNION ALL
 
