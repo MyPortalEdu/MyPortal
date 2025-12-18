@@ -8,6 +8,7 @@ public static class RepositoryRegistry
     public static void AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IDirectoryRepository, DirectoryRepository>();
+        services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IBulletinRepository, BulletinRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();

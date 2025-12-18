@@ -26,7 +26,7 @@ public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepositor
         var sql = "[dbo].[sp_bulletin_get_details_by_id]";
 
         var p = new { bulletinId };
-        
+
         var result = await conn.ExecuteStoredProcedureAsync<BulletinDetailsDto>(sql, p, cancellationToken: cancellationToken);
 
         return result.FirstOrDefault();

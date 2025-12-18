@@ -11,12 +11,13 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-public class BulletinsController : BaseApiController<BulletinsController>
+public class BulletinsController : BaseDirectoryEntityController<BulletinsController>
 {
     private readonly IBulletinService _bulletinService;
 
     public BulletinsController(ProblemDetailsFactory problemFactory, ILogger<BulletinsController> logger,
-        IBulletinService bulletinService) : base(problemFactory, logger)
+        IDirectoryEntityService directoryEntityService, IBulletinService bulletinService) : base(problemFactory, logger,
+        directoryEntityService)
     {
         _bulletinService = bulletinService;
     }
@@ -47,7 +48,7 @@ public class BulletinsController : BaseApiController<BulletinsController>
     public async Task<IActionResult> CreateBulletinAsync([FromBody] BulletinUpsertDto model)
     {
         var result = await _bulletinService.CreateBulletinAsync(model, CancellationToken);
-        
+
         return Ok(result);
     }
 
@@ -75,7 +76,7 @@ public class BulletinsController : BaseApiController<BulletinsController>
     public async Task<IActionResult> DeleteBulletinAsync([FromRoute] Guid bulletinId)
     {
         await _bulletinService.DeleteBulletinAsync(bulletinId, CancellationToken);
-        
+
         return NoContent();
     }
 }

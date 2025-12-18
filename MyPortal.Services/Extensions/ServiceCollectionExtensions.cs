@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IValidationService, ValidationService>();
         services.AddScoped<IPermissionService, PermissionService>();
 
+        services.AddScoped<IBulletinService, BulletinService>();
         services.AddScoped<IDirectoryService, DirectoryService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IPersonService, PersonService>();

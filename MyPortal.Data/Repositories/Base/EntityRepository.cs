@@ -13,7 +13,7 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
 {
     private readonly IAuthorizationService _authorizationService;
     
-    protected EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
+    public EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
     {
         _authorizationService = authorizationService;
     }

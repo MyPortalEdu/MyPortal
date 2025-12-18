@@ -9,14 +9,14 @@ namespace MyPortal.Services.Documents;
 
 public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, IDirectoryEntityService where TDirectoryEntity : IDirectoryEntity
 {
-    private readonly IDirectoryService _directoryService;
+    protected readonly IDirectoryService DirectoryService;
     private readonly IDocumentService _documentService;
     private readonly IValidationService _validationService;
 
     protected DirectoryEntityService(IAuthorizationService authorizationService, IDirectoryService directoryService,
         IDocumentService documentService, IValidationService validationService) : base(authorizationService)
     {
-        _directoryService = directoryService;
+        DirectoryService = directoryService;
         _documentService = documentService;
         _validationService = validationService;
     }
@@ -40,12 +40,12 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         await _validationService.ValidateAsync(model);
 
-        if (!await CanEditDocumentsAsync(entityId, model.ParentId, cancellationToken))
+        if (!await CanEditDocumentsAsync(entityId, model.ParentId!.Value, cancellationToken))
         {
             throw new ForbiddenException("You do not have permission to create directories here.");
         }
 
-        return await _directoryService.CreateDirectoryAsync(model, cancellationToken);
+        return await DirectoryService.CreateDirectoryAsync(model, cancellationToken);
     }
 
     public async Task<DirectoryDetailsResponse> UpdateDirectoryAsync(Guid entityId, Guid directoryId,
@@ -59,14 +59,14 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
             throw new ForbiddenException("You do not have permission to edit this directory.");
         }
 
-        return await _directoryService.UpdateDirectoryAsync(directoryId, model, cancellationToken);
+        return await DirectoryService.UpdateDirectoryAsync(directoryId, model, cancellationToken);
     }
 
     public async Task DeleteDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken cancellationToken)
     {
         if (await CanEditDocumentsAsync(entityId, directoryId, cancellationToken))
         {
-            await _directoryService.DeleteDirectoryAsync(directoryId, cancellationToken);
+            await DirectoryService.DeleteDirectoryAsync(directoryId, cancellationToken);
         }
         else
         {
@@ -79,7 +79,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         if (await CanViewDocumentsAsync(entityId, directoryId, cancellationToken))
         {
-            return await _directoryService.GetDirectoryByIdAsync(directoryId, cancellationToken);
+            return await DirectoryService.GetDirectoryByIdAsync(directoryId, cancellationToken);
         }
 
         throw new ForbiddenException("You do not have permission to view this directory.");
@@ -89,7 +89,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         if (await CanViewDocumentsAsync(entityId, directoryId, cancellationToken))
         {
-            return await _directoryService.GetDirectoryContentsAsync(directoryId, cancellationToken);
+            return await DirectoryService.GetDirectoryContentsAsync(directoryId, cancellationToken);
         }
         
         throw new ForbiddenException("You do not have permission to view this directory.");
@@ -100,7 +100,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         if (await CanViewDocumentsAsync(entityId, directoryId, cancellationToken))
         {
-            return await _directoryService.GetDirectoryTreeAsync(directoryId, cancellationToken, includeDeletedDocs);
+            return await DirectoryService.GetDirectoryTreeAsync(directoryId, cancellationToken, includeDeletedDocs);
         }
         
         throw new ForbiddenException("You do not have permission to view this directory.");
@@ -200,7 +200,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
             throw new NotFoundException("Directory owner not found.");
         }
         
-        var rootTree = await _directoryService.GetFlatDirectoryTreeAsync(entity.DirectoryId, cancellationToken);
+        var rootTree = await DirectoryService.GetFlatDirectoryTreeAsync(entity.DirectoryId, cancellationToken);
 
         return rootTree.Directories.Any(d => d.Id == directoryId);
     }

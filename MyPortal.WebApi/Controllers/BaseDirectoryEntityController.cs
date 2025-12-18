@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Net.Http.Headers;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Services.Interfaces.Services;
+using MyPortal.WebApi.Models.Documents;
 
 namespace MyPortal.WebApi.Controllers;
 
-public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
+
+public abstract class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
 {
     private readonly IDirectoryEntityService _directoryEntityService;
 
@@ -17,7 +19,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpGet]
-    [Route("api/[controller]/{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}")]
     public async Task<IActionResult> GetDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         var result = await _directoryEntityService.GetDirectoryByIdAsync(entityId, directoryId, CancellationToken);
@@ -26,7 +28,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpGet]
-    [Route("api/[controller]/{entityId:guid}/attachments/directories/{directoryId:guid}/contents")]
+    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}/contents")]
     public async Task<IActionResult> GetDirectoryContentsAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         var result = await _directoryEntityService.GetDirectoryContentsAsync(entityId, directoryId, CancellationToken);
@@ -35,7 +37,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpGet]
-    [Route("api/[controller]/{entityId:guid}/attachments/directories/{directoryId:guid}/tree")]
+    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}/tree")]
     public async Task<IActionResult> GetDirectoryTreeAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         var result = await _directoryEntityService.GetDirectoryTreeAsync(entityId, directoryId, CancellationToken);
@@ -44,7 +46,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpPost]
-    [Route("api/[controller]/{entityId:guid}/attachments/directories")]
+    [Route("{entityId:guid}/attachments/directories")]
     public async Task<IActionResult> CreateDirectoryAsync([FromRoute] Guid entityId,
         [FromBody] DirectoryUpsertRequest model)
     {
@@ -54,7 +56,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpPut]
-    [Route("api/[controller]/{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}")]
     public async Task<IActionResult> UpdateDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId,
         [FromBody] DirectoryUpsertRequest model)
     {
@@ -64,7 +66,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpDelete]
-    [Route("api/[controller]/{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}")]
     public async Task<IActionResult> DeleteDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         await _directoryEntityService.DeleteDirectoryAsync(entityId, directoryId, CancellationToken);
@@ -73,7 +75,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpGet]
-    [Route("api/[controller]/{entityId:guid}/attachments/{documentId:guid}")]
+    [Route("{entityId:guid}/attachments/{documentId:guid}")]
     public async Task<IActionResult> GetDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
         var result = await _directoryEntityService.GetDocumentByIdAsync(entityId, documentId, CancellationToken);
@@ -82,7 +84,7 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpGet]
-    [Route("api/[controller]/{entityId:guid}/attachments/{documentId:guid}/download")]
+    [Route("{entityId:guid}/attachments/{documentId:guid}/download")]
     public async Task<IActionResult> DownloadDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
         var document =
@@ -102,16 +104,25 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpPost]
-    [Route("api/[controller]/{entityId:guid}/attachments/documents")]
-    public async Task<IActionResult> CreateDocumentsAsync([FromRoute] Guid entityId,
-        [FromForm] DocumentUpsertRequest model, [FromForm] IFormFile file)
+    [Route("{entityId:guid}/attachments/documents")]
+    public async Task<IActionResult> CreateDocumentAsync([FromRoute] Guid entityId,
+        [FromBody] DocumentUpsertForm form)
     {
-        await using var stream = file.OpenReadStream();
+        await using var stream = form.File.OpenReadStream();
+
+        var model = new DocumentUpsertRequest
+        {
+            TypeId = form.TypeId,
+            DirectoryId = form.DirectoryId,
+            Title = form.Title,
+            Description = form.Description,
+            IsPrivate = form.IsPrivate
+        };
         
-        model.FileName = file.FileName;
+        model.FileName = form.File.FileName;
         model.Content = stream;
-        model.ContentType = file.ContentType;
-        model.SizeBytes = file.Length;
+        model.ContentType = form.File.ContentType;
+        model.SizeBytes = form.File.Length;
         
         var result = await _directoryEntityService.CreateDocumentAsync(entityId, model, CancellationToken);
         
@@ -119,27 +130,33 @@ public class BaseDirectoryEntityController<TSelf> : BaseApiController<TSelf>
     }
 
     [HttpPut]
-    [Route("api/[controller]/{entityId:guid}/attachments/documents/{documentId:guid}")]
+    [Route("{entityId:guid}/attachments/documents/{documentId:guid}")]
     public async Task<IActionResult> UpdateDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId,
-        [FromForm] DocumentUpsertRequest model, [FromForm] IFormFile? file)
+        [FromBody] DocumentUpsertForm form)
     {
-        await using var stream = file?.OpenReadStream();
+        await using var stream = form.File.OpenReadStream();
 
-        if (stream != null && file != null)
+        var model = new DocumentUpsertRequest
         {
-            model.FileName = file.FileName;
-            model.Content = stream;
-            model.ContentType = file.ContentType;
-            model.SizeBytes = file.Length;
-        }
-        
+            TypeId = form.TypeId,
+            DirectoryId = form.DirectoryId,
+            Title = form.Title,
+            Description = form.Description,
+            IsPrivate = form.IsPrivate
+        };
+
+        model.FileName = form.File.FileName;
+        model.Content = stream;
+        model.ContentType = form.File.ContentType;
+        model.SizeBytes = form.File.Length;
+
         var result = await _directoryEntityService.UpdateDocumentAsync(entityId, documentId, model, CancellationToken);
         
         return Ok(result);
     }
 
     [HttpDelete]
-    [Route("api/[controller]/{entityId:guid}/attachments/{documentId:guid}")]
+    [Route("{entityId:guid}/attachments/{documentId:guid}")]
     public async Task<IActionResult> DeleteDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
         await _directoryEntityService.DeleteDocumentAsync(entityId, documentId, CancellationToken);

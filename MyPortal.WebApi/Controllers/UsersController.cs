@@ -26,7 +26,7 @@ public class UsersController : BaseApiController<UsersController>
     [HttpGet("{userId:guid}")]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewUsers)]
-    [ProducesResponseType(typeof(UserDetailsDto), 200)]
+    [ProducesResponseType(typeof(UserDetailsResponse), 200)]
     public async Task<IActionResult> GetUserDetailsByIdAsync([FromRoute] Guid userId)
     {
         var result = await _userService.GetDetailsByIdAsync(userId, CancellationToken);
@@ -42,7 +42,7 @@ public class UsersController : BaseApiController<UsersController>
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewUsers)]
-    [ProducesResponseType(typeof(PageResult<UserSummaryDto>), 200)]
+    [ProducesResponseType(typeof(PageResult<UserSummaryResponse>), 200)]
     public async Task<IActionResult> GetUsersAsync([FromQuery] FilterOptions filter, [FromQuery] SortOptions sort, [FromQuery] PageOptions paging)
     {
         var result = await _userService.GetUsersAsync(filter, sort, paging, CancellationToken);
