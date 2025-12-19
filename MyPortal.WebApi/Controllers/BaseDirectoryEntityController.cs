@@ -19,8 +19,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         _directoryEntityService = directoryEntityService;
     }
 
-    [HttpGet]
-    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [HttpGet("{entityId:guid}/attachments/directories/{directoryId:guid}")]
     public async Task<IActionResult> GetDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         var result = await _directoryEntityService.GetDirectoryByIdAsync(entityId, directoryId, CancellationToken);
@@ -28,8 +27,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpGet]
-    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}/contents")]
+    [HttpGet("{entityId:guid}/attachments/directories/{directoryId:guid}/contents")]
     public async Task<IActionResult> GetDirectoryContentsAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         var result = await _directoryEntityService.GetDirectoryContentsAsync(entityId, directoryId, CancellationToken);
@@ -37,8 +35,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpGet]
-    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}/tree")]
+    [HttpGet("{entityId:guid}/attachments/directories/{directoryId:guid}/tree")]
     public async Task<IActionResult> GetDirectoryTreeAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         var result = await _directoryEntityService.GetDirectoryTreeAsync(entityId, directoryId, CancellationToken);
@@ -46,8 +43,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpPost]
-    [Route("{entityId:guid}/attachments/directories")]
+    [HttpPost("{entityId:guid}/attachments/directories")]
     public async Task<IActionResult> CreateDirectoryAsync([FromRoute] Guid entityId,
         [FromBody] DirectoryUpsertRequest model)
     {
@@ -56,8 +52,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpPut]
-    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [HttpPut("{entityId:guid}/attachments/directories/{directoryId:guid}")]
     public async Task<IActionResult> UpdateDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId,
         [FromBody] DirectoryUpsertRequest model)
     {
@@ -66,8 +61,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpDelete]
-    [Route("{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [HttpDelete("{entityId:guid}/attachments/directories/{directoryId:guid}")]
     public async Task<IActionResult> DeleteDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         await _directoryEntityService.DeleteDirectoryAsync(entityId, directoryId, CancellationToken);
@@ -75,8 +69,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return NoContent();
     }
 
-    [HttpGet]
-    [Route("{entityId:guid}/attachments/documents/{documentId:guid}")]
+    [HttpGet("{entityId:guid}/attachments/documents/{documentId:guid}")]
     public async Task<IActionResult> GetDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
         var result = await _directoryEntityService.GetDocumentByIdAsync(entityId, documentId, CancellationToken);
@@ -84,8 +77,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpGet]
-    [Route("{entityId:guid}/attachments/documents/{documentId:guid}/download")]
+    [HttpGet("{entityId:guid}/attachments/documents/{documentId:guid}/download")]
     public async Task<IActionResult> DownloadDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
         var document =
@@ -104,8 +96,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
             enableRangeProcessing: document.Content.CanSeek);
     }
 
-    [HttpPost]
-    [Route("{entityId:guid}/attachments/documents")]
+    [HttpPost("{entityId:guid}/attachments/documents")]
     public async Task<IActionResult> CreateDocumentAsync([FromRoute] Guid entityId,
         [FromForm] DocumentUpsertForm form)
     {
@@ -133,8 +124,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpPut]
-    [Route("{entityId:guid}/attachments/documents/{documentId:guid}")]
+    [HttpPut("{entityId:guid}/attachments/documents/{documentId:guid}")]
     public async Task<IActionResult> UpdateDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId,
         [FromForm] DocumentUpsertForm form)
     {
@@ -162,8 +152,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
         return Ok(result);
     }
 
-    [HttpDelete]
-    [Route("{entityId:guid}/attachments/documents/{documentId:guid}")]
+    [HttpDelete("{entityId:guid}/attachments/documents/{documentId:guid}")]
     public async Task<IActionResult> DeleteDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
         await _directoryEntityService.DeleteDocumentAsync(entityId, documentId, CancellationToken);

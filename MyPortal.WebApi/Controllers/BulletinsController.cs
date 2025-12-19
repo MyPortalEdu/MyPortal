@@ -6,6 +6,7 @@ using MyPortal.Auth.Enums;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Services;
+using MyPortal.WebApi.Infrastructure.Attributes;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Sorting;
 
@@ -47,6 +48,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     }
 
     [HttpPost]
+    [ValidateModel]
     [Permission(PermissionMode.RequireAll, Permissions.School.EditSchoolBulletins)]
     public async Task<IActionResult> CreateBulletinAsync([FromBody] BulletinUpsertDto model)
     {
@@ -56,6 +58,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     }
 
     [HttpPut("{bulletinId:guid}")]
+    [ValidateModel]
     [Permission(PermissionMode.RequireAll, Permissions.School.EditSchoolBulletins)]
     public async Task<IActionResult> UpdateBulletinAsync([FromRoute] Guid bulletinId, [FromBody] BulletinUpsertDto model)
     {
@@ -65,6 +68,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     }
 
     [HttpPut("{bulletinId:guid}/approve")]
+    [ValidateModel]
     [Permission(PermissionMode.RequireAll, Permissions.School.ApproveSchoolBulletins)]
     public async Task<IActionResult> ApproveBulletinAsync([FromRoute] Guid bulletinId,
         [FromBody] BulletinApprovalDto model)
