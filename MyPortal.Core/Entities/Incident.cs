@@ -4,7 +4,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("Incidents")]
-    public class Incident : AuditableEntity, ISoftDeleteEntity
+    public class Incident : AuditableEntity, ISoftDeleteEntity, IAcademicYearEntity
     {
         public Guid AcademicYearId { get; set; }
 

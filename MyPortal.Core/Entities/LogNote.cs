@@ -5,7 +5,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("LogNotes")]
-    public class LogNote : AuditableEntity, ISoftDeleteEntity
+    public class LogNote : AuditableEntity, ISoftDeleteEntity, IAcademicYearEntity
     {
         public Guid LogNoteTypeId { get; set; }
 

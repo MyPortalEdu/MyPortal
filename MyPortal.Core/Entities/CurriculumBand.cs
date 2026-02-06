@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
     [Table("CurriculumBands")]
-    public class CurriculumBand : Entity
+    public class CurriculumBand : Entity, IAcademicYearEntity
     {
         public Guid AcademicYearId { get; set; }
 

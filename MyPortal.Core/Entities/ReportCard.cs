@@ -1,12 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
     [Table("ReportCards")]
-    public class ReportCard : Entity
+    public class ReportCard : Entity, IAcademicYearEntity
     {
         public Guid StudentId { get; set; }
+
+        public Guid AcademicYearId { get; set; }
 
         public Guid BehaviourTypeId { get; set; }
 
@@ -20,6 +23,7 @@ namespace MyPortal.Core.Entities
         public bool IsActive { get; set; }
 
         public Student? Student { get; set; }
+        public AcademicYear? AcademicYear { get; set; }
         public IncidentType? BehaviourType { get; set; }
     }
 }
