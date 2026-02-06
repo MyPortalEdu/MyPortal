@@ -12,23 +12,4 @@ public class BaseService
     {
         _authorizationService = authorizationService;
     }
-    
-    protected FilterOptions ApplyFilterCriteria(FilterOptions? filter, BoolJoin join, params FilterCriterion[] criteria)
-    {
-        var groups = filter?.Groups.ToList() ?? [];
-
-        var filterGroup = new FilterGroup
-        {
-            Criteria = criteria,
-            Join = join
-        };
-        
-        groups.Add(filterGroup);
-
-        return new FilterOptions
-        {
-            Groups = groups.ToArray(),
-            Join = BoolJoin.And
-        };
-    }
 }

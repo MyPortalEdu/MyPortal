@@ -1,6 +1,6 @@
 ﻿namespace MyPortal.Contracts.Models.Bulletins;
 
-public class BulletinSummaryDto
+public class BulletinSummaryResponse
 {
     public Guid Id { get; set; }
 

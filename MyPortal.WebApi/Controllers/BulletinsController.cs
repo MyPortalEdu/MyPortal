@@ -50,7 +50,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     [HttpPost]
     [ValidateModel]
     [Permission(PermissionMode.RequireAll, Permissions.School.EditSchoolBulletins)]
-    public async Task<IActionResult> CreateBulletinAsync([FromBody] BulletinUpsertDto model)
+    public async Task<IActionResult> CreateBulletinAsync([FromBody] BulletinUpsertRequest model)
     {
         var result = await _bulletinService.CreateBulletinAsync(model, CancellationToken);
 
@@ -60,7 +60,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     [HttpPut("{bulletinId:guid}")]
     [ValidateModel]
     [Permission(PermissionMode.RequireAll, Permissions.School.EditSchoolBulletins)]
-    public async Task<IActionResult> UpdateBulletinAsync([FromRoute] Guid bulletinId, [FromBody] BulletinUpsertDto model)
+    public async Task<IActionResult> UpdateBulletinAsync([FromRoute] Guid bulletinId, [FromBody] BulletinUpsertRequest model)
     {
         await _bulletinService.UpdateBulletinAsync(bulletinId, model, CancellationToken);
 
@@ -71,7 +71,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     [ValidateModel]
     [Permission(PermissionMode.RequireAll, Permissions.School.ApproveSchoolBulletins)]
     public async Task<IActionResult> ApproveBulletinAsync([FromRoute] Guid bulletinId,
-        [FromBody] BulletinApprovalDto model)
+        [FromBody] BulletinApprovalRequest model)
     {
         await _bulletinService.UpdateBulletinApprovalAsync(bulletinId, model.IsApproved, CancellationToken);
 

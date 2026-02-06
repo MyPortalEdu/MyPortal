@@ -7,6 +7,7 @@ using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Services;
 using MyPortal.Services.People;
 using MyPortal.Services.School;
+using MyPortal.Services.School.Bulletins;
 using MyPortal.Services.Security;
 using MyPortal.Services.System;
 using MyPortal.Services.Validation;

@@ -1,6 +1,6 @@
 ﻿namespace MyPortal.Contracts.Models.Bulletins;
 
-public class BulletinUpsertDto
+public class BulletinUpsertRequest
 {
     public DateTime? ExpiresAt { get; set; }
     
