@@ -4,6 +4,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
+using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
 using MyPortal.Services.People;
 using MyPortal.Services.School;
@@ -18,6 +19,17 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMyPortalServices(this IServiceCollection services)
     {
+        services.AddServices();
+
+        services.AddAccessPolicies();
+        
+        services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
+
+        return services;
+    }
+
+    private static void AddServices(this IServiceCollection services)
+    {
         services.AddScoped<IAuthorizationService, AuthorizationService>();
         services.AddScoped<IValidationService, ValidationService>();
         services.AddScoped<IPermissionService, PermissionService>();
@@ -31,9 +43,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserService, UserService>();
 
         services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
-        
-        services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
+    }
 
-        return services;
+    private static void AddAccessPolicies(this IServiceCollection services)
+    {
+        services.AddScoped<IAccessPolicy<Bulletin, BulletinVisibilityScope>, BulletinAccessPolicy>();
     }
 }

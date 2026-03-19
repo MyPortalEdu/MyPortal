@@ -5,7 +5,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("StudentGroups")]
-    public class StudentGroup : LookupEntity, ISystemEntity, IAcademicYearEntity
+    public class StudentGroup : LookupEntity, IAuditableEntity, ISystemEntity, IAcademicYearEntity, IVersionedEntity
     {
         [Required] [StringLength(10)] 
         public string Code { get; set; } = null!;
@@ -26,5 +26,16 @@ namespace MyPortal.Core.Entities
         public AcademicYear? AcademicYear { get; set; }
         public StudentGroup? PromoteToGroup { get; set; }
         public StudentGroupSupervisor? MainSupervisor { get; set; }
+        
+        // Audit
+        public Guid CreatedById { get; set; }
+        public string CreatedByIpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid LastModifiedById { get; set; }
+        public string LastModifiedByIpAddress { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+        public User? CreatedBy { get; set; }
+        public User? LastModifiedBy { get; set; }
+        public long Version { get; set; }
     }
 }

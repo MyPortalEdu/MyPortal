@@ -8,7 +8,7 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 namespace MyPortal.WebApi.Controllers
 {
     [Route("api/me")]
-    public class MeController : BaseApiController<MeController>
+    public sealed class MeController : BaseApiController<MeController>
     {
         private readonly IUserService _userService;
         private readonly ICurrentUser _user;

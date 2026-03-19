@@ -1,4 +1,6 @@
-﻿using MyPortal.Auth.Interfaces;
+﻿using Dapper;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Data.Repositories.Base;
@@ -21,7 +23,10 @@ namespace MyPortal.Data.Repositories
 
             var sql = @"[dbo].[sp_directory_get_details_by_id]";
 
-            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, new { directoryId },
+            var param = new
+                { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
+
+            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, param,
                 cancellationToken: cancellationToken);
 
             return result.FirstOrDefault();
@@ -33,7 +38,10 @@ namespace MyPortal.Data.Repositories
 
             var sql = @"[dbo].[sp_directory_get_details_by_parent_id]";
 
-            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, new { directoryId },
+            var param = new
+                { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
+
+            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, param,
                 cancellationToken: cancellationToken);
 
             return result.ToList();
@@ -46,10 +54,27 @@ namespace MyPortal.Data.Repositories
 
             var sql = @"[dbo].[sp_directory_get_tree_by_id]";
 
-            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, new { directoryId },
+            var param = new
+                { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
+
+            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, param,
                 cancellationToken: cancellationToken);
 
             return result.ToList();
+        }
+
+        public async Task<bool> IsInSubtreeAsync(Guid rootDirectoryId, Guid candidateDirectoryId,
+            CancellationToken cancellationToken)
+        {
+            using var conn = _factory.Create();
+
+            var sql = @"[dbo].[sp_directory_is_in_subtree]";
+
+            var param = new { rootDirectoryId, candidateDirectoryId };
+
+            var result = await conn.ExecuteScalarAsync<bool>(sql, param);
+
+            return result;
         }
     }
 }

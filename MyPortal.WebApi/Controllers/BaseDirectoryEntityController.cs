@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Net.Http.Headers;
+using MyPortal.Auth.Attributes;
+using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Interfaces;
 using MyPortal.Services.Interfaces.Services;
+using MyPortal.WebApi.Infrastructure.Attributes;
 using MyPortal.WebApi.Models.Documents;
 
 namespace MyPortal.WebApi.Controllers;
@@ -44,6 +47,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     }
 
     [HttpPost("{entityId:guid}/attachments/directories")]
+    [UserType(UserType.Staff)]
     public async Task<IActionResult> CreateDirectoryAsync([FromRoute] Guid entityId,
         [FromBody] DirectoryUpsertRequest model)
     {
@@ -53,6 +57,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     }
 
     [HttpPut("{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [UserType(UserType.Staff)]
     public async Task<IActionResult> UpdateDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId,
         [FromBody] DirectoryUpsertRequest model)
     {
@@ -62,6 +67,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     }
 
     [HttpDelete("{entityId:guid}/attachments/directories/{directoryId:guid}")]
+    [UserType(UserType.Staff)]
     public async Task<IActionResult> DeleteDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
         await _directoryEntityService.DeleteDirectoryAsync(entityId, directoryId, CancellationToken);
@@ -97,6 +103,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     }
 
     [HttpPost("{entityId:guid}/attachments/documents")]
+    [ValidateModel]
     public async Task<IActionResult> CreateDocumentAsync([FromRoute] Guid entityId,
         [FromForm] DocumentUpsertForm form)
     {
@@ -125,6 +132,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     }
 
     [HttpPut("{entityId:guid}/attachments/documents/{documentId:guid}")]
+    [ValidateModel]
     public async Task<IActionResult> UpdateDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId,
         [FromForm] DocumentUpsertForm form)
     {

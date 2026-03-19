@@ -6,7 +6,7 @@ using QueryKit.Repositories.Attributes;
 namespace MyPortal.Core.Entities
 {
     [Table("Documents")]
-    public class Document : AuditableEntity, IDirectoryEntity, ISoftDeleteEntity
+    public class Document : Entity, IAuditableEntity, IDirectoryEntity, ISoftDeleteEntity, IVersionedEntity
     {
         // Classification
         public Guid TypeId { get; set; }
@@ -44,5 +44,16 @@ namespace MyPortal.Core.Entities
         public Directory? Directory { get; set; }
 
         public DocumentType? Type { get; set; }
+        
+        // Audit
+        public Guid CreatedById { get; set; }
+        public string CreatedByIpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid LastModifiedById { get; set; }
+        public string LastModifiedByIpAddress { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+        public User? CreatedBy { get; set; }
+        public User? LastModifiedBy { get; set; }
+        public long Version { get; set; }
     }
 }

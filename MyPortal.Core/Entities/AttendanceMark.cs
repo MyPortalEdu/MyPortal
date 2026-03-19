@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace MyPortal.Core.Entities
 {
     [Table("AttendanceMarks")]
-    public class AttendanceMark : AuditableEntity
+    public class AttendanceMark : Entity
     {
         public Guid StudentId { get; set; }
 

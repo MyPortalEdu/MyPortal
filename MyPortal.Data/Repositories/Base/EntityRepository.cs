@@ -15,35 +15,35 @@ namespace MyPortal.Data.Repositories.Base;
 public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IEntityRepository<TEntity>
     where TEntity : class, IEntity
 {
-    private readonly IAuthorizationService _authorizationService;
+    protected IAuthorizationService AuthorizationService { get; }
     
     public EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
     {
-        _authorizationService = authorizationService;
+        AuthorizationService = authorizationService;
     }
 
-    private SortOptions DefaultSort = new SortOptions
+    private readonly SortOptions _defaultSort = new()
     {
         Criteria = new[] { new SortCriterion { ColumnName = "Id", Direction = SortDirection.Ascending } }
     };
 
     protected override Task<PageResult<T>> GetListPagedAsync<T>(string sql, object? parameters, FilterOptions? filter, SortOptions? sort, PageOptions? paging,
-        bool includeDeleted = false, CancellationToken cancellationToken = new CancellationToken())
+        bool includeDeleted = false, CancellationToken cancellationToken = new())
     {
         if (paging != null && sort == null)
         {
-            sort = DefaultSort;
+            sort = _defaultSort;
         }
 
         return base.GetListPagedAsync<T>(sql, parameters, filter, sort, paging, includeDeleted, cancellationToken);
     }
 
     public override Task<PageResult<TEntity>> GetListPagedAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
-        bool includeDeleted = false, CancellationToken cancellationToken = new CancellationToken())
+        bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
         if (paging != null && sort == null)
         {
-            sort = DefaultSort;
+            sort = _defaultSort;
         }
 
         return base.GetListPagedAsync(filter, sort, paging, includeDeleted, cancellationToken);
@@ -53,14 +53,14 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
     {
         if (entity is IAuditableEntity auditable)
         {
-            var userId = _authorizationService.GetCurrentUserId();
+            var userId = AuthorizationService.GetCurrentUserId();
 
             if (!userId.HasValue)
             {
                 throw new AuthenticationException("Not authenticated.");
             }
             
-            var ipAddress = _authorizationService.GetCurrentUserIpAddress() ?? "";
+            var ipAddress = AuthorizationService.GetCurrentUserIpAddress() ?? "";
             
             auditable.CreatedAt = DateTime.UtcNow;
             auditable.CreatedById = userId.Value;
@@ -70,12 +70,22 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             auditable.LastModifiedById = userId.Value;
         }
         
+        if (entity is IVersionedEntity { Version: 0 } versionedEntity)
+        {
+            versionedEntity.Version = 1;
+        }
+        
         return base.InsertAsync(entity, cancellationToken);
     }
 
     public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
         var entityInDb = await GetByIdAsync(entity.Id, cancellationToken);
+
+        if (entityInDb is null)
+        {
+            throw new NotFoundException($"{typeof(TEntity).Name} not found.");
+        }
 
         if (entityInDb is ISystemEntity { IsSystem: true })
         {
@@ -84,20 +94,33 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
 
         if (entity is IAuditableEntity auditable)
         {
-            var userId = _authorizationService.GetCurrentUserId();
+            var userId = AuthorizationService.GetCurrentUserId();
 
             if (!userId.HasValue)
             {
                 throw new AuthenticationException("Not authenticated.");
             }
             
-            var ipAddress = _authorizationService.GetCurrentUserIpAddress() ?? "";
+            var ipAddress = AuthorizationService.GetCurrentUserIpAddress() ?? "";
             
             auditable.LastModifiedById = userId.Value;
             auditable.LastModifiedAt = DateTime.UtcNow;
             auditable.LastModifiedByIpAddress = ipAddress;
         }
+        
+        if (entity is IVersionedEntity versioned)
+        {
+            var expected = versioned.Version;
 
+            // Will throw ConcurrencyException if 0 rows (version mismatch or deleted)
+            // This is most likely a conflict since we've already had to retrieve the original entity by this point
+            await base.UpdateWithVersionAsync(entity, expected, cancellationToken);
+            
+            versioned.Version = expected + 1;
+
+            return entity;
+        }
+        
         return await base.UpdateAsync(entity, cancellationToken);
     }
 

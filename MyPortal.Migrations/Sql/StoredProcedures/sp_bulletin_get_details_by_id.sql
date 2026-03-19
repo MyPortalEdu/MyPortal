@@ -2,7 +2,13 @@
 SET ANSI_NULLS ON;
 GO
 
-CREATE OR ALTER PROCEDURE [dbo].[sp_bulletin_get_details_by_id] 
+CREATE OR ALTER PROCEDURE [dbo].[sp_bulletin_get_details_by_id]
+    @canView BIT,
+    @isStaff BIT,
+    @canApprove BIT,
+    @canEdit BIT,
+    @currentUserId UNIQUEIDENTIFIER,
+    @nowUtc DATETIME2(7),
     @bulletinId UNIQUEIDENTIFIER
 AS
 BEGIN
@@ -23,7 +29,8 @@ SELECT
     B.LastModifiedById,
     COALESCE(MBUN.Name, MBU.UserName) AS LastModifiedByName,
     B.LastModifiedByIpAddress,
-    B.LastModifiedAt
+    B.LastModifiedAt,
+    B.Version
 FROM dbo.Bulletins B
          INNER JOIN dbo.Users CBU ON CBU.Id = B.CreatedById
          INNER JOIN dbo.Users MBU ON MBU.Id = B.LastModifiedById

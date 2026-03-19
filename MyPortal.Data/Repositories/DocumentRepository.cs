@@ -1,4 +1,5 @@
 ﻿using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
@@ -15,13 +16,15 @@ namespace MyPortal.Data.Repositories
         {
         }
 
-        public async Task<DocumentDetailsResponse?> GetDetailsByIdAsync(Guid documentId, CancellationToken cancellationToken)
+        public async Task<DocumentDetailsResponse> GetDetailsByIdAsync(Guid documentId, CancellationToken cancellationToken)
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_document_get_details_by_id]";
+            var sql = "[dbo].[sp_document_get_details_by_id]";
 
-            var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, new { documentId },
+            var param = new { documentId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
+
+            var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, param,
                 cancellationToken: cancellationToken);
 
             return result.FirstOrDefault();
@@ -32,10 +35,13 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_document_get_details_by_directory]";
+            var sql = "[dbo].[sp_document_get_details_by_directory]";
+
+            var param = new
+                { directoryId, includeDeleted, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
 
             var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql,
-                new { directoryId, includeDeleted },
+                param,
                 cancellationToken: cancellationToken);
 
             return result.ToList();
@@ -46,9 +52,12 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_document_get_tree_by_directory_id]";
+            var sql = "[dbo].[sp_document_get_tree_by_directory_id]";
 
-            var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, new { directoryId, includeDeleted },
+            var param = new
+                { directoryId, includeDeleted, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
+
+            var result = await conn.ExecuteStoredProcedureAsync<DocumentDetailsResponse>(sql, param,
                 cancellationToken: cancellationToken);
 
             return result.ToList();

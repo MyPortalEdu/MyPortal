@@ -1,15 +1,16 @@
-﻿using MyPortal.Auth.Interfaces;
-using QueryKit.Repositories.Enums;
-using QueryKit.Repositories.Filtering;
+﻿using Microsoft.Extensions.Logging;
+using MyPortal.Auth.Interfaces;
 
 namespace MyPortal.Services;
 
 public class BaseService
 {
-    protected readonly IAuthorizationService _authorizationService;
+    protected IAuthorizationService AuthorizationService { get; }
+    protected ILogger Logger { get; }
 
-    public BaseService(IAuthorizationService authorizationService)
+    public BaseService(IAuthorizationService authorizationService, ILogger logger)
     {
-        _authorizationService = authorizationService;
+        AuthorizationService = authorizationService;
+        Logger = logger;
     }
 }

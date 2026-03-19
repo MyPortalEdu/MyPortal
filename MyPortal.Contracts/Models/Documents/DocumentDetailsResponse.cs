@@ -12,9 +12,13 @@ namespace MyPortal.Contracts.Models.Documents
 
         public Guid DirectoryId { get; set; }
 
+        public Guid CreatedById { get; set; }
+
         public string CreatedByName { get; set; } = null!;
 
         public DateTime CreatedAt { get; set; }
+
+        public Guid LastModifiedById { get; set; }
 
         public string LastModifiedByName { get; set; } = null!;
 

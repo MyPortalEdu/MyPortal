@@ -1,0 +1,2 @@
+﻿ALTER TABLE dbo.Directories
+	ADD UploadPolicy TINYINT NOT NULL DEFAULT(0);

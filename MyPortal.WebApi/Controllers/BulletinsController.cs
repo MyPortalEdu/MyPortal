@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
+using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Services;
@@ -12,7 +13,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-public class BulletinsController : BaseDirectoryEntityController<BulletinsController, Bulletin>
+public sealed class BulletinsController : BaseDirectoryEntityController<BulletinsController, Bulletin>
 {
     private readonly IBulletinService _bulletinService;
 
@@ -24,8 +25,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     }
 
     [HttpGet("{bulletinId:guid}")]
-    [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins,
-        Permissions.School.EditSchoolBulletins)]
+    [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins)]
     public async Task<IActionResult> GetBulletinDetailsByIdAsync([FromRoute] Guid bulletinId)
     {
         var result = await _bulletinService.GetDetailsByIdAsync(bulletinId, CancellationToken);
@@ -34,8 +34,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     }
 
     [HttpGet]
-    [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins,
-        Permissions.School.EditSchoolBulletins)]
+    [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins)]
     public async Task<IActionResult> GetBulletinsAsync([FromQuery] int page, [FromQuery] int pageSize,
         [FromQuery] FilterOptions? filter, [FromQuery] SortOptions? sort)
     {
@@ -49,7 +48,8 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
 
     [HttpPost]
     [ValidateModel]
-    [Permission(PermissionMode.RequireAll, Permissions.School.EditSchoolBulletins)]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
     public async Task<IActionResult> CreateBulletinAsync([FromBody] BulletinUpsertRequest model)
     {
         var result = await _bulletinService.CreateBulletinAsync(model, CancellationToken);
@@ -59,8 +59,10 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
 
     [HttpPut("{bulletinId:guid}")]
     [ValidateModel]
-    [Permission(PermissionMode.RequireAll, Permissions.School.EditSchoolBulletins)]
-    public async Task<IActionResult> UpdateBulletinAsync([FromRoute] Guid bulletinId, [FromBody] BulletinUpsertRequest model)
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
+    public async Task<IActionResult> UpdateBulletinAsync([FromRoute] Guid bulletinId,
+        [FromBody] BulletinUpsertRequest model)
     {
         await _bulletinService.UpdateBulletinAsync(bulletinId, model, CancellationToken);
 
@@ -69,6 +71,7 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
 
     [HttpPut("{bulletinId:guid}/approve")]
     [ValidateModel]
+    [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAll, Permissions.School.ApproveSchoolBulletins)]
     public async Task<IActionResult> ApproveBulletinAsync([FromRoute] Guid bulletinId,
         [FromBody] BulletinApprovalRequest model)
@@ -79,7 +82,8 @@ public class BulletinsController : BaseDirectoryEntityController<BulletinsContro
     }
 
     [HttpDelete("{bulletinId:guid}")]
-    [Permission(PermissionMode.RequireAll, Permissions.School.EditSchoolBulletins)]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
     public async Task<IActionResult> DeleteBulletinAsync([FromRoute] Guid bulletinId)
     {
         await _bulletinService.DeleteBulletinAsync(bulletinId, CancellationToken);

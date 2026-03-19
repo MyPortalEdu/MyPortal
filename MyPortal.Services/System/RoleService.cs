@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
@@ -21,9 +22,9 @@ namespace MyPortal.Services.System
         private readonly IRolePermissionCache _rolePermissionCache;
         private readonly RoleManager<ApplicationRole> _roleManager;
 
-        public RoleService(IAuthorizationService authorizationService, IRoleRepository roleRepository,
+        public RoleService(IAuthorizationService authorizationService, ILogger logger, IRoleRepository roleRepository,
             IRolePermissionRepository rolePermissionRepository, IRolePermissionCache rolePermissionCache,
-            RoleManager<ApplicationRole> roleManager) : base(authorizationService)
+            RoleManager<ApplicationRole> roleManager) : base(authorizationService, logger)
         {
             _roleRepository = roleRepository;
             _rolePermissionRepository = rolePermissionRepository;
@@ -33,7 +34,7 @@ namespace MyPortal.Services.System
 
         public async Task<RoleDetailsResponse?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken)
         {
-            await _authorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
 
             return await _roleRepository.GetDetailsByIdAsync(roleId, cancellationToken);
         }
@@ -41,7 +42,7 @@ namespace MyPortal.Services.System
         public async Task<PageResult<RoleSummaryResponse>> GetRolesAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
             CancellationToken cancellationToken = default)
         {
-            await _authorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
 
             var result = await _roleRepository.GetRolesAsync(filter, sort, paging, cancellationToken);
 
@@ -50,7 +51,7 @@ namespace MyPortal.Services.System
 
         public async Task<IdentityResult> CreateRoleAsync(RoleUpsertRequest model, CancellationToken cancellationToken)
         {
-            await _authorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
 
             var role = new ApplicationRole
             {
@@ -69,7 +70,7 @@ namespace MyPortal.Services.System
 
         public async Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken)
         {
-            await _authorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
 
             var role = await _roleManager.FindByIdAsync(roleId.ToString());
 
@@ -93,7 +94,7 @@ namespace MyPortal.Services.System
 
         public async Task<IdentityResult> DeleteRoleAsync(Guid roleId, CancellationToken cancellationToken)
         {
-            await _authorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
 
             var role = await _roleManager.FindByIdAsync(roleId.ToString());
 

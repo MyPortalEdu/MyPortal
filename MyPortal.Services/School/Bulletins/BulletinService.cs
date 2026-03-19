@@ -1,5 +1,7 @@
-﻿using MyPortal.Auth.Constants;
+﻿using Microsoft.Extensions.Logging;
+using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Contracts.Models.Documents;
@@ -7,6 +9,7 @@ using MyPortal.Core.Entities;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Repositories;
+using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
@@ -19,18 +22,20 @@ namespace MyPortal.Services.School.Bulletins;
 public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinService
 {
     private readonly IBulletinRepository _bulletinRepository;
+    private readonly IAccessPolicy<Bulletin, BulletinVisibilityScope> _accessPolicy;
 
-    public BulletinService(IAuthorizationService authorizationService, IDirectoryService directoryService,
-        IDocumentService documentService, IValidationService validationService,
-        IBulletinRepository bulletinRepository) : base(authorizationService, directoryService, documentService,
-        validationService)
+    public BulletinService(IAuthorizationService authorizationService, ILogger<BulletinService> logger,
+        IDirectoryService directoryService, IDocumentService documentService, IValidationService validationService,
+        IBulletinRepository bulletinRepository, IAccessPolicy<Bulletin, BulletinVisibilityScope> accessPolicy) : base(
+        authorizationService, logger, directoryService, documentService, validationService)
     {
         _bulletinRepository = bulletinRepository;
+        _accessPolicy = accessPolicy;
     }
 
-    public async Task<BulletinDetailsResponse?> GetDetailsByIdAsync(Guid bulletinId, CancellationToken cancellationToken)
+    public async Task<BulletinDetailsResponse> GetDetailsByIdAsync(Guid bulletinId, CancellationToken cancellationToken)
     {
-        var scope = await BulletinVisibilityScope.FromAsync(_authorizationService, cancellationToken);
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
         
         var bulletin = await _bulletinRepository.GetDetailsByIdAsync(bulletinId, scope, cancellationToken);
 
@@ -41,27 +46,31 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default)
     {
-        var scope = await  BulletinVisibilityScope.FromAsync(_authorizationService, cancellationToken);
+        var scope = await  BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
         
         return await _bulletinRepository.GetSummariesAsync(scope, filter, sort, paging, cancellationToken);
     }
 
     public async Task<Guid> CreateBulletinAsync(BulletinUpsertRequest model, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
         var bulletinId = SqlConvention.SequentialGuid();
 
         var directoryRequest = new DirectoryUpsertRequest
         {
-            Name = $"bulletin-{bulletinId:N}"
+            Name = $"bulletin-{bulletinId:N}",
+            IsPrivate = model.IsPrivate,
+            UploadPolicy = DirectoryUploadPolicy.StaffOnly
         };
 
         var directory = await DirectoryService.CreateDirectoryAsync(directoryRequest, cancellationToken);
 
+        Logger.LogInformation("Directory created for bulletin: {bulletinId}", bulletinId);
+
         var bulletin = new Bulletin
         {
-            Id = SqlConvention.SequentialGuid(),
+            Id = bulletinId,
             Title = model.Title,
             Detail = model.Detail,
             IsPrivate = model.IsPrivate,
@@ -69,23 +78,22 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             DirectoryId = directory.Id
         };
 
-        var result = await _bulletinRepository.InsertAsync(bulletin, cancellationToken);
+        await _bulletinRepository.InsertAsync(bulletin, cancellationToken);
 
-        return result.Id;
+        Logger.LogInformation("Bulletin created: {bulletinId}", bulletinId);
+
+        return bulletinId;
     }
 
     public async Task UpdateBulletinAsync(Guid bulletinId, BulletinUpsertRequest model, CancellationToken cancellationToken)
     {
-        var bulletin = await _bulletinRepository.GetByIdAsync(bulletinId, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
-        if (bulletin == null)
-        {
-            throw new NotFoundException("Bulletin not found.");
-        }
-        
-        var scope = await BulletinVisibilityScope.FromAsync(_authorizationService, cancellationToken);
+        var bulletin = await GetBulletinOrThrowAsync(bulletinId, cancellationToken);
 
-        if (!BulletinAccessPolicy.CanEdit(bulletin, scope))
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+
+        if (!_accessPolicy.CanEdit(bulletin, scope))
         {
             throw new ForbiddenException("You do not have permission to edit this bulletin.");
         }
@@ -94,8 +102,9 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         bulletin.Detail = model.Detail;
         bulletin.IsPrivate = model.IsPrivate;
         bulletin.ExpiresAt = model.ExpiresAt;
+        bulletin.Version = model.Version;
 
-        if (!await _authorizationService.HasPermissionAsync(Permissions.School.ApproveSchoolBulletins,
+        if (!await AuthorizationService.HasPermissionAsync(Permissions.School.ApproveSchoolBulletins,
                 cancellationToken))
         {
             // Any edits by non-approvers will require re-approval
@@ -103,92 +112,91 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         }
 
         await _bulletinRepository.UpdateAsync(bulletin, cancellationToken);
+        Logger.LogInformation("Bulletin updated: {bulletinId}", bulletinId);
     }
 
     public async Task DeleteBulletinAsync(Guid bulletinId, CancellationToken cancellationToken)
     {
-        var bulletin = await _bulletinRepository.GetByIdAsync(bulletinId, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
-        if (bulletin == null)
-        {
-            throw new NotFoundException("Bulletin not found.");
-        }
-        
-        var scope = await BulletinVisibilityScope.FromAsync(_authorizationService, cancellationToken);
+        var bulletin = await GetBulletinOrThrowAsync(bulletinId, cancellationToken);
 
-        if (!BulletinAccessPolicy.CanEdit(bulletin, scope))
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+
+        if (!_accessPolicy.CanEdit(bulletin, scope))
         {
             throw new ForbiddenException("You do not have permission to delete this bulletin.");
         }
 
         await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken);
 
+        Logger.LogInformation("Bulletin deleted: {bulletinId}", bulletinId);
+
         await DirectoryService.DeleteDirectoryAsync(bulletin.DirectoryId, cancellationToken);
+
+        Logger.LogInformation("Directory deleted for bulletin: {bulletinId}", bulletinId);
     }
 
     public async Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.ApproveSchoolBulletins,
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.ApproveSchoolBulletins,
             cancellationToken);
 
-        var bulletin = await _bulletinRepository.GetByIdAsync(bulletinId, cancellationToken);
-
-        if (bulletin == null)
-        {
-            throw new NotFoundException("Bulletin not found.");
-        }
+        var bulletin = await GetBulletinOrThrowAsync(bulletinId, cancellationToken);
 
         bulletin.IsApproved = isApproved;
 
         await _bulletinRepository.UpdateAsync(bulletin, cancellationToken);
+
+        Logger.LogInformation("Bulletin approval updated: {bulletinId}, IsApproved: {isApproved}", bulletinId,
+            isApproved);
     }
 
-    public override async Task<Bulletin?> GetByIdAsync(Guid entityId, CancellationToken cancellationToken)
+    public override async Task<Bulletin> GetByIdAsync(Guid entityId, CancellationToken cancellationToken)
     {
         var bulletin = await _bulletinRepository.GetByIdAsync(entityId, cancellationToken);
+
+        if (bulletin == null)
+        {
+            throw new NotFoundException("Bulletin not found.");
+        }
 
         return bulletin;
     }
 
-    
-
-    public override async Task<bool> CanViewDocumentsAsync(Guid entityId, Guid directoryId,
+    public override async Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId,
         CancellationToken cancellationToken)
     {
-        var scope =  await BulletinVisibilityScope.FromAsync(_authorizationService, cancellationToken);
-        
-        var bulletin = await GetByIdAsync(entityId, cancellationToken);
+        var scope =  await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
-        if (bulletin == null)
+        var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
+
+        if (_accessPolicy.CanView(bulletin, scope))
         {
-            throw new NotFoundException("Bulletin not found.");
-        }
-        
-        if (BulletinAccessPolicy.CanView(bulletin, scope, DateTime.UtcNow))
-        {
-            return await base.CanViewDocumentsAsync(entityId, directoryId, cancellationToken);
+            return await base.CanViewDirectoryAsync(entityId, directoryId, cancellationToken);
         }
 
         return false;
     }
 
-    public override async Task<bool> CanEditDocumentsAsync(Guid entityId, Guid directoryId,
+    public override async Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId,
         CancellationToken cancellationToken)
     {
-        var scope = await BulletinVisibilityScope.FromAsync(_authorizationService, cancellationToken);
-        
-        var bulletin = await GetByIdAsync(entityId, cancellationToken);
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
-        if (bulletin == null)
-        {
-            throw new NotFoundException("Bulletin not found.");
-        }
+        var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
         
-        if (BulletinAccessPolicy.CanEdit(bulletin, scope))
+        if (_accessPolicy.CanEdit(bulletin, scope))
         {
-            return await base.CanEditDocumentsAsync(entityId, directoryId, cancellationToken);
+            return await base.CanEditDirectoryAsync(entityId, directoryId, cancellationToken);
         }
 
         return false;
+    }
+
+    private async Task<Bulletin> GetBulletinOrThrowAsync(Guid bulletinId, CancellationToken ct)
+    {
+        return await _bulletinRepository.GetByIdAsync(bulletinId, ct)
+               ?? throw new NotFoundException("Bulletin not found.");
     }
 }

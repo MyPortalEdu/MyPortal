@@ -57,7 +57,7 @@ public interface IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntit
     /// <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see
     /// cref="DirectoryDetailsResponse"/> with the directory details if found; otherwise, <see langword="null"/>.</returns>
-    Task<DirectoryDetailsResponse?> GetDirectoryByIdAsync(Guid entityId, Guid directoryId,
+    Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid entityId, Guid directoryId,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -127,7 +127,7 @@ public interface IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntit
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see
     /// cref="DocumentDetailsResponse"/> with the document details if found; otherwise, <see langword="null"/>.</returns>
-    Task<DocumentDetailsResponse?> GetDocumentByIdAsync(Guid entityId, Guid documentId,
+    Task<DocumentDetailsResponse> GetDocumentByIdAsync(Guid entityId, Guid documentId,
         CancellationToken cancellationToken);
     
     /// <summary>

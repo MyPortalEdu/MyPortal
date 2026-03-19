@@ -5,7 +5,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("Students")]
-    public class Student : Entity, ISoftDeleteEntity
+    public class Student : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
     {
         public Guid PersonId { get; set; }
 
@@ -37,5 +37,16 @@ namespace MyPortal.Core.Entities
         public SenType? SenType { get; set; }
         public EnrolmentStatus? EnrolmentStatus { get; set; }
         public BoarderStatus? BoarderStatus { get; set; }
+        
+        // Audit
+        public Guid CreatedById { get; set; }
+        public string CreatedByIpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid LastModifiedById { get; set; }
+        public string LastModifiedByIpAddress { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+        public User? CreatedBy { get; set; }
+        public User? LastModifiedBy { get; set; }
+        public long Version { get; set; }
     }
 }

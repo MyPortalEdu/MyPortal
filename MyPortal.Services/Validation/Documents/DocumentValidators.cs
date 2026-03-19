@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using MyPortal.Common.Constants;
 using MyPortal.Common.Options;
@@ -10,7 +11,7 @@ public class DocumentValidators
 {
     public class DocumentUpsertRequestValidator : AbstractValidator<DocumentUpsertRequest>
     {
-        public DocumentUpsertRequestValidator(IOptions<FileStorageOptions> fileStorageOptions)
+        public DocumentUpsertRequestValidator(IOptions<FileStorageOptions> fileStorageOptions, IAuthorizationService au)
         {
             RuleFor(x => x.TypeId)
                 .NotEmpty().WithMessage("TypeId is required.");

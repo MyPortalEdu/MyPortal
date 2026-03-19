@@ -1,5 +1,4 @@
-﻿using System.Data;
-using QueryKit.Repositories.Interfaces;
+﻿using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Common.Interfaces;
 

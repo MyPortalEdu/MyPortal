@@ -27,10 +27,12 @@
     <None Remove="Sql\Scripts\db_create_tables.sql" />
     <None Remove="Sql\StoredProcedures\sp_directory_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_directory_get_details_by_parent_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_directory_is_in_subtree.sql" />
     <None Remove="Sql\StoredProcedures\sp_document_get_details_by_directory.sql" />
     <None Remove="Sql\StoredProcedures\sp_document_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_permission_get_by_user_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_user_get_info_by_id.sql" />
+    <None Remove="Sql\Updates\0008_add_directory_upload_policy.sql" />
     <EmbeddedResource Include="Sql\Scripts\db_create_tables.sql" />
     <None Remove="Sql\Functions\fn_diary_event_get_overlapping.sql" />
     <EmbeddedResource Include="Sql\Functions\fn_diary_event_get_overlapping.sql" />
@@ -39,10 +41,12 @@
     <None Remove="Sql\Views\vw_attendance_period_instances.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_directory_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_directory_get_details_by_parent_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_directory_is_in_subtree.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_document_get_details_by_directory.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_document_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_permission_get_by_user_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_user_get_info_by_id.sql" />
+    <EmbeddedResource Include="Sql\Updates\0008_add_directory_upload_policy.sql" />
     <EmbeddedResource Include="Sql\Views\vw_attendance_period_instances.sql" />
     <None Remove="Sql\Views\vw_session_period_metadata.sql" />
     <EmbeddedResource Include="Sql\Views\vw_session_period_metadata.sql" />
@@ -76,6 +80,11 @@
     <EmbeddedResource Include="Sql\StoredProcedures\sp_bulletin_get_details_by_id.sql" />
     <None Remove="Sql\Updates\0006_add_bulletin_permissions.sql" />
     <EmbeddedResource Include="Sql\Updates\0006_add_bulletin_permissions.sql" />
+    <None Remove="Sql\Updates\0007_add_academic_year_entities.sql" />
+    <EmbeddedResource Include="Sql\Updates\0007_add_academic_year_entities.sql" />
+    <None Remove="Sql\Indexes\ix_attendance_marks.sql" />
+    <EmbeddedResource Include="Sql\Indexes\ix_attendance_marks.sql" />
+    <None Remove="Sql\Indexes\ix_directories.sql" />
   </ItemGroup>
 
   <ItemGroup>

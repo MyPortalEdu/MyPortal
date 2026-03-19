@@ -1,12 +1,16 @@
 ﻿using MyPortal.Core.Entities;
+using MyPortal.Services.Interfaces.Providers;
+using MyPortal.Services.Interfaces.Security;
 
 namespace MyPortal.Services.School.Bulletins;
 
-public static class BulletinAccessPolicy
+public class BulletinAccessPolicy : IAccessPolicy<Bulletin, BulletinVisibilityScope>
 {
-    public static bool IsNotExpired(DateTime? expiresAt, DateTime nowUtc) => expiresAt is null || expiresAt > nowUtc;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
-    public static bool CanView(Bulletin bulletin, BulletinVisibilityScope scope, DateTime nowUtc)
+    public bool IsNotExpired(DateTime? expiresAt, DateTime nowUtc) => expiresAt is null || expiresAt > nowUtc;
+
+    public bool CanView(Bulletin bulletin, BulletinVisibilityScope scope)
     {
         if (bulletin.IsPrivate && !scope.IsStaff)
         {
@@ -18,7 +22,7 @@ public static class BulletinAccessPolicy
             return true;
         }
 
-        var approvedAndNotExpired = bulletin.IsApproved && IsNotExpired(bulletin.ExpiresAt, nowUtc);
+        var approvedAndNotExpired = bulletin.IsApproved && IsNotExpired(bulletin.ExpiresAt, _dateTimeProvider.UtcNow);
 
         if (!scope.IsStaff)
         {
@@ -38,16 +42,16 @@ public static class BulletinAccessPolicy
         return approvedAndNotExpired;
     }
 
-    public static bool CanEdit(Bulletin bulletin, BulletinVisibilityScope scope)
+    public bool CanEdit(Bulletin bulletin, BulletinVisibilityScope scope)
     {
-        if (scope.CanApprove)
-        {
-            return true;
-        }
-
         if (!scope.IsStaff)
         {
             return false;
+        }
+        
+        if (scope.CanApprove)
+        {
+            return true;
         }
         
         return scope.CanEdit && bulletin.CreatedById == scope.CurrentUserId;

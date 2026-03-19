@@ -7,7 +7,7 @@ namespace MyPortal.Services.Interfaces.Services;
 
 public interface IBulletinService
 {
-    Task<BulletinDetailsResponse?> GetDetailsByIdAsync(Guid bulletinId, CancellationToken cancellationToken);
+    Task<BulletinDetailsResponse> GetDetailsByIdAsync(Guid bulletinId, CancellationToken cancellationToken);
     Task<PageResult<BulletinSummaryResponse>> GetBulletinsAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default);
     Task<Guid> CreateBulletinAsync(BulletinUpsertRequest model, CancellationToken cancellationToken);

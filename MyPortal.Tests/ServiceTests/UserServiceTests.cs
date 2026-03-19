@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Moq;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -18,6 +19,7 @@ namespace MyPortal.Tests.ServiceTests;
 public class UserServiceTests
 {
     private Mock<IAuthorizationService> _authorizationService;
+    private Mock<ILogger<UserService>> _logger;
     private Mock<IUserRepository> _userRepository;
     private Mock<IPermissionRepository> _permissionRepository;
     private Mock<UserManager<ApplicationUser>> _userManager;
@@ -29,6 +31,7 @@ public class UserServiceTests
     public void Setup()
     {
         _authorizationService = new Mock<IAuthorizationService>(MockBehavior.Strict);
+        _logger = new Mock<ILogger<UserService>>(MockBehavior.Strict);
         _userRepository = new Mock<IUserRepository>(MockBehavior.Strict);
         _permissionRepository = new Mock<IPermissionRepository>(MockBehavior.Strict);
         _userManager = IdentityMocks.MockUserManager<ApplicationUser>();
@@ -40,6 +43,7 @@ public class UserServiceTests
 
         _userService = new UserService(
             _authorizationService.Object,
+            _logger.Object,
             _userRepository.Object,
             _permissionRepository.Object,
             _userManager.Object,

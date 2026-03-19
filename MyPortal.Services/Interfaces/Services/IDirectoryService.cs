@@ -48,7 +48,17 @@ namespace MyPortal.Services.Interfaces.Services
         /// <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a <see
         /// cref="DirectoryDetailsResponse"/> with the directory details if found; otherwise, <see langword="null"/>.</returns>
-        Task<DirectoryDetailsResponse?> GetDirectoryByIdAsync(Guid directoryId, CancellationToken cancellationToken);
+        Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Attempts to retrieve details for the specified directory by its unique identifier.
+        /// </summary>
+        /// <param name="directoryId">The unique identifier of the directory to retrieve.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see
+        /// cref="DirectoryDetailsResponse"/> if the directory is found; otherwise, <see langword="null"/>.</returns>
+        Task<DirectoryDetailsResponse?> TryGetDirectoryByIdAsync(Guid directoryId,
+            CancellationToken cancellationToken);
 
         /// <summary>
         /// Asynchronously retrieves the immediate contents of the specified directory.
@@ -82,5 +92,17 @@ namespace MyPortal.Services.Interfaces.Services
         /// cref="DirectoryContentsResponse"/> with the flat list of directory contents.</returns>
         Task<DirectoryContentsResponse> GetFlatDirectoryTreeAsync(Guid directoryId,
             CancellationToken cancellationToken, bool includeDeletedDocs = false);
+
+        /// <summary>
+        /// Determines asynchronously whether the specified candidate directory is a descendant of the given root
+        /// directory within the directory tree.
+        /// </summary>
+        /// <param name="rootDirectoryId">The unique identifier of the root directory to check against.</param>
+        /// <param name="candidateDirectoryId">The unique identifier of the directory to test for membership within the subtree of the root directory.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the
+        /// candidate directory is within the subtree of the root directory; otherwise, <see langword="false"/>.</returns>
+        Task<bool> IsDirectoryInSubtreeAsync(Guid rootDirectoryId, Guid candidateDirectoryId,
+            CancellationToken cancellationToken);
     }
 }

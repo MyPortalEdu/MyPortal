@@ -22,7 +22,7 @@ public class EntityReadRepository<TEntity> : BaseEntityReadRepository<TEntity, G
     };
 
     protected override Task<PageResult<T>> GetListPagedAsync<T>(string sql, object? parameters, FilterOptions? filter, SortOptions? sort, PageOptions? paging,
-        bool includeDeleted = false, CancellationToken cancellationToken = new CancellationToken())
+        bool includeDeleted = false, CancellationToken cancellationToken = new())
     {
         if (paging != null && sort == null)
         {
@@ -33,7 +33,7 @@ public class EntityReadRepository<TEntity> : BaseEntityReadRepository<TEntity, G
     }
 
     public override Task<PageResult<TEntity>> GetListPagedAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
-        bool includeDeleted = false, CancellationToken cancellationToken = new CancellationToken())
+        bool includeDeleted = false, CancellationToken cancellationToken = new())
     {
         if (paging != null && sort == null)
         {

@@ -13,7 +13,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-public class RolesController : BaseApiController<RolesController>
+public sealed class RolesController : BaseApiController<RolesController>
 {
     private readonly IRoleService _roleService;
 

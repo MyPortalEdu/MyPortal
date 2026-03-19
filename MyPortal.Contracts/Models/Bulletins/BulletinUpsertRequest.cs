@@ -9,4 +9,6 @@ public class BulletinUpsertRequest
     public required string Detail { get; set; }
 
     public bool IsPrivate { get; set; }
+
+    public long Version { get; set; }
 }

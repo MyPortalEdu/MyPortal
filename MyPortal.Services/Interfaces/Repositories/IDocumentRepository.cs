@@ -6,7 +6,7 @@ namespace MyPortal.Services.Interfaces.Repositories
 {
     public interface IDocumentRepository : IEntityRepository<Document>
     {
-        Task<DocumentDetailsResponse?> GetDetailsByIdAsync(Guid documentId, CancellationToken cancellationToken);
+        Task<DocumentDetailsResponse> GetDetailsByIdAsync(Guid documentId, CancellationToken cancellationToken);
 
         Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId,
             CancellationToken cancellationToken, bool includeDeleted = false);

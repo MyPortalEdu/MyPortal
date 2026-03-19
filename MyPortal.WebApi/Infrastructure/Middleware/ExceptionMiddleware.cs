@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MyPortal.Common.Exceptions;
+using QueryKit.Repositories.Exceptions;
 
 namespace MyPortal.WebApi.Infrastructure.Middleware;
 
@@ -61,6 +62,14 @@ public class ExceptionMiddleware : IMiddleware
                     statusCode: StatusCodes.Status409Conflict,
                     title: "Academic year locked.",
                     detail: aex.Message));
+        }
+        catch (ConcurrencyException cex)
+        {
+            await WriteProblemAsync(context,
+                _problemFactory.CreateProblemDetails(context,
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Entity version mismatch.",
+                    detail: cex.Message));
         }
         catch (NotFoundException nex)
         {

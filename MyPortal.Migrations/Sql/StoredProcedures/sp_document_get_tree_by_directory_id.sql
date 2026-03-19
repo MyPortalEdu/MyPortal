@@ -4,6 +4,7 @@ GO
 
 CREATE OR ALTER PROCEDURE [dbo].[sp_document_get_tree_by_directory_id] 
     @directoryId UNIQUEIDENTIFIER,
+    @isStaff BIT,
     @includeDeleted BIT
 AS
 BEGIN
@@ -52,6 +53,7 @@ INNER JOIN dbo.[Users] [UM] ON [D].[LastModifiedById] = [UM].[Id]
 OUTER APPLY dbo.fn_person_get_name (UC.[PersonId], 3, 0, 1) AS UCN
 OUTER APPLY dbo.fn_person_get_name (UM.[PersonId], 3, 0, 1) AS UMN
 WHERE ([D].IsDeleted = 0 OR @includeDeleted = 1)
+AND (@isStaff = 1 OR D.[IsPrivate] = 0)
 ORDER BY dir.Name, [D].Title
 
 END;
