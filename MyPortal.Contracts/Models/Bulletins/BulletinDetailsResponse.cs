@@ -31,4 +31,6 @@ public class BulletinDetailsResponse
     public string LastModifiedByIpAddress { get; set; } = "";
     
     public DateTime LastModifiedAt { get; set; }
+
+    public long Version { get; set; }
 }
