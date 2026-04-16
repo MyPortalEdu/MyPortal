@@ -40,6 +40,14 @@ public class UserServiceTests
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        
+        _authorizationService
+            .Setup(a => a.GetCurrentUserId())
+            .Returns(Guid.NewGuid());
+        
+        _authorizationService
+            .Setup(a => a.GetCurrentUserIpAddress())
+            .Returns("::1");
 
         _userService = new UserService(
             _authorizationService.Object,
