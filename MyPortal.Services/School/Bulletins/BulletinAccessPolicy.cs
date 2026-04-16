@@ -7,6 +7,11 @@ namespace MyPortal.Services.School.Bulletins;
 public class BulletinAccessPolicy : IAccessPolicy<Bulletin, BulletinVisibilityScope>
 {
     private readonly IDateTimeProvider _dateTimeProvider;
+    
+    public BulletinAccessPolicy(IDateTimeProvider dateTimeProvider)
+    {
+        _dateTimeProvider = dateTimeProvider;
+    }
 
     public bool IsNotExpired(DateTime? expiresAt, DateTime nowUtc) => expiresAt is null || expiresAt > nowUtc;
 

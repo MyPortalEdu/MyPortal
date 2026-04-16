@@ -4,9 +4,11 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
+using MyPortal.Services.Interfaces.Providers;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
 using MyPortal.Services.People;
+using MyPortal.Services.Providers;
 using MyPortal.Services.School;
 using MyPortal.Services.School.Bulletins;
 using MyPortal.Services.Security;
@@ -30,6 +32,8 @@ public static class ServiceCollectionExtensions
 
     private static void AddServices(this IServiceCollection services)
     {
+        services.AddScoped<IDateTimeProvider, DateTimeProvider>();
+        
         services.AddScoped<IAuthorizationService, AuthorizationService>();
         services.AddScoped<IValidationService, ValidationService>();
         services.AddScoped<IPermissionService, PermissionService>();
