@@ -7,13 +7,6 @@ namespace MyPortal.WebApi.Providers
 {
     public sealed class Base64JsonBinderProvider<T> : IModelBinderProvider where T : class
     {
-        private readonly JsonSerializerOptions _json;
-
-        public Base64JsonBinderProvider(JsonSerializerOptions? json = null)
-        {
-            _json = json ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        }
-
         public IModelBinder? GetBinder(ModelBinderProviderContext context)
         {
             if (context is null)

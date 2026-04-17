@@ -25,7 +25,7 @@ public class Program
             .Build();
 
         string connectionString = config.GetSection("Database:ConnectionString").Value
-                                  ?? throw new InvalidOperationException("Connection string 'MyPortal' not found.");
+                                  ?? throw new InvalidOperationException("Connection string not provided.");
         
         using var loggerFactory = LoggerFactory.Create(builder =>
         {

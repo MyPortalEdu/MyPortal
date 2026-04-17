@@ -22,7 +22,7 @@ namespace MyPortal.Services.System
         private readonly IRolePermissionCache _rolePermissionCache;
         private readonly RoleManager<ApplicationRole> _roleManager;
 
-        public RoleService(IAuthorizationService authorizationService, ILogger logger, IRoleRepository roleRepository,
+        public RoleService(IAuthorizationService authorizationService, ILogger<RoleService> logger, IRoleRepository roleRepository,
             IRolePermissionRepository rolePermissionRepository, IRolePermissionCache rolePermissionCache,
             RoleManager<ApplicationRole> roleManager) : base(authorizationService, logger)
         {

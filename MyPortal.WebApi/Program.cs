@@ -271,6 +271,15 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.OperationFilter<AuthorizeCheckOperationFilter>();
+    
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description =  "JWT Authorization header using the Bearer scheme.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.OAuth2,
+        Scheme = "Bearer"
+    });
 });
 
 builder.Services.AddTransient<ExceptionMiddleware>();

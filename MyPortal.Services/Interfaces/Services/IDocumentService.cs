@@ -54,7 +54,7 @@ namespace MyPortal.Services.Interfaces.Services
         /// <param name="documentId">The unique identifier of the document to retrieve.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a <see
-        /// cref="DocumentDetailsResponse"/> with the document details if found; otherwise, <see langword="null"/>.</returns>
+        /// cref="DocumentDetailsResponse"/> with the document details if found.</returns>
         Task<DocumentDetailsResponse> GetDocumentByIdAsync(Guid documentId, CancellationToken cancellationToken);
 
         /// <summary>

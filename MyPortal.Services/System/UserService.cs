@@ -5,6 +5,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Users;
+using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Repositories.Filtering;
@@ -21,7 +22,7 @@ public class UserService : BaseService, IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
 
-    public UserService(IAuthorizationService authorizationService, ILogger logger, IUserRepository userRepository,
+    public UserService(IAuthorizationService authorizationService, ILogger<UserService> logger, IUserRepository userRepository,
         IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager) : base(authorizationService, logger)
     {

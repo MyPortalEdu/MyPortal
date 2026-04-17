@@ -14,7 +14,7 @@ SELECT
     D.[ParentId],
     D.[Name],
     D.[IsPrivate],
-    D.[UploadPolicy],
+    D.[UploadPolicy]
 FROM [Directories] [D]
 WHERE D.[Id] = @directoryId
   AND (@isStaff = 1 OR D.[IsPrivate] = 0)

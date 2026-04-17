@@ -84,7 +84,6 @@
     <EmbeddedResource Include="Sql\Updates\0007_add_academic_year_entities.sql" />
     <None Remove="Sql\Indexes\ix_attendance_marks.sql" />
     <EmbeddedResource Include="Sql\Indexes\ix_attendance_marks.sql" />
-    <None Remove="Sql\Indexes\ix_directories.sql" />
   </ItemGroup>
 
   <ItemGroup>

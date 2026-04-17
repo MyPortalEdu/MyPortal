@@ -47,7 +47,7 @@ namespace MyPortal.WebApi.Models.Binders
 
                     bindingContext.Result = ModelBindingResult.Success(model);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     bindingContext.ModelState.TryAddModelError(key, $"Invalid {key} payload.");
                     bindingContext.Result = ModelBindingResult.Failed();

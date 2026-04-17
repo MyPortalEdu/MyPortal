@@ -279,7 +279,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
         
         if (dir == null)
         {
-            throw new NotFoundException("Directory not found.");
+            return null;
         }
 
         // prevent cross-entity access even if caller guesses a valid Guid

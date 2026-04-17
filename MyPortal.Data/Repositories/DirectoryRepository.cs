@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Data;
+using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
@@ -72,7 +73,7 @@ namespace MyPortal.Data.Repositories
 
             var param = new { rootDirectoryId, candidateDirectoryId };
 
-            var result = await conn.ExecuteScalarAsync<bool>(sql, param);
+            var result = await conn.ExecuteScalarAsync<bool>(sql, param, commandType:CommandType.StoredProcedure);
 
             return result;
         }

@@ -47,7 +47,7 @@ namespace MyPortal.Services.Interfaces.Services
         /// <param name="directoryId">The unique identifier of the directory to retrieve. Must correspond to an existing directory.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a <see
-        /// cref="DirectoryDetailsResponse"/> with the directory details if found; otherwise, <see langword="null"/>.</returns>
+        /// cref="DirectoryDetailsResponse"/> with the directory details if found.</returns>
         Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId, CancellationToken cancellationToken);
 
         /// <summary>

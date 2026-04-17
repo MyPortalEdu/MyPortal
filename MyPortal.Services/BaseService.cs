@@ -8,7 +8,7 @@ public class BaseService
     protected IAuthorizationService AuthorizationService { get; }
     protected ILogger Logger { get; }
 
-    public BaseService(IAuthorizationService authorizationService, ILogger logger)
+    public BaseService(IAuthorizationService authorizationService, ILogger<BaseService> logger)
     {
         AuthorizationService = authorizationService;
         Logger = logger;

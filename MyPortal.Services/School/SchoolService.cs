@@ -10,7 +10,7 @@ public class SchoolService : BaseService, ISchoolService
 {
     private readonly ISchoolRepository _schoolRepository;
 
-    public SchoolService(IAuthorizationService authorizationService, ILogger logger, ISchoolRepository schoolRepository)
+    public SchoolService(IAuthorizationService authorizationService, ILogger<SchoolService> logger, ISchoolRepository schoolRepository)
         : base(authorizationService, logger)
     {
         _schoolRepository = schoolRepository;
