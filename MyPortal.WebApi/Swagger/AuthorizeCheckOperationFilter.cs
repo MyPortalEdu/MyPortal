@@ -2,7 +2,9 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-public sealed class AuthorizeCheckOperationFilter : IOperationFilter
+namespace MyPortal.WebApi.Swagger;
+
+public abstract class AuthorizeCheckOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {

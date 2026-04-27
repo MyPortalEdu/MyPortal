@@ -28,8 +28,11 @@ public class ExceptionMiddleware : IMiddleware
         catch (ValidationException vex)
         {
             var modelState = new ModelStateDictionary();
+            
             foreach (var error in vex.Errors)
+            {
                 modelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            }
 
             var problem = _problemFactory.CreateValidationProblemDetails(
                 context,
@@ -38,6 +41,31 @@ public class ExceptionMiddleware : IMiddleware
                 title: "Validation failed.");
 
             await WriteProblemAsync(context, problem);
+        }
+        catch (ArgumentException aex)
+        {
+            var modelState = new ModelStateDictionary();
+
+            if (!string.IsNullOrWhiteSpace(aex.ParamName))
+            {
+                modelState.AddModelError(aex.ParamName, aex.Message);
+                
+                var problem = _problemFactory.CreateValidationProblemDetails(
+                    context,
+                    modelState,
+                    statusCode: StatusCodes.Status400BadRequest,
+                    title: "Validation failed.");
+                
+                await WriteProblemAsync(context, problem);
+            }
+            else
+            {
+                await WriteProblemAsync(context,
+                    _problemFactory.CreateProblemDetails(context,
+                        statusCode: StatusCodes.Status400BadRequest,
+                        title: "Validation failed.",
+                        detail: aex.Message));
+            }
         }
         catch (AuthenticationException aex)
         {

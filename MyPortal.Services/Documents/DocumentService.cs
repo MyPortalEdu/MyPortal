@@ -25,7 +25,6 @@ public class DocumentService : BaseService, IDocumentService
     private readonly IFileStorageProvider _storageProvider;
     private readonly IValidationService _validationService;
 
-
     public DocumentService(IAuthorizationService authorizationService, ILogger<DocumentService> logger,
         IDocumentRepository documentRepository, IDocumentTypeRepository documentTypeRepository,
         IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider,

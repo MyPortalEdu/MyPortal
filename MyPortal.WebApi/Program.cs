@@ -26,6 +26,7 @@ using MyPortal.WebApi;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
+using MyPortal.WebApi.Swagger;
 using MyPortal.WebApi.Transformers;
 using OpenIddict.Validation.AspNetCore;
 using QueryKit.Dialects;
@@ -277,7 +278,7 @@ builder.Services.AddSwaggerGen(c =>
         Description =  "JWT Authorization header using the Bearer scheme.",
         Name = "Authorization",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.OAuth2,
+        Type = SecuritySchemeType.Http,
         Scheme = "Bearer"
     });
 });
