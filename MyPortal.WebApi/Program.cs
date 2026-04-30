@@ -23,6 +23,7 @@ using MyPortal.Data.Security;
 using MyPortal.FileStorage.Extensions;
 using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
+using MyPortal.WebApi.Filters;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
@@ -113,6 +114,13 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddClaimsPrincipalFactory<ApplicationUserClaimsPrincipalFactory>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddScoped<ISecurityStampValidator, SecurityStampValidator<ApplicationUser>>();
+builder.Services.AddScoped<ITwoFactorSecurityStampValidator, TwoFactorSecurityStampValidator<ApplicationUser>>();
+builder.Services.Configure<SecurityStampValidatorOptions>(o =>
+{
+    o.ValidationInterval = TimeSpan.FromMinutes(5);
+});
+
 var certOpts = new CertificateOptions();
 builder.Configuration.GetSection("Certificates").Bind(certOpts);
 
@@ -193,16 +201,11 @@ builder.Services.AddAuthentication(options =>
         o.Cookie.SameSite = SameSiteMode.Lax;
         o.ExpireTimeSpan = TimeSpan.FromDays(14);
         o.SlidingExpiration = true;
-        o.Events.OnValidatePrincipal = async ctx =>
-        {
-            var userManager = ctx.HttpContext.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await userManager.GetUserAsync(ctx.Principal!);
-            if (user is null || !user.IsEnabled)
-            {
-                ctx.RejectPrincipal();
-                await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-            }
-        };
+        // SecurityStampValidator re-validates the stamp every ValidationInterval (5 min,
+        // configured above). Disable, password change, role change, or admin force-rotate
+        // all trigger a fresh stamp via UpdateSecurityStampAsync, kicking the session out
+        // within the interval. No need for a per-request IsEnabled lookup.
+        o.Events.OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync;
         o.Events.OnRedirectToLogin = ctx =>
         {
             if (IsApiRequest(ctx.Request))
@@ -234,7 +237,9 @@ builder.Services.AddAuthorization(o =>
 
 builder.Services.AddAntiforgery(o =>
 {
-    o.Cookie.Name = "XSRF-TOKEN";
+    // Storage cookie keeps its default name (.AspNetCore.Antiforgery.*); the
+    // XSRF-TOKEN cookie set by the middleware below is what the SPA reads to
+    // populate the X-XSRF-TOKEN header on state-changing requests.
     o.HeaderName = "X-XSRF-TOKEN";
 });
 
@@ -251,12 +256,16 @@ builder.Services.AddScoped<IRolePermissionProvider, SqlRolePermissionProvider>()
 builder.Services.AddRepositories();
 builder.Services.AddMyPortalServices();
 
+builder.Services.AddScoped<CookieAntiforgeryFilter>();
+
 builder.Services.AddControllers(o =>
 {
     o.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
 
     o.ModelBinderProviders.Insert(0, new Base64JsonBinderProvider<FilterOptions>());
     o.ModelBinderProviders.Insert(0, new Base64JsonBinderProvider<SortOptions>());
+
+    o.Filters.Add<CookieAntiforgeryFilter>();
 });
 
 builder.Services.AddRazorPages();

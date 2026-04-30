@@ -22,14 +22,15 @@ namespace MyPortal.Auth.Policies
             {
                 var scheme = ctx.User.Identity?.AuthenticationType ?? string.Empty;
 
-                var isBearer = string.Equals(
-                    scheme,
-                    OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme,
-                    StringComparison.OrdinalIgnoreCase);
-
-                if (!isBearer)
+                if (string.Equals(scheme, IdentityConstants.ApplicationScheme, StringComparison.OrdinalIgnoreCase))
                 {
-                    return true; // Cookie-authenticated user -> allowed
+                    return true;
+                }
+
+                if (!string.Equals(scheme, OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
                 }
 
                 var scopes = ctx.User.Claims

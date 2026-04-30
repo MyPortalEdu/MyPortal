@@ -28,16 +28,15 @@ public class AuthorizationService : IAuthorizationService
         return _user.UserType;
     }
 
-    public async Task<bool> HasPermissionAsync(string permission, CancellationToken cancellationToken)
+    public Task<bool> HasPermissionAsync(string permission, CancellationToken cancellationToken)
     {
-        var id = _user.UserId ?? throw new AuthenticationException("Not authenticated.");
-        return await _perms.HasPermissionAsync(id, permission, cancellationToken);
+        return _perms.HasPermissionAsync(permission, cancellationToken);
     }
 
     public async Task RequirePermissionAsync(string permission, CancellationToken ct = default)
     {
-        var id = _user.UserId ?? throw new AuthenticationException("Not authenticated.");
-        if (!await _perms.HasPermissionAsync(id, permission, ct))
+        if (_user.UserId is null) throw new AuthenticationException("Not authenticated.");
+        if (!await _perms.HasPermissionAsync(permission, ct))
             throw new ForbiddenException($"You do not have permission to perform this action.");
     }
 

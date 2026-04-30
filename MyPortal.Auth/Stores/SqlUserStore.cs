@@ -59,6 +59,7 @@ VALUES
         user.NormalizedUserName = Normalize(user.UserName);
         user.NormalizedEmail    = Normalize(user.Email);
 
+        // Created* fields are immutable after insert and deliberately excluded from this UPDATE.
         const string sql = @"
 UPDATE dbo.Users SET
  UserName=@UserName, NormalizedUserName=@NormalizedUserName,
@@ -68,7 +69,6 @@ UPDATE dbo.Users SET
  PhoneNumberConfirmed=@PhoneNumberConfirmed, TwoFactorEnabled=@TwoFactorEnabled,
  LockoutEnd=@LockoutEnd, LockoutEnabled=@LockoutEnabled, AccessFailedCount=@AccessFailedCount,
  PersonId=@PersonId, UserType=@UserType, IsEnabled=@IsEnabled, IsSystem=@IsSystem,
- CreatedAt=@CreatedAt, CreatedById=@CreatedById, CreatedByIpAddress=@CreatedByIpAddress,
  LastModifiedAt=@LastModifiedAt, LastModifiedById=@LastModifiedById, LastModifiedByIpAddress=@LastModifiedByIpAddress,
  Version=@Version
 WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
@@ -97,9 +97,6 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
                 user.IsEnabled,
                 user.IsSystem,
                 user.ConcurrencyStamp,
-                user.CreatedAt,
-                user.CreatedById,
-                user.CreatedByIpAddress,
                 user.LastModifiedAt,
                 user.LastModifiedById,
                 user.LastModifiedByIpAddress,

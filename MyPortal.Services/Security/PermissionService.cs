@@ -18,9 +18,10 @@ public class PermissionService : IPermissionService
         _permissionRepository = permissionRepository;
     }
 
-    public async Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct = default)
+    public async Task<bool> HasPermissionAsync(string permission, CancellationToken ct = default)
     {
-        if (_user.UserId != userId) return false;
+        if (_user.UserId is null) return false;
+
         var roles = await _user.GetRolesAsync(ct);
         var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
         return perms.Contains(permission, StringComparer.OrdinalIgnoreCase);

@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.Extensions.Caching.Memory;
+using System.Security.Claims;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 
@@ -9,19 +8,17 @@ public class CurrentUser : ICurrentUser
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IRoleAccessor _roles;
-    private readonly IMemoryCache _cache;
 
     private ClaimsPrincipal? Principal => _httpContextAccessor.HttpContext?.User;
-    
-    public CurrentUser(IHttpContextAccessor httpContextAccessor, IRoleAccessor roles, IMemoryCache cache)
+
+    public CurrentUser(IHttpContextAccessor httpContextAccessor, IRoleAccessor roles)
     {
         _httpContextAccessor = httpContextAccessor;
         _roles = roles;
-        _cache = cache;
     }
-    
+
     public string? IpAddress => _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
-    
+
     public Guid? UserId
     {
         get
@@ -40,18 +37,12 @@ public class CurrentUser : ICurrentUser
             return Enum.TryParse<UserType>(raw, true, out var t) ? t : UserType.Unknown;
         }
     }
-    
+
     public async Task<IReadOnlyCollection<Guid>> GetRolesAsync(CancellationToken ct = default)
     {
         if (UserId is null)
-            return await Task.FromResult<IReadOnlyCollection<Guid>>([]);
-        
-        var key = $"roles:{UserId}";
+            return [];
 
-        return await _cache.GetOrCreateAsync(key, async entry =>
-        {
-            entry.SlidingExpiration = TimeSpan.FromMinutes(10);
-            return await _roles.GetRolesForUserAsync(UserId.Value, ct);
-        })! ?? [];
+        return await _roles.GetRolesForUserAsync(UserId.Value, ct);
     }
 }

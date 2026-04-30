@@ -20,7 +20,7 @@ namespace MyPortal.Data.Repositories
 
             var p = new { roleId };
 
-            var conn = _factory.Create();
+            using var conn = _factory.Create();
 
             return await conn.ExecuteStoredProcedureAsync<RolePermission>(sql, p, cancellationToken: cancellationToken);
         }

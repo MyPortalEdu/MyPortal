@@ -19,17 +19,15 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
     {
         if (_user.UserId is null) return;
 
-        var userId = _user.UserId.Value;
-
         if (req.Permissions.Length == 0)
         {
-            context.Succeed(req);
+            // Misconfigured policy (no permissions specified) — fail closed.
             return;
         }
 
         var checks = new List<bool>(req.Permissions.Length);
         foreach (var p in req.Permissions)
-            checks.Add(await _perms.HasPermissionAsync(userId, p));
+            checks.Add(await _perms.HasPermissionAsync(p));
 
         bool ok = req.Mode == PermissionMode.RequireAny
             ? checks.Any(x => x)
