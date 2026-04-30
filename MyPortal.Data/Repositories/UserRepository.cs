@@ -46,7 +46,7 @@ public class UserRepository : EntityRepository<User>, IUserRepository
         PageOptions? paging = null,
         CancellationToken cancellationToken = default)
     {
-        var sql = SqlResourceLoader.Load("System.Users.GetUsers.sql");
+        var sql = SqlResourceLoader.Load("System.Users.GetUserSummaries.sql");
 
         var result = await GetListPagedAsync<UserSummaryResponse>(sql, null, filter, sort, paging, false, cancellationToken);
         

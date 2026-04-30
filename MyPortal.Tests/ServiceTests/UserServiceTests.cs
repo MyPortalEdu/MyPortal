@@ -8,6 +8,7 @@ using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Contracts.Models.System.Users;
+using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.System;
 using MyPortal.Tests.Mocks;
@@ -24,6 +25,7 @@ public class UserServiceTests
     private Mock<IPermissionRepository> _permissionRepository;
     private Mock<UserManager<ApplicationUser>> _userManager;
     private Mock<RoleManager<ApplicationRole>> _roleManager;
+    private Mock<IValidationService> _validationService;
 
     private UserService _userService;
 
@@ -36,18 +38,23 @@ public class UserServiceTests
         _permissionRepository = new Mock<IPermissionRepository>(MockBehavior.Strict);
         _userManager = IdentityMocks.MockUserManager<ApplicationUser>();
         _roleManager = IdentityMocks.MockRoleManager<ApplicationRole>();
+        _validationService = new Mock<IValidationService>(MockBehavior.Strict);
 
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        
+
         _authorizationService
             .Setup(a => a.GetCurrentUserId())
             .Returns(Guid.NewGuid());
-        
+
         _authorizationService
             .Setup(a => a.GetCurrentUserIpAddress())
             .Returns("::1");
+
+        _validationService
+            .Setup(v => v.ValidateAsync(It.IsAny<UserUpsertRequest>()))
+            .Returns(Task.CompletedTask);
 
         _userService = new UserService(
             _authorizationService.Object,
@@ -55,7 +62,8 @@ public class UserServiceTests
             _userRepository.Object,
             _permissionRepository.Object,
             _userManager.Object,
-            _roleManager.Object
+            _roleManager.Object,
+            _validationService.Object
         );
     }
 
@@ -330,7 +338,7 @@ public class UserServiceTests
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
-        var user = new ApplicationUser { Id = id, IsEnabled = true };
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Student };
 
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "Same" };
@@ -348,7 +356,7 @@ public class UserServiceTests
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
-            UserType = UserType.Student,
+            UserType = UserType.Student, // unchanged
             IsEnabled = true, // unchanged
             RoleIds = new List<Guid> { roleId } // same set as before
         }, CancellationToken.None);
@@ -368,7 +376,7 @@ public class UserServiceTests
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
-        var user = new ApplicationUser { Id = id, IsEnabled = true };
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Student };
         var roleId = Guid.NewGuid();
 
         var emptyRole = new ApplicationRole { Id = roleId, Name = "   " }; // whitespace

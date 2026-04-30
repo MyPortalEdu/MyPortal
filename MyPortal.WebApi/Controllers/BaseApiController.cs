@@ -16,7 +16,6 @@ namespace MyPortal.WebApi.Controllers;
 [ApiController]
 [Authorize(Policy = ScopePolicy.PolicyName)]
 [Route("api/[controller]")]
-[IgnoreAntiforgeryToken] // <-- Clients may be using bearer auth
 public abstract class BaseApiController<TSelf> : ControllerBase
 {
     private readonly ProblemDetailsFactory _problemFactory;

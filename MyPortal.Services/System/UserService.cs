@@ -6,6 +6,7 @@ using MyPortal.Auth.Models;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Core.Entities;
+using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Repositories.Filtering;
@@ -21,15 +22,17 @@ public class UserService : BaseService, IUserService
     private readonly IPermissionRepository _permissionRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
+    private readonly IValidationService _validationService;
 
     public UserService(IAuthorizationService authorizationService, ILogger<UserService> logger, IUserRepository userRepository,
         IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager) : base(authorizationService, logger)
+        RoleManager<ApplicationRole> roleManager, IValidationService validationService) : base(authorizationService, logger)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
         _userManager = userManager;
         _roleManager = roleManager;
+        _validationService = validationService;
     }
 
     public async Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
@@ -118,6 +121,8 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
+        await _validationService.ValidateAsync(model);
+
         var newUser = new ApplicationUser
         {
             Id = SqlConvention.SequentialGuid(),
@@ -156,6 +161,8 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
+        await _validationService.ValidateAsync(model);
+
         var user = await _userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
@@ -164,6 +171,7 @@ public class UserService : BaseService, IUserService
         }
 
         bool userDisabled = user.IsEnabled && !model.IsEnabled;
+        bool userTypeChanged = user.UserType != model.UserType;
 
         user.PersonId = model.PersonId;
         user.IsEnabled = model.IsEnabled;
@@ -175,14 +183,28 @@ public class UserService : BaseService, IUserService
         user.LastModifiedByIpAddress = AuthorizationService.GetCurrentUserIpAddress();
         user.Version += 1;
 
+        using var tx = CreateTransactionScope();
+
         var rolesChanged = await UpdateUserRoles(user, model.RoleIds);
 
-        if (userDisabled || rolesChanged)
+        IdentityResult result;
+        // Rotate the security stamp on any privilege-relevant change. Without this, an active
+        // session keeps its claims (UserType, roles) until ValidationInterval expires.
+        if (userDisabled || userTypeChanged || rolesChanged)
         {
-            return await _userManager.UpdateSecurityStampAsync(user);
+            result = await _userManager.UpdateSecurityStampAsync(user);
+        }
+        else
+        {
+            result = await _userManager.UpdateAsync(user);
         }
 
-        return await _userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            tx.Complete();
+        }
+
+        return result;
     }
 
     public async Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken)

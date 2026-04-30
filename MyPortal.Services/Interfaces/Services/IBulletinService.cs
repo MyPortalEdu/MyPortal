@@ -13,5 +13,6 @@ public interface IBulletinService
     Task<Guid> CreateBulletinAsync(BulletinUpsertRequest model, CancellationToken cancellationToken);
     Task UpdateBulletinAsync(Guid bulletinId, BulletinUpsertRequest model, CancellationToken cancellationToken);
     Task DeleteBulletinAsync(Guid bulletinId, CancellationToken cancellationToken);
-    Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, CancellationToken cancellationToken);
+    Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, long expectedVersion,
+        CancellationToken cancellationToken);
 }

@@ -42,7 +42,7 @@ public sealed class RolesController : BaseApiController<RolesController>
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewRoles)]
     public async Task<IActionResult> GetRolesAsync([FromQuery] int page, [FromQuery] int pageSize,
-        [FromQuery] FilterOptions filter, [FromQuery] SortOptions sort)
+        [FromQuery] FilterOptions? filter, [FromQuery] SortOptions? sort)
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 

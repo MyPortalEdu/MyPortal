@@ -5,10 +5,12 @@ import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {providePrimeNG} from 'primeng/config';
-import {provideHttpClient, withInterceptorsFromDi, withXsrfConfiguration} from '@angular/common/http';
+import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angular/common/http';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
 import {definePreset} from '@primeng/themes';
+import {apiBaseInterceptor} from './core/interceptors/api-base-interceptor';
+import {authErrorInterceptor} from './core/interceptors/auth-error-interceptor';
 
 const MyPortal = definePreset(Aura, {
   semantic: {
@@ -31,7 +33,7 @@ const MyPortal = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(
-      withInterceptorsFromDi(),
+      withInterceptors([apiBaseInterceptor, authErrorInterceptor]),
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' })
     ),
     provideBrowserGlobalErrorListeners(),

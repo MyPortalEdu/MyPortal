@@ -133,10 +133,13 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (!Guid.TryParse(userId, out var id))
+            return null;
+
         const string sql = "SELECT TOP 1 * FROM dbo.Users WHERE Id=@Id;";
         using var connection = _connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationUser>(
-            new CommandDefinition(sql, new { Id = Guid.Parse(userId) }, cancellationToken: cancellationToken));
+            new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<ApplicationUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)

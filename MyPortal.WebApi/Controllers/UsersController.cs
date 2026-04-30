@@ -44,7 +44,7 @@ public class UsersController : BaseApiController<UsersController>
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewUsers)]
     [ProducesResponseType(typeof(PageResult<UserSummaryResponse>), 200)]
     public async Task<IActionResult> GetUsersAsync([FromQuery] int page, [FromQuery] int pageSize,
-        [FromQuery] FilterOptions filter, [FromQuery] SortOptions sort)
+        [FromQuery] FilterOptions? filter, [FromQuery] SortOptions? sort)
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 

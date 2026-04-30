@@ -43,7 +43,9 @@ public class LoginModel : PageModel
         if (user is null)
         { ModelState.AddModelError(string.Empty, "Invalid credentials."); ReturnUrl = returnUrl; return Page(); }
 
-        var result = await _signIn.PasswordSignInAsync(user, Input.Password, Input.RememberMe, true);
+        // lockoutOnFailure: false — IUserLockoutStore is not implemented on SqlUserStore.
+        // Re-enable once the lockout store is wired up.
+        var result = await _signIn.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (!result.Succeeded)
         { ModelState.AddModelError(string.Empty, "Invalid credentials."); ReturnUrl = returnUrl; return Page(); }
 

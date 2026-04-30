@@ -76,7 +76,8 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     public async Task<IActionResult> ApproveBulletinAsync([FromRoute] Guid bulletinId,
         [FromBody] BulletinApprovalRequest model)
     {
-        await _bulletinService.UpdateBulletinApprovalAsync(bulletinId, model.IsApproved, CancellationToken);
+        await _bulletinService.UpdateBulletinApprovalAsync(bulletinId, model.IsApproved, model.ExpectedVersion,
+            CancellationToken);
 
         return NoContent();
     }

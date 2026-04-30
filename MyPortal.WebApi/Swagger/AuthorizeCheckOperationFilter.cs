@@ -4,7 +4,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace MyPortal.WebApi.Swagger;
 
-public abstract class AuthorizeCheckOperationFilter : IOperationFilter
+public class AuthorizeCheckOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {

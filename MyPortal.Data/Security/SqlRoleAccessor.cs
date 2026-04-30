@@ -23,8 +23,8 @@ FROM UserRoles UR
 JOIN Roles R ON UR.RoleId = R.Id
 WHERE UR.UserId = @userId";
 
-        var conn = _connectionFactory.Create();
-        var roles = await conn.QueryAsync<Guid>(sql, new { userId });
+        using var conn = _connectionFactory.Create();
+        var roles = await conn.QueryAsync<Guid>(new CommandDefinition(sql, new { userId }, cancellationToken: ct));
         return roles.Distinct().ToArray();
     }
 }

@@ -106,7 +106,10 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         bulletin.Detail = model.Detail;
         bulletin.IsPrivate = model.IsPrivate;
         bulletin.ExpiresAt = model.ExpiresAt;
-        bulletin.Version = model.Version;
+        // Hand the client's expected version to the repo's optimistic-concurrency check;
+        // QueryKit's UpdateWithVersionAsync turns it into a WHERE Version=@expected guard
+        // and throws ConcurrencyException on mismatch.
+        bulletin.Version = model.ExpectedVersion;
 
         if (!await AuthorizationService.HasPermissionAsync(Permissions.School.ApproveSchoolBulletins,
                 cancellationToken))
@@ -144,7 +147,8 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         Logger.LogInformation("Directory deleted for bulletin: {bulletinId}", bulletinId);
     }
 
-    public async Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, CancellationToken cancellationToken)
+    public async Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, long expectedVersion,
+        CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ApproveSchoolBulletins,
             cancellationToken);
@@ -159,6 +163,8 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         }
 
         bulletin.IsApproved = isApproved;
+        // Hand the client's expected version to the repo's optimistic-concurrency check.
+        bulletin.Version = expectedVersion;
 
         await _bulletinRepository.UpdateAsync(bulletin, cancellationToken);
 

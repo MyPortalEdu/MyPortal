@@ -205,16 +205,27 @@ public class DocumentService : BaseService, IDocumentService
             throw new ForbiddenException("You do not have permission to delete this document.");
         }
 
-        if (!softDelete)
-        {
-            await _storageProvider.DeleteFileAsync(document.StorageKey, cancellationToken);
-
-            Logger.LogInformation("File {fileName} deleted, storage key: {storageKey}", document.FileName, document.StorageKey);
-        }
-            
+        // Delete the DB row first; only purge the blob on success. Reverse order would orphan
+        // the row pointing at a missing blob if storage delete succeeded but DB delete failed.
         await _documentRepository.DeleteAsync(documentId, cancellationToken, softDelete);
 
         Logger.LogInformation("Document deleted: {documentId}, soft delete: {softDelete}", documentId, softDelete);
+
+        if (!softDelete)
+        {
+            try
+            {
+                await _storageProvider.DeleteFileAsync(document.StorageKey, cancellationToken);
+                Logger.LogInformation("File {fileName} deleted, storage key: {storageKey}", document.FileName,
+                    document.StorageKey);
+            }
+            catch (Exception cleanupEx)
+            {
+                Logger.LogWarning(cleanupEx,
+                    "Document row deleted but failed to delete blob at storage key {storageKey}. Manual cleanup may be required.",
+                    document.StorageKey);
+            }
+        }
     }
 
     public async Task<DocumentDetailsResponse> GetDocumentByIdAsync(Guid documentId,

@@ -317,9 +317,15 @@ app.UseAuthorization();
 
 app.Use(async (ctx, next) =>
 {
+    // Issue the XSRF-TOKEN cookie on any browser navigation that returns the SPA shell —
+    // not just `/`. Deep links (handled by MapFallbackToFile) need it too. We gate on the
+    // Accept header so API/XHR/asset requests don't unnecessarily mint a token.
     if (HttpMethods.IsGet(ctx.Request.Method) &&
-        ctx.Request.Path == "/" &&
-        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN"))
+        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN") &&
+        !ctx.Request.Path.StartsWithSegments("/api") &&
+        !ctx.Request.Path.StartsWithSegments("/connect") &&
+        ctx.Request.Headers["Accept"].ToString()
+            .Contains("text/html", StringComparison.OrdinalIgnoreCase))
     {
         var anti = ctx.RequestServices.GetRequiredService<IAntiforgery>();
         var tokens = anti.GetAndStoreTokens(ctx);
