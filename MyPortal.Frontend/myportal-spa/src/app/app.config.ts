@@ -5,7 +5,7 @@ import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {providePrimeNG} from 'primeng/config';
-import {provideHttpClient, withInterceptorsFromDi} from '@angular/common/http';
+import {provideHttpClient, withInterceptorsFromDi, withXsrfConfiguration} from '@angular/common/http';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
 import {definePreset} from '@primeng/themes';
@@ -30,7 +30,10 @@ const MyPortal = definePreset(Aura, {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(
+      withInterceptorsFromDi(),
+      withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' })
+    ),
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),

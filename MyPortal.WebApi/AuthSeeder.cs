@@ -72,13 +72,28 @@ public static class AuthSeeder
                 UserType = UserType.Staff,
                 IsEnabled = true,
                 IsSystem = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                CreatedByIpAddress = "::1",
+                LastModifiedByIpAddress = "::1",
+                LastModifiedAt = DateTime.UtcNow,
+                Version = 1
             };
             await users.CreateAsync(admin, "Passw0rd!");
             await users.AddToRoleAsync(admin, "System Administrator");
         }
 
         using var conn = connFactory.Create();
+        
+        await conn.ExecuteAsync(@"
+DECLARE @result int;
+EXEC @result = sp_getapplock 
+    @Resource = 'MyPortal.AuthSeeder',
+    @LockMode = 'Exclusive',
+    @LockOwner = 'Session',
+    @LockTimeout = 60000;
+IF @result < 0 THROW 50000, 'Could not acquire seed lock', 1;
+");
+        
         var allPerms = (await conn.QueryAsync<Guid>("SELECT Id FROM Permissions")).ToArray();
         var adminRoleId = await conn.QuerySingleAsync<Guid>("SELECT Id FROM Roles WHERE Name = @name", new { name = "System Administrator" });
 
@@ -88,6 +103,26 @@ public static class AuthSeeder
                 IF NOT EXISTS (SELECT 1 FROM dbo.RolePermissions WHERE RoleId=@r AND PermissionId=@p)
                 INSERT INTO dbo.RolePermissions(Id, RoleId, PermissionId) VALUES(@id, @r, @p);",
                 new { id = Guid.NewGuid(), r = adminRoleId, p = perm });
+        }
+        
+        var seededTables = new[] { "GradeSets" };
+
+        foreach (var table in seededTables)
+        {
+            await conn.ExecuteAsync(
+                $@"UPDATE dbo.[{table}] 
+SET CreatedById = @adminId, 
+    LastModifiedById = @adminId 
+WHERE CreatedById IS NULL OR LastModifiedById IS NULL",
+                new { adminId = admin.Id });
+
+            await conn.ExecuteAsync(
+                $@"ALTER TABLE dbo.[{table}] 
+ALTER COLUMN CreatedById UNIQUEIDENTIFIER NOT NULL;");
+            
+            await conn.ExecuteAsync(
+                $@"ALTER TABLE dbo.[{table}] 
+ALTER COLUMN LastModifiedById UNIQUEIDENTIFIER NOT NULL;");
         }
     }
 }

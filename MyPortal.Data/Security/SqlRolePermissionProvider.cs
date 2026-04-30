@@ -23,12 +23,12 @@ public class SqlRolePermissionProvider : IRolePermissionProvider
 
         var all = new List<IReadOnlyCollection<string>>(roles.Length);
 
-        var conn = _connectionFactory.Create();
+        using var conn = _connectionFactory.Create();
 
         foreach (var role in roles)
         {
             var cached = await _cache.GetAsync(role, ct);
-            if (cached.Count > 0)
+            if (cached is not null)
             {
                 all.Add(cached);
                 continue;

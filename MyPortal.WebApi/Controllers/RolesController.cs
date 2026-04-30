@@ -13,7 +13,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-public class RolesController : BaseApiController<RolesController>
+public sealed class RolesController : BaseApiController<RolesController>
 {
     private readonly IRoleService _roleService;
 
@@ -41,9 +41,12 @@ public class RolesController : BaseApiController<RolesController>
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.System.ViewRoles)]
-    public async Task<IActionResult> GetRolesAsync([FromQuery] FilterOptions? filter, [FromQuery] SortOptions? sort, [FromQuery] PageOptions? paging)
+    public async Task<IActionResult> GetRolesAsync([FromQuery] int page, [FromQuery] int pageSize,
+        [FromQuery] FilterOptions filter, [FromQuery] SortOptions sort)
     {
-        var result = await _roleService.GetRolesAsync(filter, sort, paging, CancellationToken);
+        var options = GetListingOptions(page, pageSize, filter, sort);
+
+        var result = await _roleService.GetRolesAsync(options.FilterOptions, options.SortOptions, options.PageOptions);
 
         return Ok(result);
     }

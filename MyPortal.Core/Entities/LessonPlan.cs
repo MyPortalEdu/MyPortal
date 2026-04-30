@@ -5,7 +5,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("LessonPlans")]
-    public class LessonPlan : AuditableEntity, IDirectoryEntity
+    public class LessonPlan : Entity, IAuditableEntity, IDirectoryEntity, IVersionedEntity
     {
         public Guid StudyTopicId { get; set; }
 
@@ -22,5 +22,15 @@ namespace MyPortal.Core.Entities
 
         public Directory? Directory { get; set; }
         public StudyTopic? StudyTopic { get; set; }
+        
+        public Guid CreatedById { get; set; }
+        public string CreatedByIpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid LastModifiedById { get; set; }
+        public string LastModifiedByIpAddress { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+        public User? CreatedBy { get; set; }
+        public User? LastModifiedBy { get; set; }
+        public long Version { get; set; }
     }
 }

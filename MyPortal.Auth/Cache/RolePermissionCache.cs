@@ -12,8 +12,8 @@ public class RolePermissionCache : IRolePermissionCache
         _cache = cache;
     }
 
-    public Task<IReadOnlyCollection<string>> GetAsync(Guid roleId, CancellationToken ct = default)
-        => Task.FromResult(_cache.Get<IReadOnlyCollection<string>>(Key(roleId)) ?? Array.Empty<string>());
+    public Task<IReadOnlyCollection<string>?> GetAsync(Guid roleId, CancellationToken ct = default)
+        => Task.FromResult(_cache.Get<IReadOnlyCollection<string>>(Key(roleId)));
 
     public void Set(Guid roleId, IReadOnlyCollection<string> perms)
         => _cache.Set(Key(roleId), perms, new MemoryCacheEntryOptions

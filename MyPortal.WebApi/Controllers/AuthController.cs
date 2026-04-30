@@ -83,8 +83,15 @@ public sealed class AuthController : ControllerBase
             if (!result.Succeeded || result.Principal is null)
                 return Forbid(oidcScheme);
 
-            // optionally re-check user.Enabled here by loading the user id from NameIdentifier
-            // and forbidding if disabled, depending on token invalidation strategy.
+            var subject = result.Principal.GetClaim(OpenIddictConstants.Claims.Subject);
+
+            if (string.IsNullOrEmpty(subject))
+                return Forbid(oidcScheme);
+
+            var user = await _userManager.FindByIdAsync(subject);
+
+            if (user is null || !user.IsEnabled)
+                return Forbid(oidcScheme);
 
             return SignIn(result.Principal, oidcScheme);
         }

@@ -12,4 +12,4 @@
     U.TwoFactorEnabled,
     U.LockoutEnabled
 FROM dbo.Users U
-CROSS APPLY dbo.fn_person_get_name(U.PersonId, 3, 0, 0) P
+OUTER APPLY dbo.fn_person_get_name(U.PersonId, 3, 0, 0) P

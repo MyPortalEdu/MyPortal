@@ -1,4 +1,5 @@
 ﻿using MyPortal.Contracts.Models.Documents;
+using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Services.Interfaces.Services;
 
@@ -11,7 +12,7 @@ namespace MyPortal.Services.Interfaces.Services;
 /// updating directories and documents, retrieving details and contents, and deleting items with options for soft
 /// deletion. All methods accept a cancellation token to support cooperative cancellation of asynchronous operations.
 /// Thread safety and transactional guarantees depend on the specific implementation.</remarks>
-public interface IDirectoryEntityService
+public interface IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntity : IDirectoryEntity
 {
     /// <summary>
     /// Creates a new directory for the specified entity asynchronously using the provided details.
@@ -56,7 +57,7 @@ public interface IDirectoryEntityService
     /// <param name="cancellationToken">A token that can be used to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see
     /// cref="DirectoryDetailsResponse"/> with the directory details if found; otherwise, <see langword="null"/>.</returns>
-    Task<DirectoryDetailsResponse?> GetDirectoryByIdAsync(Guid entityId, Guid directoryId,
+    Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid entityId, Guid directoryId,
         CancellationToken cancellationToken);
 
     /// <summary>
@@ -126,7 +127,7 @@ public interface IDirectoryEntityService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see
     /// cref="DocumentDetailsResponse"/> with the document details if found; otherwise, <see langword="null"/>.</returns>
-    Task<DocumentDetailsResponse?> GetDocumentByIdAsync(Guid entityId, Guid documentId,
+    Task<DocumentDetailsResponse> GetDocumentByIdAsync(Guid entityId, Guid documentId,
         CancellationToken cancellationToken);
     
     /// <summary>

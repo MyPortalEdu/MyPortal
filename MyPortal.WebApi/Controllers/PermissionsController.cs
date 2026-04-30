@@ -8,7 +8,7 @@ using MyPortal.Common.Enums;
 
 namespace MyPortal.WebApi.Controllers
 {
-    public class PermissionsController : BaseApiController<PermissionsController>
+    public sealed class PermissionsController : BaseApiController<PermissionsController>
     {
         private readonly IPermissionService _permissionService;
 

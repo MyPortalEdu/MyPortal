@@ -2,6 +2,7 @@
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Auth.Requirements;
+using MyPortal.Common.Enums;
 
 namespace MyPortal.Auth.Handlers;
 
@@ -12,6 +13,11 @@ public sealed class UserTypeHandler : AuthorizationHandler<UserTypeRequirement>
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UserTypeRequirement req)
     {
+        if (_me.UserType == UserType.Unknown)
+        {
+            return Task.CompletedTask;
+        }
+
         var ut = _me.UserType.ToString();
         if (req.Allowed.Length == 0 || req.Allowed.Contains(ut, StringComparer.OrdinalIgnoreCase))
             context.Succeed(req);

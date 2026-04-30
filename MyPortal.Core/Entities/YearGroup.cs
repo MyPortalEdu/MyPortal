@@ -4,7 +4,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("YearGroups")]
-    public class YearGroup : Entity, IStudentGroupEntity
+    public class YearGroup : Entity, IAuditableEntity, IStudentGroupEntity, IVersionedEntity
     {
         public Guid StudentGroupId { get; set; }
 
@@ -12,5 +12,16 @@ namespace MyPortal.Core.Entities
 
         public StudentGroup? StudentGroup { get; set; }
         public CurriculumYearGroup? CurriculumYearGroup { get; set; }
+        
+        // Audit
+        public Guid CreatedById { get; set; }
+        public string CreatedByIpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid LastModifiedById { get; set; }
+        public string LastModifiedByIpAddress { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+        public User? CreatedBy { get; set; }
+        public User? LastModifiedBy { get; set; }
+        public long Version { get; set; }
     }
 }

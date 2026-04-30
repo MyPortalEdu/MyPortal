@@ -1,8 +1,8 @@
-﻿using MyPortal.Auth.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.Documents;
-using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
@@ -15,8 +15,9 @@ public class DirectoryService : BaseService, IDirectoryService
     private readonly IDirectoryRepository _directoryRepository;
     private readonly IDocumentRepository _documentRepository;
 
-    public DirectoryService(IAuthorizationService authorizationService, IDirectoryRepository directoryRepository,
-        IDocumentRepository documentRepository) : base(authorizationService)
+    public DirectoryService(IAuthorizationService authorizationService, ILogger<DirectoryService> logger,
+        IDirectoryRepository directoryRepository, IDocumentRepository documentRepository) : base(authorizationService,
+        logger)
     {
         _directoryRepository = directoryRepository;
         _documentRepository = documentRepository;
@@ -25,10 +26,7 @@ public class DirectoryService : BaseService, IDirectoryService
     public async Task<DirectoryDetailsResponse> CreateDirectoryAsync(DirectoryUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        if (_authorizationService.GetCurrentUserType() != UserType.Staff && model.IsPrivate)
-        {
-            throw new ForbiddenException("You do not have permission to create private directories.");
-        }
+        RequireStaff("create");
 
         var id = SqlConvention.SequentialGuid();
 
@@ -37,18 +35,20 @@ public class DirectoryService : BaseService, IDirectoryService
             Id = id,
             Name = model.Name,
             ParentId = model.ParentId,
-            IsPrivate = model.IsPrivate
+            IsPrivate = model.IsPrivate,
+            UploadPolicy = model.UploadPolicy
         };
 
         await _directoryRepository.InsertAsync(directory, cancellationToken);
 
-        return await GetDirectoryByIdAsync(id, cancellationToken) ??
-               throw new InvalidOperationException("Created directory, but could not load details.");
+        return await GetDirectoryByIdAsync(id, cancellationToken);
     }
 
     public async Task<DirectoryDetailsResponse> UpdateDirectoryAsync(Guid directoryId, DirectoryUpsertRequest model,
         CancellationToken cancellationToken)
     {
+        RequireStaff("update");
+
         var directory = await _directoryRepository.GetByIdAsync(directoryId, cancellationToken);
 
         if (directory == null)
@@ -56,23 +56,20 @@ public class DirectoryService : BaseService, IDirectoryService
             throw new NotFoundException("Directory not found.");
         }
 
-        if (_authorizationService.GetCurrentUserType() != UserType.Staff && model.IsPrivate)
-        {
-            throw new ForbiddenException("You do not have permission to make directories private.");
-        }
-
         directory.IsPrivate = model.IsPrivate;
         directory.Name = model.Name;
         directory.ParentId = model.ParentId;
+        directory.UploadPolicy = model.UploadPolicy;
 
         await _directoryRepository.UpdateAsync(directory, cancellationToken);
 
-        return await GetDirectoryByIdAsync(directoryId, cancellationToken) ??
-               throw new InvalidOperationException("Updated directory, but could not load details.");
+        return await GetDirectoryByIdAsync(directoryId, cancellationToken);
     }
 
     public async Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken)
     {
+        RequireStaff("delete");
+
         var directory = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
 
         if (directory == null)
@@ -80,30 +77,28 @@ public class DirectoryService : BaseService, IDirectoryService
             throw new NotFoundException("Directory not found.");
         }
         
-        if (_authorizationService.GetCurrentUserType() != UserType.Staff)
-        {
-            var tree = await GetDirectoryTreeAsync(directoryId, cancellationToken);
-
-            if (tree.ContainsPrivateEntities())
-            {
-                throw new ForbiddenException("You do not have permission to delete this directory.");
-            }
-        }
-        
         await DeleteDirectoryContentsAsync(directoryId, cancellationToken);
 
         await _directoryRepository.DeleteAsync(directoryId, cancellationToken);
     }
 
-    public async Task<DirectoryDetailsResponse?> GetDirectoryByIdAsync(Guid directoryId,
+    public async Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId,
         CancellationToken cancellationToken)
     {
         var result = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
 
-        if (result is { IsPrivate: true } && _authorizationService.GetCurrentUserType() != UserType.Staff)
+        if (result == null)
         {
-            throw new ForbiddenException("You do not have permission to view this directory.");
+            throw new NotFoundException("Directory not found.");
         }
+
+        return result;
+    }
+
+    public async Task<DirectoryDetailsResponse?> TryGetDirectoryByIdAsync(Guid directoryId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
 
         return result;
     }
@@ -113,24 +108,10 @@ public class DirectoryService : BaseService, IDirectoryService
     {
         var directory = await GetDirectoryByIdAsync(directoryId, cancellationToken);
 
-        if (directory == null)
-        {
-            throw new NotFoundException("Directory not found.");
-        }
-
-        if (directory.IsPrivate && _authorizationService.GetCurrentUserType() != UserType.Staff)
-        {
-            throw new ForbiddenException("You do not have permission to view this directory.");
-        }
-
         var directories = await _directoryRepository.GetDirectoriesByParentIdAsync(directoryId, cancellationToken);
         var documents = await _documentRepository.GetDocumentsByDirectoryId(directoryId, cancellationToken);
 
-        var response = new DirectoryContentsResponse(directory,
-            directories.Where(d => _authorizationService.GetCurrentUserType() == UserType.Staff || !d.IsPrivate)
-                .ToList(),
-            documents.Where(e => _authorizationService.GetCurrentUserType() == UserType.Staff || !e.IsPrivate)
-                .ToList());
+        var response = new DirectoryContentsResponse(directory, directories, documents);
 
         return response;
     }
@@ -149,17 +130,18 @@ public class DirectoryService : BaseService, IDirectoryService
     {
         var directory = await GetDirectoryByIdAsync(directoryId, cancellationToken);
 
-        if (directory == null)
-        {
-            throw new NotFoundException("Directory not found.");
-        }
-        
         var directories = await _directoryRepository.GetDirectoryTreeAsync(directoryId, cancellationToken);
 
         var documents = await _documentRepository.GetDocumentsInSubtreeAsync(directoryId, cancellationToken,
             includeDeletedDocs);
 
         return new DirectoryContentsResponse(directory, directories, documents);
+    }
+
+    public async Task<bool> IsDirectoryInSubtreeAsync(Guid rootDirectoryId, Guid candidateDirectoryId,
+        CancellationToken cancellationToken)
+    {
+        return await _directoryRepository.IsInSubtreeAsync(rootDirectoryId, candidateDirectoryId, cancellationToken);
     }
 
     private async Task DeleteDirectoryContentsAsync(Guid directoryId, CancellationToken cancellationToken)
@@ -183,18 +165,21 @@ public class DirectoryService : BaseService, IDirectoryService
         }
     }
 
-   
+
     private DirectoryTreeResponse BuildTree(Guid rootDirectoryId, DirectoryContentsResponse flatTree)
     {
         var directoriesById = flatTree.Directories.ToDictionary(d => d.Id);
+
+        // Key by non-null ParentId (Guid), ignore roots (ParentId == null)
         var directoriesByParent = flatTree.Directories
-            .GroupBy(d => d.ParentId)
+            .Where(d => d.ParentId.HasValue)
+            .GroupBy(d => d.ParentId!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var documentsByDirectory = flatTree.Documents
             .GroupBy(d => d.DirectoryId)
             .ToDictionary(g => g.Key, g => g.ToList());
-        
+
         DirectoryTreeResponse Build(Guid dirId, HashSet<Guid> visited)
         {
             if (!visited.Add(dirId))
@@ -209,9 +194,11 @@ public class DirectoryService : BaseService, IDirectoryService
             childDirs ??= new List<DirectoryDetailsResponse>();
             childDocs ??= new List<DocumentDetailsResponse>();
 
+            // IMPORTANT: don't reuse the same visited set across siblings
+            // or we'll get false "cycle detected" when different branches share an ancestor
             return new DirectoryTreeResponse(
                 dir,
-                childDirs.Select(d => Build(d.Id, visited)).ToList(),
+                childDirs.Select(d => Build(d.Id, new HashSet<Guid>(visited))).ToList(),
                 childDocs
             );
         }
@@ -219,4 +206,11 @@ public class DirectoryService : BaseService, IDirectoryService
         return Build(rootDirectoryId, new HashSet<Guid>());
     }
 
+    private void RequireStaff(string action)
+    {
+        if (AuthorizationService.GetCurrentUserType() != UserType.Staff)
+        {
+            throw new ForbiddenException($"You do not have permission to {action} this directory.");
+        }
+    }
 }

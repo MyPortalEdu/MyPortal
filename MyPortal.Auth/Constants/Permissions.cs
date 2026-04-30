@@ -122,9 +122,9 @@ public static class Permissions
         // public const string EditSchoolDiary         = "School.EditSchoolDiary";
         // public const string ViewSchoolDocuments     = "School.ViewSchoolDocuments";
         // public const string EditSchoolDocuments     = "School.EditSchoolDocuments";
-        // public const string ViewSchoolBulletins     = "School.ViewSchoolBulletins";
-        // public const string EditSchoolBulletins     = "School.EditSchoolBulletins";
-        // public const string ApproveSchoolBulletins  = "School.ApproveSchoolBulletins";
+        public const string ViewSchoolBulletins     = "School.ViewSchoolBulletins";
+        public const string EditSchoolBulletins     = "School.EditSchoolBulletins";
+        public const string ApproveSchoolBulletins  = "School.ApproveSchoolBulletins";
     }
 
     public static class Student

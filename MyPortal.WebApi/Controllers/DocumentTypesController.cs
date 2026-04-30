@@ -5,7 +5,7 @@ using MyPortal.Services.Interfaces.Services;
 
 namespace MyPortal.WebApi.Controllers;
 
-public class DocumentTypesController : BaseApiController<DocumentTypesController>
+public sealed class DocumentTypesController : BaseApiController<DocumentTypesController>
 {
     private readonly IDocumentService _documentService;
 

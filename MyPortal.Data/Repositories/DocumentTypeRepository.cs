@@ -1,4 +1,5 @@
-﻿using MyPortal.Common.Interfaces;
+﻿using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Repositories.Base;
@@ -10,7 +11,8 @@ namespace MyPortal.Data.Repositories;
 
 public class DocumentTypeRepository : EntityRepository<DocumentType>, IDocumentTypeRepository
 {
-    public DocumentTypeRepository(IDbConnectionFactory factory) : base(factory)
+    public DocumentTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
+        factory, authorizationService)
     {
     }
 

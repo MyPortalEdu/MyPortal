@@ -5,11 +5,11 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("StaffMembers")]
-    public class StaffMember : Entity, ISoftDeleteEntity
+    public class StaffMember : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
     {
-        public Guid? LineManagerId { get; set; }
-
         public Guid PersonId { get; set; }
+        
+        public Guid? LineManagerId { get; set; }
 
         [Required] 
         [StringLength(128)] 
@@ -37,5 +37,16 @@ namespace MyPortal.Core.Entities
         public Person? Person { get; set; }
 
         public StaffMember? LineManager { get; set; }
+        
+        // Audit
+        public Guid CreatedById { get; set; }
+        public string CreatedByIpAddress { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid LastModifiedById { get; set; }
+        public string LastModifiedByIpAddress { get; set; }
+        public DateTime LastModifiedAt { get; set; }
+        public User? CreatedBy { get; set; }
+        public User? LastModifiedBy { get; set; }
+        public long Version { get; set; }
     }
 }

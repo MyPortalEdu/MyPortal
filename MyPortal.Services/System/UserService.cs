@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Users;
+using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Repositories.Filtering;
@@ -20,9 +22,9 @@ public class UserService : BaseService, IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
 
-    public UserService(IAuthorizationService authorizationService, IUserRepository userRepository,
+    public UserService(IAuthorizationService authorizationService, ILogger<UserService> logger, IUserRepository userRepository,
         IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager) : base(authorizationService)
+        RoleManager<ApplicationRole> roleManager) : base(authorizationService, logger)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
@@ -32,18 +34,18 @@ public class UserService : BaseService, IUserService
 
     public async Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
 
         return await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
     }
 
     public async Task<UserInfoResponse?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var currentUserId = _authorizationService.GetCurrentUserId();
+        var currentUserId = AuthorizationService.GetCurrentUserId();
 
         if (currentUserId == null || currentUserId != userId)
         {
-            await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
         }
 
         var userInfo = await _userRepository.GetInfoByIdAsync(userId, cancellationToken);
@@ -63,7 +65,7 @@ public class UserService : BaseService, IUserService
     public async Task<PageResult<UserSummaryResponse>> GetUsersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
 
         var result = await _userRepository.GetUsersAsync(filter, sort, paging, cancellationToken);
         
@@ -73,7 +75,7 @@ public class UserService : BaseService, IUserService
     public async Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordRequest model,
         CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
         var user = await _userManager.FindByIdAsync(userId.ToString());
 
@@ -82,14 +84,20 @@ public class UserService : BaseService, IUserService
             throw new NotFoundException("User not found.");
         }
 
-        await _userManager.RemovePasswordAsync(user);
+        var removeResult = await _userManager.RemovePasswordAsync(user);
+
+        if (!removeResult.Succeeded)
+        {
+            return removeResult;
+        }
+
         return await _userManager.AddPasswordAsync(user, model.Password);
     }
 
     public async Task<IdentityResult> ChangePasswordAsync(Guid userId, UserChangePasswordRequest model,
         CancellationToken cancellationToken)
     {
-        var currentUserId = _authorizationService.GetCurrentUserId();
+        var currentUserId = AuthorizationService.GetCurrentUserId();
 
         if (currentUserId == null || currentUserId != userId)
         {
@@ -108,7 +116,7 @@ public class UserService : BaseService, IUserService
 
     public async Task<IdentityResult> CreateUserAsync(UserUpsertRequest model, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
         var newUser = new ApplicationUser
         {
@@ -118,13 +126,27 @@ public class UserService : BaseService, IUserService
             CreatedAt = DateTime.UtcNow,
             IsEnabled = model.IsEnabled,
             UserType = model.UserType,
-            PersonId = model.PersonId
+            PersonId = model.PersonId,
+            CreatedById = AuthorizationService.GetCurrentUserId(),
+            CreatedByIpAddress = AuthorizationService.GetCurrentUserIpAddress(),
+            LastModifiedAt = DateTime.UtcNow,
+            LastModifiedById = AuthorizationService.GetCurrentUserId(),
+            LastModifiedByIpAddress = AuthorizationService.GetCurrentUserIpAddress(),
+            Version = 1
         };
 
+        using var tx = CreateTransactionScope();
 
         var result = await _userManager.CreateAsync(newUser, model.Password);
 
+        if (!result.Succeeded)
+        {
+            return result;
+        }
+
         await UpdateUserRoles(newUser, model.RoleIds);
+
+        tx.Complete();
 
         return result;
     }
@@ -132,7 +154,7 @@ public class UserService : BaseService, IUserService
     public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
         var user = await _userManager.FindByIdAsync(userId.ToString());
 
@@ -148,6 +170,11 @@ public class UserService : BaseService, IUserService
         user.UserType = model.UserType;
         user.UserName = model.Username;
 
+        user.LastModifiedAt = DateTime.UtcNow;
+        user.LastModifiedById = AuthorizationService.GetCurrentUserId();
+        user.LastModifiedByIpAddress = AuthorizationService.GetCurrentUserIpAddress();
+        user.Version += 1;
+
         var rolesChanged = await UpdateUserRoles(user, model.RoleIds);
 
         if (userDisabled || rolesChanged)
@@ -160,7 +187,7 @@ public class UserService : BaseService, IUserService
 
     public async Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
 
         var user = await _userManager.FindByIdAsync(userId.ToString());
 

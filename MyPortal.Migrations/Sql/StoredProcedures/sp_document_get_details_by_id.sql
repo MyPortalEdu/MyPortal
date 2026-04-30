@@ -3,7 +3,8 @@ SET ANSI_NULLS ON;
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[sp_document_get_details_by_id] 
-    @documentId UNIQUEIDENTIFIER
+    @documentId UNIQUEIDENTIFIER,
+    @isStaff BIT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -12,17 +13,11 @@ SELECT
     D.[Id],
     D.[TypeId],
     DT.[Description] AS TypeDescription,
-    CASE
-        WHEN UC.PersonId IS NOT NULL
-            THEN dbo.fn_person_get_name(UC.PersonId, 3, 0 ,1)
-        ELSE UC.Username
-    END AS CreatedByName,
+    D.[CreatedById],
+    COALESCE(UCN.[Name], UC.[UserName]) AS CreatedByName,
     D.[CreatedAt],
-    CASE
-        WHEN UM.PersonId IS NOT NULL
-            THEN dbo.fn_person_get_name(UM.PersonId, 3, 0 ,1)
-        ELSE UM.Username
-    END AS LastModifiedByName,
+    D.[LastModifiedById],
+    COALESCE(UMN.[Name], UM.[UserName]) AS LastModifiedByName,
     D.[LastModifiedAt],
     D.[StorageKey],
     D.[FileName],
@@ -37,6 +32,9 @@ FROM [Documents] [D]
 INNER JOIN dbo.[DocumentTypes] [DT] ON [D].[TypeId] = [DT].[Id]
 INNER JOIN dbo.[Users] [UC] ON [D].[CreatedById] = [UC].[Id]
 INNER JOIN dbo.[Users] [UM] ON [D].[LastModifiedById] = [UM].[Id]
-WHERE D.[Id] = @documentId;
+OUTER APPLY dbo.fn_person_get_name (UC.[PersonId], 3, 0, 1) AS UCN
+OUTER APPLY dbo.fn_person_get_name (UM.[PersonId], 3, 0, 1) AS UMN
+WHERE D.[Id] = @documentId
+AND (D.[IsPrivate] = 0 OR @isStaff = 1);
 
 END;

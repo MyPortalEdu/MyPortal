@@ -33,15 +33,15 @@ public class DocumentValidators
             When(x => x.Content != null, () =>
             {
                 RuleFor(x => x.FileName)
-                    .NotEmpty().WithMessage("FileName is required when file content is provided.")
+                    .NotEmpty().WithMessage("FileName is required.")
                     .MaximumLength(256).WithMessage("FileName must not exceed 256 characters.");
 
                 RuleFor(x => x.ContentType)
-                    .NotEmpty().WithMessage("ContentType is required when file content is provided.")
+                    .NotEmpty().WithMessage("ContentType is required.")
                     .MaximumLength(256).WithMessage("ContentType must not exceed 256 characters.");
 
                 RuleFor(x => x.SizeBytes)
-                    .GreaterThan(0).WithMessage("SizeBytes must be greater than zero when file content is provided.")
+                    .GreaterThan(0).WithMessage("Size must be greater than zero.")
                     .LessThan(fileStorageOptions.Value.MaxFileSizeBytes)
                     .WithMessage($"File cannot exceed {fileStorageOptions.Value.MaxFileSizeBytes / DocumentLimits.BytesPerMegabyte}MB in size.");
             });

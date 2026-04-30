@@ -53,12 +53,20 @@ export class AuthGuard implements CanActivate, CanMatch {
       return (hasPerms && hasUserType) ? true : this.router.parseUrl('/');
     } catch (e: any) {
       if (e?.status === 401) {
-        const encoded = encodeURIComponent(returnUrl || (location.pathname + location.search + location.hash));
-        location.href = `/account/login?returnUrl=${encoded}`;
+        const candidate = returnUrl || (location.pathname + location.search + location.hash);
+        const safe = AuthGuard.sanitizeReturnUrl(candidate);
+        location.href = `/account/login?returnUrl=${encodeURIComponent(safe)}`;
         return false;
       }
 
       return this.router.parseUrl('/');
     }
+  }
+
+  // Reject anything that isn't a same-origin path (must start with a single '/').
+  private static sanitizeReturnUrl(value: string): string {
+    if (!value.startsWith('/')) return '/';
+    if (value.startsWith('//') || value.startsWith('/\\')) return '/';
+    return value;
   }
 }

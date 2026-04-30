@@ -1,4 +1,6 @@
-﻿namespace MyPortal.Contracts.Models.Documents
+﻿using MyPortal.Common.Enums;
+
+namespace MyPortal.Contracts.Models.Documents
 {
     public class DirectoryDetailsResponse
     {
@@ -6,5 +8,6 @@
         public Guid? ParentId { get; set; }
         public string Name { get; set; } = null!;
         public bool IsPrivate { get; set; }
+        public DirectoryUploadPolicy UploadPolicy { get; set; }
     }
 }

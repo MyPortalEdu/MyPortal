@@ -29,6 +29,13 @@ CREATE TABLE [dbo].[AcademicTerms] (
     [Name] nvarchar(128) NOT NULL,
     [StartDate] datetime2(7) NOT NULL,
     [EndDate] datetime2(7) NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_AcademicTerms_Version DEFAULT (1),
     CONSTRAINT PK_AcademicTerms PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -40,6 +47,13 @@ CREATE TABLE [dbo].[AcademicYears] (
     [Id] uniqueidentifier NOT NULL,
     [Name] nvarchar(128) NOT NULL,
     [IsLocked] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_AcademicYears_Version DEFAULT (1),
     CONSTRAINT PK_AcademicYears PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -96,6 +110,7 @@ CREATE TABLE [dbo].[Achievements] (
     [Date] datetime2(7) NOT NULL,
     [Comments] nvarchar(256) NULL,
     [IsDeleted] bit NOT NULL,
+    [Version] bigint NOT NULL CONSTRAINT DF_Achievements_Version DEFAULT (1),
     CONSTRAINT PK_Achievements PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -458,6 +473,7 @@ CREATE TABLE [dbo].[Bills] (
     [ChargeBillingPeriodId] uniqueidentifier NULL,
     [DueDate] datetime2(7) NOT NULL,
     [IsDispatched] bit NULL,
+    [Version] bigint NOT NULL CONSTRAINT DF_Bills_Version DEFAULT (1),
     CONSTRAINT PK_Bills PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -482,6 +498,13 @@ CREATE TABLE [dbo].[BuildingFloors] (
     [Description] nvarchar(256) NOT NULL,
     [Active] bit NOT NULL CONSTRAINT DF_BuildingFloors_Active DEFAULT (1),
     [BuildingId] uniqueidentifier NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_BuildingFloors_Version DEFAULT (1),
     CONSTRAINT PK_BuildingFloors PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -493,6 +516,13 @@ CREATE TABLE [dbo].[Buildings] (
     [Id] uniqueidentifier NOT NULL,
     [Description] nvarchar(256) NOT NULL,
     [Active] bit NOT NULL CONSTRAINT DF_Buildings_Active DEFAULT (1),
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Buildings_Version DEFAULT (1),
     CONSTRAINT PK_Buildings PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -511,9 +541,10 @@ CREATE TABLE [dbo].[Bulletins] (
     [DirectoryId] uniqueidentifier NOT NULL,
     [ExpiresAt] datetime2(7) NULL,
     [Title] nvarchar(256) NOT NULL,
-    [Detail] nvarchar(256) NOT NULL,
+    [Detail] nvarchar(2000) NOT NULL,
     [IsPrivate] bit NOT NULL,
     [IsApproved] bit NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Bulletins_Version DEFAULT (1),
     CONSTRAINT PK_Bulletins PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -566,6 +597,13 @@ CREATE TABLE [dbo].[Classes] (
     [CurriculumGroupId] uniqueidentifier NOT NULL,
     [DirectoryId] uniqueidentifier NOT NULL,
     [Code] nvarchar(256) NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Classes_Version DEFAULT (1),
     CONSTRAINT PK_Classes PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -675,6 +713,13 @@ CREATE TABLE [dbo].[Courses] (
     [Active] bit NOT NULL CONSTRAINT DF_Courses_Active DEFAULT (1),
     [SubjectId] uniqueidentifier NOT NULL,
     [Name] nvarchar(256) NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Courses_Version DEFAULT (1),
     CONSTRAINT PK_Courses PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -863,6 +908,7 @@ CREATE TABLE [dbo].[DiaryEvents] (
     [IsAllDay] bit NOT NULL,
     [IsPublic] bit NOT NULL,
     [IsSystem] bit NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_DiaryEvents_Version DEFAULT (1),
     CONSTRAINT PK_DiaryEvents PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -886,6 +932,13 @@ CREATE TABLE [dbo].[Directories] (
     [ParentId] uniqueidentifier NULL,
     [Name] nvarchar(256) NOT NULL,
     [IsPrivate] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Directories_Version DEFAULT (1),
     CONSTRAINT PK_Directories PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -930,10 +983,10 @@ CREATE TABLE [dbo].[Documents] (
     [Id] uniqueidentifier NOT NULL,
     [CreatedById] uniqueidentifier NOT NULL,
     [CreatedByIpAddress] nvarchar(45) NOT NULL,
-    [CreatedAt] datetime2(7) NOT NULL,   
+    [CreatedAt] datetime2(7) NOT NULL,
     [LastModifiedById] uniqueidentifier NOT NULL,
     [LastModifiedByIpAddress] nvarchar(40) NOT NULL,
-    [LastModifiedAt] datetime2(7) NOT NULL,    
+    [LastModifiedAt] datetime2(7) NOT NULL,
 
     -- Classification
     [TypeId] uniqueidentifier NOT NULL,
@@ -951,7 +1004,7 @@ CREATE TABLE [dbo].[Documents] (
     [Description] nvarchar(256) NULL,
     [IsPrivate] bit NOT NULL,
     [IsDeleted] bit NOT NULL,
-
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Documents_Version DEFAULT (1),
     CONSTRAINT PK_Documents PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1465,6 +1518,13 @@ CREATE TABLE [dbo].[GradeSets] (
     [Active] bit NOT NULL CONSTRAINT DF_GradeSets_Active DEFAULT (1),
     [Name] nvarchar(256) NOT NULL,
     [IsSystem] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_GradeSets_Version DEFAULT (1),
     CONSTRAINT PK_GradeSets PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1551,6 +1611,7 @@ CREATE TABLE [dbo].[Incidents] (
     [Date] datetime2(7) NOT NULL,
     [Comments] nvarchar(256) NULL,
     [IsDeleted] bit NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Incidents_Version DEFAULT (1),
     CONSTRAINT PK_Incidents PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1617,6 +1678,7 @@ CREATE TABLE [dbo].[LessonPlans] (
     [Order] int NOT NULL,
     [Title] nvarchar(256) NOT NULL,
     [PlanContent] nvarchar(256) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_LessonPlans_Version DEFAULT (1),
     CONSTRAINT PK_LessonPlans PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1674,6 +1736,7 @@ CREATE TABLE [dbo].[LogNotes] (
     [Message] nvarchar(256) NOT NULL,
     [IsPrivate] bit NOT NULL,
     [IsDeleted] bit NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_LogNotes_Version DEFAULT (1),
     CONSTRAINT PK_LogNotes PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1741,6 +1804,7 @@ CREATE TABLE [dbo].[MedicalEvents] (
     [PersonId] uniqueidentifier NOT NULL,
     [Date] datetime2(7) NOT NULL,
     [Note] nvarchar(256) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_MedicalEvents_Version DEFAULT (1),
     CONSTRAINT PK_MedicalEvents PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1887,6 +1951,7 @@ CREATE TABLE [dbo].[People] (
     [Deceased] datetime2(7) NULL,
     [EthnicityId] uniqueidentifier NULL,
     [IsDeleted] bit NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_People_Version DEFAULT (1),
     CONSTRAINT PK_People PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1957,9 +2022,9 @@ IF OBJECT_ID(N'[dbo].[Photos]', N'U') IS NULL
 BEGIN
 CREATE TABLE [dbo].[Photos] (
     [Id] uniqueidentifier NOT NULL,
-    [Data] varbinary(max) NOT NULL,
+    [DocumentId] UNIQUEIDENTIFIER NOT NULL,
     [PhotoDate] datetime2(7) NOT NULL,
-    [MimeType] nvarchar(256) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Photos_Version DEFAULT (1),
     CONSTRAINT PK_Photos PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2000,7 +2065,14 @@ CREATE TABLE [dbo].[RegGroups] (
     [StudentGroupId] uniqueidentifier NOT NULL,
     [YearGroupId] uniqueidentifier NOT NULL,
     [RoomId] uniqueidentifier NULL,
-     CONSTRAINT PK_RegGroups PRIMARY KEY CLUSTERED ([Id])
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_RegGroups_Version DEFAULT (1),
+    CONSTRAINT PK_RegGroups PRIMARY KEY CLUSTERED ([Id])
     );
 END
 
@@ -2093,6 +2165,13 @@ CREATE TABLE [dbo].[ResultSets] (
     [Active] bit NOT NULL CONSTRAINT DF_ResultSets_Active DEFAULT (1),
     [Name] nvarchar(256) NOT NULL,
     [IsLocked] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_ResultSets_Version DEFAULT (1),
     CONSTRAINT PK_ResultSets PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2117,6 +2196,7 @@ CREATE TABLE [dbo].[Results] (
     [Comment] nvarchar(1000) NULL,
     [ColourCode] nvarchar(256) NULL,
     [Note] nvarchar(256) NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Results_Version DEFAULT (1),
     CONSTRAINT PK_Results PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2180,6 +2260,13 @@ CREATE TABLE [dbo].[Rooms] (
     [MaxGroupSize] int NOT NULL,
     [TelephoneNo] nvarchar(256) NULL,
     [IsExcludedFromCover] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Rooms_Version DEFAULT (1),
     CONSTRAINT PK_Rooms PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2445,6 +2532,13 @@ CREATE TABLE [dbo].[StaffMembers] (
     [Qualifications] nvarchar(128) NULL,
     [IsTeachingStaff] bit NOT NULL,
     [IsDeleted] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_StaffMembers_Version DEFAULT (1),
     CONSTRAINT PK_StaffMembers PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2580,6 +2674,13 @@ CREATE TABLE [dbo].[StudentGroups] (
     [MaxMembers] int NULL,
     [Notes] nvarchar(256) NULL,
     [IsSystem] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_StudentGroups_Version DEFAULT (1),
     CONSTRAINT PK_StudentGroups PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2616,6 +2717,13 @@ CREATE TABLE [dbo].[Students] (
     [PupilPremium] bit NOT NULL,
     [Upn] nvarchar(13) NULL,
     [IsDeleted] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Students_Version DEFAULT (1),
     CONSTRAINT PK_Students PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2691,6 +2799,13 @@ CREATE TABLE [dbo].[Subjects] (
     [Name] nvarchar(256) NOT NULL,
     [Code] nvarchar(5) NOT NULL,
     [IsDeleted] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Subjects_Version DEFAULT (1),
     CONSTRAINT PK_Subjects PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2752,6 +2867,7 @@ CREATE TABLE [dbo].[Tasks] (
     [Completed] bit NOT NULL,
     [CanAssigneeEdit] bit NOT NULL,
     [IsSystem] bit NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Tasks_Version DEFAULT (1),
     CONSTRAINT PK_Tasks PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2810,11 +2926,17 @@ IF OBJECT_ID(N'[dbo].[Users]', N'U') IS NULL
 BEGIN
 CREATE TABLE [dbo].[Users] (
     [Id] uniqueidentifier NOT NULL,
-    [CreatedAt] datetime2(7) NOT NULL,
     [PersonId] uniqueidentifier NULL,
     [UserType] int NOT NULL,
     [IsEnabled] bit NOT NULL,
     [IsSystem] bit NOT NULL,
+    [CreatedById] UNIQUEIDENTIFIER NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_Users_Version DEFAULT (1),
     CONSTRAINT PK_Users PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2838,7 +2960,14 @@ CREATE TABLE [dbo].[YearGroups] (
     [Id] uniqueidentifier NOT NULL,
     [StudentGroupId] uniqueidentifier NOT NULL,
     [CurriculumYearGroupId] uniqueidentifier NOT NULL,
-     CONSTRAINT PK_YearGroups PRIMARY KEY CLUSTERED ([Id])
+    [CreatedById] UNIQUEIDENTIFIER NOT NULL,
+    [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
+    [CreatedAt] DATETIME2(7) NOT NULL,
+    [LastModifiedById] UNIQUEIDENTIFIER NOT NULL,
+    [LastModifiedByIpAddress] NVARCHAR(45) NOT NULL,
+    [LastModifiedAt] DATETIME2(7) NOT NULL,
+    [Version] BIGINT NOT NULL CONSTRAINT DF_YearGroups_Version DEFAULT (1),
+    CONSTRAINT PK_YearGroups PRIMARY KEY CLUSTERED ([Id])
     );
 END
 
@@ -5431,6 +5560,11 @@ BEGIN
 CREATE INDEX [IX_PhoneNumbers_AgencyId] ON [dbo].[PhoneNumbers]([AgencyId]);
 END
 
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Photos_DocumentId_Documents' AND parent_object_id = OBJECT_ID(N'[dbo].[Photos]'))
+BEGIN
+ALTER TABLE [dbo].[Photos]
+    ADD CONSTRAINT [FK_Photos_DocumentId_Documents] FOREIGN KEY ([DocumentId]) REFERENCES [dbo].[Documents]([Id]);
+END
 
 IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Products_ProductTypeId_ProductTypes' AND parent_object_id = OBJECT_ID(N'[dbo].[Products]'))
 BEGIN
@@ -6886,4 +7020,3 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_YearGroups_Curriculum
 BEGIN
 CREATE INDEX [IX_YearGroups_CurriculumYearGroupId] ON [dbo].[YearGroups]([CurriculumYearGroupId]);
 END
-

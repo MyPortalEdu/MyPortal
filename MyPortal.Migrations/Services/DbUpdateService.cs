@@ -44,6 +44,7 @@ public class DbUpdateService : IDbUpdateService
         }
 
         await ApplyUpdates(cancellationToken);
+        await CreateIndexes(cancellationToken);
         await CreateFunctions(cancellationToken);
         await CreateStoredProcedures(cancellationToken);
         await CreateViews(cancellationToken);
@@ -63,6 +64,9 @@ public class DbUpdateService : IDbUpdateService
         var builder = new SqlConnectionStringBuilder(_connectionString);
         return builder.InitialCatalog;
     }
+
+    private async Task CreateIndexes(CancellationToken cancellationToken)
+        => await ExecuteScriptsUnderNamespaceAsync("MyPortal.Migrations.Sql.Indexes", cancellationToken);
 
     private async Task CreateFunctions(CancellationToken cancellationToken)
         => await ExecuteScriptsUnderNamespaceAsync("MyPortal.Migrations.Sql.Functions", cancellationToken);

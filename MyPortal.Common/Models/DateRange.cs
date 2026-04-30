@@ -1,210 +1,98 @@
 ﻿using MyPortal.Common.Extensions;
 
-namespace MyPortal.Common.Models
+namespace MyPortal.Common.Models;
+
+/// <summary>Represents an inclusive start / exclusive end date range.</summary>
+public class DateRange
 {
-    public class DateRange
+    public DateTime Start { get; private set; }
+    public DateTime End { get; private set; }
+
+    public TimeSpan Duration => End - Start;
+
+    public static DateRange CurrentWeek
     {
-        private DateRange? _beforeStart;
-        private DateRange? _afterEnd;
-
-        public static DateRange CurrentWeek
+        get
         {
-            get
-            {
-                var monday = DateTime.Today.GetDayOfWeek(DayOfWeek.Monday);
-
-                return new DateRange(monday, monday.AddDays(6));
-            }
-        }
-
-        public DateTime Start { get; set; }
-        public DateTime End { get; set; }
-
-        public DateRange? BeforeStart
-        {
-            get { return _beforeStart; }
-        }
-
-        public DateRange? AfterEnd
-        {
-            get { return _afterEnd; }
-        }
-
-        public DateRange(DateTime start, DateTime end)
-        {
-            Start = start;
-            End = end;
-        }
-
-        public TimeSpan TotalTime => End - Start;
-
-        public DateRange[] GetAll()
-        {
-            var ranges = new List<DateRange>();
-            ranges.Add(this);
-            ranges.AddRange(GetLeft());
-            ranges.AddRange(GetRight());
-
-            return ranges.ToArray();
-        }
-
-        private DateRange[] GetLeft()
-        {
-            var ranges = new List<DateRange>();
-
-            if (BeforeStart != null)
-            {
-                ranges.Add(BeforeStart);
-                ranges.AddRange(BeforeStart.GetLeft());
-            }
-
-            return ranges.ToArray();
-        }
-
-        private DateRange[] GetRight()
-        {
-            var ranges = new List<DateRange>();
-
-            if (AfterEnd != null)
-            {
-                ranges.Add(AfterEnd);
-                ranges.AddRange(AfterEnd.GetRight());
-            }
-
-            return ranges.ToArray();
-        }
-
-        public bool Overlaps(DateRange dateRange, bool includeAdjacent)
-        {
-            var overlaps = (Start < dateRange.End && End > dateRange.Start) ||
-                           (includeAdjacent && IsAdjacentTo(dateRange));
-
-            return overlaps;
-        }
-
-        public bool IsAdjacentTo(DateRange dateRange)
-        {
-            return IsAdjacentToStart(dateRange) || IsAdjacentToEnd(dateRange);
-        }
-
-        public bool TryCoalesce(DateRange dateRange)
-        {
-            try
-            {
-                Coalesce(dateRange);
-
-                return true;
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
-        }
-
-        public void Merge(DateRange dateRange)
-        {
-            if (dateRange.End > End)
-            {
-                End = dateRange.End;
-            }
-
-            if (dateRange.Start < Start)
-            {
-                Start = dateRange.Start;
-            }
-        }
-
-        public void Coalesce(DateRange dateRange)
-        {
-            if (IsAdjacentToEnd(dateRange))
-            {
-                dateRange._afterEnd = this;
-                _beforeStart = dateRange;
-            }
-            else if (IsAdjacentToStart(dateRange))
-            {
-                dateRange._beforeStart = this;
-                _afterEnd = dateRange;
-            }
-            else
-            {
-                throw new ArgumentException("The specified date range is not adjacent.", nameof(dateRange));
-            }
-        }
-
-        private bool IsAdjacentToEnd(DateRange dateRange)
-        {
-            var isAdjacent = Start == dateRange.End;
-
-            return isAdjacent;
-        }
-
-        private bool IsAdjacentToStart(DateRange dateRange)
-        {
-            var isAdjacent = End == dateRange.Start;
-
-            return isAdjacent;
-        }
-
-        public void MoveToStart(DateTime newStart)
-        {
-            var timeSpan = newStart - Start;
-
-            Move(timeSpan);
-        }
-
-        private void MoveLeft(TimeSpan timeSpan)
-        {
-            if (BeforeStart != null)
-            {
-                BeforeStart.MoveThis(timeSpan);
-                BeforeStart.MoveLeft(timeSpan);
-            }
-        }
-
-        private void MoveRight(TimeSpan timeSpan)
-        {
-            if (AfterEnd != null)
-            {
-                AfterEnd.MoveThis(timeSpan);
-                AfterEnd.MoveRight(timeSpan);
-            }
-        }
-
-        private void MoveThis(TimeSpan timeSpan)
-        {
-            Start = Start.Add(timeSpan);
-            End = End.Add(timeSpan);
-        }
-
-        public void Move(TimeSpan timeSpan)
-        {
-            MoveThis(timeSpan);
-
-            MoveLeft(timeSpan);
-            MoveRight(timeSpan);
-        }
-
-        public void Extend(TimeSpan timeSpan)
-        {
-            if (timeSpan < TimeSpan.Zero)
-            {
-                throw new ArgumentException("Cannot extend a date range by a negative amount", nameof(timeSpan));
-            }
-
-            End = End.Add(timeSpan);
-
-            MoveRight(timeSpan);
-        }
-
-        public IEnumerable<DateTime> GetAllDates()
-        {
-            return Start.GetAllInstancesUntil(End);
-        }
-
-        public Tuple<DateTime, DateTime> ToTuple()
-        {
-            return new Tuple<DateTime, DateTime>(Start, End);
+            var monday = DateTime.Today.GetDayOfWeek(DayOfWeek.Monday);
+            return new DateRange(monday, monday.AddDays(6));
         }
     }
+
+    public DateRange(DateTime start, DateTime end)
+    {
+        if (end < start)
+            throw new ArgumentException("End must not be before Start.", nameof(end));
+
+        Start = start;
+        End = end;
+    }
+
+    // --- Overlap/Adjacency ---
+
+    public bool Overlaps(DateRange other, bool includeAdjacent = false) =>
+        (Start < other.End && End > other.Start) ||
+        (includeAdjacent && IsAdjacentTo(other));
+
+    public bool IsAdjacentTo(DateRange other) =>
+        End == other.Start || Start == other.End;
+
+    // --- Mutation ---
+
+    /// <summary>Expands this range to also cover <paramref name="other"/>.</summary>
+    public void Merge(DateRange other)
+    {
+        if (other.Start < Start) Start = other.Start;
+        if (other.End > End) End = other.End;
+    }
+
+    /// <summary>Shifts the range so it begins at <paramref name="newStart"/>.</summary>
+    public void MoveToStart(DateTime newStart) => Move(newStart - Start);
+
+    /// <summary>Shifts both endpoints by <paramref name="offset"/>.</summary>
+    public void Move(TimeSpan offset)
+    {
+        Start = Start.Add(offset);
+        End = End.Add(offset);
+    }
+
+    /// <summary>Stretches the end of the range by <paramref name="amount"/>.</summary>
+    public void Extend(TimeSpan amount)
+    {
+        if (amount < TimeSpan.Zero)
+            throw new ArgumentException("Cannot extend by a negative amount.", nameof(amount));
+
+        End = End.Add(amount);
+    }
+
+    // --- Coalescing ---
+
+    /// <summary>
+    /// Attempts to coalesce this range with <paramref name="other"/>.
+    /// Returns <c>false</c> when the two ranges are not adjacent.
+    /// </summary>
+    public bool TryCoalesce(DateRange other, out DateRange? coalesced)
+    {
+        if (!IsAdjacentTo(other))
+        {
+            coalesced = null;
+            return false;
+        }
+
+        coalesced = End == other.Start
+            ? new DateRange(Start, other.End)
+            : new DateRange(other.Start, End);
+
+        return true;
+    }
+
+    // --- Enumeration ---
+
+    public IEnumerable<DateTime> GetAllDates() => Start.GetAllInstancesUntil(End);
+
+    // --- Conversion ---
+
+    public (DateTime Start, DateTime End) ToTuple() => (Start, End);
+
+    public override string ToString() => $"{Start:d} – {End:d}";
 }

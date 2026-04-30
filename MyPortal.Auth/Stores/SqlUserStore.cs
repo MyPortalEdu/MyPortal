@@ -34,15 +34,17 @@ public class SqlUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Appl
 
         const string sql = @"
 INSERT INTO dbo.Users
-(Id, CreatedAt, PersonId, UserType, IsEnabled, IsSystem,
+(Id, PersonId, UserType, IsEnabled, IsSystem,
  UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
  PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumber, PhoneNumberConfirmed,
- TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount)
+ TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount, CreatedAt, CreatedById, CreatedByIpAddress,
+ LastModifiedAt, LastModifiedById, LastModifiedByIpAddress, Version)
 VALUES
-(@Id, @CreatedAt, @PersonId, @UserType, @IsEnabled, @IsSystem,
+(@Id, @PersonId, @UserType, @IsEnabled, @IsSystem,
  @UserName, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed,
  @PasswordHash, @SecurityStamp, @ConcurrencyStamp, @PhoneNumber, @PhoneNumberConfirmed,
- @TwoFactorEnabled, @LockoutEnd, @LockoutEnabled, @AccessFailedCount);";
+ @TwoFactorEnabled, @LockoutEnd, @LockoutEnabled, @AccessFailedCount, @CreatedAt, @CreatedById, @CreatedByIpAddress,
+ @LastModifiedAt, @LastModifiedById, @LastModifiedByIpAddress, @Version);";
 
         using var connection = _connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql, user, cancellationToken: cancellationToken));
@@ -57,6 +59,7 @@ VALUES
         user.NormalizedUserName = Normalize(user.UserName);
         user.NormalizedEmail    = Normalize(user.Email);
 
+        // Created* fields are immutable after insert and deliberately excluded from this UPDATE.
         const string sql = @"
 UPDATE dbo.Users SET
  UserName=@UserName, NormalizedUserName=@NormalizedUserName,
@@ -65,7 +68,9 @@ UPDATE dbo.Users SET
  ConcurrencyStamp=@NewConcurrencyStamp, PhoneNumber=@PhoneNumber,
  PhoneNumberConfirmed=@PhoneNumberConfirmed, TwoFactorEnabled=@TwoFactorEnabled,
  LockoutEnd=@LockoutEnd, LockoutEnabled=@LockoutEnabled, AccessFailedCount=@AccessFailedCount,
- PersonId=@PersonId, UserType=@UserType, IsEnabled=@IsEnabled, IsSystem=@IsSystem
+ PersonId=@PersonId, UserType=@UserType, IsEnabled=@IsEnabled, IsSystem=@IsSystem,
+ LastModifiedAt=@LastModifiedAt, LastModifiedById=@LastModifiedById, LastModifiedByIpAddress=@LastModifiedByIpAddress,
+ Version=@Version
 WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
 
         using var connection = _connectionFactory.Create();
@@ -91,7 +96,11 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
                 user.UserType,
                 user.IsEnabled,
                 user.IsSystem,
-                user.ConcurrencyStamp
+                user.ConcurrencyStamp,
+                user.LastModifiedAt,
+                user.LastModifiedById,
+                user.LastModifiedByIpAddress,
+                user.Version
             }, cancellationToken: cancellationToken));
 
         if (rowsAffected == 0)

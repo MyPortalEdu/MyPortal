@@ -142,8 +142,10 @@ MERGE INTO [dbo].[GradeSets] AS Target
 UPDATE SET Active = Source.Active
 
     WHEN NOT MATCHED THEN
-INSERT (Id, Name, Description, Active, IsSystem)
-VALUES (Id, Name, Description, Active, System);
+INSERT (Id, Name, Description, Active, IsSystem,
+CreatedAt, CreatedByIpAddress,
+LastModifiedAt, LastModifiedByIpAddress)
+VALUES (Id, Name, Description, Active, System, SYSUTCDATETIME(), '::1', SYSUTCDATETIME(), '::1');
 
 MERGE INTO [dbo].[Grades] AS Target
     USING (VALUES
@@ -2409,8 +2411,8 @@ MERGE INTO [dbo].[Directories] AS Target
 UPDATE SET ParentId = Source.ParentId, Name = Source.Name, IsPrivate = Source.Private
 
     WHEN NOT MATCHED THEN
-INSERT (Id, ParentId, Name, IsPrivate)
-VALUES (Id, ParentId, Name, Private);
+INSERT (Id, ParentId, Name, IsPrivate, CreatedAt, CreatedByIpAddress, LastModifiedAt, LastModifiedByIpAddress)
+VALUES (Id, ParentId, Name, Private, SYSUTCDATETIME(), '::1', SYSUTCDATETIME(), '::1');
 
 MERGE INTO [dbo].[DiaryEventTypes] AS Target
     USING (VALUES

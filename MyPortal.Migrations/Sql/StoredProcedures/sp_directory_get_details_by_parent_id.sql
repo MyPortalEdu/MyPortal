@@ -3,7 +3,8 @@ SET ANSI_NULLS ON;
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[sp_directory_get_details_by_parent_id]
-    @directoryId UNIQUEIDENTIFIER
+    @directoryId UNIQUEIDENTIFIER,
+    @isStaff BIT
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -12,8 +13,10 @@ SELECT
     D.[Id],
     D.[ParentId],
     D.[Name],
-    D.[IsPrivate]
+    D.[IsPrivate],
+    D.[UploadPolicy]
 FROM [Directories] [D]
-WHERE D.[ParentId] = @directoryId;
+WHERE D.[ParentId] = @directoryId
+  AND (@isStaff = 1 OR D.[IsPrivate] = 0)
 
 END;
