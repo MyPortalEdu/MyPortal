@@ -541,7 +541,7 @@ CREATE TABLE [dbo].[Bulletins] (
     [DirectoryId] uniqueidentifier NOT NULL,
     [ExpiresAt] datetime2(7) NULL,
     [Title] nvarchar(256) NOT NULL,
-    [Detail] nvarchar(256) NOT NULL,
+    [Detail] nvarchar(2000) NOT NULL,
     [IsPrivate] bit NOT NULL,
     [IsApproved] bit NOT NULL,
     [Version] BIGINT NOT NULL CONSTRAINT DF_Bulletins_Version DEFAULT (1),

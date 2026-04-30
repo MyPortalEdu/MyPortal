@@ -12,7 +12,8 @@ public class BulletinValidator : AbstractValidator<BulletinUpsertRequest>
             .MaximumLength(50).WithMessage("Title must not exceed 50 characters.");
         
         RuleFor(x => x.Detail)
-            .NotEmpty().WithMessage("Detail is required");
+            .NotEmpty().WithMessage("Detail is required.")
+            .MaximumLength(2000).WithMessage("Detail must not exceed 2000 characters.");
         
         RuleFor(y => y.ExpiresAt)
             .Must(exp => exp == null || exp > DateTime.UtcNow)
