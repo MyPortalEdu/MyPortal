@@ -1,6 +1,8 @@
-﻿using MyPortal.Common.Enums;
+﻿using System.Runtime.CompilerServices;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Models;
 
+[assembly: InternalsVisibleTo("MyPortal.Tests")]
 namespace MyPortal.Common.Extensions
 {
     internal static class DateTimeExtensions
