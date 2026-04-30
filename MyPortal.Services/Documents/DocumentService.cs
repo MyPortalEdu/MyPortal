@@ -118,30 +118,72 @@ public class DocumentService : BaseService, IDocumentService
                 throw new ForbiddenException("You do not have permission to make documents private.");
         }
 
-        if (model.Content != null)
-        {
-            await using var hashedStream =
-                await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
-            await _storageProvider.SaveFileAsync(documentInDb.StorageKey, hashedStream.UsableStream,
-                model.ContentType!, cancellationToken);
-
-            Logger.LogInformation("File {fileName} saved with storage key: {storageKey}", model.FileName, documentInDb.StorageKey);
-
-            documentInDb.FileName = model.FileName!;
-            documentInDb.ContentType = model.ContentType!;
-            documentInDb.SizeBytes = model.SizeBytes;
-            documentInDb.Hash = hashedStream.Hash;
-        }
-
         documentInDb.TypeId = model.TypeId;
         documentInDb.DirectoryId = model.DirectoryId;
         documentInDb.Title = model.Title;
         documentInDb.Description = model.Description;
         documentInDb.IsPrivate = model.IsPrivate;
 
-        await _documentRepository.UpdateAsync(documentInDb, cancellationToken);
+        string? oldStorageKey = null;
+        string? newStorageKey = null;
+
+        if (model.Content != null)
+        {
+            newStorageKey = _storageKeyGenerator.Generate(model.FileName!);
+
+            await using var hashedStream =
+                await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
+            await _storageProvider.SaveFileAsync(newStorageKey, hashedStream.UsableStream,
+                model.ContentType!, cancellationToken);
+
+            Logger.LogInformation("New file {fileName} saved with storage key: {storageKey}", model.FileName, newStorageKey);
+
+            oldStorageKey = documentInDb.StorageKey;
+            documentInDb.StorageKey = newStorageKey;
+            documentInDb.FileName = model.FileName!;
+            documentInDb.ContentType = model.ContentType!;
+            documentInDb.SizeBytes = model.SizeBytes;
+            documentInDb.Hash = hashedStream.Hash;
+        }
+
+        try
+        {
+            await _documentRepository.UpdateAsync(documentInDb, cancellationToken);
+        }
+        catch
+        {
+            if (newStorageKey != null)
+            {
+                try
+                {
+                    await _storageProvider.DeleteFileAsync(newStorageKey, CancellationToken.None);
+                }
+                catch (Exception cleanupEx)
+                {
+                    Logger.LogWarning(cleanupEx,
+                        "Document update failed; orphan file left at storage key {storageKey} (cleanup also failed).",
+                        newStorageKey);
+                }
+            }
+            throw;
+        }
 
         Logger.LogInformation("Document updated: {documentId}", documentId);
+
+        if (oldStorageKey != null)
+        {
+            try
+            {
+                await _storageProvider.DeleteFileAsync(oldStorageKey, cancellationToken);
+                Logger.LogInformation("Replaced file deleted at storage key: {storageKey}", oldStorageKey);
+            }
+            catch (Exception cleanupEx)
+            {
+                Logger.LogWarning(cleanupEx,
+                    "Document updated, but failed to delete replaced file at storage key {storageKey}. Manual cleanup may be required.",
+                    oldStorageKey);
+            }
+        }
 
         var response = await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken)
                        ?? throw new InvalidOperationException("Updated document, but could not load details.");
