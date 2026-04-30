@@ -37,7 +37,7 @@ namespace MyPortal.Services.System
 
         public async Task<RoleDetailsResponse?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken)
         {
-            await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewRoles, cancellationToken);
 
             return await _roleRepository.GetDetailsByIdAsync(roleId, cancellationToken);
         }
@@ -45,7 +45,7 @@ namespace MyPortal.Services.System
         public async Task<PageResult<RoleSummaryResponse>> GetRolesAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
             CancellationToken cancellationToken = default)
         {
-            await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewRoles, cancellationToken);
 
             var result = await _roleRepository.GetRolesAsync(filter, sort, paging, cancellationToken);
 
@@ -54,7 +54,7 @@ namespace MyPortal.Services.System
 
         public async Task<IdentityResult> CreateRoleAsync(RoleUpsertRequest model, CancellationToken cancellationToken)
         {
-            await AuthorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
             await _validationService.ValidateAsync(model);
 
@@ -84,7 +84,7 @@ namespace MyPortal.Services.System
 
         public async Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken)
         {
-            await AuthorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
             await _validationService.ValidateAsync(model);
 
@@ -121,7 +121,7 @@ namespace MyPortal.Services.System
 
         public async Task<IdentityResult> DeleteRoleAsync(Guid roleId, CancellationToken cancellationToken)
         {
-            await AuthorizationService.RequirePermissionAsync(Permissions.System.EditRoles, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
             var role = await _roleManager.FindByIdAsync(roleId.ToString());
 

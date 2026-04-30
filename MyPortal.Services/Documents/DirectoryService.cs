@@ -76,10 +76,19 @@ public class DirectoryService : BaseService, IDirectoryService
         {
             throw new NotFoundException("Directory not found.");
         }
-        
+
+        // Wrap the recursive walk + the root delete in one transaction so a failure halfway
+        // through (cancellation, repo error) rolls back instead of leaving a half-deleted tree.
+        // Note: this path always soft-deletes documents (via the repo default). If hard-delete
+        // with blob cleanup is ever needed here, route through IDocumentService.DeleteDocumentAsync
+        // and trigger storage cleanup after this transaction commits.
+        using var tx = CreateTransactionScope();
+
         await DeleteDirectoryContentsAsync(directoryId, cancellationToken);
 
         await _directoryRepository.DeleteAsync(directoryId, cancellationToken);
+
+        tx.Complete();
     }
 
     public async Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId,

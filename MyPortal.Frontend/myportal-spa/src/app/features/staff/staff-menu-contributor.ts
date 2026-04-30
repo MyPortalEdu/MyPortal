@@ -20,7 +20,7 @@ export class StaffMenuContributor implements AppMenuContributor {
           {
             label: 'Users',
             routerLink: ['/staff/system/users'],
-            permissionsAny: [Permissions.System.ViewUsers, Permissions.System.EditUsers]
+            permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers]
           }
         ]
       }

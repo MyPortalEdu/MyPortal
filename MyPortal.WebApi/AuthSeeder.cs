@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Transactions;
+using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using MyPortal.Auth.Models;
@@ -95,6 +96,12 @@ public static class AuthSeeder
                 Version = 1
             };
 
+            // Wrap create + role-add so a failure between them doesn't leave a dangling
+            // admin user without their role. Restartable: next boot finds no user, retries.
+            using var tx = new TransactionScope(TransactionScopeOption.Required,
+                new TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted },
+                TransactionScopeAsyncFlowOption.Enabled);
+
             var createResult = await users.CreateAsync(admin, initialPassword);
             if (!createResult.Succeeded)
             {
@@ -110,6 +117,8 @@ public static class AuthSeeder
                     "Failed to add initial admin user to System Administrator role: " +
                     string.Join("; ", addToRoleResult.Errors.Select(e => $"{e.Code}: {e.Description}")));
             }
+
+            tx.Complete();
         }
 
         using var conn = connFactory.Create();

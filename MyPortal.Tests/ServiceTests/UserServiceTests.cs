@@ -26,6 +26,7 @@ public class UserServiceTests
     private Mock<UserManager<ApplicationUser>> _userManager;
     private Mock<RoleManager<ApplicationRole>> _roleManager;
     private Mock<IValidationService> _validationService;
+    private Mock<IUserStatusCache> _userStatusCache;
 
     private UserService _userService;
 
@@ -39,6 +40,7 @@ public class UserServiceTests
         _userManager = IdentityMocks.MockUserManager<ApplicationUser>();
         _roleManager = IdentityMocks.MockRoleManager<ApplicationRole>();
         _validationService = new Mock<IValidationService>(MockBehavior.Strict);
+        _userStatusCache = new Mock<IUserStatusCache>(MockBehavior.Loose);
 
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -63,7 +65,8 @@ public class UserServiceTests
             _permissionRepository.Object,
             _userManager.Object,
             _roleManager.Object,
-            _validationService.Object
+            _validationService.Object,
+            _userStatusCache.Object
         );
     }
 
@@ -79,7 +82,7 @@ public class UserServiceTests
         var result = await _userService.GetDetailsByIdAsync(id, CancellationToken.None);
 
         _authorizationService.Verify(
-            a => a.RequirePermissionAsync(Permissions.System.ViewUsers, It.IsAny<CancellationToken>()),
+            a => a.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, It.IsAny<CancellationToken>()),
             Times.Exactly(1));
 
         Assert.That(result, Is.EqualTo(dto));
@@ -112,7 +115,7 @@ public class UserServiceTests
         Assert.That(result!.Permissions, Is.EquivalentTo(new[] { "A", "B" }));
 
         _authorizationService.Verify(
-            a => a.RequirePermissionAsync(Permissions.System.ViewUsers, It.IsAny<CancellationToken>()),
+            a => a.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -122,7 +125,7 @@ public class UserServiceTests
         var requestedId = Guid.NewGuid();
         _authorizationService.Setup(a => a.GetCurrentUserId()).Returns(Guid.NewGuid());
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.ViewUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var info = new UserInfoResponse { Id = requestedId, Permissions = [] };
@@ -136,7 +139,7 @@ public class UserServiceTests
 
         Assert.That(result, Is.Not.Null);
         _authorizationService.Verify(
-            a => a.RequirePermissionAsync(Permissions.System.ViewUsers, It.IsAny<CancellationToken>()),
+            a => a.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -158,7 +161,7 @@ public class UserServiceTests
     public void SetPasswordAsync_Throws_NotFound_WhenUserMissing()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _userManager.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
@@ -177,7 +180,7 @@ public class UserServiceTests
     public async Task SetPasswordAsync_RemovesThenAddsPassword_AndReturnsResult()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var user = new ApplicationUser { Id = Guid.NewGuid() };
@@ -235,7 +238,7 @@ public class UserServiceTests
     public async Task CreateUserAsync_CreatesUser_AndUpdatesRoles()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var roleId = Guid.NewGuid();
@@ -269,7 +272,7 @@ public class UserServiceTests
     public async Task UpdateUserAsync_UpdatesSecurityStamp_WhenUserDisabled()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
@@ -297,7 +300,7 @@ public class UserServiceTests
     public async Task UpdateUserAsync_UpdatesSecurityStamp_WhenRolesChanged()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
@@ -334,7 +337,7 @@ public class UserServiceTests
     public async Task UpdateUserAsync_UpdatesUser_WhenNoStateChange()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
@@ -372,7 +375,7 @@ public class UserServiceTests
     public async Task UpdateUserAsync_SkipsAddingRole_WhenRoleNameEmpty()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
@@ -407,7 +410,7 @@ public class UserServiceTests
     public void UpdateUserAsync_Throws_NotFound_WhenRoleMissing()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
@@ -437,7 +440,7 @@ public class UserServiceTests
     public void DeleteUserAsync_Throws_NotFound_WhenMissing()
     {
         _authorizationService
-            .Setup(a => a.RequirePermissionAsync(Permissions.System.EditUsers, It.IsAny<CancellationToken>()))
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _userManager.Setup(m => m.FindByIdAsync(It.IsAny<string>()))

@@ -25,7 +25,7 @@ public class UsersController : BaseApiController<UsersController>
 
     [HttpGet("{userId:guid}")]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.ViewUsers)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewUsers)]
     [ProducesResponseType(typeof(UserDetailsResponse), 200)]
     public async Task<IActionResult> GetUserDetailsByIdAsync([FromRoute] Guid userId)
     {
@@ -41,7 +41,7 @@ public class UsersController : BaseApiController<UsersController>
 
     [HttpGet]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.ViewUsers)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewUsers)]
     [ProducesResponseType(typeof(PageResult<UserSummaryResponse>), 200)]
     public async Task<IActionResult> GetUsersAsync([FromQuery] int page, [FromQuery] int pageSize,
         [FromQuery] FilterOptions? filter, [FromQuery] SortOptions? sort)
@@ -57,7 +57,7 @@ public class UsersController : BaseApiController<UsersController>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.EditUsers)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     public async Task<IActionResult> CreateUserAsync([FromBody] UserUpsertRequest model)
     {
         var result = await _userService.CreateUserAsync(model, CancellationToken);
@@ -68,7 +68,7 @@ public class UsersController : BaseApiController<UsersController>
     [HttpPut("{userId:guid}")]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.EditUsers)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid userId, [FromBody] UserUpsertRequest model)
     {
         var result = await _userService.UpdateUserAsync(userId, model, CancellationToken);
@@ -79,7 +79,7 @@ public class UsersController : BaseApiController<UsersController>
     [HttpPut("{userId:guid}/password")]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.EditUsers)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     public async Task<IActionResult> SetPasswordAsync([FromRoute] Guid userId, [FromBody] UserSetPasswordRequest model)
     {
         var result = await _userService.SetPasswordAsync(userId, model, CancellationToken);
@@ -89,7 +89,7 @@ public class UsersController : BaseApiController<UsersController>
 
     [HttpDelete("{userId:guid}")]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.EditUsers)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid userId)
     {
         var result = await _userService.DeleteUserAsync(userId, CancellationToken);

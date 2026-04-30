@@ -1,5 +1,8 @@
 export const Permissions = {
-  System: {
+  // Object key matches the C# `Permissions.SystemAdmin` class name (which avoids the `System`
+  // namespace collision); the wire-string values keep the "System." prefix to match the
+  // server's permission rows.
+  SystemAdmin: {
     ViewUsers:           'System.ViewUsers',
     EditUsers:           'System.EditUsers',
     ViewGroups:          'System.ViewGroups',

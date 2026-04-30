@@ -23,26 +23,24 @@ public class SqlRolePermissionProvider : IRolePermissionProvider
 
         var all = new List<IReadOnlyCollection<string>>(roles.Length);
 
-        using var conn = _connectionFactory.Create();
-
         foreach (var role in roles)
         {
-            var cached = await _cache.GetAsync(role, ct);
-            if (cached is not null)
-            {
-                all.Add(cached);
-                continue;
-            }
-
-            const string sql = @"
-                SELECT DISTINCT P.Name
-                FROM Roles R
-                JOIN RolePermissions RP ON RP.RoleId = R.Id
-                JOIN Permissions P ON P.Id = RP.PermissionId
-                WHERE R.Id = @roleId;";
-            var perms = (await conn.QueryAsync<string>(sql, new { roleId = role })).ToArray();
-            _cache.Set(role, perms);
+            var perms = await _cache.GetOrAddAsync(role, FetchAsync, ct);
             all.Add(perms);
+
+            async Task<IReadOnlyCollection<string>> FetchAsync(CancellationToken token)
+            {
+                const string sql = @"
+                    SELECT DISTINCT P.Name
+                    FROM Roles R
+                    JOIN RolePermissions RP ON RP.RoleId = R.Id
+                    JOIN Permissions P ON P.Id = RP.PermissionId
+                    WHERE R.Id = @roleId;";
+
+                using var conn = _connectionFactory.Create();
+                return (await conn.QueryAsync<string>(
+                    new CommandDefinition(sql, new { roleId = role }, cancellationToken: token))).ToArray();
+            }
         }
 
         return all.SelectMany(x => x).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();

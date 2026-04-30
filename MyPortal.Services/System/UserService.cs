@@ -23,21 +23,24 @@ public class UserService : BaseService, IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly IValidationService _validationService;
+    private readonly IUserStatusCache _userStatusCache;
 
     public UserService(IAuthorizationService authorizationService, ILogger<UserService> logger, IUserRepository userRepository,
         IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager, IValidationService validationService) : base(authorizationService, logger)
+        RoleManager<ApplicationRole> roleManager, IValidationService validationService,
+        IUserStatusCache userStatusCache) : base(authorizationService, logger)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
         _userManager = userManager;
         _roleManager = roleManager;
         _validationService = validationService;
+        _userStatusCache = userStatusCache;
     }
 
     public async Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
-        await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
 
         return await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
     }
@@ -48,7 +51,7 @@ public class UserService : BaseService, IUserService
 
         if (currentUserId == null || currentUserId != userId)
         {
-            await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+            await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
         }
 
         var userInfo = await _userRepository.GetInfoByIdAsync(userId, cancellationToken);
@@ -68,7 +71,7 @@ public class UserService : BaseService, IUserService
     public async Task<PageResult<UserSummaryResponse>> GetUsersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default)
     {
-        await AuthorizationService.RequirePermissionAsync(Permissions.System.ViewUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
 
         var result = await _userRepository.GetUsersAsync(filter, sort, paging, cancellationToken);
         
@@ -78,7 +81,7 @@ public class UserService : BaseService, IUserService
     public async Task<IdentityResult> SetPasswordAsync(Guid userId, UserSetPasswordRequest model,
         CancellationToken cancellationToken)
     {
-        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
         var user = await _userManager.FindByIdAsync(userId.ToString());
 
@@ -119,7 +122,7 @@ public class UserService : BaseService, IUserService
 
     public async Task<IdentityResult> CreateUserAsync(UserUpsertRequest model, CancellationToken cancellationToken)
     {
-        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
         await _validationService.ValidateAsync(model);
 
@@ -159,7 +162,7 @@ public class UserService : BaseService, IUserService
     public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
         await _validationService.ValidateAsync(model);
 
@@ -202,6 +205,9 @@ public class UserService : BaseService, IUserService
         if (result.Succeeded)
         {
             tx.Complete();
+            // Drop the cached IsEnabled so a disable takes effect on the next permission check
+            // instead of waiting up to the cache TTL.
+            _userStatusCache.Invalidate(userId);
         }
 
         return result;
@@ -209,7 +215,7 @@ public class UserService : BaseService, IUserService
 
     public async Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
-        await AuthorizationService.RequirePermissionAsync(Permissions.System.EditUsers, cancellationToken);
+        await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
         var user = await _userManager.FindByIdAsync(userId.ToString());
 
@@ -218,7 +224,14 @@ public class UserService : BaseService, IUserService
             throw new NotFoundException("User not found.");
         }
 
-        return await _userManager.DeleteAsync(user);
+        var result = await _userManager.DeleteAsync(user);
+
+        if (result.Succeeded)
+        {
+            _userStatusCache.Invalidate(userId);
+        }
+
+        return result;
     }
 
     private async Task<bool> UpdateUserRoles(ApplicationUser user, IList<Guid> roleIds)

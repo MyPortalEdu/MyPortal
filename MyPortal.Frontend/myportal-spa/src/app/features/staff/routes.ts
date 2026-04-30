@@ -20,7 +20,7 @@ export const STAFF_ROUTES: Routes = [
         component: UserListPage,
         canActivate: [AuthGuard],
         data: {
-          permissionsAny: [Permissions.System.ViewUsers, Permissions.System.EditUsers],
+          permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers],
           breadcrumb: 'Users'
         }
       }
