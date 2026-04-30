@@ -64,6 +64,8 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             UploadPolicy = DirectoryUploadPolicy.StaffOnly
         };
 
+        using var tx = CreateTransactionScope();
+
         var directory = await DirectoryService.CreateDirectoryAsync(directoryRequest, cancellationToken);
 
         Logger.LogInformation("Directory created for bulletin: {bulletinId}", bulletinId);
@@ -80,6 +82,8 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         await _bulletinRepository.InsertAsync(bulletin, cancellationToken);
 
+        tx.Complete();
+
         Logger.LogInformation("Bulletin created: {bulletinId}", bulletinId);
 
         return bulletinId;
@@ -89,9 +93,9 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
-        var bulletin = await GetBulletinOrThrowAsync(bulletinId, cancellationToken);
-
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+
+        var bulletin = await GetVisibleBulletinOrThrowAsync(bulletinId, scope, cancellationToken);
 
         if (!_accessPolicy.CanEdit(bulletin, scope))
         {
@@ -119,21 +123,24 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
-        var bulletin = await GetBulletinOrThrowAsync(bulletinId, cancellationToken);
-
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+
+        var bulletin = await GetVisibleBulletinOrThrowAsync(bulletinId, scope, cancellationToken);
 
         if (!_accessPolicy.CanEdit(bulletin, scope))
         {
             throw new ForbiddenException("You do not have permission to delete this bulletin.");
         }
 
-        await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken);
+        using var tx = CreateTransactionScope();
 
-        Logger.LogInformation("Bulletin deleted: {bulletinId}", bulletinId);
+        await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken);
 
         await DirectoryService.DeleteDirectoryAsync(bulletin.DirectoryId, cancellationToken);
 
+        tx.Complete();
+
+        Logger.LogInformation("Bulletin deleted: {bulletinId}", bulletinId);
         Logger.LogInformation("Directory deleted for bulletin: {bulletinId}", bulletinId);
     }
 
@@ -142,7 +149,14 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ApproveSchoolBulletins,
             cancellationToken);
 
-        var bulletin = await GetBulletinOrThrowAsync(bulletinId, cancellationToken);
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+
+        var bulletin = await GetVisibleBulletinOrThrowAsync(bulletinId, scope, cancellationToken);
+
+        if (!_accessPolicy.CanEdit(bulletin, scope))
+        {
+            throw new ForbiddenException("You do not have permission to approve this bulletin.");
+        }
 
         bulletin.IsApproved = isApproved;
 
@@ -198,5 +212,18 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     {
         return await _bulletinRepository.GetByIdAsync(bulletinId, ct)
                ?? throw new NotFoundException("Bulletin not found.");
+    }
+
+    private async Task<Bulletin> GetVisibleBulletinOrThrowAsync(Guid bulletinId, BulletinVisibilityScope scope,
+        CancellationToken ct)
+    {
+        var bulletin = await _bulletinRepository.GetByIdAsync(bulletinId, ct);
+
+        if (bulletin == null || !_accessPolicy.CanView(bulletin, scope))
+        {
+            throw new NotFoundException("Bulletin not found.");
+        }
+
+        return bulletin;
     }
 }
