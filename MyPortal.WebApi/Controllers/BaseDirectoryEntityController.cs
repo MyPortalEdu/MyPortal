@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Net.Http.Headers;
 using MyPortal.Auth.Attributes;
+using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Interfaces;
@@ -98,7 +99,11 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
 
         typedHeaders.LastModified = document.Details.LastModifiedAt;
 
-        return File(document.Content, document.Details.ContentType, document.Details.FileName,
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+        var safeContentType = SafeContentTypes.Sanitize(document.Details.ContentType);
+
+        return File(document.Content, safeContentType, document.Details.FileName,
             enableRangeProcessing: document.Content.CanSeek);
     }
 
