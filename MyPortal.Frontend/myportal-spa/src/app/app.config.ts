@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import Aura from '@primeuix/themes/aura';
 
@@ -11,6 +11,7 @@ import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
 import {definePreset} from '@primeng/themes';
 import {apiBaseInterceptor} from './core/interceptors/api-base-interceptor';
 import {authErrorInterceptor} from './core/interceptors/auth-error-interceptor';
+import {AppErrorHandler} from './core/error/app-error-handler';
 
 const MyPortal = definePreset(Aura, {
   semantic: {
@@ -52,6 +53,7 @@ export const appConfig: ApplicationConfig = {
         },
       }
     }),
-    { provide: MENU_CONTRIBUTORS, useClass: StaffMenuContributor, multi: true }
+    { provide: MENU_CONTRIBUTORS, useClass: StaffMenuContributor, multi: true },
+    { provide: ErrorHandler, useClass: AppErrorHandler }
   ]
 };

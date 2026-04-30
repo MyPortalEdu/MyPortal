@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
+using MyPortal.Common.Options;
 using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
@@ -24,18 +26,23 @@ public class DocumentService : BaseService, IDocumentService
     private readonly IStorageKeyGenerator _storageKeyGenerator;
     private readonly IFileStorageProvider _storageProvider;
     private readonly IValidationService _validationService;
+    private readonly IOptions<FileStorageOptions> _fileStorageOptions;
 
     public DocumentService(IAuthorizationService authorizationService, ILogger<DocumentService> logger,
         IDocumentRepository documentRepository, IDocumentTypeRepository documentTypeRepository,
         IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider,
-        IValidationService validationService) : base(authorizationService, logger)
+        IValidationService validationService, IOptions<FileStorageOptions> fileStorageOptions)
+        : base(authorizationService, logger)
     {
         _documentRepository = documentRepository;
         _documentTypeRepository = documentTypeRepository;
         _storageKeyGenerator = storageKeyGenerator;
         _storageProvider = storageProvider;
         _validationService = validationService;
+        _fileStorageOptions = fileStorageOptions;
     }
+
+    private long MaxFileSizeBytes => _fileStorageOptions.Value.MaxFileSizeBytes;
 
     public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model,
         CancellationToken cancellationToken)
@@ -55,7 +62,12 @@ public class DocumentService : BaseService, IDocumentService
         var storageKey = _storageKeyGenerator.Generate(model.FileName!);
 
         await using var hashedStream =
-            await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
+            await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, MaxFileSizeBytes, cancellationToken);
+
+        // Trust the stream over the client-supplied SizeBytes. Reject mismatches — a client
+        // that claims SizeBytes=100 while uploading something larger or smaller is either
+        // malicious or buggy, and we don't want the DB row to disagree with the blob.
+        VerifyContentLength(hashedStream.UsableStream.Length, model.SizeBytes);
 
         await _storageProvider.SaveFileAsync(storageKey, hashedStream.UsableStream, model.ContentType!,
             cancellationToken);
@@ -71,7 +83,7 @@ public class DocumentService : BaseService, IDocumentService
             ContentType = model.ContentType!,
             FileName = model.FileName!,
             DirectoryId = model.DirectoryId,
-            SizeBytes = model.SizeBytes,
+            SizeBytes = hashedStream.UsableStream.Length,
             TypeId = model.TypeId,
             Title = model.Title,
             Description = model.Description,
@@ -132,7 +144,10 @@ public class DocumentService : BaseService, IDocumentService
             newStorageKey = _storageKeyGenerator.Generate(model.FileName!);
 
             await using var hashedStream =
-                await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, cancellationToken);
+                await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, MaxFileSizeBytes, cancellationToken);
+
+            VerifyContentLength(hashedStream.UsableStream.Length, model.SizeBytes);
+
             await _storageProvider.SaveFileAsync(newStorageKey, hashedStream.UsableStream,
                 model.ContentType!, cancellationToken);
 
@@ -142,7 +157,7 @@ public class DocumentService : BaseService, IDocumentService
             documentInDb.StorageKey = newStorageKey;
             documentInDb.FileName = model.FileName!;
             documentInDb.ContentType = model.ContentType!;
-            documentInDb.SizeBytes = model.SizeBytes;
+            documentInDb.SizeBytes = hashedStream.UsableStream.Length;
             documentInDb.Hash = hashedStream.Hash;
         }
 
@@ -286,5 +301,15 @@ public class DocumentService : BaseService, IDocumentService
         CancellationToken cancellationToken)
     {
         return await _documentTypeRepository.GetDocumentTypes(filter, cancellationToken);
+    }
+
+    private static void VerifyContentLength(long actual, long? claimed)
+    {
+        if (claimed.HasValue && claimed.Value != actual)
+        {
+            throw new ArgumentException(
+                $"Uploaded content length ({actual} bytes) does not match the declared size ({claimed.Value} bytes).",
+                nameof(DocumentUpsertRequest.SizeBytes));
+        }
     }
 }

@@ -15,10 +15,10 @@ public class ApplicationUser : IdentityUser<Guid>
     
     // Audit
     public Guid? CreatedById { get; set; }
-    public string CreatedByIpAddress { get; set; }
+    public string CreatedByIpAddress { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public Guid? LastModifiedById { get; set; }
-    public string LastModifiedByIpAddress { get; set; }
+    public string LastModifiedByIpAddress { get; set; } = string.Empty;
     public DateTime LastModifiedAt { get; set; }
     public long Version { get; set; }
 }

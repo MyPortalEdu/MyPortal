@@ -90,14 +90,11 @@ public class UserService : BaseService, IUserService
             throw new NotFoundException("User not found.");
         }
 
-        var removeResult = await _userManager.RemovePasswordAsync(user);
-
-        if (!removeResult.Succeeded)
-        {
-            return removeResult;
-        }
-
-        return await _userManager.AddPasswordAsync(user, model.Password);
+        // Reset via a generated token so the new hash replaces the old in a single store
+        // operation. The previous remove-then-add could leave a user without a password if
+        // the second step failed (e.g. complexity rejection).
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        return await _userManager.ResetPasswordAsync(user, token, model.Password);
     }
 
     public async Task<IdentityResult> ChangePasswordAsync(Guid userId, UserChangePasswordRequest model,

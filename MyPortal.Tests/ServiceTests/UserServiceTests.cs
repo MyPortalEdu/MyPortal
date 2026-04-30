@@ -177,7 +177,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task SetPasswordAsync_RemovesThenAddsPassword_AndReturnsResult()
+    public async Task SetPasswordAsync_ResetsPassword_AndReturnsResult()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -186,8 +186,8 @@ public class UserServiceTests
         var user = new ApplicationUser { Id = Guid.NewGuid() };
 
         _userManager.Setup(m => m.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
-        _userManager.Setup(m => m.RemovePasswordAsync(user)).ReturnsAsync(IdentityResult.Success);
-        _userManager.Setup(m => m.AddPasswordAsync(user, "X")).ReturnsAsync(IdentityResult.Success);
+        _userManager.Setup(m => m.GeneratePasswordResetTokenAsync(user)).ReturnsAsync("reset-token");
+        _userManager.Setup(m => m.ResetPasswordAsync(user, "reset-token", "X")).ReturnsAsync(IdentityResult.Success);
 
         var res = await _userService.SetPasswordAsync(user.Id, new UserSetPasswordRequest
         {

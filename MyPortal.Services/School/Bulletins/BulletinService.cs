@@ -36,7 +36,12 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     public async Task<BulletinDetailsResponse> GetDetailsByIdAsync(Guid bulletinId, CancellationToken cancellationToken)
     {
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
-        
+
+        // Defense in depth: assert the access policy server-side before issuing the
+        // detail-projection query. The repository SP also filters by scope, but we don't
+        // want IDOR protection to depend on a single layer.
+        _ = await GetVisibleBulletinOrThrowAsync(bulletinId, scope, cancellationToken);
+
         var bulletin = await _bulletinRepository.GetDetailsByIdAsync(bulletinId, scope, cancellationToken);
 
         return bulletin ?? throw new NotFoundException("Bulletin not found.");
@@ -187,16 +192,16 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     public override async Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId,
         CancellationToken cancellationToken)
     {
-        var scope =  await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
         var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
 
-        if (_accessPolicy.CanView(bulletin, scope))
+        if (!_accessPolicy.CanView(bulletin, scope))
         {
-            return await base.CanViewDirectoryAsync(entityId, directoryId, cancellationToken);
+            return false;
         }
 
-        return false;
+        return await CanStructurallyViewDirectoryAsync(entityId, directoryId, cancellationToken);
     }
 
     public override async Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId,
@@ -205,13 +210,30 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
         var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
-        
-        if (_accessPolicy.CanEdit(bulletin, scope))
+
+        if (!_accessPolicy.CanEdit(bulletin, scope))
         {
-            return await base.CanEditDirectoryAsync(entityId, directoryId, cancellationToken);
+            return false;
         }
 
-        return false;
+        return await CanStructurallyEditDirectoryAsync(entityId, directoryId, cancellationToken);
+    }
+
+    public override async Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId,
+        CancellationToken cancellationToken)
+    {
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+
+        var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
+
+        // Upload to a bulletin's directory is gated by CanEdit on the bulletin — only the
+        // creator (with edit permission) or an approver can attach documents to it.
+        if (!_accessPolicy.CanEdit(bulletin, scope))
+        {
+            return false;
+        }
+
+        return await CanStructurallyUploadToDirectoryAsync(entityId, directoryId, cancellationToken);
     }
 
     private async Task<Bulletin> GetBulletinOrThrowAsync(Guid bulletinId, CancellationToken ct)
