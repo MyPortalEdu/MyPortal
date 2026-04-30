@@ -84,7 +84,13 @@ public class UserService : BaseService, IUserService
             throw new NotFoundException("User not found.");
         }
 
-        await _userManager.RemovePasswordAsync(user);
+        var removeResult = await _userManager.RemovePasswordAsync(user);
+
+        if (!removeResult.Succeeded)
+        {
+            return removeResult;
+        }
+
         return await _userManager.AddPasswordAsync(user, model.Password);
     }
 
@@ -129,10 +135,18 @@ public class UserService : BaseService, IUserService
             Version = 1
         };
 
+        using var tx = CreateTransactionScope();
 
         var result = await _userManager.CreateAsync(newUser, model.Password);
 
+        if (!result.Succeeded)
+        {
+            return result;
+        }
+
         await UpdateUserRoles(newUser, model.RoleIds);
+
+        tx.Complete();
 
         return result;
     }
@@ -155,6 +169,11 @@ public class UserService : BaseService, IUserService
         user.IsEnabled = model.IsEnabled;
         user.UserType = model.UserType;
         user.UserName = model.Username;
+
+        user.LastModifiedAt = DateTime.UtcNow;
+        user.LastModifiedById = AuthorizationService.GetCurrentUserId();
+        user.LastModifiedByIpAddress = AuthorizationService.GetCurrentUserIpAddress();
+        user.Version += 1;
 
         var rolesChanged = await UpdateUserRoles(user, model.RoleIds);
 

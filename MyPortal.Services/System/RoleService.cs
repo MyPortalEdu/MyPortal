@@ -61,9 +61,18 @@ namespace MyPortal.Services.System
                 IsSystem = false
             };
 
+            using var tx = CreateTransactionScope();
+
             var result = await _roleManager.CreateAsync(role);
 
+            if (!result.Succeeded)
+            {
+                return result;
+            }
+
             await UpdateRolePermissionsAsync(role, model.PermissionIds, cancellationToken);
+
+            tx.Complete();
 
             return result;
         }
@@ -88,6 +97,8 @@ namespace MyPortal.Services.System
             role.Description = model.Description;
 
             var result = await _roleManager.UpdateAsync(role);
+
+            await UpdateRolePermissionsAsync(role, model.PermissionIds, cancellationToken);
 
             return result;
         }
