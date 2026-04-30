@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Options;
@@ -7,24 +7,30 @@ using QueryKit.Repositories.Filtering;
 
 namespace MyPortal.WebApi.Models.Binders
 {
-    public class Base64JsonBinder<T>: IModelBinder where T : class
+    public class Base64JsonBinder<T> : IModelBinder where T : class
     {
+        private const int MaxBase64Length = 8 * 1024;
+        private const int MaxJsonDepth = 16;
+
         private readonly JsonSerializerOptions _json;
 
         public Base64JsonBinder(IOptions<JsonOptions> jsonOptions)
         {
-            _json = jsonOptions.Value.JsonSerializerOptions;
+            _json = new JsonSerializerOptions(jsonOptions.Value.JsonSerializerOptions)
+            {
+                MaxDepth = MaxJsonDepth
+            };
         }
 
-        public async Task BindModelAsync(ModelBindingContext bindingContext)
+        public Task BindModelAsync(ModelBindingContext bindingContext)
         {
             var key = bindingContext.ModelName;
-
             var value = bindingContext.ValueProvider.GetValue(key);
 
             if (value == ValueProviderResult.None)
             {
                 bindingContext.Result = ModelBindingResult.Success(null);
+                return Task.CompletedTask;
             }
 
             var base64 = value.FirstValue;
@@ -32,27 +38,35 @@ namespace MyPortal.WebApi.Models.Binders
             if (string.IsNullOrEmpty(base64))
             {
                 bindingContext.Result = ModelBindingResult.Success(null);
+                return Task.CompletedTask;
             }
-            else
+
+            if (base64.Length > MaxBase64Length)
             {
-                try
-                {
-                    var json = Base64UrlEncoder.Decode(base64);
-                    var model = JsonSerializer.Deserialize<T>(json, _json);
-
-                    if (model is FilterOptions fo)
-                    {
-                        NormalizeFilterValues(fo);
-                    }
-
-                    bindingContext.Result = ModelBindingResult.Success(model);
-                }
-                catch (Exception)
-                {
-                    bindingContext.ModelState.TryAddModelError(key, $"Invalid {key} payload.");
-                    bindingContext.Result = ModelBindingResult.Failed();
-                }
+                bindingContext.ModelState.TryAddModelError(key, $"{key} payload exceeds maximum size.");
+                bindingContext.Result = ModelBindingResult.Failed();
+                return Task.CompletedTask;
             }
+
+            try
+            {
+                var json = Base64UrlEncoder.Decode(base64);
+                var model = JsonSerializer.Deserialize<T>(json, _json);
+
+                if (model is FilterOptions fo)
+                {
+                    NormalizeFilterValues(fo);
+                }
+
+                bindingContext.Result = ModelBindingResult.Success(model);
+            }
+            catch (Exception)
+            {
+                bindingContext.ModelState.TryAddModelError(key, $"Invalid {key} payload.");
+                bindingContext.Result = ModelBindingResult.Failed();
+            }
+
+            return Task.CompletedTask;
         }
 
         private static void NormalizeFilterValues(FilterOptions filter)
@@ -82,21 +96,13 @@ namespace MyPortal.WebApi.Models.Binders
                 JsonValueKind.Null => null,
                 JsonValueKind.True => true,
                 JsonValueKind.False => false,
-
-                // numbers: choose a sensible default; you can change to int/long/decimal policy
                 JsonValueKind.Number => e.TryGetInt64(out var l) ? l
                     : e.TryGetDecimal(out var d) ? d
                     : e.GetDouble(),
-
-                JsonValueKind.String => e.TryGetDateTime(out var dt) ? dt : e.GetString(),
-
-                // for In/Between, you likely want arrays of primitive values
+                JsonValueKind.String => e.GetString(),
                 JsonValueKind.Array => e.EnumerateArray().Select(ConvertJsonElement).ToArray(),
-
-                // if you ever receive an object, decide: raw json string, or reject
-                JsonValueKind.Object => e.GetRawText(),
-
-                _ => e.GetRawText()
+                JsonValueKind.Object => throw new FormatException("Object values are not allowed in filter criteria."),
+                _ => throw new FormatException($"Unsupported filter value kind '{e.ValueKind}'.")
             };
         }
     }
