@@ -100,6 +100,8 @@
     <EmbeddedResource Include="Sql\StoredProcedures\sp_register_get_reg_group.sql" />
     <None Remove="Sql\StoredProcedures\sp_register_submit.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_register_submit.sql" />
+    <None Remove="Sql\Updates\0014_add_timetable_entities.sql" />
+    <EmbeddedResource Include="Sql\Updates\0014_add_timetable_entities.sql" />
   </ItemGroup>
 
   <ItemGroup>
