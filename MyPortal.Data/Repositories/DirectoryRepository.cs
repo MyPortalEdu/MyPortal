@@ -4,8 +4,8 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
+using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Data.Repositories.Base;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 using Directory = MyPortal.Core.Entities.Directory;
 

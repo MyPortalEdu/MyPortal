@@ -3,8 +3,8 @@ using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Data.Repositories.Base;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories

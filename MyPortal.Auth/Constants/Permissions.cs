@@ -43,8 +43,10 @@ public static class Permissions
 
     public static class Attendance
     {
-        // public const string ViewAttendanceMarks  = "Attendance.ViewAttendanceMarks";
-        // public const string EditAttendanceMarks  = "Attendance.EditAttendanceMarks";
+        public const string ViewAttendanceSetup = "Attendance.ViewAttendanceSetup";
+        public const string EditAttendanceSetup = "Attendance.EditAttendanceSetup";
+        public const string ViewAttendanceMarks = "Attendance.ViewAttendanceMarks";
+        public const string EditAttendanceMarks = "Attendance.EditAttendanceMarks";
         // public const string UseRestrictedCodes   = "Attendance.UseRestrictedCodes";
     }
 

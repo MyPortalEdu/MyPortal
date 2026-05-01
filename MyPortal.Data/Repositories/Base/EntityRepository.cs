@@ -2,7 +2,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Interfaces;
-using MyPortal.Services.Interfaces.Repositories.Base;
+using MyPortal.Data.Interfaces.Repositories.Base;
 using QueryKit.Repositories;
 using QueryKit.Repositories.Enums;
 using QueryKit.Repositories.Filtering;

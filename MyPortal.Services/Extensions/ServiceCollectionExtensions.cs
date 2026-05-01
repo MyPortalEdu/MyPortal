@@ -2,8 +2,11 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
+using MyPortal.Data.VisibilityScopes;
+using MyPortal.Services.Attendance;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
+using MyPortal.Services.Interfaces.Attendance;
 using MyPortal.Services.Interfaces.Providers;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
@@ -37,7 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthorizationService, AuthorizationService>();
         services.AddScoped<IValidationService, ValidationService>();
         services.AddScoped<IPermissionService, PermissionService>();
-
+        
         services.AddScoped<IBulletinService, BulletinService>();
         services.AddScoped<IDirectoryService, DirectoryService>();
         services.AddScoped<IDocumentService, DocumentService>();
@@ -45,6 +48,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ISchoolService, SchoolService>();
         services.AddScoped<IUserService, UserService>();
+
+        services.AddScoped<IRegisterService, RegisterService>();
 
         services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
     }

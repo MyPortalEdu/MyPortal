@@ -90,6 +90,16 @@
     <EmbeddedResource Include="Sql\Updates\0011_gradesets_audit_not_null.sql" />
     <None Remove="Sql\Indexes\ix_attendance_marks.sql" />
     <EmbeddedResource Include="Sql\Indexes\ix_attendance_marks.sql" />
+    <None Remove="Sql\Updates\0012_add_attendance_mark_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\0012_add_attendance_mark_permissions.sql" />
+    <None Remove="Sql\Updates\0013_add_attendance_mark_list_type.sql" />
+    <EmbeddedResource Include="Sql\Updates\0013_add_attendance_mark_list_type.sql" />
+    <None Remove="Sql\StoredProcedures\sp_register_get_lesson.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_register_get_lesson.sql" />
+    <None Remove="Sql\StoredProcedures\sp_register_get_reg_group.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_register_get_reg_group.sql" />
+    <None Remove="Sql\StoredProcedures\sp_register_submit.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_register_submit.sql" />
   </ItemGroup>
 
   <ItemGroup>

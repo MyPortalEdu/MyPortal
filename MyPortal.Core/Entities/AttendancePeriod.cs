@@ -13,9 +13,9 @@ namespace MyPortal.Core.Entities
         [Required, StringLength(128)]
         public string Name { get; set; } = null!;
         
-        public TimeSpan StartTime { get; set; }
+        public TimeOnly StartTime { get; set; }
         
-        public TimeSpan EndTime { get; set; }
+        public TimeOnly EndTime { get; set; }
 
         public bool IsAmReg { get; set; }
 

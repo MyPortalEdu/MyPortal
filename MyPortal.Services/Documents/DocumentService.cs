@@ -9,9 +9,10 @@ using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.FileStorage.Helpers;
 using MyPortal.FileStorage.Interfaces;
+using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Services.Extensions;
 using MyPortal.Services.Filters;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
@@ -300,7 +301,15 @@ public class DocumentService : BaseService, IDocumentService
     public async Task<IList<LookupResponse>> GetDocumentTypesAsync(DocumentTypeFilter filter,
         CancellationToken cancellationToken)
     {
-        return await _documentTypeRepository.GetDocumentTypes(filter, cancellationToken);
+        var all = await _documentTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+
+        return all
+            .Where(t => t.Active)
+            .Where(t => (filter.General && t.General) || (filter.Student && t.Student) ||
+                        (filter.Contact && t.Contact) || (filter.Send && t.IsSend) ||
+                        (filter.Staff && t.Staff))
+            .Select(t => t.ToResponseModel())
+            .ToList();
     }
 
     private static void VerifyContentLength(long actual, long? claimed)

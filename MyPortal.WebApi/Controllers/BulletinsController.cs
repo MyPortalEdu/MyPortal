@@ -40,7 +40,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _bulletinService.GetBulletinsAsync(options.FilterOptions, options.SortOptions,
+        var result = await _bulletinService.GetBulletinSummariesAsync(options.FilterOptions, options.SortOptions,
             options.PageOptions, CancellationToken);
 
         return Ok(result);

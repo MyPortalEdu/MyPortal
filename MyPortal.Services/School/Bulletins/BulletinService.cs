@@ -8,7 +8,8 @@ using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Repositories;
+using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Repositories.Filtering;
@@ -47,7 +48,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         return bulletin ?? throw new NotFoundException("Bulletin not found.");
     }
 
-    public async Task<PageResult<BulletinSummaryResponse>> GetBulletinsAsync(FilterOptions? filter = null,
+    public async Task<PageResult<BulletinSummaryResponse>> GetBulletinSummariesAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default)
     {

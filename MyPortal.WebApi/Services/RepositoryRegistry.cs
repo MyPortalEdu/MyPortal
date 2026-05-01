@@ -1,5 +1,5 @@
+using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Data.Repositories;
-using MyPortal.Services.Interfaces.Repositories;
 
 namespace MyPortal.WebApi.Services;
 
@@ -17,5 +17,6 @@ public static class RepositoryRegistry
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRegisterRepository, RegisterRepository>();
     }
 }

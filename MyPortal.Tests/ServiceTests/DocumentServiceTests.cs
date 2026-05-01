@@ -11,7 +11,7 @@ using MyPortal.Core.Entities;
 using MyPortal.FileStorage.Interfaces;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Repositories;
+using MyPortal.Data.Interfaces.Repositories;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Tests.ServiceTests;

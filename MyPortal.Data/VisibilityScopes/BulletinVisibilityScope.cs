@@ -2,7 +2,7 @@
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 
-namespace MyPortal.Services.School.Bulletins;
+namespace MyPortal.Data.VisibilityScopes;
 
 public record BulletinVisibilityScope(
     Guid? CurrentUserId,

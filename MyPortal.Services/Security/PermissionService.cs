@@ -3,7 +3,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Core.Entities;
-using MyPortal.Services.Interfaces.Repositories;
+using MyPortal.Data.Interfaces.Repositories;
 
 namespace MyPortal.Services.Security;
 

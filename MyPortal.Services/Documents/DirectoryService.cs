@@ -3,7 +3,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.Documents;
-using MyPortal.Services.Interfaces.Repositories;
+using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Directory = MyPortal.Core.Entities.Directory;
