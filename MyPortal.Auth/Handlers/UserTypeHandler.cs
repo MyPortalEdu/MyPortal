@@ -18,8 +18,15 @@ public sealed class UserTypeHandler : AuthorizationHandler<UserTypeRequirement>
             return Task.CompletedTask;
         }
 
+        if (req.Allowed.Length == 0)
+        {
+            // Fail closed: a [UserType] attribute with no allowed types is a misconfiguration,
+            // not a wildcard. Don't grant access.
+            return Task.CompletedTask;
+        }
+
         var ut = _me.UserType.ToString();
-        if (req.Allowed.Length == 0 || req.Allowed.Contains(ut, StringComparer.OrdinalIgnoreCase))
+        if (req.Allowed.Contains(ut, StringComparer.OrdinalIgnoreCase))
             context.Succeed(req);
 
         return Task.CompletedTask;

@@ -483,4 +483,8 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
+# MyPortal web host files
 /MyPortal.WebApi/wwwroot/
+
+# Claude Code
+/.claude/

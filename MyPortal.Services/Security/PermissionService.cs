@@ -1,4 +1,6 @@
-﻿using MyPortal.Auth.Interfaces;
+﻿using Microsoft.AspNetCore.Identity;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Auth.Models;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.Repositories;
@@ -10,21 +12,43 @@ public class PermissionService : IPermissionService
     private readonly ICurrentUser _user;
     private readonly IRolePermissionProvider _provider;
     private readonly IPermissionRepository _permissionRepository;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IUserStatusCache _userStatusCache;
 
-    public PermissionService(ICurrentUser user, IRolePermissionProvider provider, IPermissionRepository permissionRepository)
+    public PermissionService(ICurrentUser user, IRolePermissionProvider provider,
+        IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
+        IUserStatusCache userStatusCache)
     {
         _user = user;
         _provider = provider;
         _permissionRepository = permissionRepository;
+        _userManager = userManager;
+        _userStatusCache = userStatusCache;
     }
 
     public async Task<bool> HasPermissionAsync(string permission, CancellationToken ct = default)
     {
         if (_user.UserId is null) return false;
 
+        // Fail closed if the user has been disabled. Cookie sessions are revalidated by
+        // SecurityStampValidator within ValidationInterval, but bearer access tokens can
+        // outlive a disable until they expire — this catches that gap server-side.
+        // Backed by a 30s memory cache so we don't hit the DB on every permission check.
+        if (!await IsCurrentUserEnabledAsync(ct)) return false;
+
         var roles = await _user.GetRolesAsync(ct);
         var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
         return perms.Contains(permission, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private Task<bool> IsCurrentUserEnabledAsync(CancellationToken ct)
+    {
+        var userId = _user.UserId!.Value;
+        return _userStatusCache.IsEnabledAsync(userId, async _ =>
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            return user?.IsEnabled ?? false;
+        }, ct);
     }
 
     public async Task<IList<PermissionResponse>> GetAllPermissionsAsync(CancellationToken cancellationToken)

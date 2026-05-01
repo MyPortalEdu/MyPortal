@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using System.Transactions;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using MyPortal.Auth.Models;
@@ -8,7 +9,7 @@ namespace MyPortal.Auth.Stores;
 
 public class SqlUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<ApplicationUser>,
     IUserEmailStore<ApplicationUser>, IUserRoleStore<ApplicationUser>, IUserClaimStore<ApplicationUser>,
-    IUserSecurityStampStore<ApplicationUser>
+    IUserSecurityStampStore<ApplicationUser>, IUserLockoutStore<ApplicationUser>
 {
     private readonly IDbConnectionFactory _connectionFactory;
     private static string? Normalize(string? value) => value?.ToUpperInvariant();
@@ -55,15 +56,18 @@ VALUES
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Compute new values into locals — only assign back to `user` after the UPDATE
+        // succeeds, so a concurrency rejection doesn't leave the in-memory entity in a state
+        // that disagrees with the DB.
         var newConcurrencyStamp = Guid.NewGuid().ToString("N");
-        user.NormalizedUserName = Normalize(user.UserName);
-        user.NormalizedEmail    = Normalize(user.Email);
+        var newNormalizedUserName = Normalize(user.UserName);
+        var newNormalizedEmail = Normalize(user.Email);
 
         // Created* fields are immutable after insert and deliberately excluded from this UPDATE.
         const string sql = @"
 UPDATE dbo.Users SET
- UserName=@UserName, NormalizedUserName=@NormalizedUserName,
- Email=@Email, NormalizedEmail=@NormalizedEmail, EmailConfirmed=@EmailConfirmed,
+ UserName=@UserName, NormalizedUserName=@NewNormalizedUserName,
+ Email=@Email, NormalizedEmail=@NewNormalizedEmail, EmailConfirmed=@EmailConfirmed,
  PasswordHash=@PasswordHash, SecurityStamp=@SecurityStamp,
  ConcurrencyStamp=@NewConcurrencyStamp, PhoneNumber=@PhoneNumber,
  PhoneNumberConfirmed=@PhoneNumberConfirmed, TwoFactorEnabled=@TwoFactorEnabled,
@@ -79,9 +83,9 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
             {
                 user.Id,
                 user.UserName,
-                user.NormalizedUserName,
+                NewNormalizedUserName = newNormalizedUserName,
                 user.Email,
-                user.NormalizedEmail,
+                NewNormalizedEmail = newNormalizedEmail,
                 user.EmailConfirmed,
                 user.PasswordHash,
                 user.SecurityStamp,
@@ -112,6 +116,8 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
             });
         }
 
+        user.NormalizedUserName = newNormalizedUserName;
+        user.NormalizedEmail = newNormalizedEmail;
         user.ConcurrencyStamp = newConcurrencyStamp;
         return IdentityResult.Success;
     }
@@ -133,10 +139,13 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (!Guid.TryParse(userId, out var id))
+            return null;
+
         const string sql = "SELECT TOP 1 * FROM dbo.Users WHERE Id=@Id;";
         using var connection = _connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationUser>(
-            new CommandDefinition(sql, new { Id = Guid.Parse(userId) }, cancellationToken: cancellationToken));
+            new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<ApplicationUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
@@ -334,6 +343,10 @@ WHERE r.NormalizedName = @NormalizedRoleName;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "INSERT INTO dbo.UserClaims (Id,UserId,ClaimType,ClaimValue) VALUES (@Id,@UserId,@Type,@Value);";
+
+        // Single connection + ambient TransactionScope so the batch is all-or-nothing.
+        // (One connection inside the scope keeps it on the lightweight transaction manager.)
+        using var tx = CreateTransactionScope();
         using var connection = _connectionFactory.Create();
 
         foreach (var claim in claims)
@@ -347,6 +360,8 @@ WHERE r.NormalizedName = @NormalizedRoleName;";
                     Value = claim.Value
                 }, cancellationToken: cancellationToken));
         }
+
+        tx.Complete();
     }
 
     public async Task ReplaceClaimAsync(ApplicationUser user, Claim oldClaim, Claim newClaim, CancellationToken cancellationToken)
@@ -375,6 +390,9 @@ WHERE UserId=@UserId AND ClaimType=@OldType AND ClaimValue=@OldValue;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "DELETE FROM dbo.UserClaims WHERE UserId=@UserId AND ClaimType=@Type AND ClaimValue=@Value;";
+
+        // Single connection + ambient TransactionScope so the batch is all-or-nothing.
+        using var tx = CreateTransactionScope();
         using var connection = _connectionFactory.Create();
 
         foreach (var claim in claims)
@@ -383,6 +401,8 @@ WHERE UserId=@UserId AND ClaimType=@OldType AND ClaimValue=@OldValue;";
                 new { UserId = user.Id, Type = claim.Type, Value = claim.Value },
                 cancellationToken: cancellationToken));
         }
+
+        tx.Complete();
     }
 
     public async Task<IList<ApplicationUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
@@ -399,6 +419,48 @@ WHERE c.ClaimType = @Type AND c.ClaimValue = @Value;";
         var users = await connection.QueryAsync<ApplicationUser>(
             new CommandDefinition(sql, new { Type = claim.Type, Value = claim.Value }, cancellationToken: cancellationToken));
         return users.ToList();
+    }
+
+    private static TransactionScope CreateTransactionScope() =>
+        new(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
+
+    // -------------------------------------------------------
+    // Lockout — all in-memory mutations; UpdateAsync persists LockoutEnd /
+    // LockoutEnabled / AccessFailedCount columns already.
+    // -------------------------------------------------------
+    public Task<DateTimeOffset?> GetLockoutEndDateAsync(ApplicationUser user, CancellationToken cancellationToken)
+        => Task.FromResult(user.LockoutEnd);
+
+    public Task SetLockoutEndDateAsync(ApplicationUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+    {
+        user.LockoutEnd = lockoutEnd;
+        return Task.CompletedTask;
+    }
+
+    public Task<int> IncrementAccessFailedCountAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        user.AccessFailedCount++;
+        return Task.FromResult(user.AccessFailedCount);
+    }
+
+    public Task ResetAccessFailedCountAsync(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        user.AccessFailedCount = 0;
+        return Task.CompletedTask;
+    }
+
+    public Task<int> GetAccessFailedCountAsync(ApplicationUser user, CancellationToken cancellationToken)
+        => Task.FromResult(user.AccessFailedCount);
+
+    public Task<bool> GetLockoutEnabledAsync(ApplicationUser user, CancellationToken cancellationToken)
+        => Task.FromResult(user.LockoutEnabled);
+
+    public Task SetLockoutEnabledAsync(ApplicationUser user, bool enabled, CancellationToken cancellationToken)
+    {
+        user.LockoutEnabled = enabled;
+        return Task.CompletedTask;
     }
 
     // -------------------------------------------------------

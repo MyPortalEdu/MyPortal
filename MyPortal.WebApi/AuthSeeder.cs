@@ -1,5 +1,7 @@
-﻿using Dapper;
+﻿using System.Transactions;
+using Dapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
@@ -16,7 +18,8 @@ public static class AuthSeeder
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
         var users   = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roles   = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+        var env     = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+        var config  = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         if (await manager.FindByClientIdAsync("myportal-client") is null)
         {
@@ -63,6 +66,20 @@ public static class AuthSeeder
         var admin = await users.FindByEmailAsync(email);
         if (admin == null)
         {
+            // Initial admin password: must come from configuration (Auth:AdminInitialPassword,
+            // typically via user-secrets / environment variable). Dev-only fallback so a fresh
+            // clone runs out of the box.
+            var initialPassword = config["Auth:AdminInitialPassword"];
+            if (string.IsNullOrWhiteSpace(initialPassword))
+            {
+                if (!env.IsDevelopment())
+                {
+                    throw new InvalidOperationException(
+                        "Auth:AdminInitialPassword must be configured to seed the initial admin user.");
+                }
+                initialPassword = "Passw0rd!";
+            }
+
             admin = new ApplicationUser
             {
                 Id = Guid.NewGuid(),
@@ -78,8 +95,30 @@ public static class AuthSeeder
                 LastModifiedAt = DateTime.UtcNow,
                 Version = 1
             };
-            await users.CreateAsync(admin, "Passw0rd!");
-            await users.AddToRoleAsync(admin, "System Administrator");
+
+            // Wrap create + role-add so a failure between them doesn't leave a dangling
+            // admin user without their role. Restartable: next boot finds no user, retries.
+            using var tx = new TransactionScope(TransactionScopeOption.Required,
+                new TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted },
+                TransactionScopeAsyncFlowOption.Enabled);
+
+            var createResult = await users.CreateAsync(admin, initialPassword);
+            if (!createResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    "Failed to create initial admin user: " +
+                    string.Join("; ", createResult.Errors.Select(e => $"{e.Code}: {e.Description}")));
+            }
+
+            var addToRoleResult = await users.AddToRoleAsync(admin, "System Administrator");
+            if (!addToRoleResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    "Failed to add initial admin user to System Administrator role: " +
+                    string.Join("; ", addToRoleResult.Errors.Select(e => $"{e.Code}: {e.Description}")));
+            }
+
+            tx.Complete();
         }
 
         using var conn = connFactory.Create();
@@ -104,25 +143,9 @@ IF @result < 0 THROW 50000, 'Could not acquire seed lock', 1;
                 INSERT INTO dbo.RolePermissions(Id, RoleId, PermissionId) VALUES(@id, @r, @p);",
                 new { id = Guid.NewGuid(), r = adminRoleId, p = perm });
         }
-        
-        var seededTables = new[] { "GradeSets" };
 
-        foreach (var table in seededTables)
-        {
-            await conn.ExecuteAsync(
-                $@"UPDATE dbo.[{table}] 
-SET CreatedById = @adminId, 
-    LastModifiedById = @adminId 
-WHERE CreatedById IS NULL OR LastModifiedById IS NULL",
-                new { adminId = admin.Id });
-
-            await conn.ExecuteAsync(
-                $@"ALTER TABLE dbo.[{table}] 
-ALTER COLUMN CreatedById UNIQUEIDENTIFIER NOT NULL;");
-            
-            await conn.ExecuteAsync(
-                $@"ALTER TABLE dbo.[{table}] 
-ALTER COLUMN LastModifiedById UNIQUEIDENTIFIER NOT NULL;");
-        }
+        // GradeSets audit-column backfill + NOT NULL was previously here. It has moved to
+        // numbered migration 0011_gradesets_audit_not_null.sql so schema changes are journalled
+        // and don't run unconditionally on every boot.
     }
 }

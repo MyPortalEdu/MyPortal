@@ -1,3 +1,17 @@
+-- ============================================================================
+-- INITIAL DATABASE CREATION SCRIPT — DO NOT EDIT TO ADD/CHANGE TABLES.
+--
+-- This script runs ONCE, on a brand-new database, before any numbered migration
+-- in Sql\Updates\. Edits made here AFTER initial deployment do not propagate to
+-- existing environments — the script is not journalled in _DatabaseUpdates and
+-- DbUpdateService skips it whenever the database already exists.
+--
+-- All schema changes after the initial release MUST go in a new numbered file
+-- under Sql\Updates\NNNN_<description>.sql. Make those scripts idempotent
+-- (`IF NOT EXISTS`, `IF COL_LENGTH(...) IS NULL`, etc.) so they're safe to
+-- re-run if the journal is ever lost.
+-- ============================================================================
+
 SET XACT_ABORT ON;
 SET NOCOUNT ON;
 

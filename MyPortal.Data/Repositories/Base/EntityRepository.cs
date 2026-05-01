@@ -9,6 +9,7 @@ using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 using System.Security.Authentication;
+using System.Transactions;
 
 namespace MyPortal.Data.Repositories.Base;
 
@@ -80,6 +81,12 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
 
     public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
+        // The system-entity check and the actual UPDATE are two separate Dapper calls.
+        // Wrap them in an ambient transaction so they enlist on the same connection /
+        // commit together — and so they enlist into any outer scope (e.g. a service
+        // that's already inside CreateTransactionScope).
+        using var tx = CreateTransactionScope();
+
         var entityInDb = await GetByIdAsync(entity.Id, cancellationToken);
 
         if (entityInDb is null)
@@ -100,14 +107,15 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             {
                 throw new AuthenticationException("Not authenticated.");
             }
-            
+
             var ipAddress = AuthorizationService.GetCurrentUserIpAddress() ?? "";
-            
+
             auditable.LastModifiedById = userId.Value;
             auditable.LastModifiedAt = DateTime.UtcNow;
             auditable.LastModifiedByIpAddress = ipAddress;
         }
-        
+
+        TEntity result;
         if (entity is IVersionedEntity versioned)
         {
             var expected = versioned.Version;
@@ -115,17 +123,24 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             // Will throw ConcurrencyException if 0 rows (version mismatch or deleted)
             // This is most likely a conflict since we've already had to retrieve the original entity by this point
             await base.UpdateWithVersionAsync(entity, expected, cancellationToken);
-            
+
             versioned.Version = expected + 1;
 
-            return entity;
+            result = entity;
         }
-        
-        return await base.UpdateAsync(entity, cancellationToken);
+        else
+        {
+            result = await base.UpdateAsync(entity, cancellationToken);
+        }
+
+        tx.Complete();
+        return result;
     }
 
     public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default, bool softDelete = true)
     {
+        using var tx = CreateTransactionScope();
+
         var entity = await GetByIdAsync(id, cancellationToken);
 
         if (entity is ISystemEntity { IsSystem: true })
@@ -133,6 +148,14 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             throw new SystemEntityException("You cannot delete a system entity.");
         }
 
-        return await base.DeleteAsync(id, cancellationToken, softDelete);
+        var result = await base.DeleteAsync(id, cancellationToken, softDelete);
+
+        tx.Complete();
+        return result;
     }
+
+    private static TransactionScope CreateTransactionScope() =>
+        new(TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
 }

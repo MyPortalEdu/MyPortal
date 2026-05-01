@@ -171,7 +171,9 @@ public static class Permissions
         // public const string EditTrainingCourses             = "Staff.EditTrainingCourses";
     }
 
-    public static class System
+    // Class name avoids the `System` namespace; the wire-string values keep the "System."
+    // prefix so existing rows in dbo.Permissions and any pre-issued tokens still match.
+    public static class SystemAdmin
     {
         public const string ViewUsers  = "System.ViewUsers";
         public const string EditUsers  = "System.EditUsers";

@@ -86,6 +86,8 @@
     <EmbeddedResource Include="Sql\Updates\0009_audit_columns_and_photo_restructure.sql" />
     <None Remove="Sql\Updates\0010_widen_bulletin_detail.sql" />
     <EmbeddedResource Include="Sql\Updates\0010_widen_bulletin_detail.sql" />
+    <None Remove="Sql\Updates\0011_gradesets_audit_not_null.sql" />
+    <EmbeddedResource Include="Sql\Updates\0011_gradesets_audit_not_null.sql" />
     <None Remove="Sql\Indexes\ix_attendance_marks.sql" />
     <EmbeddedResource Include="Sql\Indexes\ix_attendance_marks.sql" />
   </ItemGroup>

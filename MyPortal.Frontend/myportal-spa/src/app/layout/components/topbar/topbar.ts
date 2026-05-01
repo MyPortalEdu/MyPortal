@@ -25,10 +25,7 @@ export class Topbar implements OnInit {
   constructor(private http: HttpClient, private me: MeService) {}
 
   ngOnInit(): void {
-    // restore preference
-    if (localStorage.getItem('mp:dark') === '1') {
-      document.documentElement.classList.add('mp-dark');
-    }
+    // Dark-mode class is applied in index.html before bootstrap to avoid FOUC.
     this.me$ = this.me.me();
     this.updateUserMenu();
   }

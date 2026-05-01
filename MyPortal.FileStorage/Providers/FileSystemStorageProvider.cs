@@ -39,7 +39,7 @@ namespace MyPortal.FileStorage.Providers
             var fullPath = GetFullPath(storageKey);
 
             if (!File.Exists(fullPath))
-                throw new FileNotFoundException("File not found for storage key.", fullPath);
+                throw new FileNotFoundException("File not found for storage key.", storageKey);
 
             Stream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return Task.FromResult(stream);
@@ -65,27 +65,41 @@ namespace MyPortal.FileStorage.Providers
 
         private string GetFullPath(string storageKey)
         {
+            if (string.IsNullOrWhiteSpace(storageKey))
+                throw new UnauthorizedAccessException("Storage key must not be empty.");
+
+            // Reject keys that look like absolute paths, drive letters, or UNC paths before any join.
+            if (Path.IsPathRooted(storageKey)
+                || storageKey.StartsWith('/')
+                || storageKey.StartsWith('\\')
+                || storageKey.Contains(':'))
+            {
+                throw new UnauthorizedAccessException($"Access to path '{storageKey}' is denied.");
+            }
+
             var safeKey = storageKey.Replace('/', Path.DirectorySeparatorChar);
             var fullPath = Path.Combine(_rootPath, safeKey);
-            
+
             // Normalize paths to resolve any relative path components
             var normalizedFullPath = Path.GetFullPath(fullPath);
             var normalizedRootPath = Path.GetFullPath(_rootPath);
-            
-            // Ensure the normalized root path ends with a directory separator for proper containment check
+
             if (!normalizedRootPath.EndsWith(Path.DirectorySeparatorChar))
             {
                 normalizedRootPath += Path.DirectorySeparatorChar;
             }
-            
-            // Ensure the resolved path is within the root directory
-            // Check that the full path starts with the root path (with trailing separator)
-            // This handles all path separators correctly on all platforms
-            if (!normalizedFullPath.StartsWith(normalizedRootPath, StringComparison.Ordinal))
+
+            // Filesystem case-sensitivity differs by OS — match the platform default rather than
+            // forcing Ordinal (which falsely rejects on case-insensitive volumes).
+            var comparison = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+            if (!normalizedFullPath.StartsWith(normalizedRootPath, comparison))
             {
                 throw new UnauthorizedAccessException($"Access to path '{storageKey}' is denied. Path traversal detected.");
             }
-            
+
             return normalizedFullPath;
         }
     }

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ActivatedRouteSnapshot,
   CanActivate,
@@ -51,14 +52,26 @@ export class AuthGuard implements CanActivate, CanMatch {
         needTypes.length === 0 || needTypes.includes(me.userType);
 
       return (hasPerms && hasUserType) ? true : this.router.parseUrl('/');
-    } catch (e: any) {
-      if (e?.status === 401) {
-        const candidate = returnUrl || (location.pathname + location.search + location.hash);
-        const safe = AuthGuard.sanitizeReturnUrl(candidate);
-        location.href = `/account/login?returnUrl=${encodeURIComponent(safe)}`;
-        return false;
+    } catch (e: unknown) {
+      if (e instanceof HttpErrorResponse) {
+        if (e.status === 401) {
+          // 401 is also handled by auth-error-interceptor; keep this path as a fallback
+          // for callers that don't go through the interceptor.
+          const candidate = returnUrl || (location.pathname + location.search + location.hash);
+          const safe = AuthGuard.sanitizeReturnUrl(candidate);
+          location.href = `/account/login?returnUrl=${encodeURIComponent(safe)}`;
+          return false;
+        }
+
+        if (e.status === 403) {
+          // Server says we're authenticated but not authorized. Bounce home.
+          return this.router.parseUrl('/');
+        }
       }
 
+      // Network blip, 5xx, or anything else — log and bounce home rather than silently
+      // collapsing into a login redirect (which would mask transient backend issues).
+      console.error('AuthGuard: unexpected error while checking access', e);
       return this.router.parseUrl('/');
     }
   }

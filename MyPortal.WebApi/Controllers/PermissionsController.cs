@@ -20,7 +20,7 @@ namespace MyPortal.WebApi.Controllers
 
         [HttpGet]
         [UserType(UserType.Staff)]
-        [Permission(PermissionMode.RequireAny, Permissions.System.ViewRoles, Permissions.System.EditRoles)]
+        [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles)]
         public async Task<IActionResult> GetPermissionsAsync()
         {
             var result = await _permissionService.GetAllPermissionsAsync(CancellationToken);

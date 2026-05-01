@@ -52,10 +52,10 @@ namespace MyPortal.Core.Entities
         
         // Audit
         public Guid CreatedById { get; set; }
-        public string CreatedByIpAddress { get; set; }
+        public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public Guid LastModifiedById { get; set; }
-        public string LastModifiedByIpAddress { get; set; }
+        public string LastModifiedByIpAddress { get; set; } = string.Empty;
         public DateTime LastModifiedAt { get; set; }
         public User? CreatedBy { get; set; }
         public User? LastModifiedBy { get; set; }

@@ -8,7 +8,8 @@ export const STAFF_ROUTES: Routes = [
   {
     path: '',
     component: AppShell,
-    canActivate: [AuthGuard],
+    // No canActivate here — the parent canMatch in app.routes already gated entry to /staff.
+    // Apply canActivate only on children that have additional permission requirements.
     children: [
       {
         path: '',
@@ -20,7 +21,7 @@ export const STAFF_ROUTES: Routes = [
         component: UserListPage,
         canActivate: [AuthGuard],
         data: {
-          permissionsAny: [Permissions.System.ViewUsers, Permissions.System.EditUsers],
+          permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers],
           breadcrumb: 'Users'
         }
       }

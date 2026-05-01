@@ -16,7 +16,6 @@ namespace MyPortal.WebApi.Controllers;
 [ApiController]
 [Authorize(Policy = ScopePolicy.PolicyName)]
 [Route("api/[controller]")]
-[IgnoreAntiforgeryToken] // <-- Clients may be using bearer auth
 public abstract class BaseApiController<TSelf> : ControllerBase
 {
     private readonly ProblemDetailsFactory _problemFactory;
@@ -112,11 +111,21 @@ public abstract class BaseApiController<TSelf> : ControllerBase
     protected IActionResult UnauthorizedProblem(string detail, string? type = null) =>
         Problem(StatusCodes.Status401Unauthorized, "Unauthorized", detail, type);
 
+    private const int DefaultPageSize = 25;
+    private const int MaxPageSize = 100;
+
     protected ListingOptions GetListingOptions(int page, int pageSize, FilterOptions? filter, SortOptions? sort)
     {
         var options = new ListingOptions();
 
-        options.PageOptions = PageOptions.Create(page, pageSize);
+        // Clamp untrusted query inputs so a caller can't request `pageSize=int.MaxValue` and
+        // pull the full table down in one round-trip.
+        var safePage = page <= 0 ? 1 : page;
+        var safePageSize = pageSize <= 0
+            ? DefaultPageSize
+            : Math.Min(pageSize, MaxPageSize);
+
+        options.PageOptions = PageOptions.Create(safePage, safePageSize);
 
         if (sort?.Criteria is { Length: > 0 })
         {

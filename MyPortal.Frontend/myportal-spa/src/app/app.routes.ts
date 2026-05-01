@@ -14,7 +14,9 @@ export const routes: Routes = [
   },
   {
     path: 'staff',
-    canMatch: [AuthGuard], canActivate: [AuthGuard],
+    // canMatch alone is enough at the lazy boundary — it short-circuits the lazy load on
+    // access denied. Adding canActivate here would re-run the guard for no benefit.
+    canMatch: [AuthGuard],
     data: { userTypes: [UserType.Staff] },
     loadChildren: () => import('./features/staff/routes').then(m => m.STAFF_ROUTES)
   }

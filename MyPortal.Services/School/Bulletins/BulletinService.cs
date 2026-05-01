@@ -36,7 +36,12 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     public async Task<BulletinDetailsResponse> GetDetailsByIdAsync(Guid bulletinId, CancellationToken cancellationToken)
     {
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
-        
+
+        // Defense in depth: assert the access policy server-side before issuing the
+        // detail-projection query. The repository SP also filters by scope, but we don't
+        // want IDOR protection to depend on a single layer.
+        _ = await GetVisibleBulletinOrThrowAsync(bulletinId, scope, cancellationToken);
+
         var bulletin = await _bulletinRepository.GetDetailsByIdAsync(bulletinId, scope, cancellationToken);
 
         return bulletin ?? throw new NotFoundException("Bulletin not found.");
@@ -106,7 +111,10 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         bulletin.Detail = model.Detail;
         bulletin.IsPrivate = model.IsPrivate;
         bulletin.ExpiresAt = model.ExpiresAt;
-        bulletin.Version = model.Version;
+        // Hand the client's expected version to the repo's optimistic-concurrency check;
+        // QueryKit's UpdateWithVersionAsync turns it into a WHERE Version=@expected guard
+        // and throws ConcurrencyException on mismatch.
+        bulletin.Version = model.ExpectedVersion;
 
         if (!await AuthorizationService.HasPermissionAsync(Permissions.School.ApproveSchoolBulletins,
                 cancellationToken))
@@ -144,7 +152,8 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         Logger.LogInformation("Directory deleted for bulletin: {bulletinId}", bulletinId);
     }
 
-    public async Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, CancellationToken cancellationToken)
+    public async Task UpdateBulletinApprovalAsync(Guid bulletinId, bool isApproved, long expectedVersion,
+        CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ApproveSchoolBulletins,
             cancellationToken);
@@ -159,6 +168,8 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         }
 
         bulletin.IsApproved = isApproved;
+        // Hand the client's expected version to the repo's optimistic-concurrency check.
+        bulletin.Version = expectedVersion;
 
         await _bulletinRepository.UpdateAsync(bulletin, cancellationToken);
 
@@ -181,16 +192,16 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     public override async Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId,
         CancellationToken cancellationToken)
     {
-        var scope =  await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
         var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
 
-        if (_accessPolicy.CanView(bulletin, scope))
+        if (!_accessPolicy.CanView(bulletin, scope))
         {
-            return await base.CanViewDirectoryAsync(entityId, directoryId, cancellationToken);
+            return false;
         }
 
-        return false;
+        return await CanStructurallyViewDirectoryAsync(entityId, directoryId, cancellationToken);
     }
 
     public override async Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId,
@@ -199,13 +210,30 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
         var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
-        
-        if (_accessPolicy.CanEdit(bulletin, scope))
+
+        if (!_accessPolicy.CanEdit(bulletin, scope))
         {
-            return await base.CanEditDirectoryAsync(entityId, directoryId, cancellationToken);
+            return false;
         }
 
-        return false;
+        return await CanStructurallyEditDirectoryAsync(entityId, directoryId, cancellationToken);
+    }
+
+    public override async Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId,
+        CancellationToken cancellationToken)
+    {
+        var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
+
+        var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
+
+        // Upload to a bulletin's directory is gated by CanEdit on the bulletin — only the
+        // creator (with edit permission) or an approver can attach documents to it.
+        if (!_accessPolicy.CanEdit(bulletin, scope))
+        {
+            return false;
+        }
+
+        return await CanStructurallyUploadToDirectoryAsync(entityId, directoryId, cancellationToken);
     }
 
     private async Task<Bulletin> GetBulletinOrThrowAsync(Guid bulletinId, CancellationToken ct)

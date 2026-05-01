@@ -106,6 +106,12 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
         options.Password.RequireLowercase = passwordOpts.RequireLowercase;
         options.Password.RequireUppercase = passwordOpts.RequireUppercase;
         options.Password.RequireDigit = passwordOpts.RequireDigit;
+
+        // Lockout: 5 failed attempts → locked for 15 minutes. AllowedForNewUsers
+        // means CreateAsync sets LockoutEnabled=true on every new user.
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        options.Lockout.AllowedForNewUsers = true;
     })
     .AddRoles<ApplicationRole>()
     .AddUserStore<SqlUserStore>()
@@ -248,6 +254,7 @@ builder.Services.AddScoped<IAuthorizationHandler, UserTypeHandler>();
 
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, ApplicationPolicyProvider>();
 builder.Services.AddSingleton<IRolePermissionCache, RolePermissionCache>();
+builder.Services.AddSingleton<IUserStatusCache, UserStatusCache>();
 
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IRoleAccessor, SqlRoleAccessor>();
@@ -317,9 +324,15 @@ app.UseAuthorization();
 
 app.Use(async (ctx, next) =>
 {
+    // Issue the XSRF-TOKEN cookie on any browser navigation that returns the SPA shell —
+    // not just `/`. Deep links (handled by MapFallbackToFile) need it too. We gate on the
+    // Accept header so API/XHR/asset requests don't unnecessarily mint a token.
     if (HttpMethods.IsGet(ctx.Request.Method) &&
-        ctx.Request.Path == "/" &&
-        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN"))
+        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN") &&
+        !ctx.Request.Path.StartsWithSegments("/api") &&
+        !ctx.Request.Path.StartsWithSegments("/connect") &&
+        ctx.Request.Headers["Accept"].ToString()
+            .Contains("text/html", StringComparison.OrdinalIgnoreCase))
     {
         var anti = ctx.RequestServices.GetRequiredService<IAntiforgery>();
         var tokens = anti.GetAndStoreTokens(ctx);

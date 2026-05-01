@@ -28,10 +28,24 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
 
     public abstract Task<TDirectoryEntity> GetByIdAsync(Guid entityId, CancellationToken cancellationToken);
 
-    public virtual async Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
+    // Authorization is split into two layers:
+    //   1) Entity access policy — "is the caller allowed to interact with THIS entity at all?"
+    //      Each TDirectoryEntity has different rules (e.g. bulletin visibility/approval), so
+    //      this layer is abstract and subclasses MUST implement it. Without this gate, any
+    //      staff user could touch any other staff user's directory tree just by guessing IDs.
+    //   2) Directory structural rules — "does the directory exist in this entity's subtree,
+    //      and do the per-directory flags (IsPrivate / UploadPolicy) permit the action?"
+    //      This is shared and exposed via the CanStructurally* helpers below.
+    public abstract Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct);
+    public abstract Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct);
+    public abstract Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct);
+
+    /// <summary>Default structural view check. Call from <see cref="CanViewDirectoryAsync"/>
+    /// after passing your entity-level access-policy gate.</summary>
+    protected async Task<bool> CanStructurallyViewDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
     {
         var dir = await TryGetDirectoryScopedAsync(entityId, directoryId, ct);
-        
+
         if (dir == null)
         {
             return false;
@@ -40,7 +54,9 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
         return !(dir.IsPrivate && AuthorizationService.GetCurrentUserType() != UserType.Staff);
     }
 
-    public virtual async Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
+    /// <summary>Default structural edit check. Call from <see cref="CanEditDirectoryAsync"/>
+    /// after passing your entity-level access-policy gate.</summary>
+    protected async Task<bool> CanStructurallyEditDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
     {
         if (AuthorizationService.GetCurrentUserType() != UserType.Staff)
         {
@@ -50,10 +66,12 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
         return await TryGetDirectoryScopedAsync(entityId, directoryId, ct) != null;
     }
 
-    public virtual async Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
+    /// <summary>Default structural upload check. Call from <see cref="CanUploadToDirectoryAsync"/>
+    /// after passing your entity-level access-policy gate.</summary>
+    protected async Task<bool> CanStructurallyUploadToDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
     {
         var dir = await TryGetDirectoryScopedAsync(entityId, directoryId, ct);
-        
+
         if (dir == null)
         {
             return false;

@@ -38,13 +38,16 @@ VALUES (@Id, @Name, @NormalizedName, @ConcurrencyStamp, @Description, @IsSystem)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Compute new values into locals — only assign back to `role` after the UPDATE
+        // succeeds, so a concurrency rejection doesn't leave the in-memory entity in a state
+        // that disagrees with the DB.
         var newConcurrencyStamp = Guid.NewGuid().ToString("N");
-        role.NormalizedName = Normalize(role.Name);
+        var newNormalizedName = Normalize(role.Name);
 
         const string sql = @"
 UPDATE dbo.Roles SET
   Name=@Name,
-  NormalizedName=@NormalizedName,
+  NormalizedName=@NewNormalizedName,
   ConcurrencyStamp=@NewConcurrencyStamp,
   Description=@Description,
   IsSystem=@IsSystem
@@ -55,7 +58,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@OldConcurrencyStamp;";
         {
             role.Id,
             role.Name,
-            role.NormalizedName,
+            NewNormalizedName = newNormalizedName,
             NewConcurrencyStamp = newConcurrencyStamp,
             role.Description,
             role.IsSystem,
@@ -71,6 +74,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@OldConcurrencyStamp;";
             });
         }
 
+        role.NormalizedName = newNormalizedName;
         role.ConcurrencyStamp = newConcurrencyStamp;
         return IdentityResult.Success;
     }
@@ -110,10 +114,13 @@ WHERE Id=@Id AND ConcurrencyStamp=@OldConcurrencyStamp;";
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (!Guid.TryParse(roleId, out var id))
+            return null;
+
         const string sql = "SELECT TOP 1 * FROM dbo.Roles WHERE Id=@Id;";
         using var connection = _connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationRole>(
-            new CommandDefinition(sql, new { Id = Guid.Parse(roleId) }, cancellationToken: cancellationToken));
+            new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<ApplicationRole?> FindByNameAsync(string normalizedRoleName, CancellationToken cancellationToken)

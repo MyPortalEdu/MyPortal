@@ -31,19 +31,21 @@ SELECT
 FROM dbo.DiaryEvents AS DE
 WHERE
     (
--- Non-all-day: overlap if Start < @End AND End > @Start  (half-open interval)
-    DE.IsAllDay = 0
-  AND DE.StartTime < @EndTime
-  AND DE.EndTime   > @StartTime
-    )
-   OR
-    (
--- All-day: treat as [Start, End + 1d)
-    DE.IsAllDay = 1
-  AND DE.StartTime < DATEADD(day, 1, @EndTime)
-  AND DE.EndTime   > @StartTime
+        (
+    -- Non-all-day: overlap if Start < @End AND End > @Start  (half-open interval)
+            DE.IsAllDay = 0
+          AND DE.StartTime < @EndTime
+          AND DE.EndTime   > @StartTime
+        )
+        OR
+        (
+    -- All-day: treat as [Start, End + 1d)
+            DE.IsAllDay = 1
+          AND DE.StartTime < DATEADD(day, 1, @EndTime)
+          AND DE.EndTime   > @StartTime
+        )
     )
   AND (
-    @EventTypeFilter IS NULL OR DE.EventTypeId = @EventTypeFilter
+        @EventTypeFilter IS NULL OR DE.EventTypeId = @EventTypeFilter
     );
 GO

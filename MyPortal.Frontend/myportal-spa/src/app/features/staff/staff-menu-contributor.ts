@@ -19,8 +19,8 @@ export class StaffMenuContributor implements AppMenuContributor {
         children: [
           {
             label: 'Users',
-            routerLink: ['system/users'],
-            permissionsAny: [Permissions.System.ViewUsers, Permissions.System.EditUsers]
+            routerLink: ['/staff/system/users'],
+            permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers]
           }
         ]
       }

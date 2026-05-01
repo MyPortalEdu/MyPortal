@@ -25,7 +25,7 @@ public sealed class RolesController : BaseApiController<RolesController>
 
     [HttpGet("{roleId:guid}")]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.ViewRoles)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewRoles)]
     public async Task<IActionResult> GetRoleDetailsAsync([FromRoute] Guid roleId)
     {
         var result = await _roleService.GetDetailsByIdAsync(roleId, CancellationToken);
@@ -40,9 +40,9 @@ public sealed class RolesController : BaseApiController<RolesController>
 
     [HttpGet]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.ViewRoles)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewRoles)]
     public async Task<IActionResult> GetRolesAsync([FromQuery] int page, [FromQuery] int pageSize,
-        [FromQuery] FilterOptions filter, [FromQuery] SortOptions sort)
+        [FromQuery] FilterOptions? filter, [FromQuery] SortOptions? sort)
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
@@ -54,7 +54,7 @@ public sealed class RolesController : BaseApiController<RolesController>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.EditRoles)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
     public async Task<IActionResult> CreateRoleAsync([FromBody] RoleUpsertRequest model)
     {
         var result = await _roleService.CreateRoleAsync(model, CancellationToken);
@@ -65,7 +65,7 @@ public sealed class RolesController : BaseApiController<RolesController>
     [HttpPut("{roleId:guid}")]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.EditRoles)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
     public async Task<IActionResult> UpdateRoleAsync([FromRoute] Guid roleId, [FromBody] RoleUpsertRequest model)
     {
         var result = await _roleService.UpdateRoleAsync(roleId, model, CancellationToken);
@@ -75,7 +75,7 @@ public sealed class RolesController : BaseApiController<RolesController>
 
     [HttpDelete("{roleId:guid}")]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.System.EditRoles)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
     public async Task<IActionResult> DeleteRoleAsync([FromRoute] Guid roleId)
     {
         var result = await _roleService.DeleteRoleAsync(roleId, CancellationToken);

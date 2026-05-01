@@ -43,7 +43,7 @@ public class LoginModel : PageModel
         if (user is null)
         { ModelState.AddModelError(string.Empty, "Invalid credentials."); ReturnUrl = returnUrl; return Page(); }
 
-        var result = await _signIn.PasswordSignInAsync(user, Input.Password, Input.RememberMe, true);
+        var result = await _signIn.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: true);
         if (!result.Succeeded)
         { ModelState.AddModelError(string.Empty, "Invalid credentials."); ReturnUrl = returnUrl; return Page(); }
 

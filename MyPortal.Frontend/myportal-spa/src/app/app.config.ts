@@ -1,14 +1,17 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import Aura from '@primeuix/themes/aura';
 
 import { routes } from './app.routes';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {providePrimeNG} from 'primeng/config';
-import {provideHttpClient, withInterceptorsFromDi, withXsrfConfiguration} from '@angular/common/http';
+import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angular/common/http';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
 import {definePreset} from '@primeng/themes';
+import {apiBaseInterceptor} from './core/interceptors/api-base-interceptor';
+import {authErrorInterceptor} from './core/interceptors/auth-error-interceptor';
+import {AppErrorHandler} from './core/error/app-error-handler';
 
 const MyPortal = definePreset(Aura, {
   semantic: {
@@ -31,7 +34,7 @@ const MyPortal = definePreset(Aura, {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(
-      withInterceptorsFromDi(),
+      withInterceptors([apiBaseInterceptor, authErrorInterceptor]),
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' })
     ),
     provideBrowserGlobalErrorListeners(),
@@ -50,6 +53,7 @@ export const appConfig: ApplicationConfig = {
         },
       }
     }),
-    { provide: MENU_CONTRIBUTORS, useClass: StaffMenuContributor, multi: true }
+    { provide: MENU_CONTRIBUTORS, useClass: StaffMenuContributor, multi: true },
+    { provide: ErrorHandler, useClass: AppErrorHandler }
   ]
 };

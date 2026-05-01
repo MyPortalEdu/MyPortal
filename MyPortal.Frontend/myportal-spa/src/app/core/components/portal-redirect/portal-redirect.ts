@@ -17,7 +17,13 @@ export class PortalRedirectComponent implements OnInit {
       me.userType === UserType.Staff   ? '/staff'   :
         me.userType === UserType.Student ? '/student' :
           me.userType === UserType.Parent  ? '/parent'  :
-            '/';
+            // Unknown / unmapped user type — sign out instead of bouncing back to '/' which
+            // re-enters this component and creates an infinite redirect loop.
+            '/account/logout';
+    if (url.startsWith('/account/')) {
+      window.location.href = url;
+      return;
+    }
     this.router.navigateByUrl(url);
   }
 }
