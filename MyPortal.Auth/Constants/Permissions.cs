@@ -50,6 +50,12 @@ public static class Permissions
         // public const string UseRestrictedCodes   = "Attendance.UseRestrictedCodes";
     }
 
+    public static class Timetable
+    {
+        public const string ViewTimetables = "Timetable.ViewTimetables";
+        public const string EditTimetables = "Timetable.EditTimetables";
+    }
+
     public static class Behaviour
     {
         // public const string ViewAchievements      = "Behaviour.ViewAchievements";

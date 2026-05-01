@@ -16,7 +16,9 @@ using MyPortal.Services.School;
 using MyPortal.Services.School.Bulletins;
 using MyPortal.Services.Security;
 using MyPortal.Services.System;
+using MyPortal.Services.Timetabler;
 using MyPortal.Services.Validation;
+using MyPortal.Timetabler.Solver;
 
 namespace MyPortal.Services.Extensions;
 
@@ -50,6 +52,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserService, UserService>();
 
         services.AddScoped<IRegisterService, RegisterService>();
+
+        services.AddScoped<TimetableInputBuilder>();
+        services.AddScoped<ITimetableSolver, CpSatTimetableSolver>();
+        services.AddScoped<ITimetableSolveService, TimetableSolveService>();
+        services.AddScoped<ITimetableService, TimetableService>();
 
         services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
     }

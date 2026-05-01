@@ -102,6 +102,10 @@
     <EmbeddedResource Include="Sql\StoredProcedures\sp_register_submit.sql" />
     <None Remove="Sql\Updates\0014_add_timetable_entities.sql" />
     <EmbeddedResource Include="Sql\Updates\0014_add_timetable_entities.sql" />
+    <None Remove="Sql\Updates\0015_add_subject_rooms.sql" />
+    <EmbeddedResource Include="Sql\Updates\0015_add_subject_rooms.sql" />
+    <None Remove="Sql\Updates\0016_add_timetable_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\0016_add_timetable_permissions.sql" />
   </ItemGroup>
 
   <ItemGroup>

@@ -128,6 +128,35 @@ public class CpSatTimetableSolver : ITimetableSolver
         foreach (var (_, ivs) in teacherIntervals) if (ivs.Count > 1) model.AddNoOverlap(ivs);
         foreach (var (_, ivs) in roomIntervals)    if (ivs.Count > 1) model.AddNoOverlap(ivs);
 
+        // 2a) PPA cap. A teacher's total weekly teaching load cannot exceed
+        //     (TotalPeriodsPerWeek - PpaPeriodsPerWeek). Encoded as a weighted sum over the
+        //     teacher's assignment indicators where the weight is the slot's size — assigning
+        //     a double consumes 2 of the cap, a triple 3. Skipped when PpaPeriodsPerWeek=0
+        //     (the default), so existing inputs see no behavioural change.
+        var totalPeriodsPerWeek = input.Periods.Count;
+        var slotSizeByKey = new Dictionary<(string Block, int Slot), int>();
+        foreach (var block in input.Blocks)
+        {
+            for (var i = 0; i < block.SlotSizes.Count; i++)
+            {
+                slotSizeByKey[(block.Id, i)] = block.SlotSizes[i];
+            }
+        }
+
+        foreach (var teacher in input.Teachers)
+        {
+            if (teacher.PpaPeriodsPerWeek <= 0) continue;
+
+            var teacherKeys = teacherAssign.Keys.Where(k => k.Teacher == teacher.Id).ToArray();
+            if (teacherKeys.Length == 0) continue;
+
+            var bools   = teacherKeys.Select(k => teacherAssign[k]).ToArray();
+            var weights = teacherKeys.Select(k => (long)slotSizeByKey[(k.Block, k.Slot)]).ToArray();
+
+            model.Add(LinearExpr.WeightedSum(bools, weights) <=
+                      totalPeriodsPerWeek - teacher.PpaPeriodsPerWeek);
+        }
+
         // 3) A block's own slots must not overlap with each other (a block can't run two slots
         //    simultaneously; valid-starts already prevent intra-day collisions but this is the
         //    canonical guard).

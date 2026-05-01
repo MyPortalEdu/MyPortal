@@ -18,5 +18,8 @@ public static class RepositoryRegistry
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRegisterRepository, RegisterRepository>();
+        services.AddScoped<ITimetableSourceRepository, TimetableSourceRepository>();
+        services.AddScoped<ITimetableRunRepository, TimetableRunRepository>();
+        services.AddScoped<ITimetableRepository, TimetableRepository>();
     }
 }

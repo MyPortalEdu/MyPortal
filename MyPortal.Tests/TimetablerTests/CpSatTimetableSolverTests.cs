@@ -274,6 +274,88 @@ public class CpSatTimetableSolverTests
         Assert.That(tutorAtD4P4.PeriodIds.Single(), Is.EqualTo("D4P4"));
     }
 
+    // ─── PPA cap ─────────────────────────────────────────────────────────────
+
+    private static TimetableInput BuildSingleClassSchool(IReadOnlyList<int> slotSizes,
+        IReadOnlyList<Teacher> teachers)
+    {
+        // Single-day 6-period week, one class needing all the supplied slots filled. Used to
+        // isolate PPA cap behaviour without other constraints muddying the picture.
+        var periods = Enumerable.Range(0, 6)
+            .Select(p => new PeriodSlot($"D0P{p + 1}", 0, p + 1, false))
+            .ToList();
+
+        var rooms = new List<Room>
+        {
+            new("R1", new[] { MathsSubject }),
+            new("R2", new[] { MathsSubject }),
+        };
+
+        var block = new Block("B", slotSizes,
+            new[] { new Group("G", new[] { new ClassDefinition("C", MathsSubject) }) });
+
+        return new TimetableInput(periods, teachers, rooms,
+            new[] { new Band("BAND", new[] { block.Id }) },
+            new[] { block },
+            Array.Empty<Pin>());
+    }
+
+    [Test]
+    public void Solve_PpaCap_LimitsTeacherWeeklyLoad()
+    {
+        // 6-period week. T1 has PPA=4 so can teach at most 2 single periods; T2 (no PPA) takes
+        // the other 4. The solver must respect the cap.
+        var teachers = new List<Teacher>
+        {
+            new("T1", new[] { MathsSubject }, PpaPeriodsPerWeek: 4),
+            new("T2", new[] { MathsSubject }),
+        };
+        var input = BuildSingleClassSchool(new[] { 1, 1, 1, 1, 1, 1 }, teachers);
+
+        var result = _solver.Solve(input, new SolveOptions(MaxSeconds: 10, RandomSeed: 1));
+
+        Assert.That(result.Status, Is.AnyOf(SolveStatus.Feasible, SolveStatus.Optimal));
+        var t1Periods = result.Assignments.Where(a => a.TeacherId == "T1").Sum(a => a.PeriodIds.Count);
+        Assert.That(t1Periods, Is.LessThanOrEqualTo(2),
+            $"T1 has PPA=4 in a 6-period week so should teach ≤ 2 periods; taught {t1Periods}.");
+    }
+
+    [Test]
+    public void Solve_PpaCap_WeightsDoubleSlotsBySize()
+    {
+        // Three doubles = 6 teaching periods. T1's cap is 6-4=2 so they can take at most one
+        // double (2 periods consumed); T2 (no PPA) covers the rest.
+        var teachers = new List<Teacher>
+        {
+            new("T1", new[] { MathsSubject }, PpaPeriodsPerWeek: 4),
+            new("T2", new[] { MathsSubject }),
+        };
+        var input = BuildSingleClassSchool(new[] { 2, 2, 2 }, teachers);
+
+        var result = _solver.Solve(input, new SolveOptions(MaxSeconds: 10, RandomSeed: 1));
+
+        Assert.That(result.Status, Is.AnyOf(SolveStatus.Feasible, SolveStatus.Optimal));
+        var t1Doubles = result.Assignments.Count(a => a.TeacherId == "T1");
+        Assert.That(t1Doubles, Is.LessThanOrEqualTo(1),
+            $"T1 has cap=2 and each slot is a double (size 2), so can take ≤ 1 double; took {t1Doubles}.");
+    }
+
+    [Test]
+    public void Solve_PpaCap_RejectsAsInfeasibleWhenDemandExceedsAvailableCapacity()
+    {
+        // Single qualified teacher with PPA=2 → cap=4. Demand is 6 single lessons. No way to
+        // assign all 6 → CP-SAT must report Infeasible.
+        var teachers = new List<Teacher>
+        {
+            new("T1", new[] { MathsSubject }, PpaPeriodsPerWeek: 2),
+        };
+        var input = BuildSingleClassSchool(new[] { 1, 1, 1, 1, 1, 1 }, teachers);
+
+        var result = _solver.Solve(input, new SolveOptions(MaxSeconds: 10, RandomSeed: 1));
+
+        Assert.That(result.Status, Is.EqualTo(SolveStatus.Infeasible));
+    }
+
     [Test]
     public void Solve_RejectsModel_WhenSubjectHasNoQualifiedTeacher()
     {
