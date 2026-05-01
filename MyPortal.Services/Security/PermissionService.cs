@@ -44,7 +44,7 @@ public class PermissionService : IPermissionService
     private Task<bool> IsCurrentUserEnabledAsync(CancellationToken ct)
     {
         var userId = _user.UserId!.Value;
-        return _userStatusCache.IsEnabledAsync(userId, async token =>
+        return _userStatusCache.IsEnabledAsync(userId, async _ =>
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             return user?.IsEnabled ?? false;

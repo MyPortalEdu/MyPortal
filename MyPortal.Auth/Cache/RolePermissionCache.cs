@@ -18,11 +18,23 @@ public class RolePermissionCache : IRolePermissionCache
         => Task.FromResult(_cache.Get<IReadOnlyCollection<string>>(Key(roleId)));
 
     public void Set(Guid roleId, IReadOnlyCollection<string> perms)
-        => _cache.Set(Key(roleId), perms, new MemoryCacheEntryOptions
+    {
+        var options = new MemoryCacheEntryOptions
         {
             SlidingExpiration = TimeSpan.FromMinutes(10),
             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
-        });
+        };
+        options.RegisterPostEvictionCallback(OnEvicted, roleId);
+        _cache.Set(Key(roleId), perms, options);
+    }
+
+    private void OnEvicted(object key, object? value, EvictionReason reason, object? state)
+    {
+        if (state is Guid roleId)
+        {
+            _locks.TryRemove(roleId, out _);
+        }
+    }
 
     public void Invalidate(Guid roleId) => _cache.Remove(Key(roleId));
 
