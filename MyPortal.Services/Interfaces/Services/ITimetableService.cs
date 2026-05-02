@@ -21,4 +21,11 @@ public interface ITimetableService
     Task ApplyAsync(Guid timetableId, TimetableApplyRequest model, CancellationToken cancellationToken);
 
     Task DiscardAsync(Guid timetableId, CancellationToken cancellationToken);
+
+    Task<Guid> AddPinAsync(Guid timetableId, TimetablePinUpsertRequest model,
+        CancellationToken cancellationToken);
+
+    Task<IList<TimetablePinResponse>> ListPinsAsync(Guid timetableId, CancellationToken cancellationToken);
+
+    Task RemovePinAsync(Guid timetableId, Guid pinId, CancellationToken cancellationToken);
 }

@@ -18,4 +18,11 @@ public interface ITimetableRunRepository
         CancellationToken cancellationToken);
 
     Task<TimetableRun?> GetRunAsync(Guid runId, CancellationToken cancellationToken);
+
+    Task UpdateRunStatusAsync(Guid runId, TimetableRunStatus status, CancellationToken cancellationToken);
+
+    /// Marks any Queued/Running rows as Failed with a "host restart" diagnostic. Called once
+    /// when the worker spins up — without it, runs orphaned by a host crash would stay in a
+    /// non-terminal state forever and the polling endpoint would never finish.
+    Task<int> MarkOrphanedRunsFailedAsync(CancellationToken cancellationToken);
 }

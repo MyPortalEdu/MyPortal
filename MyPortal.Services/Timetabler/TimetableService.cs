@@ -7,6 +7,7 @@ using MyPortal.Contracts.Models.Timetabler;
 using MyPortal.Core.Entities;
 using MyPortal.Core.Enums;
 using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
@@ -17,14 +18,20 @@ public class TimetableService : BaseService, ITimetableService
 {
     private readonly ITimetableRepository _repository;
     private readonly ITimetableRunRepository _runRepository;
+    private readonly ITimetableMaterialisationService _materialisationService;
+    private readonly IValidationService _validationService;
 
     public TimetableService(IAuthorizationService authorizationService,
         ILogger<TimetableService> logger, ITimetableRepository repository,
-        ITimetableRunRepository runRepository)
+        ITimetableRunRepository runRepository,
+        ITimetableMaterialisationService materialisationService,
+        IValidationService validationService)
         : base(authorizationService, logger)
     {
         _repository = repository;
         _runRepository = runRepository;
+        _materialisationService = materialisationService;
+        _validationService = validationService;
     }
 
     public async Task<Guid> CreateDraftAsync(TimetableUpsertRequest model, CancellationToken cancellationToken)
@@ -126,10 +133,13 @@ public class TimetableService : BaseService, ITimetableService
         await _repository.ApplyAsync(timetable.Id, timetable.AcademicYearId,
             model.EffectiveFrom, model.EffectiveTo, cancellationToken);
 
-        Logger.LogInformation("Timetable applied: {timetableId} — Sessions materialisation pending separate service.",
-            timetable.Id);
+        await _materialisationService.MaterialiseAsync(timetable.Id,
+            model.EffectiveFrom, model.EffectiveTo, cancellationToken);
 
         tx.Complete();
+
+        Logger.LogInformation("Timetable applied: {timetableId} (effective {from}..{to}).",
+            timetable.Id, model.EffectiveFrom, model.EffectiveTo);
     }
 
     public async Task DiscardAsync(Guid timetableId, CancellationToken cancellationToken)
@@ -146,6 +156,76 @@ public class TimetableService : BaseService, ITimetableService
         await _repository.UpdateStatusAsync(timetableId, TimetableStatus.Discarded, cancellationToken);
 
         Logger.LogInformation("Timetable discarded: {timetableId}", timetableId);
+    }
+
+    public async Task<Guid> AddPinAsync(Guid timetableId, TimetablePinUpsertRequest model,
+        CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
+            cancellationToken);
+
+        await _validationService.ValidateAsync(model);
+
+        var timetable = await _repository.GetByIdAsync(timetableId, cancellationToken)
+                        ?? throw new NotFoundException("Timetable not found.");
+
+        // Pinning a Superseded/Discarded timetable changes nothing meaningful (no future runs);
+        // only Draft / Active accept new pins. Active pins protect a re-solve from breaking the
+        // currently-applied schedule.
+        if (timetable.Status is TimetableStatus.Superseded or TimetableStatus.Discarded)
+            throw new InvalidOperationException(
+                $"Cannot add pins to a {timetable.Status} timetable.");
+
+        var userId = AuthorizationService.GetCurrentUserId()
+                     ?? throw new ForbiddenException("Not authenticated.");
+
+        var pin = new TimetablePin
+        {
+            Id = SqlConvention.SequentialGuid(),
+            TimetableId = timetableId,
+            CurriculumBlockId = model.CurriculumBlockId,
+            SlotIndex = model.SlotIndex,
+            ClassId = model.ClassId,
+            TeacherId = model.TeacherId,
+            RoomId = model.RoomId,
+            StartAttendancePeriodId = model.StartAttendancePeriodId,
+            CreatedById = userId,
+            CreatedByIpAddress = AuthorizationService.GetCurrentUserIpAddress() ?? string.Empty,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        await _repository.InsertPinAsync(pin, cancellationToken);
+
+        Logger.LogInformation("Pin added: {pinId} to timetable {timetableId}", pin.Id, timetableId);
+        return pin.Id;
+    }
+
+    public async Task<IList<TimetablePinResponse>> ListPinsAsync(Guid timetableId,
+        CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.ViewTimetables,
+            cancellationToken);
+
+        var pins = await _repository.ListPinsAsync(timetableId, cancellationToken);
+        return pins.Select(ToPinResponse).ToList();
+    }
+
+    public async Task RemovePinAsync(Guid timetableId, Guid pinId, CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
+            cancellationToken);
+
+        var pin = await _repository.GetPinAsync(pinId, cancellationToken)
+                  ?? throw new NotFoundException("Pin not found.");
+
+        // Defence-in-depth: an attacker can't delete pins from a different timetable by guessing
+        // pin ids — the URL's timetableId must match the pin's parent.
+        if (pin.TimetableId != timetableId)
+            throw new NotFoundException("Pin not found.");
+
+        await _repository.DeletePinAsync(pinId, cancellationToken);
+
+        Logger.LogInformation("Pin removed: {pinId} from timetable {timetableId}", pinId, timetableId);
     }
 
     // --- mapping ----------------------------------------------------------------------
@@ -182,5 +262,14 @@ public class TimetableService : BaseService, ITimetableService
         CurriculumBlockId = a.CurriculumBlockId, SlotIndex = a.SlotIndex,
         ClassId = a.ClassId, TeacherId = a.TeacherId, RoomId = a.RoomId,
         StartAttendancePeriodId = a.StartAttendancePeriodId, Size = a.Size,
+    };
+
+    private static TimetablePinResponse ToPinResponse(TimetablePin p) => new()
+    {
+        Id = p.Id, TimetableId = p.TimetableId,
+        CurriculumBlockId = p.CurriculumBlockId, SlotIndex = p.SlotIndex,
+        ClassId = p.ClassId, TeacherId = p.TeacherId, RoomId = p.RoomId,
+        StartAttendancePeriodId = p.StartAttendancePeriodId,
+        CreatedById = p.CreatedById, CreatedAt = p.CreatedAt,
     };
 }

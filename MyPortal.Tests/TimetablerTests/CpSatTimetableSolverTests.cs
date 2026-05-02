@@ -50,20 +50,22 @@ public class CpSatTimetableSolverTests
         };
 
         // Y7 maths: two sets, structure [single, single, double] = 4 periods/week.
+        var mathsSizes = new[] { 1, 1, 2 };
         var mathsBlock = new Block("BLK_MAT_Y7",
-            SlotSizes: new[] { 1, 1, 2 },
+            SlotSizes: mathsSizes,
             Groups: new[]
             {
-                new Group("GRP_MA1", new[] { new ClassDefinition("CLS_MA1", MathsSubject) }),
-                new Group("GRP_MA2", new[] { new ClassDefinition("CLS_MA2", MathsSubject) }),
+                new Group("GRP_MA1", new[] { new ClassDefinition("CLS_MA1", MathsSubject, mathsSizes) }),
+                new Group("GRP_MA2", new[] { new ClassDefinition("CLS_MA2", MathsSubject, mathsSizes) }),
             });
 
         // Y7 PE: two singles.
+        var peSizes = new[] { 1, 1 };
         var peBlock = new Block("BLK_PE_Y7",
-            SlotSizes: new[] { 1, 1 },
+            SlotSizes: peSizes,
             Groups: new[]
             {
-                new Group("GRP_PE1", new[] { new ClassDefinition("CLS_PE1", PeSubject) }),
+                new Group("GRP_PE1", new[] { new ClassDefinition("CLS_PE1", PeSubject, peSizes) }),
             });
 
         var bands = new List<Band>
@@ -226,25 +228,26 @@ public class CpSatTimetableSolverTests
             new("R_PE1", new[] { PeSubject }),
         };
 
+        var singleSize = new[] { 1 };
         var mathsBlock = new Block("BLK_MAT_Y7",
-            SlotSizes: new[] { 1 },
+            SlotSizes: singleSize,
             Groups: new[]
             {
-                new Group("GRP_MA1", new[] { new ClassDefinition("CLS_MA1", MathsSubject) }),
+                new Group("GRP_MA1", new[] { new ClassDefinition("CLS_MA1", MathsSubject, singleSize) }),
             });
 
         var peBlock = new Block("BLK_PE_Y7",
-            SlotSizes: new[] { 1 },
+            SlotSizes: singleSize,
             Groups: new[]
             {
-                new Group("GRP_PE1", new[] { new ClassDefinition("CLS_PE1", PeSubject) }),
+                new Group("GRP_PE1", new[] { new ClassDefinition("CLS_PE1", PeSubject, singleSize) }),
             });
 
         var altBlock = new Block("BLK_TUTOR",
-            SlotSizes: new[] { 1 },
+            SlotSizes: singleSize,
             Groups: new[]
             {
-                new Group("GRP_TUTOR", new[] { new ClassDefinition("CLS_TUTOR", MathsSubject) }),
+                new Group("GRP_TUTOR", new[] { new ClassDefinition("CLS_TUTOR", MathsSubject, singleSize) }),
             },
             AllowsConcurrentScheduling: true);
 
@@ -292,7 +295,7 @@ public class CpSatTimetableSolverTests
         };
 
         var block = new Block("B", slotSizes,
-            new[] { new Group("G", new[] { new ClassDefinition("C", MathsSubject) }) });
+            new[] { new Group("G", new[] { new ClassDefinition("C", MathsSubject, slotSizes) }) });
 
         return new TimetableInput(periods, teachers, rooms,
             new[] { new Band("BAND", new[] { block.Id }) },
@@ -356,6 +359,158 @@ public class CpSatTimetableSolverTests
         Assert.That(result.Status, Is.EqualTo(SolveStatus.Infeasible));
     }
 
+    // ─── multi-class per group ─────────────────────────────────────────────
+
+    [Test]
+    public void Solve_TutorBlock_TwoGroupsTwoClassesEach_ProducesAllAssignments()
+    {
+        // Tutor block where each tutor group does Maths AND PE — so each group has 2 classes.
+        // Block has 4 slots: 2 singles (Maths) + 2 doubles (PE). The solver must arrange so
+        // each group gets exactly its required count of each class.
+        var periods = Enumerable.Range(0, 6)
+            .Select(p => new PeriodSlot($"D0P{p + 1}", 0, p + 1, false))
+            .ToList();
+
+        var teachers = new List<Teacher>
+        {
+            new("T_M1", new[] { MathsSubject }),
+            new("T_M2", new[] { MathsSubject }),
+            new("T_PE1", new[] { PeSubject }),
+            new("T_PE2", new[] { PeSubject }),
+        };
+
+        var rooms = new List<Room>
+        {
+            new("R_M1", new[] { MathsSubject }),
+            new("R_M2", new[] { MathsSubject }),
+            new("R_PE1", new[] { PeSubject }),
+            new("R_PE2", new[] { PeSubject }),
+        };
+
+        // Each group's curriculum: 2 single-period Maths + 1 double-period PE = 4 periods.
+        // Block slot sizes (sorted): [1, 1, 2].
+        var perClassMaths = new[] { 1, 1 };
+        var perClassPe    = new[] { 2 };
+        var blockSlotSizes = new[] { 1, 1, 2 };
+
+        var tutorBlock = new Block("BLK_TUTOR",
+            SlotSizes: blockSlotSizes,
+            Groups: new[]
+            {
+                new Group("GRP_7A", new[]
+                {
+                    new ClassDefinition("CLS_7A_Ma", MathsSubject, perClassMaths),
+                    new ClassDefinition("CLS_7A_PE", PeSubject,    perClassPe),
+                }),
+                new Group("GRP_7B", new[]
+                {
+                    new ClassDefinition("CLS_7B_Ma", MathsSubject, perClassMaths),
+                    new ClassDefinition("CLS_7B_PE", PeSubject,    perClassPe),
+                }),
+            });
+
+        var input = new TimetableInput(periods, teachers, rooms,
+            new[] { new Band("BAND_Y7", new[] { tutorBlock.Id }) },
+            new[] { tutorBlock },
+            Array.Empty<Pin>());
+
+        var result = _solver.Solve(input, new SolveOptions(MaxSeconds: 10, RandomSeed: 1));
+
+        Assert.That(result.Status, Is.AnyOf(SolveStatus.Feasible, SolveStatus.Optimal));
+
+        // 3 slots × 2 groups = 6 assignments (one class picked per (slot, group)).
+        Assert.That(result.Assignments, Has.Count.EqualTo(6));
+
+        // Each group should pick Maths twice (at the 2 single slots) and PE once (at the
+        // double slot) — verify cardinality holds.
+        foreach (var groupId in new[] { "GRP_7A", "GRP_7B" })
+        {
+            var groupAssignments = result.Assignments
+                .Where(a => a.ClassId.StartsWith($"CLS_{groupId.Substring(4)}_"))
+                .ToList();
+            Assert.That(groupAssignments, Has.Count.EqualTo(3),
+                $"Group {groupId} should have 3 assignments (2 Maths singles + 1 PE double).");
+
+            var mathsCount = groupAssignments.Count(a => a.ClassId.EndsWith("_Ma"));
+            var peCount    = groupAssignments.Count(a => a.ClassId.EndsWith("_PE"));
+            Assert.That(mathsCount, Is.EqualTo(2), $"{groupId} should have 2 Maths assignments.");
+            Assert.That(peCount,    Is.EqualTo(1), $"{groupId} should have 1 PE assignment.");
+        }
+    }
+
+    [Test]
+    public void Solve_TutorBlock_AllowsGroupsToPickDifferentClassesAtSameSlot()
+    {
+        // Same tutor-block setup as above, but now we look at the per-slot picks. At each
+        // single slot, 7A and 7B may end up doing different subjects — that's the new
+        // capability the multi-class-per-group model unlocks.
+        var periods = Enumerable.Range(0, 6)
+            .Select(p => new PeriodSlot($"D0P{p + 1}", 0, p + 1, false))
+            .ToList();
+
+        var teachers = new List<Teacher>
+        {
+            new("T_M1", new[] { MathsSubject }),
+            new("T_M2", new[] { MathsSubject }),
+            new("T_PE1", new[] { PeSubject }),
+            new("T_PE2", new[] { PeSubject }),
+        };
+
+        var rooms = new List<Room>
+        {
+            new("R_M1", new[] { MathsSubject }),
+            new("R_M2", new[] { MathsSubject }),
+            new("R_PE1", new[] { PeSubject }),
+            new("R_PE2", new[] { PeSubject }),
+        };
+
+        // Each group: 1 single Maths + 1 double PE = 3 periods. Block: [1, 2].
+        // Forces 7A and 7B to overlap on at least one slot type each.
+        var perClassMaths = new[] { 1 };
+        var perClassPe    = new[] { 2 };
+        var blockSlotSizes = new[] { 1, 2 };
+
+        var tutorBlock = new Block("BLK_TUTOR",
+            SlotSizes: blockSlotSizes,
+            Groups: new[]
+            {
+                new Group("GRP_7A", new[]
+                {
+                    new ClassDefinition("CLS_7A_Ma", MathsSubject, perClassMaths),
+                    new ClassDefinition("CLS_7A_PE", PeSubject,    perClassPe),
+                }),
+                new Group("GRP_7B", new[]
+                {
+                    new ClassDefinition("CLS_7B_Ma", MathsSubject, perClassMaths),
+                    new ClassDefinition("CLS_7B_PE", PeSubject,    perClassPe),
+                }),
+            });
+
+        var input = new TimetableInput(periods, teachers, rooms,
+            new[] { new Band("BAND_Y7", new[] { tutorBlock.Id }) },
+            new[] { tutorBlock },
+            Array.Empty<Pin>());
+
+        var result = _solver.Solve(input, new SolveOptions(MaxSeconds: 10, RandomSeed: 1));
+
+        Assert.That(result.Status, Is.AnyOf(SolveStatus.Feasible, SolveStatus.Optimal));
+
+        // Each group picks Maths once (the single slot) and PE once (the double slot). Both
+        // groups land on the same slot indices for Maths and PE because slots are lockstep.
+        var bySlot = result.Assignments.GroupBy(a => a.SlotIndex).ToDictionary(g => g.Key, g => g.ToList());
+        Assert.That(bySlot.Count, Is.EqualTo(2), "Two slots, two groups → assignments at slots 0 and 1.");
+        foreach (var slotPair in bySlot.Values)
+        {
+            Assert.That(slotPair, Has.Count.EqualTo(2),
+                "Each slot has one assignment per group (2 groups → 2 per slot).");
+            // Both classes at the same slot should have the same subject (because their slot
+            // sizes match — both Maths if slot is single, both PE if slot is double).
+            var subjects = slotPair.Select(a => a.ClassId.Split('_').Last()).Distinct().ToList();
+            Assert.That(subjects, Has.Count.EqualTo(1),
+                "Both groups at the same slot must pick a class of the same size; with 1 maths + 1 PE per group, that means the same subject.");
+        }
+    }
+
     [Test]
     public void Solve_RejectsModel_WhenSubjectHasNoQualifiedTeacher()
     {
@@ -369,7 +524,7 @@ public class CpSatTimetableSolverTests
             SlotSizes: new[] { 1 },
             Groups: new[]
             {
-                new Group("GRP_PE1", new[] { new ClassDefinition("CLS_PE1", PeSubject) })
+                new Group("GRP_PE1", new[] { new ClassDefinition("CLS_PE1", PeSubject, new[] { 1 }) })
             });
 
         var input = new TimetableInput(

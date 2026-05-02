@@ -2,7 +2,8 @@ namespace MyPortal.Core.Enums;
 
 public enum TimetableRunStatus
 {
-    Running = 0,
-    Succeeded = 1,
-    Failed = 2
+    Queued = 0,
+    Running = 1,
+    Succeeded = 2,
+    Failed = 3
 }

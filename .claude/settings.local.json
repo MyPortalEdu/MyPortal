@@ -8,7 +8,13 @@
       "Bash(grep -oE \"MyPortal\\\\.Core[\\\\\\\\\\\\\\\\/]Entities[\\\\\\\\\\\\\\\\/][^\\(]+\" C:/Users/Rowan/.claude/projects/C--Users-Rowan-Source-Repos-MyPortal/ebbdbef0-208d-4f1f-93ec-db07164abcfe/tool-results/btrzq7rb1.txt)",
       "Bash(tee /tmp/full-scale-run-2.log)",
       "Bash(git mv *)",
-      "Bash(sed -i '' 's|namespace MyPortal\\\\.Services\\\\.Timetabler;|namespace MyPortal.Data.Timetabler;|' MyPortal.Data/Timetabler/TimetableInputSources.cs)"
+      "Bash(sed -i '' 's|namespace MyPortal\\\\.Services\\\\.Timetabler;|namespace MyPortal.Data.Timetabler;|' MyPortal.Data/Timetabler/TimetableInputSources.cs)",
+      "Bash(tee /tmp/full-scale-phased-cumulative.log)",
+      "Bash(tee /tmp/full-scale-cum-fixed.log)",
+      "Bash(tee /tmp/full-scale-pool-cum.log)",
+      "Bash(tee /tmp/full-scale-perslot-phase2.log)",
+      "Bash(tee /tmp/full-scale-final.log)",
+      "Bash(tee /tmp/full-scale-final2.log)"
     ]
   }
 }

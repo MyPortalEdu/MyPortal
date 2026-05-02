@@ -27,6 +27,7 @@ using MyPortal.WebApi.Filters;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
+using MyPortal.WebApi.Services.Background;
 using MyPortal.WebApi.Swagger;
 using MyPortal.WebApi.Transformers;
 using OpenIddict.Validation.AspNetCore;
@@ -262,6 +263,8 @@ builder.Services.AddScoped<IRolePermissionProvider, SqlRolePermissionProvider>()
 
 builder.Services.AddRepositories();
 builder.Services.AddMyPortalServices();
+
+builder.Services.AddHostedService<TimetableRunWorker>();
 
 builder.Services.AddScoped<CookieAntiforgeryFilter>();
 

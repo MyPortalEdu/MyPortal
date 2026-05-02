@@ -106,6 +106,8 @@
     <EmbeddedResource Include="Sql\Updates\0015_add_subject_rooms.sql" />
     <None Remove="Sql\Updates\0016_add_timetable_permissions.sql" />
     <EmbeddedResource Include="Sql\Updates\0016_add_timetable_permissions.sql" />
+    <None Remove="Sql\Updates\0017_add_staff_non_contact_allocations.sql" />
+    <EmbeddedResource Include="Sql\Updates\0017_add_staff_non_contact_allocations.sql" />
   </ItemGroup>
 
   <ItemGroup>

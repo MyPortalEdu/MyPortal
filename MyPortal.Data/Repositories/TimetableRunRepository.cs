@@ -25,7 +25,7 @@ public class TimetableRunRepository : ITimetableRunRepository
         {
             Id = Guid.NewGuid(),
             TimetableId = timetableId,
-            Status = TimetableRunStatus.Running,
+            Status = TimetableRunStatus.Queued,
             StartedAt = DateTime.UtcNow,
             CompletedAt = null,
             SolverDiagnostic = null,
@@ -93,5 +93,31 @@ public class TimetableRunRepository : ITimetableRunRepository
         return await conn.QuerySingleOrDefaultAsync<TimetableRun>(new CommandDefinition(
             "SELECT * FROM dbo.TimetableRuns WHERE Id = @runId;",
             new { runId }, cancellationToken: cancellationToken));
+    }
+
+    public async Task UpdateRunStatusAsync(Guid runId, TimetableRunStatus status,
+        CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+        await conn.ExecuteAsync(new CommandDefinition(
+            "UPDATE dbo.TimetableRuns SET Status = @status WHERE Id = @runId;",
+            new { runId, status = (int)status }, cancellationToken: cancellationToken));
+    }
+
+    public async Task<int> MarkOrphanedRunsFailedAsync(CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+        return await conn.ExecuteAsync(new CommandDefinition(
+            @"UPDATE dbo.TimetableRuns
+                  SET Status = @failed,
+                      CompletedAt = SYSUTCDATETIME(),
+                      SolverDiagnostic = 'Orphaned by host restart.'
+                WHERE Status IN (@queued, @running);",
+            new
+            {
+                queued  = (int)TimetableRunStatus.Queued,
+                running = (int)TimetableRunStatus.Running,
+                failed  = (int)TimetableRunStatus.Failed,
+            }, cancellationToken: cancellationToken));
     }
 }

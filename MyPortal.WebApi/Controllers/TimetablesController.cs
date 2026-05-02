@@ -81,10 +81,10 @@ public sealed class TimetablesController : BaseApiController<TimetablesControlle
     public async Task<IActionResult> RunAsync([FromRoute] Guid timetableId,
         [FromBody] TimetableRunRequest model)
     {
-        // Synchronous v1 — callers should expect this to take minutes for full-school inputs.
-        // A job-queue front-end can wrap this once we have one.
-        var run = await _solveService.RunAsync(timetableId, model.WeekPatternId, CancellationToken);
-        return Ok(new
+        // Returns immediately — the BackgroundService picks up the queued item and
+        // executes the solve. Caller polls GET /runs/{runId} for status.
+        var run = await _solveService.QueueRunAsync(timetableId, model.WeekPatternId, CancellationToken);
+        return Accepted(new
         {
             id = run.Id,
             timetableId = run.TimetableId,
@@ -112,6 +112,37 @@ public sealed class TimetablesController : BaseApiController<TimetablesControlle
     public async Task<IActionResult> DiscardAsync([FromRoute] Guid timetableId)
     {
         await _service.DiscardAsync(timetableId, CancellationToken);
+        return NoContent();
+    }
+
+    // ─── pins ─────────────────────────────────────────────────────────────
+
+    [HttpGet("{timetableId:guid}/pins")]
+    [Permission(PermissionMode.RequireAny, Permissions.Timetable.ViewTimetables)]
+    public async Task<IActionResult> ListPinsAsync([FromRoute] Guid timetableId)
+    {
+        var result = await _service.ListPinsAsync(timetableId, CancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{timetableId:guid}/pins")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.Timetable.EditTimetables)]
+    public async Task<IActionResult> AddPinAsync([FromRoute] Guid timetableId,
+        [FromBody] TimetablePinUpsertRequest model)
+    {
+        var id = await _service.AddPinAsync(timetableId, model, CancellationToken);
+        return Ok(new { id });
+    }
+
+    [HttpDelete("{timetableId:guid}/pins/{pinId:guid}")]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.Timetable.EditTimetables)]
+    public async Task<IActionResult> RemovePinAsync([FromRoute] Guid timetableId,
+        [FromRoute] Guid pinId)
+    {
+        await _service.RemovePinAsync(timetableId, pinId, CancellationToken);
         return NoContent();
     }
 }

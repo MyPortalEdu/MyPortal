@@ -22,4 +22,27 @@ public interface ITimetableRepository : IEntityRepository<Timetable>
         DateTime effectiveFrom, DateTime? effectiveTo, CancellationToken cancellationToken);
 
     Task UpdateStatusAsync(Guid timetableId, TimetableStatus status, CancellationToken cancellationToken);
+
+    /// Loads every AttendancePeriod in the same WeekPattern(s) as the timetable's assignments.
+    /// Used by materialisation to walk consecutive periods for multi-size slots.
+    Task<IList<AttendancePeriod>> GetAttendancePeriodsForAssignmentsAsync(Guid timetableId,
+        CancellationToken cancellationToken);
+
+    Task BulkInsertSessionsAsync(IReadOnlyList<Session> sessions, CancellationToken cancellationToken);
+
+    Task BulkInsertSessionPeriodsAsync(IReadOnlyList<SessionPeriod> sessionPeriods,
+        CancellationToken cancellationToken);
+
+    Task InsertPinAsync(TimetablePin pin, CancellationToken cancellationToken);
+
+    Task<IList<TimetablePin>> ListPinsAsync(Guid timetableId, CancellationToken cancellationToken);
+
+    Task<TimetablePin?> GetPinAsync(Guid pinId, CancellationToken cancellationToken);
+
+    Task DeletePinAsync(Guid pinId, CancellationToken cancellationToken);
+
+    Task<IList<StaffMember>> GetAssignedTeachersAsync(Guid timetableId, CancellationToken cancellationToken);
+
+    Task BulkInsertNonContactAllocationsAsync(
+        IReadOnlyList<StaffNonContactAllocation> allocations, CancellationToken cancellationToken);
 }

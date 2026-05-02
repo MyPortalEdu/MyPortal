@@ -106,8 +106,10 @@ public class TimetableInputBuilder
         BuildBlocks(TimetableInputSources sources)
     {
         var sessionTypeLength = sources.SessionTypes.ToDictionary(st => st.Id, st => st.Length);
-        var groupSessionsByGroup = sources.GroupSessions
-            .GroupBy(gs => gs.CurriculumGroupId)
+        // CurriculumGroupSession is keyed by (GroupId, SubjectId), so per (group, subject) we
+        // know the session breakdown — directly attributable to the Class for that subject.
+        var groupSessionsByGroupAndSubject = sources.GroupSessions
+            .GroupBy(gs => (gs.CurriculumGroupId, gs.SubjectId))
             .ToDictionary(g => g.Key, g => g.ToArray());
         var groupsByBlock = sources.Groups
             .GroupBy(cg => cg.BlockId)
@@ -126,22 +128,12 @@ public class TimetableInputBuilder
                 throw new InvalidOperationException(
                     $"CurriculumBlock '{blockEntity.Code}' has no curriculum groups.");
 
-            // Slot sizes come from the first group's session config — within one block, every
-            // group runs in parallel against the same time slots, so all groups must agree on
-            // the slot structure. Picking the first group is a deterministic choice; mismatched
-            // configs across groups in one block would be a data-entry bug to surface later.
-            var primaryGroup = blockGroups[0];
-            if (!groupSessionsByGroup.TryGetValue(primaryGroup.Id, out var sessions) || sessions.Length == 0)
-                throw new InvalidOperationException(
-                    $"CurriculumGroup '{primaryGroup.Id}' has no CurriculumGroupSessions configured.");
-
-            // CurriculumGroupSession.SessionAmount × SessionType.Length, expanded into a flat
-            // list of slot sizes. Sorted ascending so the solver sees [1,1,1,2] not [2,1,1,1] —
-            // not load-bearing, just deterministic.
-            var slotSizes = sessions
-                .SelectMany(gs => Enumerable.Repeat(sessionTypeLength[gs.SessionTypeId], gs.SessionAmount))
-                .OrderBy(s => s)
-                .ToArray();
+            // Build solver groups. Each Class derives its own SessionSizes from CurriculumGroupSession
+            // rows for (group, class.subject). The block's slot multiset is the union of one group's
+            // class session sizes; we validate that every group in the block produces the same
+            // multiset so slots can be lockstep across groups.
+            int[]? canonicalSlotSizes = null;
+            string? canonicalGroupId = null;
 
             var solverGroups = blockGroups.Select(g =>
             {
@@ -155,16 +147,47 @@ public class TimetableInputBuilder
                         throw new InvalidOperationException(
                             $"Class '{c.Code}' references missing Course '{c.CourseId}'.");
 
+                    if (!groupSessionsByGroupAndSubject.TryGetValue((g.Id, subjectId), out var sessions)
+                        || sessions.Length == 0)
+                        throw new InvalidOperationException(
+                            $"Class '{c.Code}' has no CurriculumGroupSessions configured " +
+                            $"for group '{g.Id}', subject '{subjectId}'.");
+
+                    var classSessionSizes = sessions
+                        .SelectMany(gs => Enumerable.Repeat(sessionTypeLength[gs.SessionTypeId], gs.SessionAmount))
+                        .ToArray();
+
                     var classKey = c.Id.ToString();
                     var subjectKey = subjectId.ToString();
                     classSubjects[classKey] = subjectKey;
-                    return new ClassDefinition(classKey, subjectKey);
+                    return new ClassDefinition(classKey, subjectKey, classSessionSizes);
                 }).ToArray();
+
+                // Aggregate this group's class-level sessions into the group's slot multiset.
+                // Sorted so multiset comparison across groups is order-independent.
+                var groupSlotSizes = classDefs
+                    .SelectMany(c => c.SessionSizes)
+                    .OrderBy(s => s)
+                    .ToArray();
+
+                if (canonicalSlotSizes is null)
+                {
+                    canonicalSlotSizes = groupSlotSizes;
+                    canonicalGroupId = g.Id.ToString();
+                }
+                else if (!canonicalSlotSizes.SequenceEqual(groupSlotSizes))
+                {
+                    throw new InvalidOperationException(
+                        $"Block '{blockEntity.Code}' groups have mismatched session-size profiles. " +
+                        $"Group '{canonicalGroupId}' has [{string.Join(",", canonicalSlotSizes)}], " +
+                        $"group '{g.Id}' has [{string.Join(",", groupSlotSizes)}]. " +
+                        $"All groups in a block must share the same total session-size multiset.");
+                }
 
                 return new Group(g.Id.ToString(), classDefs);
             }).ToArray();
 
-            blocks.Add(new Block(blockEntity.Id.ToString(), slotSizes, solverGroups));
+            blocks.Add(new Block(blockEntity.Id.ToString(), canonicalSlotSizes!, solverGroups));
         }
 
         return (blocks, classSubjects);

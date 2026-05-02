@@ -9,6 +9,7 @@ using MyPortal.Services.Interfaces.Services;
 using MyPortal.Timetabler.Models;
 using MyPortal.Timetabler.Solver;
 using QueryKit.Sql;
+using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Timetabler;
 
@@ -18,22 +19,25 @@ public class TimetableSolveService : BaseService, ITimetableSolveService
     private readonly ITimetableRunRepository _runRepository;
     private readonly TimetableInputBuilder _builder;
     private readonly ITimetableSolver _solver;
+    private readonly TimetableRunQueue _queue;
 
     public TimetableSolveService(IAuthorizationService authorizationService,
         ILogger<TimetableSolveService> logger,
         ITimetableSourceRepository sourceRepository,
         ITimetableRunRepository runRepository,
         TimetableInputBuilder builder,
-        ITimetableSolver solver)
+        ITimetableSolver solver,
+        TimetableRunQueue queue)
         : base(authorizationService, logger)
     {
         _sourceRepository = sourceRepository;
         _runRepository = runRepository;
         _builder = builder;
         _solver = solver;
+        _queue = queue;
     }
 
-    public async Task<TimetableRun> RunAsync(Guid timetableId, Guid weekPatternId,
+    public async Task<TimetableRun> QueueRunAsync(Guid timetableId, Guid weekPatternId,
         CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
@@ -45,8 +49,21 @@ public class TimetableSolveService : BaseService, ITimetableSolveService
         var run = await _runRepository.CreateRunAsync(timetableId, triggeredById,
             inputSnapshot: null, cancellationToken);
 
-        Logger.LogInformation("Timetable run started: {runId} (timetable {timetableId})",
+        await _queue.EnqueueAsync(new TimetableRunWorkItem(run.Id, timetableId, weekPatternId),
+            cancellationToken);
+
+        Logger.LogInformation("Timetable run queued: {runId} (timetable {timetableId})",
             run.Id, timetableId);
+
+        return run;
+    }
+
+    public async Task ExecuteRunAsync(Guid runId, Guid timetableId, Guid weekPatternId,
+        CancellationToken cancellationToken)
+    {
+        await _runRepository.UpdateRunStatusAsync(runId, TimetableRunStatus.Running, cancellationToken);
+
+        Logger.LogInformation("Timetable run executing: {runId}", runId);
 
         try
         {
@@ -72,34 +89,32 @@ public class TimetableSolveService : BaseService, ITimetableSolveService
                     .ToArray();
 
                 await _runRepository.ReplaceAssignmentsAsync(timetableId, entities, cancellationToken);
-                await _runRepository.MarkRunCompletedAsync(run.Id, TimetableRunStatus.Succeeded,
+                await _runRepository.MarkRunCompletedAsync(runId, TimetableRunStatus.Succeeded,
                     output.Diagnostic, cancellationToken);
 
                 Logger.LogInformation(
                     "Timetable run succeeded: {runId} ({assignmentCount} assignments, {status})",
-                    run.Id, entities.Length, output.Status);
+                    runId, entities.Length, output.Status);
             }
             else
             {
-                await _runRepository.MarkRunCompletedAsync(run.Id, TimetableRunStatus.Failed,
+                await _runRepository.MarkRunCompletedAsync(runId, TimetableRunStatus.Failed,
                     output.Diagnostic, cancellationToken);
 
                 Logger.LogWarning("Timetable run failed: {runId} ({status} — {diagnostic})",
-                    run.Id, output.Status, output.Diagnostic);
+                    runId, output.Status, output.Diagnostic);
             }
         }
         catch (Exception ex)
         {
-            // Surface the failure on the Run row so admins can read it via the polling endpoint
-            // even though we're rethrowing.
-            await _runRepository.MarkRunCompletedAsync(run.Id, TimetableRunStatus.Failed,
+            // Record failure on the Run row using a fresh CancellationToken — even if the
+            // outer cancellation fired (host shutdown), the polling endpoint should still see
+            // a terminal status rather than a stuck Running.
+            await _runRepository.MarkRunCompletedAsync(runId, TimetableRunStatus.Failed,
                 ex.Message, CancellationToken.None);
 
-            Logger.LogError(ex, "Timetable run threw: {runId}", run.Id);
+            Logger.LogError(ex, "Timetable run threw: {runId}", runId);
             throw;
         }
-
-        return await _runRepository.GetRunAsync(run.Id, cancellationToken)
-               ?? throw new NotFoundException($"Run '{run.Id}' missing after completion.");
     }
 }

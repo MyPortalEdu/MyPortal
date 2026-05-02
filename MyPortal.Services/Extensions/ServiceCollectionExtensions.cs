@@ -53,10 +53,12 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IRegisterService, RegisterService>();
 
+        services.AddSingleton<TimetableRunQueue>();
         services.AddScoped<TimetableInputBuilder>();
         services.AddScoped<ITimetableSolver, CpSatTimetableSolver>();
         services.AddScoped<ITimetableSolveService, TimetableSolveService>();
         services.AddScoped<ITimetableService, TimetableService>();
+        services.AddScoped<ITimetableMaterialisationService, TimetableMaterialisationService>();
 
         services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
     }

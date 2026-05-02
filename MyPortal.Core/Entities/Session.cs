@@ -16,7 +16,7 @@ namespace MyPortal.Core.Entities
         public DateTime StartDate { get; set; }
 
         public DateTime EndDate { get; set; }
-
+        
         public StaffMember? Teacher { get; set; }
         public Class? Class { get; set; }
         public Room? Room { get; set; }
