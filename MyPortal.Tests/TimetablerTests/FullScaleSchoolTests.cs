@@ -284,13 +284,10 @@ public class FullScaleSchoolTests
 
     private static void AssertSpreadIsReasonable(TimetableInput input, TimetableOutput result)
     {
-        // Sanity-check the spread objective: it minimises same-day pairs of *slot starts within
-        // a block*, not *sessions of a single class*. With multi-class-per-group blocks, an
-        // individual class's sessions can still end up clumped even when the block as a whole
-        // is well-spread (the 2 slots a class lands in might both be on the same day). Per-
-        // class spread is a known v2 enhancement; for now we accept up to 10% of multi-session
-        // classes being clumped, which catches a totally-failing objective without false-
-        // failing on the few unlucky picks the block-level spread can't avoid.
+        // The per-class spread objective penalises every same-day pair of a class's sessions,
+        // so "all sessions on one day" carries C(N,2) cost — pushed away from unless staffing
+        // forces it. At full-school scale with 30% staffing slack we expect zero clumped
+        // classes; any nonzero count means the objective lost a tradeoff it shouldn't have.
         var periodById = input.Periods.ToDictionary(p => p.Id);
         var classSessionCount = input.Blocks
             .SelectMany(b => b.Groups.SelectMany(g => g.Classes))
@@ -304,7 +301,7 @@ public class FullScaleSchoolTests
         var clumped = multiSessionClasses.Count(grp =>
             grp.Select(a => periodById[a.PeriodIds[0]].Day).Distinct().Count() == 1);
 
-        Assert.That(clumped, Is.LessThanOrEqualTo(multiSessionClasses.Count / 10),
+        Assert.That(clumped, Is.EqualTo(0),
             $"{clumped} of {multiSessionClasses.Count} multi-session classes had all sessions on a single day — spread objective looks broken.");
     }
 

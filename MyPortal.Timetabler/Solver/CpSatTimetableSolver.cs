@@ -306,7 +306,14 @@ public class CpSatTimetableSolver : ITimetableSolver
             }
         }
 
-        // Spread objective: minimise same-day pairs of slot intervals within a block.
+        // Spread objective: per-class same-day pair penalty. For each (block, group, class) we
+        // sum BoolVars that fire when two of that class's *picked* slots fall on the same day.
+        // Cost grows quadratically with clumping (C(N,2) for all-on-one-day, 0 for fully spread)
+        // so "all sessions on Monday" is much more expensive than "two on Monday, two on Friday"
+        // — pushing the solver toward distinct-day assignments without an explicit max-per-day
+        // constraint. For single-class groups pickedI ≡ 1 so this collapses to "same-day pairs
+        // of slots", matching the previous block-level objective; for multi-class groups it
+        // correctly tracks each class's individual clumping rather than the block as a whole.
         if (options.MaximiseSpread)
         {
             var dayByPeriodIdx = ctx.Periods.Select(p => (long)p.Day).ToArray();
@@ -316,6 +323,7 @@ public class CpSatTimetableSolver : ITimetableSolver
             foreach (var block in input.Blocks)
             {
                 if (block.SlotSizes.Count < 2) continue;
+
                 var slotDay = new IntVar[block.SlotSizes.Count];
                 for (var i = 0; i < block.SlotSizes.Count; i++)
                 {
@@ -323,13 +331,46 @@ public class CpSatTimetableSolver : ITimetableSolver
                     model.AddElement(slotStart[(block.Id, i)], dayByPeriodIdx, sd);
                     slotDay[i] = sd;
                 }
-                for (var i = 0; i < slotDay.Length; i++)
-                for (var j = i + 1; j < slotDay.Length; j++)
+
+                // Reuse the same-day BoolVar across classes that look at the same slot pair —
+                // it depends only on (block, i, j), not on the class.
+                var sameDayCache = new Dictionary<(int, int), BoolVar>();
+                BoolVar SameDayVar(int i, int j)
                 {
-                    var same = model.NewBoolVar($"same_{block.Id}_{i}_{j}");
-                    model.Add(slotDay[i] == slotDay[j]).OnlyEnforceIf(same);
-                    model.Add(slotDay[i] != slotDay[j]).OnlyEnforceIf(same.Not());
-                    penaltyTerms.Add(same);
+                    var key = i < j ? (i, j) : (j, i);
+                    if (sameDayCache.TryGetValue(key, out var existing)) return existing;
+                    var v = model.NewBoolVar($"same_{block.Id}_{key.Item1}_{key.Item2}");
+                    model.Add(slotDay[key.Item1] == slotDay[key.Item2]).OnlyEnforceIf(v);
+                    model.Add(slotDay[key.Item1] != slotDay[key.Item2]).OnlyEnforceIf(v.Not());
+                    sameDayCache[key] = v;
+                    return v;
+                }
+
+                foreach (var group in block.Groups)
+                foreach (var cls in group.Classes)
+                {
+                    var pickable = new List<int>();
+                    for (var i = 0; i < block.SlotSizes.Count; i++)
+                        if (cls.SessionSizes.Contains(block.SlotSizes[i]))
+                            pickable.Add(i);
+                    if (pickable.Count < 2) continue;
+
+                    for (var ii = 0; ii < pickable.Count; ii++)
+                    for (var jj = ii + 1; jj < pickable.Count; jj++)
+                    {
+                        var i = pickable[ii];
+                        var j = pickable[jj];
+                        var pickedI = classPicked[(block.Id, i, group.Id, cls.Id)];
+                        var pickedJ = classPicked[(block.Id, j, group.Id, cls.Id)];
+                        var same = SameDayVar(i, j);
+
+                        // conflict ≥ pickedI + pickedJ + same - 2 forces conflict = 1 iff all
+                        // three are 1 (under minimization the solver keeps it at 0 otherwise).
+                        var conflict = model.NewBoolVar(
+                            $"conf_{block.Id}_{i}_{j}_{group.Id}_{cls.Id}");
+                        model.Add(conflict >= pickedI + pickedJ + same - 2);
+                        penaltyTerms.Add(conflict);
+                    }
                 }
             }
             if (penaltyTerms.Count > 0) model.Minimize(LinearExpr.Sum(penaltyTerms.ToArray()));
@@ -405,22 +446,27 @@ public class CpSatTimetableSolver : ITimetableSolver
             list.Add(slotIdx);
         }
 
-        // Per-slot (per-session) teacher and room decisions. Per-class continuity is too tight
-        // for solver-time feasibility — schools that want it can pin a teacher per class. The
-        // looser per-session model is just a per-period bipartite matching: at any period,
-        // assign one teacher per concurrent class, drawn from the candidate pool.
-        var teacherAssign = new Dictionary<(string Block, int Slot, string Group, string Class, string Teacher), BoolVar>();
-        var roomAssign    = new Dictionary<(string Block, int Slot, string Group, string Class, string Room),    BoolVar>();
+        // Two-layer teacher model. classTeacher[C, t]=1 means teacher t is in class C's
+        // teaching set; sessionTeacher[slot, C, t]=1 means t actually teaches that session.
+        // sessionTeacher ≤ classTeacher (only in-set teachers can teach sessions). Class set
+        // size bounded by [1, MaxTeachersPerWeek]; the OBJECTIVE penalises sets > 1 heavily so
+        // continuity is preferred whenever feasible. Rooms keep simpler per-session model
+        // since "one room per class" isn't a typical school requirement.
+        var classTeacher    = new Dictionary<(string Block, string Group, string Class, string Teacher), BoolVar>();
+        var sessionTeacher  = new Dictionary<(string Block, int Slot, string Group, string Class, string Teacher), BoolVar>();
+        var roomAssign      = new Dictionary<(string Block, int Slot, string Group, string Class, string Room), BoolVar>();
 
         var teacherIntervals = input.Teachers.ToDictionary(t => t.Id, _ => new List<IntervalVar>());
         var roomIntervals    = input.Rooms.ToDictionary(r => r.Id,    _ => new List<IntervalVar>());
 
-        var classBySubjectLookup = new Dictionary<(string Block, string Group, string Class), string>();
+        var classByKey = new Dictionary<(string Block, string Group, string Class), ClassDefinition>();
+        var classBySubject = new Dictionary<(string Block, string Group, string Class), string>();
         foreach (var block in input.Blocks)
         foreach (var group in block.Groups)
         foreach (var cls in group.Classes)
         {
-            classBySubjectLookup[(block.Id, group.Id, cls.Id)] = cls.SubjectId;
+            classByKey[(block.Id, group.Id, cls.Id)] = cls;
+            classBySubject[(block.Id, group.Id, cls.Id)] = cls.SubjectId;
         }
 
         var groupByBlockClass = new Dictionary<(string Block, string Class), string>();
@@ -431,30 +477,60 @@ public class CpSatTimetableSolver : ITimetableSolver
             groupByBlockClass[(block.Id, cls.Id)] = group.Id;
         }
 
+        var splitPenalties = new List<LinearExpr>();
+        const int splitPenaltyWeight = 1000;
+
         foreach (var ((blockId, groupId, classId), occurrences) in classOccurrences)
         {
-            var subjectId = classBySubjectLookup[(blockId, groupId, classId)];
+            var cls = classByKey[(blockId, groupId, classId)];
+            var subjectId = cls.SubjectId;
             var eligibleTeachers = ctx.TeachersForSubject[subjectId];
             var eligibleRooms    = ctx.RoomsForSubject[subjectId];
-            var size = ctx.BlockById[blockId].SlotSizes;
+            var blockSizes = ctx.BlockById[blockId].SlotSizes;
 
+            // 1) classTeacher per (class, candidate teacher).
+            var classTeacherBools = new List<BoolVar>(eligibleTeachers.Count);
+            foreach (var t in eligibleTeachers)
+            {
+                var b = model.NewBoolVar($"ct_{blockId}_{groupId}_{classId}_{t}");
+                classTeacher[(blockId, groupId, classId, t)] = b;
+                classTeacherBools.Add(b);
+            }
+            // At least 1, at most MaxTeachersPerWeek teachers.
+            var classTeacherCount = LinearExpr.Sum(classTeacherBools.ToArray());
+            model.Add(classTeacherCount >= 1);
+            model.Add(classTeacherCount <= cls.MaxTeachersPerWeek);
+
+            // Penalise extra teachers heavily. classTeacherCount - 1 is the "split count" —
+            // 0 if continuity holds, ≥1 if split. The MaxTeachersPerWeek upper bound prevents
+            // unbounded splits when the penalty becomes worth paying.
+            splitPenalties.Add(classTeacherCount - 1);
+
+            // 2) sessionTeacher per (slot, class, candidate teacher), with the linkage to
+            //    classTeacher. Optional intervals participate in per-teacher NoOverlap.
             foreach (var slotIdx in occurrences)
             {
-                var slotSize = size[slotIdx];
+                var slotSize = blockSizes[slotIdx];
                 var startPeriod = phase1.SlotStarts[(blockId, slotIdx)];
 
-                var tBools = new List<BoolVar>(eligibleTeachers.Count);
+                var sessionBools = new List<BoolVar>(eligibleTeachers.Count);
                 foreach (var t in eligibleTeachers)
                 {
-                    var b = model.NewBoolVar($"t_{blockId}_{slotIdx}_{groupId}_{classId}_{t}");
-                    teacherAssign[(blockId, slotIdx, groupId, classId, t)] = b;
-                    tBools.Add(b);
+                    var sb = model.NewBoolVar($"st_{blockId}_{slotIdx}_{groupId}_{classId}_{t}");
+                    sessionTeacher[(blockId, slotIdx, groupId, classId, t)] = sb;
+                    sessionBools.Add(sb);
+
+                    // Linkage: sessionTeacher[..t] only allowed if classTeacher[t] = 1.
+                    model.Add(sb <= classTeacher[(blockId, groupId, classId, t)]);
+
                     var oiv = model.NewOptionalFixedSizeIntervalVar(model.NewConstant(startPeriod),
-                        slotSize, b, $"toi_{blockId}_{slotIdx}_{groupId}_{classId}_{t}");
+                        slotSize, sb, $"toi_{blockId}_{slotIdx}_{groupId}_{classId}_{t}");
                     teacherIntervals[t].Add(oiv);
                 }
-                model.AddExactlyOne(tBools);
+                // Exactly one teacher actually teaches each session.
+                model.AddExactlyOne(sessionBools);
 
+                // 3) Room — simpler per-session pick; no continuity layer.
                 var rBools = new List<BoolVar>(eligibleRooms.Count);
                 foreach (var r in eligibleRooms)
                 {
@@ -473,7 +549,7 @@ public class CpSatTimetableSolver : ITimetableSolver
         foreach (var (_, ivs) in roomIntervals)    if (ivs.Count > 1) model.AddNoOverlap(ivs);
 
         // PPA cap: per teacher, total assigned class-periods ≤ TotalPeriodsPerWeek - PpaPeriodsPerWeek.
-        // Each teacherAssign[..., t] = 1 contributes (slot's size) periods.
+        // Each sessionTeacher[..., t] = 1 contributes (slot's size) periods.
         var totalPeriodsPerWeek = input.Periods.Count;
         var slotSizeByKey = new Dictionary<(string Block, int Slot), int>();
         foreach (var block in input.Blocks)
@@ -483,30 +559,41 @@ public class CpSatTimetableSolver : ITimetableSolver
         foreach (var teacher in input.Teachers)
         {
             if (teacher.PpaPeriodsPerWeek <= 0) continue;
-            var teacherKeys = teacherAssign.Keys.Where(k => k.Teacher == teacher.Id).ToArray();
+            var teacherKeys = sessionTeacher.Keys.Where(k => k.Teacher == teacher.Id).ToArray();
             if (teacherKeys.Length == 0) continue;
-            var bools = teacherKeys.Select(k => teacherAssign[k]).ToArray();
+            var bools = teacherKeys.Select(k => sessionTeacher[k]).ToArray();
             var weights = teacherKeys.Select(k => (long)slotSizeByKey[(k.Block, k.Slot)]).ToArray();
             model.Add(LinearExpr.WeightedSum(bools, weights) <=
                       totalPeriodsPerWeek - teacher.PpaPeriodsPerWeek);
         }
 
-        // Teacher / room pins. With per-slot assignments, a pin without a SlotIndex applies
-        // to every slot occurrence of the pinned class — modelled by forcing the per-slot
-        // assignment indicator at each occurrence.
+        // Teacher / room pins. Teacher pins target classTeacher (force the teacher into the
+        // class set); room pins target every per-session occurrence (rooms are per-session).
         foreach (var pin in input.Pins)
         {
             if (pin.ClassId is null) continue;
             var groupId = groupByBlockClass[(pin.BlockId, pin.ClassId)];
-            if (!classOccurrences.TryGetValue((pin.BlockId, groupId, pin.ClassId), out var occurrences))
-                continue;
-            foreach (var slotIdx in occurrences)
+            if (pin.TeacherId is not null)
             {
-                if (pin.TeacherId is not null)
-                    model.Add(teacherAssign[(pin.BlockId, slotIdx, groupId, pin.ClassId, pin.TeacherId)] == 1);
-                if (pin.RoomId is not null)
-                    model.Add(roomAssign[(pin.BlockId, slotIdx, groupId, pin.ClassId, pin.RoomId)] == 1);
+                model.Add(classTeacher[(pin.BlockId, groupId, pin.ClassId, pin.TeacherId)] == 1);
             }
+            if (pin.RoomId is not null
+                && classOccurrences.TryGetValue((pin.BlockId, groupId, pin.ClassId), out var occurrences))
+            {
+                foreach (var slotIdx in occurrences)
+                {
+                    model.Add(roomAssign[(pin.BlockId, slotIdx, groupId, pin.ClassId, pin.RoomId)] == 1);
+                }
+            }
+        }
+
+        // Minimise total split penalty (extra teachers per class summed × heavy weight).
+        // Continuity is preferred; splits happen only when matching is otherwise infeasible.
+        if (splitPenalties.Count > 0)
+        {
+            model.Minimize(LinearExpr.WeightedSum(
+                splitPenalties.ToArray(),
+                Enumerable.Repeat((long)splitPenaltyWeight, splitPenalties.Count).ToArray()));
         }
 
         var solver = new CpSolver
@@ -543,9 +630,9 @@ public class CpSatTimetableSolver : ITimetableSolver
                 foreach (var group in block.Groups)
                 {
                     var classId = phase1.SlotClassPick[(block.Id, i, group.Id)];
-                    var subjectId = classBySubjectLookup[(block.Id, group.Id, classId)];
+                    var subjectId = classBySubject[(block.Id, group.Id, classId)];
                     var teacher = ctx.TeachersForSubject[subjectId]
-                        .First(t => solver.BooleanValue(teacherAssign[(block.Id, i, group.Id, classId, t)]));
+                        .First(t => solver.BooleanValue(sessionTeacher[(block.Id, i, group.Id, classId, t)]));
                     var room = ctx.RoomsForSubject[subjectId]
                         .First(r => solver.BooleanValue(roomAssign[(block.Id, i, group.Id, classId, r)]));
                     assignments.Add(new Assignment(block.Id, i, classId, teacher, room, periodIds));
