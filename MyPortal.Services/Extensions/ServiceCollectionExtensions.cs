@@ -16,7 +16,7 @@ using MyPortal.Services.School;
 using MyPortal.Services.School.Bulletins;
 using MyPortal.Services.Security;
 using MyPortal.Services.System;
-using MyPortal.Services.Timetabler;
+using MyPortal.Services.Timetable;
 using MyPortal.Services.Validation;
 using MyPortal.Timetabler.Solver;
 

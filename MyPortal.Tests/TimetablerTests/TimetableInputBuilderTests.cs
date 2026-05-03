@@ -1,6 +1,6 @@
 using MyPortal.Core.Entities;
 using MyPortal.Data.Timetabler;
-using MyPortal.Services.Timetabler;
+using MyPortal.Services.Timetable;
 using MyPortal.Timetabler.Solver;
 using Directory = MyPortal.Core.Entities.Directory;
 

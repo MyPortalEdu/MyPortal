@@ -3,7 +3,7 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.Attendance;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Attendance;
 

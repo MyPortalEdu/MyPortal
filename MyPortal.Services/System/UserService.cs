@@ -7,12 +7,12 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces;
-using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
+using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Services.System;
 

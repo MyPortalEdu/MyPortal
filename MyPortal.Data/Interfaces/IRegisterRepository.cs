@@ -1,6 +1,6 @@
 using MyPortal.Contracts.Models.Attendance;
 
-namespace MyPortal.Data.Interfaces.Repositories;
+namespace MyPortal.Data.Interfaces;
 
 public interface IRegisterRepository
 {

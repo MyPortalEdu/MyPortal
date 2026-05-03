@@ -4,7 +4,7 @@ using Dapper;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Core.Enums;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;

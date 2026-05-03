@@ -8,13 +8,13 @@ using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces;
-using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
 using MyPortal.Services.School.Bulletins;
 using QueryKit.Repositories.Exceptions;
 using Task = System.Threading.Tasks.Task;
+using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Tests.ServiceTests;
 

@@ -2,7 +2,7 @@
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Core.Entities;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
 using QueryKit.Extensions;

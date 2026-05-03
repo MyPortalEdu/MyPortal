@@ -1,8 +1,8 @@
 ﻿using MyPortal.Contracts.Models.Documents;
-using MyPortal.Data.Interfaces.Repositories.Base;
+using MyPortal.Data.Interfaces.Base;
 using Directory = MyPortal.Core.Entities.Directory;
 
-namespace MyPortal.Data.Interfaces.Repositories
+namespace MyPortal.Data.Interfaces
 {
     public interface IDirectoryRepository : IEntityRepository<Directory>
     {

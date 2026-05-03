@@ -1,6 +1,6 @@
 using MyPortal.Data.Timetabler;
 
-namespace MyPortal.Data.Interfaces.Repositories;
+namespace MyPortal.Data.Interfaces;
 
 public interface ITimetableSourceRepository
 {

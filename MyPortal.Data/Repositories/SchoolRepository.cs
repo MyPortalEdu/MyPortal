@@ -3,7 +3,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.School;
 using MyPortal.Core.Entities;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using QueryKit.Extensions;
 using QueryKit.Repositories.Interfaces;

@@ -1,7 +1,7 @@
 ﻿using MyPortal.Contracts.Models.School;
-using MyPortal.Data.Interfaces.Repositories.Base;
+using MyPortal.Data.Interfaces.Base;
 
-namespace MyPortal.Data.Interfaces.Repositories;
+namespace MyPortal.Data.Interfaces;
 
 public interface ISchoolRepository : IEntityRepository<Core.Entities.School>
 {

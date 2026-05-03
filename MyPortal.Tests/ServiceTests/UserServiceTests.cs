@@ -9,10 +9,10 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces;
-using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Services.System;
 using MyPortal.Tests.Mocks;
 using Task = System.Threading.Tasks.Task;
+using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Tests.ServiceTests;
 

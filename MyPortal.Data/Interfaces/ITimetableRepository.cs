@@ -1,9 +1,9 @@
 using MyPortal.Core.Entities;
 using MyPortal.Core.Enums;
-using MyPortal.Data.Interfaces.Repositories.Base;
+using MyPortal.Data.Interfaces.Base;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Data.Interfaces.Repositories;
+namespace MyPortal.Data.Interfaces;
 
 public interface ITimetableRepository : IEntityRepository<Timetable>
 {

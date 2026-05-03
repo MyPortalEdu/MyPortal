@@ -1,12 +1,12 @@
 ﻿using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Core.Entities;
-using MyPortal.Data.Interfaces.Repositories.Base;
+using MyPortal.Data.Interfaces.Base;
 using MyPortal.Data.VisibilityScopes;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 
-namespace MyPortal.Data.Interfaces.Repositories;
+namespace MyPortal.Data.Interfaces;
 
 public interface IBulletinRepository : IEntityRepository<Bulletin>
 {

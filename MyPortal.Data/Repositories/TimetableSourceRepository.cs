@@ -3,7 +3,7 @@ using Dapper;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Timetabler;
 
 namespace MyPortal.Data.Repositories;

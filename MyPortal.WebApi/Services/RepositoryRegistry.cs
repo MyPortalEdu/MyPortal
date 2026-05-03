@@ -1,4 +1,4 @@
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories;
 
 namespace MyPortal.WebApi.Services;

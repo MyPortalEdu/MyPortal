@@ -4,14 +4,14 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Core.Entities;
 using MyPortal.Core.Enums;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces.Services;
 using MyPortal.Timetabler.Models;
 using MyPortal.Timetabler.Solver;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Timetabler;
+namespace MyPortal.Services.Timetable;
 
 public class TimetableSolveService : BaseService, ITimetableSolveService
 {

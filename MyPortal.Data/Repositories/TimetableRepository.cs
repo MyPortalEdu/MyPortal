@@ -4,7 +4,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Core.Enums;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using Task = System.Threading.Tasks.Task;
 

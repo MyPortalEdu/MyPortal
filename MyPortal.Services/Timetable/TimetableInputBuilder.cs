@@ -4,7 +4,7 @@ using MyPortal.Timetabler.Models;
 using SolverRoom = MyPortal.Timetabler.Models.Room;
 using SolverTeacher = MyPortal.Timetabler.Models.Teacher;
 
-namespace MyPortal.Services.Timetabler;
+namespace MyPortal.Services.Timetable;
 
 /// Pure-function adapter from domain entities to TimetableInput. The loading strategy
 /// (Dapper, EF, cached) lives outside; this class only converts already-loaded entities so it

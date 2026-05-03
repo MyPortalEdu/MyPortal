@@ -2,12 +2,12 @@ using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Constants;
 using MyPortal.Core.Entities;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Timetabler;
+namespace MyPortal.Services.Timetable;
 
 public class TimetableMaterialisationService : BaseService, ITimetableMaterialisationService
 {

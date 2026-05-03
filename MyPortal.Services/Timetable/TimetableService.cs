@@ -6,13 +6,13 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.Timetabler;
 using MyPortal.Core.Entities;
 using MyPortal.Core.Enums;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Timetabler;
+namespace MyPortal.Services.Timetable;
 
 public class TimetableService : BaseService, ITimetableService
 {
@@ -39,7 +39,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
 
-        var entity = new Timetable
+        var entity = new Core.Entities.Timetable
         {
             Id = SqlConvention.SequentialGuid(),
             AcademicYearId = model.AcademicYearId,
@@ -230,7 +230,7 @@ public class TimetableService : BaseService, ITimetableService
 
     // --- mapping ----------------------------------------------------------------------
 
-    private static TimetableSummaryResponse ToSummary(Timetable t) => new()
+    private static TimetableSummaryResponse ToSummary(Core.Entities.Timetable t) => new()
     {
         Id = t.Id, AcademicYearId = t.AcademicYearId, Name = t.Name,
         Status = (int)t.Status,
@@ -238,7 +238,7 @@ public class TimetableService : BaseService, ITimetableService
         CreatedAt = t.CreatedAt,
     };
 
-    private static TimetableDetailsResponse ToDetails(Timetable t) => new()
+    private static TimetableDetailsResponse ToDetails(Core.Entities.Timetable t) => new()
     {
         Id = t.Id, AcademicYearId = t.AcademicYearId, Name = t.Name,
         Status = (int)t.Status,

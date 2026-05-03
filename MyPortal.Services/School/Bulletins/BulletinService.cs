@@ -8,7 +8,6 @@ using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
-using MyPortal.Data.Interfaces.Repositories;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
@@ -17,6 +16,7 @@ using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
+using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Services.School.Bulletins;
 

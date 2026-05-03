@@ -2,7 +2,7 @@ using System.Data;
 using Dapper;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Attendance;
-using MyPortal.Data.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Data.Repositories;
 
@@ -17,17 +17,23 @@ public class RegisterRepository : IRegisterRepository
 
     public Task<RegisterResponse?> GetLessonRegisterAsync(Guid sessionPeriodId, Guid attendanceWeekId,
         CancellationToken cancellationToken)
-        => GetRegisterAsync("[dbo].[sp_register_get_lesson]",
+    {
+        
+        return GetRegisterAsync("[dbo].[sp_register_get_lesson]",
             new { sessionPeriodId, attendanceWeekId }, cancellationToken);
+    }
 
     public Task<RegisterResponse?> GetRegGroupRegisterAsync(Guid regGroupId, Guid attendancePeriodId,
         Guid attendanceWeekId, CancellationToken cancellationToken)
-        => GetRegisterAsync("[dbo].[sp_register_get_reg_group]",
+    {
+        return GetRegisterAsync("[dbo].[sp_register_get_reg_group]",
             new { regGroupId, attendancePeriodId, attendanceWeekId }, cancellationToken);
+    }
 
     public Task SubmitLessonRegisterAsync(Guid sessionPeriodId, Guid attendanceWeekId,
         IReadOnlyCollection<SubmitMarkRequest> marks, CancellationToken cancellationToken)
-        => SubmitAsync(new
+    {
+        return SubmitAsync(new
         {
             sessionPeriodId,
             regGroupId = (Guid?)null,
@@ -35,10 +41,12 @@ public class RegisterRepository : IRegisterRepository
             attendanceWeekId,
             marks = MarksAsTvp(marks)
         }, cancellationToken);
+    }
 
     public Task SubmitRegGroupRegisterAsync(Guid regGroupId, Guid attendancePeriodId, Guid attendanceWeekId,
         IReadOnlyCollection<SubmitMarkRequest> marks, CancellationToken cancellationToken)
-        => SubmitAsync(new
+    {
+        return SubmitAsync(new
         {
             sessionPeriodId = (Guid?)null,
             regGroupId,
@@ -46,6 +54,7 @@ public class RegisterRepository : IRegisterRepository
             attendanceWeekId,
             marks = MarksAsTvp(marks)
         }, cancellationToken);
+    }
 
     private async Task<RegisterResponse?> GetRegisterAsync(string sql, object parameters,
         CancellationToken cancellationToken)
