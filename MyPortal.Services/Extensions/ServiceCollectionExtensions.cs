@@ -4,10 +4,12 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Attendance;
+using MyPortal.Services.Curriculum;
 using MyPortal.Services.Curriculum.Timetable;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Attendance;
+using MyPortal.Services.Interfaces.Curriculum;
 using MyPortal.Services.Interfaces.Providers;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.Interfaces.Services;
@@ -26,45 +28,61 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMyPortalServices(this IServiceCollection services)
     {
+        services.AddSingletons();
+        services.AddProviders();
+        services.AddTimetabler();
         services.AddServices();
-
         services.AddAccessPolicies();
+        services.AddValidators();
         
-        services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
-
         return services;
     }
 
     private static void AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IDateTimeProvider, DateTimeProvider>();
-        
         services.AddScoped<IAuthorizationService, AuthorizationService>();
         services.AddScoped<IValidationService, ValidationService>();
         services.AddScoped<IPermissionService, PermissionService>();
-        
+
+        services.AddScoped<IAcademicYearService, AcademicYearService>();
         services.AddScoped<IBulletinService, BulletinService>();
         services.AddScoped<IDirectoryService, DirectoryService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IRegisterService, RegisterService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ISchoolService, SchoolService>();
+        services.AddScoped<ITimetableMaterialisationService, TimetableMaterialisationService>();
+        services.AddScoped<ITimetableService, TimetableService>();
+        services.AddScoped<ITimetableSolveService, TimetableSolveService>();
         services.AddScoped<IUserService, UserService>();
 
-        services.AddScoped<IRegisterService, RegisterService>();
+        services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
+    }
 
-        services.AddSingleton<TimetableRunQueue>();
+    private static void AddProviders(this IServiceCollection services)
+    {
+        services.AddScoped<IDateTimeProvider, DateTimeProvider>();
+    }
+
+    private static void AddTimetabler(this IServiceCollection services)
+    {
         services.AddScoped<TimetableInputBuilder>();
         services.AddScoped<ITimetableSolver, CpSatTimetableSolver>();
-        services.AddScoped<ITimetableSolveService, TimetableSolveService>();
-        services.AddScoped<ITimetableService, TimetableService>();
-        services.AddScoped<ITimetableMaterialisationService, TimetableMaterialisationService>();
+    }
 
-        services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
+    private static void AddSingletons(this IServiceCollection services)
+    {
+        services.AddSingleton<TimetableRunQueue>();
     }
 
     private static void AddAccessPolicies(this IServiceCollection services)
     {
         services.AddScoped<IAccessPolicy<Bulletin, BulletinVisibilityScope>, BulletinAccessPolicy>();
+    }
+
+    private static void AddValidators(this IServiceCollection services)
+    {
+        services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
     }
 }

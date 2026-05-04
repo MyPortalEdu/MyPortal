@@ -18,6 +18,7 @@ using MyPortal.Auth.Providers;
 using MyPortal.Auth.Stores;
 using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
+using MyPortal.Data.Extensions;
 using MyPortal.Data.Factories;
 using MyPortal.Data.Security;
 using MyPortal.FileStorage.Extensions;

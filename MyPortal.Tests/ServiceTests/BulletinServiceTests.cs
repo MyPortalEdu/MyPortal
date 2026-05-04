@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Extensions.Logging;
 using Moq;
 using MyPortal.Auth.Constants;
@@ -109,7 +110,7 @@ public class BulletinServiceTests
         var bulletin = MakeBulletin(bulletinId);
         var dto = new BulletinDetailsResponse { Id = bulletinId, Title = "Test" };
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.GetDetailsByIdAsync(bulletinId,
@@ -127,7 +128,7 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         // Defense in depth: even if the SP would have returned a row, the policy denies.
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
@@ -145,7 +146,7 @@ public class BulletinServiceTests
     public void GetDetailsByIdAsync_Throws_NotFound_WhenBulletinMissing()
     {
         var bulletinId = Guid.NewGuid();
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync((Bulletin?)null);
 
         Assert.That(async () => await _service.GetDetailsByIdAsync(bulletinId, CancellationToken.None),
@@ -163,7 +164,7 @@ public class BulletinServiceTests
         _directoryService.Setup(d => d.CreateDirectoryAsync(It.IsAny<DirectoryUpsertRequest>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DirectoryDetailsResponse { Id = directoryId, Name = "bulletin-x" });
-        _bulletinRepository.Setup(r => r.InsertAsync(It.IsAny<Bulletin>(), It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.InsertAsync(It.IsAny<Bulletin>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync((Bulletin b, CancellationToken _) => b);
 
         var model = new BulletinUpsertRequest
@@ -190,7 +191,7 @@ public class BulletinServiceTests
                 b.Title == "Hello" &&
                 b.Detail == "World" &&
                 b.IsPrivate),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
     }
 
     [Test]
@@ -206,7 +207,7 @@ public class BulletinServiceTests
         _directoryService.Verify(d => d.CreateDirectoryAsync(It.IsAny<DirectoryUpsertRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
         _bulletinRepository.Verify(r => r.InsertAsync(It.IsAny<Bulletin>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     // ─── UpdateBulletinAsync ─────────────────────────────────────────────────
@@ -219,11 +220,11 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId, version: 5);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
 
         var model = new BulletinUpsertRequest
@@ -254,11 +255,11 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId, isApproved: true);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
 
         await _service.UpdateBulletinAsync(bulletinId, new BulletinUpsertRequest
@@ -278,11 +279,11 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId, isApproved: true);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
 
         await _service.UpdateBulletinAsync(bulletinId, new BulletinUpsertRequest
@@ -301,7 +302,7 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
@@ -312,7 +313,7 @@ public class BulletinServiceTests
             Throws.TypeOf<ForbiddenException>());
 
         _bulletinRepository.Verify(r => r.UpdateAsync(It.IsAny<Bulletin>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     [Test]
@@ -323,11 +324,11 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId, version: 5);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ThrowsAsync(new ConcurrencyException("version mismatch"));
 
         var staleClient = new BulletinUpsertRequest { Title = "X", Detail = "Y", ExpectedVersion = 4 };
@@ -347,11 +348,11 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId, version: 7, isApproved: false);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
 
         await _service.UpdateBulletinApprovalAsync(bulletinId, isApproved: true, expectedVersion: 7,
@@ -370,7 +371,7 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
@@ -380,7 +381,7 @@ public class BulletinServiceTests
             Throws.TypeOf<ForbiddenException>());
 
         _bulletinRepository.Verify(r => r.UpdateAsync(It.IsAny<Bulletin>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     // ─── DeleteBulletinAsync ─────────────────────────────────────────────────
@@ -394,18 +395,18 @@ public class BulletinServiceTests
         var directoryId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId, directoryId);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>()))
+        _bulletinRepository.Setup(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
         _directoryService.Setup(d => d.DeleteDirectoryAsync(directoryId, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         await _service.DeleteBulletinAsync(bulletinId, CancellationToken.None);
 
-        _bulletinRepository.Verify(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>()),
+        _bulletinRepository.Verify(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()),
             Times.Once);
         _directoryService.Verify(d => d.DeleteDirectoryAsync(directoryId, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -419,7 +420,7 @@ public class BulletinServiceTests
         var bulletinId = Guid.NewGuid();
         var bulletin = MakeBulletin(bulletinId);
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>()))
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
         _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
@@ -428,7 +429,7 @@ public class BulletinServiceTests
             Throws.TypeOf<ForbiddenException>());
 
         _bulletinRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(),
-            It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Never);
+            It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Never);
         _directoryService.Verify(d => d.DeleteDirectoryAsync(It.IsAny<Guid>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
