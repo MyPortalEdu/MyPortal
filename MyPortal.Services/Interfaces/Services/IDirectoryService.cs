@@ -1,14 +1,15 @@
-﻿using MyPortal.Contracts.Models.Documents;
+﻿using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models.Documents;
 
 namespace MyPortal.Services.Interfaces.Services
 {
     public interface IDirectoryService
     {
         Task<DirectoryDetailsResponse> CreateDirectoryAsync(DirectoryUpsertRequest model,
-            CancellationToken cancellationToken);
+            CancellationToken cancellationToken, IUnitOfWork? uow = null);
         Task<DirectoryDetailsResponse> UpdateDirectoryAsync(Guid directoryId, DirectoryUpsertRequest model,
             CancellationToken cancellationToken);
-        Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken);
+        Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken, IUnitOfWork? uow = null);
         Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId, CancellationToken cancellationToken);
         Task<DirectoryDetailsResponse?> TryGetDirectoryByIdAsync(Guid directoryId,
             CancellationToken cancellationToken);

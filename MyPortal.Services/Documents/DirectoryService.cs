@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Data.Interfaces;
+using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Directory = MyPortal.Core.Entities.Directory;
@@ -14,17 +16,19 @@ public class DirectoryService : BaseService, IDirectoryService
 {
     private readonly IDirectoryRepository _directoryRepository;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
     public DirectoryService(IAuthorizationService authorizationService, ILogger<DirectoryService> logger,
-        IDirectoryRepository directoryRepository, IDocumentRepository documentRepository) : base(authorizationService,
-        logger)
+        IDirectoryRepository directoryRepository, IDocumentRepository documentRepository,
+        IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
     {
         _directoryRepository = directoryRepository;
         _documentRepository = documentRepository;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task<DirectoryDetailsResponse> CreateDirectoryAsync(DirectoryUpsertRequest model,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
         RequireStaff("create");
 
@@ -39,7 +43,7 @@ public class DirectoryService : BaseService, IDirectoryService
             UploadPolicy = model.UploadPolicy
         };
 
-        await _directoryRepository.InsertAsync(directory, cancellationToken);
+        await _directoryRepository.InsertAsync(directory, cancellationToken, uow?.Transaction);
 
         return await GetDirectoryByIdAsync(id, cancellationToken);
     }
@@ -66,7 +70,8 @@ public class DirectoryService : BaseService, IDirectoryService
         return await GetDirectoryByIdAsync(directoryId, cancellationToken);
     }
 
-    public async Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken)
+    public async Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken,
+        IUnitOfWork? uow = null)
     {
         RequireStaff("delete");
 
@@ -82,13 +87,13 @@ public class DirectoryService : BaseService, IDirectoryService
         // Note: this path always soft-deletes documents (via the repo default). If hard-delete
         // with blob cleanup is ever needed here, route through IDocumentService.DeleteDocumentAsync
         // and trigger storage cleanup after this transaction commits.
-        using var tx = CreateTransactionScope();
+        await _unitOfWorkFactory.RunInTransactionAsync(uow, async activeUow =>
+        {
+            await DeleteDirectoryContentsAsync(directoryId, cancellationToken, activeUow);
 
-        await DeleteDirectoryContentsAsync(directoryId, cancellationToken);
-
-        await _directoryRepository.DeleteAsync(directoryId, cancellationToken);
-
-        tx.Complete();
+            await _directoryRepository.DeleteAsync(directoryId, cancellationToken,
+                transaction: activeUow.Transaction);
+        }, cancellationToken);
     }
 
     public async Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId,
@@ -124,7 +129,7 @@ public class DirectoryService : BaseService, IDirectoryService
 
         return response;
     }
-    
+
     public async Task<DirectoryTreeResponse> GetDirectoryTreeAsync(
         Guid directoryId,
         CancellationToken cancellationToken,
@@ -153,24 +158,27 @@ public class DirectoryService : BaseService, IDirectoryService
         return await _directoryRepository.IsInSubtreeAsync(rootDirectoryId, candidateDirectoryId, cancellationToken);
     }
 
-    private async Task DeleteDirectoryContentsAsync(Guid directoryId, CancellationToken cancellationToken)
+    private async Task DeleteDirectoryContentsAsync(Guid directoryId, CancellationToken cancellationToken,
+        IUnitOfWork uow)
     {
         var contents = await GetDirectoryContentsAsync(directoryId, cancellationToken);
 
         foreach (var subdirectory in contents.Directories)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
-            await DeleteDirectoryContentsAsync(subdirectory.Id, cancellationToken);
-            
-            await _directoryRepository.DeleteAsync(subdirectory.Id, cancellationToken);
+
+            await DeleteDirectoryContentsAsync(subdirectory.Id, cancellationToken, uow);
+
+            await _directoryRepository.DeleteAsync(subdirectory.Id, cancellationToken,
+                transaction: uow.Transaction);
         }
 
         foreach (var document in contents.Documents)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
-            await _documentRepository.DeleteAsync(document.Id, cancellationToken);
+
+            await _documentRepository.DeleteAsync(document.Id, cancellationToken,
+                transaction: uow.Transaction);
         }
     }
 

@@ -1,12 +1,13 @@
-using System.Transactions;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Timetabler;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
@@ -20,18 +21,21 @@ public class TimetableService : BaseService, ITimetableService
     private readonly ITimetableRunRepository _runRepository;
     private readonly ITimetableMaterialisationService _materialisationService;
     private readonly IValidationService _validationService;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
     public TimetableService(IAuthorizationService authorizationService,
         ILogger<TimetableService> logger, ITimetableRepository repository,
         ITimetableRunRepository runRepository,
         ITimetableMaterialisationService materialisationService,
-        IValidationService validationService)
+        IValidationService validationService,
+        IUnitOfWorkFactory unitOfWorkFactory)
         : base(authorizationService, logger)
     {
         _repository = repository;
         _runRepository = runRepository;
         _materialisationService = materialisationService;
         _validationService = validationService;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task<Guid> CreateDraftAsync(TimetableUpsertRequest model, CancellationToken cancellationToken)
@@ -123,20 +127,17 @@ public class TimetableService : BaseService, ITimetableService
         if (model.EffectiveTo.HasValue && model.EffectiveTo.Value < model.EffectiveFrom)
             throw new ArgumentException("EffectiveTo must be on or after EffectiveFrom.");
 
-        // Wrap repository status flip + Session materialisation in one ambient transaction so
+        // Wrap the repository status flip + Session materialisation in one transaction so
         // the timetable can never be marked Active without the corresponding Sessions, or vice
-        // versa. The repo's ApplyAsync uses TransactionScope.Required and will enlist.
-        using var tx = new TransactionScope(TransactionScopeOption.Required,
-            new TransactionOptions { IsolationLevel = global::System.Transactions.IsolationLevel.ReadCommitted },
-            TransactionScopeAsyncFlowOption.Enabled);
+        // versa. Both operations enlist via the shared UoW transaction.
+        await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
+        {
+            await _repository.ApplyAsync(timetable.Id, timetable.AcademicYearId,
+                model.EffectiveFrom, model.EffectiveTo, cancellationToken, uow.Transaction);
 
-        await _repository.ApplyAsync(timetable.Id, timetable.AcademicYearId,
-            model.EffectiveFrom, model.EffectiveTo, cancellationToken);
-
-        await _materialisationService.MaterialiseAsync(timetable.Id,
-            model.EffectiveFrom, model.EffectiveTo, cancellationToken);
-
-        tx.Complete();
+            await _materialisationService.MaterialiseAsync(timetable.Id,
+                model.EffectiveFrom, model.EffectiveTo, cancellationToken, uow);
+        }, cancellationToken);
 
         Logger.LogInformation("Timetable applied: {timetableId} (effective {from}..{to}).",
             timetable.Id, model.EffectiveFrom, model.EffectiveTo);

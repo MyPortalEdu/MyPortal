@@ -1,6 +1,8 @@
+using System.Data;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Constants;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces.Services;
@@ -21,9 +23,12 @@ public class TimetableMaterialisationService : BaseService, ITimetableMaterialis
     }
 
     public async Task MaterialiseAsync(Guid timetableId, DateTime startDate, DateTime? endDate,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        var assignments = await _timetableRepository.ListAssignmentsAsync(timetableId, cancellationToken);
+        var transaction = uow?.Transaction;
+
+        var assignments = await _timetableRepository.ListAssignmentsAsync(timetableId, cancellationToken,
+            transaction);
         if (assignments.Count == 0)
         {
             Logger.LogInformation("No assignments to materialise for timetable {timetableId}.", timetableId);
@@ -31,7 +36,7 @@ public class TimetableMaterialisationService : BaseService, ITimetableMaterialis
         }
 
         var periods = await _timetableRepository.GetAttendancePeriodsForAssignmentsAsync(
-            timetableId, cancellationToken);
+            timetableId, cancellationToken, transaction);
 
         // For each (AcademicYear, CycleDayIndex), build a chain so we can walk a slot of size N
         // from its start period to N consecutive same-day periods. Solver-side guarantees the
@@ -91,15 +96,15 @@ public class TimetableMaterialisationService : BaseService, ITimetableMaterialis
             }
         }
 
-        await _timetableRepository.BulkInsertSessionsAsync(sessions, cancellationToken);
-        await _timetableRepository.BulkInsertSessionPeriodsAsync(sessionPeriods, cancellationToken);
+        await _timetableRepository.BulkInsertSessionsAsync(sessions, cancellationToken, transaction);
+        await _timetableRepository.BulkInsertSessionPeriodsAsync(sessionPeriods, cancellationToken, transaction);
 
         var ppaAllocations = await BuildPpaAllocationsAsync(timetableId, teachingPeriodsByTeacher,
-            periods, startDate, resolvedEndDate, cancellationToken);
+            periods, startDate, resolvedEndDate, cancellationToken, transaction);
         if (ppaAllocations.Count > 0)
         {
             await _timetableRepository.BulkInsertNonContactAllocationsAsync(ppaAllocations,
-                cancellationToken);
+                cancellationToken, transaction);
         }
 
         Logger.LogInformation(
@@ -110,9 +115,11 @@ public class TimetableMaterialisationService : BaseService, ITimetableMaterialis
 
     private async Task<List<StaffNonContactAllocation>> BuildPpaAllocationsAsync(Guid timetableId,
         Dictionary<Guid, HashSet<Guid>> teachingPeriodsByTeacher, IList<AttendancePeriod> periods,
-        DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
+        DateTime startDate, DateTime endDate, CancellationToken cancellationToken,
+        IDbTransaction? transaction)
     {
-        var teachers = await _timetableRepository.GetAssignedTeachersAsync(timetableId, cancellationToken);
+        var teachers = await _timetableRepository.GetAssignedTeachersAsync(timetableId, cancellationToken,
+            transaction);
         var teachersWithPpa = teachers.Where(t => t.PpaPeriodsPerWeek > 0).ToArray();
         if (teachersWithPpa.Length == 0) return new List<StaffNonContactAllocation>();
 

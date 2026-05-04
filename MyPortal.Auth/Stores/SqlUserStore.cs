@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using System.Transactions;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
 using MyPortal.Auth.Models;
@@ -344,10 +343,10 @@ WHERE r.NormalizedName = @NormalizedRoleName;";
 
         const string sql = "INSERT INTO dbo.UserClaims (Id,UserId,ClaimType,ClaimValue) VALUES (@Id,@UserId,@Type,@Value);";
 
-        // Single connection + ambient TransactionScope so the batch is all-or-nothing.
-        // (One connection inside the scope keeps it on the lightweight transaction manager.)
-        using var tx = CreateTransactionScope();
+        // Single connection + explicit transaction so the batch is all-or-nothing.
         using var connection = _connectionFactory.Create();
+        connection.Open();
+        using var tx = connection.BeginTransaction();
 
         foreach (var claim in claims)
         {
@@ -358,10 +357,10 @@ WHERE r.NormalizedName = @NormalizedRoleName;";
                     UserId = user.Id,
                     Type = claim.Type,
                     Value = claim.Value
-                }, cancellationToken: cancellationToken));
+                }, transaction: tx, cancellationToken: cancellationToken));
         }
 
-        tx.Complete();
+        tx.Commit();
     }
 
     public async Task ReplaceClaimAsync(ApplicationUser user, Claim oldClaim, Claim newClaim, CancellationToken cancellationToken)
@@ -391,18 +390,19 @@ WHERE UserId=@UserId AND ClaimType=@OldType AND ClaimValue=@OldValue;";
 
         const string sql = "DELETE FROM dbo.UserClaims WHERE UserId=@UserId AND ClaimType=@Type AND ClaimValue=@Value;";
 
-        // Single connection + ambient TransactionScope so the batch is all-or-nothing.
-        using var tx = CreateTransactionScope();
+        // Single connection + explicit transaction so the batch is all-or-nothing.
         using var connection = _connectionFactory.Create();
+        connection.Open();
+        using var tx = connection.BeginTransaction();
 
         foreach (var claim in claims)
         {
             await connection.ExecuteAsync(new CommandDefinition(sql,
                 new { UserId = user.Id, Type = claim.Type, Value = claim.Value },
-                cancellationToken: cancellationToken));
+                transaction: tx, cancellationToken: cancellationToken));
         }
 
-        tx.Complete();
+        tx.Commit();
     }
 
     public async Task<IList<ApplicationUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
@@ -420,11 +420,6 @@ WHERE c.ClaimType = @Type AND c.ClaimValue = @Value;";
             new CommandDefinition(sql, new { Type = claim.Type, Value = claim.Value }, cancellationToken: cancellationToken));
         return users.ToList();
     }
-
-    private static TransactionScope CreateTransactionScope() =>
-        new(TransactionScopeOption.Required,
-            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
-            TransactionScopeAsyncFlowOption.Enabled);
 
     // -------------------------------------------------------
     // Lockout — all in-memory mutations; UpdateAsync persists LockoutEnd /

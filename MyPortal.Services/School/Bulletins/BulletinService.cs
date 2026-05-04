@@ -3,10 +3,12 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Documents;
+using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Security;
@@ -24,14 +26,17 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 {
     private readonly IBulletinRepository _bulletinRepository;
     private readonly IAccessPolicy<Bulletin, BulletinVisibilityScope> _accessPolicy;
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
     public BulletinService(IAuthorizationService authorizationService, ILogger<BulletinService> logger,
         IDirectoryService directoryService, IDocumentService documentService, IValidationService validationService,
-        IBulletinRepository bulletinRepository, IAccessPolicy<Bulletin, BulletinVisibilityScope> accessPolicy) : base(
+        IBulletinRepository bulletinRepository, IAccessPolicy<Bulletin, BulletinVisibilityScope> accessPolicy,
+        IUnitOfWorkFactory unitOfWorkFactory) : base(
         authorizationService, logger, directoryService, documentService, validationService)
     {
         _bulletinRepository = bulletinRepository;
         _accessPolicy = accessPolicy;
+        _unitOfWorkFactory = unitOfWorkFactory;
     }
 
     public async Task<BulletinDetailsResponse> GetDetailsByIdAsync(Guid bulletinId, CancellationToken cancellationToken)
@@ -70,25 +75,24 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             UploadPolicy = DirectoryUploadPolicy.StaffOnly
         };
 
-        using var tx = CreateTransactionScope();
-
-        var directory = await DirectoryService.CreateDirectoryAsync(directoryRequest, cancellationToken);
-
-        Logger.LogInformation("Directory created for bulletin: {bulletinId}", bulletinId);
-
-        var bulletin = new Bulletin
+        await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
         {
-            Id = bulletinId,
-            Title = model.Title,
-            Detail = model.Detail,
-            IsPrivate = model.IsPrivate,
-            ExpiresAt = model.ExpiresAt,
-            DirectoryId = directory.Id
-        };
+            var directory = await DirectoryService.CreateDirectoryAsync(directoryRequest, cancellationToken, uow);
 
-        await _bulletinRepository.InsertAsync(bulletin, cancellationToken);
+            Logger.LogInformation("Directory created for bulletin: {bulletinId}", bulletinId);
 
-        tx.Complete();
+            var bulletin = new Bulletin
+            {
+                Id = bulletinId,
+                Title = model.Title,
+                Detail = model.Detail,
+                IsPrivate = model.IsPrivate,
+                ExpiresAt = model.ExpiresAt,
+                DirectoryId = directory.Id
+            };
+
+            await _bulletinRepository.InsertAsync(bulletin, cancellationToken, uow.Transaction);
+        }, cancellationToken);
 
         Logger.LogInformation("Bulletin created: {bulletinId}", bulletinId);
 
@@ -141,13 +145,12 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             throw new ForbiddenException("You do not have permission to delete this bulletin.");
         }
 
-        using var tx = CreateTransactionScope();
+        await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
+        {
+            await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken, transaction: uow.Transaction);
 
-        await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken);
-
-        await DirectoryService.DeleteDirectoryAsync(bulletin.DirectoryId, cancellationToken);
-
-        tx.Complete();
+            await DirectoryService.DeleteDirectoryAsync(bulletin.DirectoryId, cancellationToken, uow);
+        }, cancellationToken);
 
         Logger.LogInformation("Bulletin deleted: {bulletinId}", bulletinId);
         Logger.LogInformation("Directory deleted for bulletin: {bulletinId}", bulletinId);

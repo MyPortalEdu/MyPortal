@@ -1,5 +1,4 @@
 using System.Data;
-using System.Transactions;
 using Dapper;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
@@ -63,14 +62,13 @@ public class TimetableRunRepository : ITimetableRunRepository
     {
         // Atomic swap: clearing previous-run output before inserting new rows means a partially
         // failed write can't leave a mix of stale + fresh assignments under the same Timetable.
-        using var tx = new TransactionScope(TransactionScopeOption.Required,
-            new TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted },
-            TransactionScopeAsyncFlowOption.Enabled);
-
         using var conn = _factory.Create();
+        conn.Open();
+        using var tx = conn.BeginTransaction(IsolationLevel.ReadCommitted);
+
         await conn.ExecuteAsync(new CommandDefinition(
             "DELETE FROM dbo.TimetableAssignments WHERE TimetableId = @timetableId;",
-            new { timetableId }, cancellationToken: cancellationToken));
+            new { timetableId }, transaction: tx, cancellationToken: cancellationToken));
 
         if (assignments.Count > 0)
         {
@@ -81,10 +79,10 @@ public class TimetableRunRepository : ITimetableRunRepository
                   VALUES
                     (@Id, @TimetableId, @CurriculumBlockId, @SlotIndex, @ClassId, @TeacherId,
                      @RoomId, @StartAttendancePeriodId, @Size);",
-                assignments, cancellationToken: cancellationToken));
+                assignments, transaction: tx, cancellationToken: cancellationToken));
         }
 
-        tx.Complete();
+        tx.Commit();
     }
 
     public async Task<TimetableRun?> GetRunAsync(Guid runId, CancellationToken cancellationToken)

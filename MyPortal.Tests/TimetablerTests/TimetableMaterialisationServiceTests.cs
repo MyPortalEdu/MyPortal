@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Extensions.Logging;
 using Moq;
 using MyPortal.Auth.Interfaces;
@@ -31,29 +32,31 @@ public class TimetableMaterialisationServiceTests
 
         _repository
             .Setup(r => r.BulkInsertSessionsAsync(It.IsAny<IReadOnlyList<Session>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<Session>, CancellationToken>((s, _) => _capturedSessions.AddRange(s))
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .Callback<IReadOnlyList<Session>, CancellationToken, IDbTransaction?>((s, _, _) =>
+                _capturedSessions.AddRange(s))
             .Returns(Task.CompletedTask);
 
         _repository
             .Setup(r => r.BulkInsertSessionPeriodsAsync(It.IsAny<IReadOnlyList<SessionPeriod>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<SessionPeriod>, CancellationToken>((sp, _) =>
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .Callback<IReadOnlyList<SessionPeriod>, CancellationToken, IDbTransaction?>((sp, _, _) =>
                 _capturedSessionPeriods.AddRange(sp))
             .Returns(Task.CompletedTask);
 
         // Default stubs for the PPA path: no teachers / no allocations. PPA-specific tests
         // override these with their own teacher fixtures.
         _repository
-            .Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>(),
+                It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<StaffMember>());
 
         _repository
             .Setup(r => r.BulkInsertNonContactAllocationsAsync(
                 It.IsAny<IReadOnlyList<StaffNonContactAllocation>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<StaffNonContactAllocation>, CancellationToken>((a, _) =>
-                _capturedAllocations.AddRange(a))
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .Callback<IReadOnlyList<StaffNonContactAllocation>, CancellationToken, IDbTransaction?>(
+                (a, _, _) => _capturedAllocations.AddRange(a))
             .Returns(Task.CompletedTask);
 
         var auth = new Mock<IAuthorizationService>(MockBehavior.Loose);
@@ -82,10 +85,11 @@ public class TimetableMaterialisationServiceTests
 
     private void StubRepoWith(params TimetableAssignment[] assignments)
     {
-        _repository.Setup(r => r.ListAssignmentsAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.ListAssignmentsAsync(TimetableId, It.IsAny<CancellationToken>(),
+                It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(assignments.ToList());
         _repository.Setup(r => r.GetAttendancePeriodsForAssignmentsAsync(TimetableId,
-                It.IsAny<CancellationToken>()))
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(DayPeriods.ToList());
     }
 
@@ -106,14 +110,14 @@ public class TimetableMaterialisationServiceTests
     public async Task Materialise_NoAssignments_DoesNothing()
     {
         StubRepoWith();
-        _repository.Setup(r => r.ListAssignmentsAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.ListAssignmentsAsync(TimetableId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<TimetableAssignment>());
 
         await _service.MaterialiseAsync(TimetableId, new DateTime(2026, 9, 1), null,
             CancellationToken.None);
 
         _repository.Verify(r => r.BulkInsertSessionsAsync(It.IsAny<IReadOnlyList<Session>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     [Test]
@@ -225,7 +229,7 @@ public class TimetableMaterialisationServiceTests
         var assignment = Assignment(p1, size: 1, teacherId: teacherId);
         StubRepoWith(assignment);
 
-        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<StaffMember> { Teacher(teacherId, ppa: 2) });
 
         await _service.MaterialiseAsync(TimetableId, new DateTime(2026, 9, 1), null,
@@ -250,7 +254,7 @@ public class TimetableMaterialisationServiceTests
         var assignment = Assignment(p2, size: 1, teacherId: teacherId);
         StubRepoWith(assignment);
 
-        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<StaffMember> { Teacher(teacherId, ppa: 2) });
 
         await _service.MaterialiseAsync(TimetableId, new DateTime(2026, 9, 1), null,
@@ -267,13 +271,13 @@ public class TimetableMaterialisationServiceTests
         var teacherId = Guid.NewGuid();
 
         // No assignments for this teacher — they have a full week free.
-        _repository.Setup(r => r.ListAssignmentsAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.ListAssignmentsAsync(TimetableId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<TimetableAssignment>
                 { Assignment(DayPeriods[0].Id, size: 1, teacherId: Guid.NewGuid()) });
         _repository.Setup(r => r.GetAttendancePeriodsForAssignmentsAsync(TimetableId,
-                It.IsAny<CancellationToken>()))
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(DayPeriods.ToList());
-        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<StaffMember> { Teacher(teacherId, ppa: 1) });
 
         await _service.MaterialiseAsync(TimetableId, new DateTime(2026, 9, 1), null,
@@ -290,7 +294,7 @@ public class TimetableMaterialisationServiceTests
         var assignment = Assignment(DayPeriods[0].Id, size: 1, teacherId: teacherId);
         StubRepoWith(assignment);
 
-        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<StaffMember> { Teacher(teacherId, ppa: 0) });
 
         await _service.MaterialiseAsync(TimetableId, new DateTime(2026, 9, 1), null,
@@ -300,7 +304,7 @@ public class TimetableMaterialisationServiceTests
         Assert.That(_capturedAllocations, Is.Empty);
         _repository.Verify(r => r.BulkInsertNonContactAllocationsAsync(
             It.IsAny<IReadOnlyList<StaffNonContactAllocation>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     [Test]
@@ -310,7 +314,7 @@ public class TimetableMaterialisationServiceTests
         var assignment = Assignment(DayPeriods[0].Id, size: 1, teacherId: teacherId);
         StubRepoWith(assignment);
 
-        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>()))
+        _repository.Setup(r => r.GetAssignedTeachersAsync(TimetableId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(new List<StaffMember> { Teacher(teacherId, ppa: 1) });
 
         var start = new DateTime(2026, 9, 1);

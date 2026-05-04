@@ -10,8 +10,6 @@ using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 using System.Security.Authentication;
-using System.Transactions;
-using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace MyPortal.Data.Repositories.Base;
 
@@ -19,7 +17,7 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
     where TEntity : class, IEntity
 {
     protected IAuthorizationService AuthorizationService { get; }
-    
+
     public EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
     {
         AuthorizationService = authorizationService;
@@ -86,13 +84,12 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
     public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default,
         IDbTransaction? transaction = null)
     {
-        // The system-entity check and the actual UPDATE are two separate Dapper calls.
-        // Wrap them in an ambient transaction so they enlist on the same connection /
-        // commit together — and so they enlist into any outer scope (e.g. a service
-        // that's already inside CreateTransactionScope).
-        using var tx = CreateTransactionScope();
-
-        var entityInDb = await GetByIdAsync(entity.Id, cancellationToken);
+        // For versioned entities, UpdateWithVersionAsync's row-version guard is the atomicity
+        // guarantee — no transaction needed around the read+write. For non-versioned entities
+        // the only thing in the read-then-write window is the IsSystem check, and IsSystem is a
+        // near-immutable seed-time property; the race is theoretical. Callers needing stronger
+        // atomicity should pass an IDbTransaction.
+        var entityInDb = await GetByIdAsync(entity.Id, cancellationToken, transaction);
 
         if (entityInDb is null)
         {
@@ -120,48 +117,31 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             auditable.LastModifiedByIpAddress = ipAddress;
         }
 
-        TEntity result;
         if (entity is IVersionedEntity versioned)
         {
             var expected = versioned.Version;
 
             // Will throw ConcurrencyException if 0 rows (version mismatch or deleted)
-            // This is most likely a conflict since we've already had to retrieve the original entity by this point
-            await base.UpdateWithVersionAsync(entity, expected, cancellationToken);
+            await base.UpdateWithVersionAsync(entity, expected, cancellationToken, transaction);
 
             versioned.Version = expected + 1;
 
-            result = entity;
-        }
-        else
-        {
-            result = await base.UpdateAsync(entity, cancellationToken, transaction);
+            return entity;
         }
 
-        tx.Complete();
-        return result;
+        return await base.UpdateAsync(entity, cancellationToken, transaction);
     }
 
     public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default,
         bool softDelete = true, IDbTransaction? transaction = null)
     {
-        using var tx = CreateTransactionScope();
-        
-        var entity = await GetByIdAsync(id, cancellationToken);
+        var entity = await GetByIdAsync(id, cancellationToken, transaction);
 
         if (entity is ISystemEntity { IsSystem: true })
         {
             throw new SystemEntityException("You cannot delete a system entity.");
         }
 
-        var result = await base.DeleteAsync(id, cancellationToken, softDelete, transaction);
-
-        tx.Complete();
-        return result;
+        return await base.DeleteAsync(id, cancellationToken, softDelete, transaction);
     }
-
-    private static TransactionScope CreateTransactionScope() =>
-        new(TransactionScopeOption.Required,
-            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
-            TransactionScopeAsyncFlowOption.Enabled);
 }

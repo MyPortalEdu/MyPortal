@@ -21,6 +21,7 @@ using MyPortal.Common.Options;
 using MyPortal.Data.Extensions;
 using MyPortal.Data.Factories;
 using MyPortal.Data.Security;
+using MyPortal.Data.UnitOfWork;
 using MyPortal.FileStorage.Extensions;
 using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
@@ -88,6 +89,7 @@ builder.Services.AddOptions<CertificateOptions>()
 QueryKit.Extensions.ConnectionExtensions.UseDialect(Dialect.SQLServer);
 
 builder.Services.AddScoped<IDbConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
 

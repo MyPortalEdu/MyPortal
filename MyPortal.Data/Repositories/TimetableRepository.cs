@@ -1,4 +1,4 @@
-using System.Transactions;
+using System.Data;
 using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
@@ -51,86 +51,124 @@ public class TimetableRepository : EntityRepository<Timetable>, ITimetableReposi
     }
 
     public async Task<IList<TimetableAssignment>> ListAssignmentsAsync(Guid timetableId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        using var conn = _factory.Create();
-        var rows = await conn.QueryAsync<TimetableAssignment>(new CommandDefinition(
-            "SELECT * FROM dbo.TimetableAssignments WHERE TimetableId = @timetableId;",
-            new { timetableId }, cancellationToken: cancellationToken));
-        return rows.ToList();
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var rows = await conn.QueryAsync<TimetableAssignment>(new CommandDefinition(
+                "SELECT * FROM dbo.TimetableAssignments WHERE TimetableId = @timetableId;",
+                new { timetableId }, transaction: transaction, cancellationToken: cancellationToken));
+            return rows.ToList();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 
     public async Task ApplyAsync(Guid timetableId, Guid academicYearId,
-        DateTime effectiveFrom, DateTime? effectiveTo, CancellationToken cancellationToken)
+        DateTime effectiveFrom, DateTime? effectiveTo, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
     {
-        using var tx = new TransactionScope(TransactionScopeOption.Required,
-            new TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted },
-            TransactionScopeAsyncFlowOption.Enabled);
+        // When called inside a UoW the caller's transaction owns commit/rollback; otherwise we
+        // open our own connection and transaction so the multi-statement apply stays atomic.
+        var (conn, owns) = AcquireConnection(transaction);
+        IDbTransaction activeTx;
+        bool ownsTransaction;
 
-        using var conn = _factory.Create();
-
-        // Capture the IDs of timetables we're about to supersede — we need them after the
-        // status flip to truncate downstream Sessions / NonContactAllocations.
-        var supersededIds = (await conn.QueryAsync<Guid>(new CommandDefinition(
-            @"SELECT Id FROM dbo.Timetables
-               WHERE AcademicYearId = @academicYearId
-                 AND Status = @active
-                 AND Id <> @timetableId;",
-            new { academicYearId, timetableId, active = (int)TimetableStatus.Active },
-            cancellationToken: cancellationToken))).ToArray();
-
-        // Close out any currently-active timetable for this academic year. EffectiveTo gets the
-        // day before applyDate so there's no overlap window where two timetables claim Active.
-        await conn.ExecuteAsync(new CommandDefinition(
-            @"UPDATE dbo.Timetables
-                  SET Status = @superseded,
-                      EffectiveTo = DATEADD(DAY, -1, @effectiveFrom),
-                      LastModifiedAt = SYSUTCDATETIME()
-                WHERE AcademicYearId = @academicYearId
-                  AND Status = @active
-                  AND Id <> @timetableId;",
-            new
-            {
-                academicYearId,
-                timetableId,
-                effectiveFrom,
-                active = (int)TimetableStatus.Active,
-                superseded = (int)TimetableStatus.Superseded,
-            }, cancellationToken: cancellationToken));
-
-        // Truncate prior Sessions and NonContactAllocations so the date-range filter in the
-        // register query doesn't see two timetables overlapping after the cutover. Only shrink
-        // — never extend — and skip rows already ended before applyDate (untouched history).
-        if (supersededIds.Length > 0)
+        if (transaction is null)
         {
-            await conn.ExecuteAsync(new CommandDefinition(
-                @"UPDATE dbo.Sessions
-                      SET EndDate = DATEADD(DAY, -1, @effectiveFrom)
-                    WHERE TimetableId IN @supersededIds
-                      AND EndDate >= @effectiveFrom;",
-                new { effectiveFrom, supersededIds },
-                cancellationToken: cancellationToken));
-
-            await conn.ExecuteAsync(new CommandDefinition(
-                @"UPDATE dbo.StaffNonContactAllocations
-                      SET EndDate = DATEADD(DAY, -1, @effectiveFrom)
-                    WHERE TimetableId IN @supersededIds
-                      AND EndDate >= @effectiveFrom;",
-                new { effectiveFrom, supersededIds },
-                cancellationToken: cancellationToken));
+            activeTx = conn.BeginTransaction(IsolationLevel.ReadCommitted);
+            ownsTransaction = true;
+        }
+        else
+        {
+            activeTx = transaction;
+            ownsTransaction = false;
         }
 
-        await conn.ExecuteAsync(new CommandDefinition(
-            @"UPDATE dbo.Timetables
-                  SET Status = @active,
-                      EffectiveFrom = @effectiveFrom,
-                      EffectiveTo = @effectiveTo,
-                      LastModifiedAt = SYSUTCDATETIME()
-                WHERE Id = @timetableId;",
-            new { timetableId, active = (int)TimetableStatus.Active, effectiveFrom, effectiveTo },
-            cancellationToken: cancellationToken));
+        try
+        {
+            // Capture the IDs of timetables we're about to supersede — we need them after the
+            // status flip to truncate downstream Sessions / NonContactAllocations.
+            var supersededIds = (await conn.QueryAsync<Guid>(new CommandDefinition(
+                @"SELECT Id FROM dbo.Timetables
+                   WHERE AcademicYearId = @academicYearId
+                     AND Status = @active
+                     AND Id <> @timetableId;",
+                new { academicYearId, timetableId, active = (int)TimetableStatus.Active },
+                transaction: activeTx, cancellationToken: cancellationToken))).ToArray();
 
-        tx.Complete();
+            // Close out any currently-active timetable for this academic year. EffectiveTo gets the
+            // day before applyDate so there's no overlap window where two timetables claim Active.
+            await conn.ExecuteAsync(new CommandDefinition(
+                @"UPDATE dbo.Timetables
+                      SET Status = @superseded,
+                          EffectiveTo = DATEADD(DAY, -1, @effectiveFrom),
+                          LastModifiedAt = SYSUTCDATETIME()
+                    WHERE AcademicYearId = @academicYearId
+                      AND Status = @active
+                      AND Id <> @timetableId;",
+                new
+                {
+                    academicYearId,
+                    timetableId,
+                    effectiveFrom,
+                    active = (int)TimetableStatus.Active,
+                    superseded = (int)TimetableStatus.Superseded,
+                }, transaction: activeTx, cancellationToken: cancellationToken));
+
+            // Truncate prior Sessions and NonContactAllocations so the date-range filter in the
+            // register query doesn't see two timetables overlapping after the cutover. Only shrink
+            // — never extend — and skip rows already ended before applyDate (untouched history).
+            if (supersededIds.Length > 0)
+            {
+                await conn.ExecuteAsync(new CommandDefinition(
+                    @"UPDATE dbo.Sessions
+                          SET EndDate = DATEADD(DAY, -1, @effectiveFrom)
+                        WHERE TimetableId IN @supersededIds
+                          AND EndDate >= @effectiveFrom;",
+                    new { effectiveFrom, supersededIds },
+                    transaction: activeTx, cancellationToken: cancellationToken));
+
+                await conn.ExecuteAsync(new CommandDefinition(
+                    @"UPDATE dbo.StaffNonContactAllocations
+                          SET EndDate = DATEADD(DAY, -1, @effectiveFrom)
+                        WHERE TimetableId IN @supersededIds
+                          AND EndDate >= @effectiveFrom;",
+                    new { effectiveFrom, supersededIds },
+                    transaction: activeTx, cancellationToken: cancellationToken));
+            }
+
+            await conn.ExecuteAsync(new CommandDefinition(
+                @"UPDATE dbo.Timetables
+                      SET Status = @active,
+                          EffectiveFrom = @effectiveFrom,
+                          EffectiveTo = @effectiveTo,
+                          LastModifiedAt = SYSUTCDATETIME()
+                    WHERE Id = @timetableId;",
+                new { timetableId, active = (int)TimetableStatus.Active, effectiveFrom, effectiveTo },
+                transaction: activeTx, cancellationToken: cancellationToken));
+
+            if (ownsTransaction)
+            {
+                activeTx.Commit();
+            }
+        }
+        catch
+        {
+            if (ownsTransaction)
+            {
+                try { activeTx.Rollback(); } catch { /* nothing useful to do */ }
+            }
+            throw;
+        }
+        finally
+        {
+            if (ownsTransaction) activeTx.Dispose();
+            if (owns) conn.Dispose();
+        }
     }
 
     public async Task UpdateStatusAsync(Guid timetableId, TimetableStatus status,
@@ -147,46 +185,67 @@ public class TimetableRepository : EntityRepository<Timetable>, ITimetableReposi
     }
 
     public async Task<IList<AttendancePeriod>> GetAttendancePeriodsForAssignmentsAsync(Guid timetableId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        using var conn = _factory.Create();
-        // Pull every period in the timetable's AcademicYear — materialisation needs the full
-        // set in order to walk consecutive periods within a day.
-        var rows = await conn.QueryAsync<AttendancePeriod>(new CommandDefinition(
-            @"SELECT AP.*
-                FROM dbo.AttendancePeriods AP
-                JOIN dbo.Timetables T ON T.AcademicYearId = AP.AcademicYearId
-               WHERE T.Id = @timetableId;",
-            new { timetableId }, cancellationToken: cancellationToken));
-        return rows.ToList();
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            // Pull every period in the timetable's AcademicYear — materialisation needs the full
+            // set in order to walk consecutive periods within a day.
+            var rows = await conn.QueryAsync<AttendancePeriod>(new CommandDefinition(
+                @"SELECT AP.*
+                    FROM dbo.AttendancePeriods AP
+                    JOIN dbo.Timetables T ON T.AcademicYearId = AP.AcademicYearId
+                   WHERE T.Id = @timetableId;",
+                new { timetableId }, transaction: transaction, cancellationToken: cancellationToken));
+            return rows.ToList();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 
     public async Task BulkInsertSessionsAsync(IReadOnlyList<Session> sessions,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
         if (sessions.Count == 0) return;
 
-        using var conn = _factory.Create();
-        await conn.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO dbo.Sessions
-                (Id, ClassId, TeacherId, RoomId, TimetableId, StartDate, EndDate)
-              VALUES
-                (@Id, @ClassId, @TeacherId, @RoomId, @TimetableId, @StartDate, @EndDate);",
-            sessions, cancellationToken: cancellationToken));
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            await conn.ExecuteAsync(new CommandDefinition(
+                @"INSERT INTO dbo.Sessions
+                    (Id, ClassId, TeacherId, RoomId, TimetableId, StartDate, EndDate)
+                  VALUES
+                    (@Id, @ClassId, @TeacherId, @RoomId, @TimetableId, @StartDate, @EndDate);",
+                sessions, transaction: transaction, cancellationToken: cancellationToken));
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 
     public async Task BulkInsertSessionPeriodsAsync(IReadOnlyList<SessionPeriod> sessionPeriods,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
         if (sessionPeriods.Count == 0) return;
 
-        using var conn = _factory.Create();
-        await conn.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO dbo.SessionPeriods
-                (Id, SessionId, PeriodId)
-              VALUES
-                (@Id, @SessionId, @PeriodId);",
-            sessionPeriods, cancellationToken: cancellationToken));
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            await conn.ExecuteAsync(new CommandDefinition(
+                @"INSERT INTO dbo.SessionPeriods
+                    (Id, SessionId, PeriodId)
+                  VALUES
+                    (@Id, @SessionId, @PeriodId);",
+                sessionPeriods, transaction: transaction, cancellationToken: cancellationToken));
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 
     public async Task InsertPinAsync(TimetablePin pin, CancellationToken cancellationToken)
@@ -231,30 +290,58 @@ public class TimetableRepository : EntityRepository<Timetable>, ITimetableReposi
     }
 
     public async Task<IList<StaffMember>> GetAssignedTeachersAsync(Guid timetableId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        using var conn = _factory.Create();
-        var rows = await conn.QueryAsync<StaffMember>(new CommandDefinition(
-            @"SELECT DISTINCT SM.*
-                FROM dbo.StaffMembers SM
-                JOIN dbo.TimetableAssignments TA ON TA.TeacherId = SM.Id
-                WHERE TA.TimetableId = @timetableId
-                  AND SM.IsDeleted = 0;",
-            new { timetableId }, cancellationToken: cancellationToken));
-        return rows.ToList();
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var rows = await conn.QueryAsync<StaffMember>(new CommandDefinition(
+                @"SELECT DISTINCT SM.*
+                    FROM dbo.StaffMembers SM
+                    JOIN dbo.TimetableAssignments TA ON TA.TeacherId = SM.Id
+                    WHERE TA.TimetableId = @timetableId
+                      AND SM.IsDeleted = 0;",
+                new { timetableId }, transaction: transaction, cancellationToken: cancellationToken));
+            return rows.ToList();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 
     public async Task BulkInsertNonContactAllocationsAsync(
-        IReadOnlyList<StaffNonContactAllocation> allocations, CancellationToken cancellationToken)
+        IReadOnlyList<StaffNonContactAllocation> allocations, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
     {
         if (allocations.Count == 0) return;
 
-        using var conn = _factory.Create();
-        await conn.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO dbo.StaffNonContactAllocations
-                (Id, StaffMemberId, TimetableId, AttendancePeriodId, Code, StartDate, EndDate)
-              VALUES
-                (@Id, @StaffMemberId, @TimetableId, @AttendancePeriodId, @Code, @StartDate, @EndDate);",
-            allocations, cancellationToken: cancellationToken));
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            await conn.ExecuteAsync(new CommandDefinition(
+                @"INSERT INTO dbo.StaffNonContactAllocations
+                    (Id, StaffMemberId, TimetableId, AttendancePeriodId, Code, StartDate, EndDate)
+                  VALUES
+                    (@Id, @StaffMemberId, @TimetableId, @AttendancePeriodId, @Code, @StartDate, @EndDate);",
+                allocations, transaction: transaction, cancellationToken: cancellationToken));
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// If a transaction is supplied, borrow its connection; otherwise open a fresh one we own.
+    /// </summary>
+    private (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
+    {
+        if (transaction?.Connection is { } shared)
+        {
+            return (shared, false);
+        }
+
+        return (_factory.Create(), true);
     }
 }
