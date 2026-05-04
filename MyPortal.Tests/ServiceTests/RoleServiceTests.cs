@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -92,8 +93,8 @@ public class RoleServiceTests
         _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RolePermission>());
         _rolePermissionRepository
-            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RolePermission rp, CancellationToken _) => rp);
+            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
 
         var result = await _roleService.CreateRoleAsync(model, CancellationToken.None);
 
@@ -104,9 +105,9 @@ public class RoleServiceTests
             Times.Once);
         // Two new permissions, no removals.
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == permId1), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<RolePermission>(rp => rp.PermissionId == permId1), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == permId2), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<RolePermission>(rp => rp.PermissionId == permId2), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
     }
 
     [Test]
@@ -126,7 +127,7 @@ public class RoleServiceTests
         Assert.That(result.Succeeded, Is.False);
         _rolePermissionRepository.Verify(r => r.GetByRoleIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        _rolePermissionRepository.Verify(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>()),
+        _rolePermissionRepository.Verify(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()),
             Times.Never);
     }
 
@@ -151,10 +152,10 @@ public class RoleServiceTests
         _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
         _rolePermissionRepository
-            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RolePermission rp, CancellationToken _) => rp);
+            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
         _rolePermissionRepository
-            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<bool>()))
+            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
 
         var model = new RoleUpsertRequest
@@ -172,13 +173,13 @@ public class RoleServiceTests
         _validationService.Verify(v => v.ValidateAsync(model), Times.Once);
         // Only the new permission is inserted; only the dropped one is deleted.
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == addedPermId), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<RolePermission>(rp => rp.PermissionId == addedPermId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
         _rolePermissionRepository.Verify(r => r.DeleteAsync(
             It.Is<Guid>(id => existing.Any(e => e.Id == id && e.PermissionId == removedPermId)),
-            It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Once);
         // The kept permission is neither re-inserted nor deleted.
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == keptPermId), It.IsAny<CancellationToken>()), Times.Never);
+            It.Is<RolePermission>(rp => rp.PermissionId == keptPermId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     [Test]
@@ -215,7 +216,7 @@ public class RoleServiceTests
         _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RolePermission> { existingRolePermission });
         _rolePermissionRepository
-            .Setup(r => r.DeleteAsync(existingRolePermission.Id, It.IsAny<CancellationToken>(), It.IsAny<bool>()))
+            .Setup(r => r.DeleteAsync(existingRolePermission.Id, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
         _roleManager.Setup(m => m.DeleteAsync(role)).ReturnsAsync(IdentityResult.Success);
 
@@ -223,7 +224,7 @@ public class RoleServiceTests
 
         Assert.That(result.Succeeded, Is.True);
         _rolePermissionRepository.Verify(r => r.DeleteAsync(existingRolePermission.Id,
-            It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Once);
         _roleManager.Verify(m => m.DeleteAsync(role), Times.Once);
         _rolePermissionCache.Verify(c => c.Invalidate(roleId), Times.Once);
     }

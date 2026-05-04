@@ -145,6 +145,8 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
     public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default,
         bool softDelete = true, IDbTransaction? transaction = null)
     {
+        using var tx = CreateTransactionScope();
+        
         var entity = await GetByIdAsync(id, cancellationToken);
 
         if (entity is ISystemEntity { IsSystem: true })
@@ -154,6 +156,7 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
 
         var result = await base.DeleteAsync(id, cancellationToken, softDelete, transaction);
 
+        tx.Complete();
         return result;
     }
 

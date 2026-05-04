@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -91,8 +92,8 @@ public class DocumentServiceTests
         _storageProvider.Setup(s => s.SaveFileAsync("2026/04/abcdef.txt", It.IsAny<Stream>(), "text/plain",
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _documentRepository.Setup(r => r.InsertAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Document d, CancellationToken _) => d);
+        _documentRepository.Setup(r => r.InsertAsync(It.IsAny<Document>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((Document d, CancellationToken _, IDbTransaction? _) => d);
         var detailsDto = new DocumentDetailsResponse { Title = "doc" };
         _documentRepository.Setup(r => r.GetDetailsByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(detailsDto);
@@ -103,7 +104,7 @@ public class DocumentServiceTests
         // Persisted SizeBytes is the actual stream length, not whatever the client claimed.
         _documentRepository.Verify(r => r.InsertAsync(
             It.Is<Document>(d => d.SizeBytes == bytes.Length && d.StorageKey == "2026/04/abcdef.txt"),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
     }
 
     [Test]
@@ -153,7 +154,7 @@ public class DocumentServiceTests
         // stream — but the seekable MemoryStream path here means we reject before save). Either
         // way, no DB row should be inserted.
         _documentRepository.Verify(r => r.InsertAsync(It.IsAny<Document>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     [Test]
@@ -188,8 +189,8 @@ public class DocumentServiceTests
             CreatedById = CurrentUserId
         };
 
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
-        _documentRepository.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
         _documentRepository.Setup(r => r.GetDetailsByIdAsync(docId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new DocumentDetailsResponse { Title = "new" });
 
@@ -218,12 +219,12 @@ public class DocumentServiceTests
             CreatedById = CurrentUserId
         };
 
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
         _storageKeyGenerator.Setup(g => g.Generate("doc.txt")).Returns("new/key");
         _storageProvider.Setup(s => s.SaveFileAsync("new/key", It.IsAny<Stream>(), "text/plain",
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _documentRepository.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
         _storageProvider.Setup(s => s.DeleteFileAsync("old/key", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _documentRepository.Setup(r => r.GetDetailsByIdAsync(docId, It.IsAny<CancellationToken>()))
@@ -254,12 +255,12 @@ public class DocumentServiceTests
             CreatedById = CurrentUserId
         };
 
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
         _storageKeyGenerator.Setup(g => g.Generate(It.IsAny<string>())).Returns("new/key");
         _storageProvider.Setup(s => s.SaveFileAsync("new/key", It.IsAny<Stream>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _documentRepository.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>()))
+        _documentRepository.Setup(r => r.UpdateAsync(existing, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ThrowsAsync(new InvalidOperationException("db down"));
         _storageProvider.Setup(s => s.DeleteFileAsync("new/key", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -289,7 +290,7 @@ public class DocumentServiceTests
             StorageKey = "k", FileName = "f", ContentType = "text/plain",
             CreatedById = OtherUserId
         };
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
 
         Assert.That(async () => await _service.UpdateDocumentAsync(docId, MakeUpsert(null, null),
                 CancellationToken.None),
@@ -307,7 +308,7 @@ public class DocumentServiceTests
             StorageKey = "k", FileName = "f", ContentType = "text/plain",
             CreatedById = CurrentUserId, IsPrivate = false
         };
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
 
         var model = MakeUpsert(null, null, isPrivate: true);
 
@@ -326,8 +327,8 @@ public class DocumentServiceTests
             Id = docId, StorageKey = "k", FileName = "f", ContentType = "text/plain",
             CreatedById = CurrentUserId
         };
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
-        _documentRepository.Setup(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), true))
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), true, It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
 
         await _service.DeleteDocumentAsync(docId, CancellationToken.None, softDelete: true);
@@ -346,11 +347,11 @@ public class DocumentServiceTests
             CreatedById = CurrentUserId
         };
         var sequence = new MockSequence();
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
         // Sequence: DB delete must happen BEFORE storage delete so a DB failure doesn't orphan
         // the row pointing at a missing blob.
         _documentRepository.InSequence(sequence)
-            .Setup(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), false))
+            .Setup(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), false, It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
         _storageProvider.InSequence(sequence)
             .Setup(s => s.DeleteFileAsync("k", It.IsAny<CancellationToken>()))
@@ -358,7 +359,7 @@ public class DocumentServiceTests
 
         await _service.DeleteDocumentAsync(docId, CancellationToken.None, softDelete: false);
 
-        _documentRepository.Verify(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), false), Times.Once);
+        _documentRepository.Verify(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), false, It.IsAny<IDbTransaction?>()), Times.Once);
         _storageProvider.Verify(s => s.DeleteFileAsync("k", It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -371,8 +372,8 @@ public class DocumentServiceTests
             Id = docId, StorageKey = "k", FileName = "f", ContentType = "text/plain",
             CreatedById = CurrentUserId
         };
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
-        _documentRepository.Setup(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), false))
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), false, It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
         _storageProvider.Setup(s => s.DeleteFileAsync("k", It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("blob gone"));
@@ -393,7 +394,7 @@ public class DocumentServiceTests
             Id = docId, StorageKey = "k", FileName = "f", ContentType = "text/plain",
             CreatedById = CurrentUserId, IsPrivate = true
         };
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
 
         Assert.That(async () => await _service.DeleteDocumentAsync(docId, CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
@@ -403,7 +404,7 @@ public class DocumentServiceTests
     public void DeleteDocumentAsync_Throws_NotFound_WhenMissing()
     {
         var docId = Guid.NewGuid();
-        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>()))
+        _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync((Document?)null);
 
         Assert.That(async () => await _service.DeleteDocumentAsync(docId, CancellationToken.None),
