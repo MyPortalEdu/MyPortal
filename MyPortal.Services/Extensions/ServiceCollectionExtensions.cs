@@ -4,6 +4,7 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Attendance;
+using MyPortal.Services.Curriculum.Timetable;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Attendance;
@@ -16,7 +17,6 @@ using MyPortal.Services.School;
 using MyPortal.Services.School.Bulletins;
 using MyPortal.Services.Security;
 using MyPortal.Services.System;
-using MyPortal.Services.Timetable;
 using MyPortal.Services.Validation;
 using MyPortal.Timetabler.Solver;
 

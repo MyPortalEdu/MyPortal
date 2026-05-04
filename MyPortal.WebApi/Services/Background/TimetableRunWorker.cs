@@ -1,6 +1,6 @@
 using MyPortal.Data.Interfaces;
+using MyPortal.Services.Curriculum.Timetable;
 using MyPortal.Services.Interfaces.Services;
-using MyPortal.Services.Timetable;
 
 namespace MyPortal.WebApi.Services.Background;
 

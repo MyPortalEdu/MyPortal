@@ -1,4 +1,4 @@
-using MyPortal.Services.Timetable;
+using MyPortal.Services.Curriculum.Timetable;
 
 namespace MyPortal.Tests.TimetablerTests;
 

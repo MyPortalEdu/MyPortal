@@ -3,7 +3,7 @@ using Moq;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
-using MyPortal.Services.Timetable;
+using MyPortal.Services.Curriculum.Timetable;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Tests.TimetablerTests;

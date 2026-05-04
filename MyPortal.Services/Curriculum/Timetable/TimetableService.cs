@@ -12,7 +12,7 @@ using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Timetable;
+namespace MyPortal.Services.Curriculum.Timetable;
 
 public class TimetableService : BaseService, ITimetableService
 {

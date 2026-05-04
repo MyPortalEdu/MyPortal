@@ -11,7 +11,7 @@ using MyPortal.Timetabler.Solver;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Timetable;
+namespace MyPortal.Services.Curriculum.Timetable;
 
 public class TimetableSolveService : BaseService, ITimetableSolveService
 {

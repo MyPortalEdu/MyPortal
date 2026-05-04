@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 
-namespace MyPortal.Services.Timetable;
+namespace MyPortal.Services.Curriculum.Timetable;
 
 public record TimetableRunWorkItem(Guid RunId, Guid TimetableId);
 
