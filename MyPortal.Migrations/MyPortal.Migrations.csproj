@@ -112,6 +112,8 @@
     <EmbeddedResource Include="Sql\Updates\0018_attendance_week_pattern_cycle_day.sql" />
     <None Remove="Sql\Updates\0019_collapse_attendance_week_pattern.sql" />
     <EmbeddedResource Include="Sql\Updates\0019_collapse_attendance_week_pattern.sql" />
+    <None Remove="Sql\Updates\0020_diary_event_kind_and_school_holidays.sql" />
+    <EmbeddedResource Include="Sql\Updates\0020_diary_event_kind_and_school_holidays.sql" />
   </ItemGroup>
 
   <ItemGroup>

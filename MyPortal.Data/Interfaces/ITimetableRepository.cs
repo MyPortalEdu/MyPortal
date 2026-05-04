@@ -1,5 +1,5 @@
+using MyPortal.Common.Enums;
 using MyPortal.Core.Entities;
-using MyPortal.Core.Enums;
 using MyPortal.Data.Interfaces.Base;
 using Task = System.Threading.Tasks.Task;
 

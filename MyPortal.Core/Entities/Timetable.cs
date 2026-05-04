@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using MyPortal.Core.Enums;
+using MyPortal.Common.Enums;
 using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities;

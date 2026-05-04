@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Core.Entities;
-using MyPortal.Core.Enums;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces.Services;
 using MyPortal.Timetabler.Models;

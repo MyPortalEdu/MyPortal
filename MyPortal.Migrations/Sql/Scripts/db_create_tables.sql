@@ -839,6 +839,17 @@ CREATE TABLE [dbo].[Detentions] (
 END
 
 
+IF OBJECT_ID(N'[dbo].[SchoolHolidays]', N'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[SchoolHolidays] (
+    [Id] uniqueidentifier NOT NULL,
+    [EventId] uniqueidentifier NOT NULL,
+    [AcademicYearId] uniqueidentifier NOT NULL,
+    CONSTRAINT PK_SchoolHolidays PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+
+
 IF OBJECT_ID(N'[dbo].[DiaryEventAttendeeResponses]', N'U') IS NULL
 BEGIN
 CREATE TABLE [dbo].[DiaryEventAttendeeResponses] (
@@ -888,6 +899,8 @@ CREATE TABLE [dbo].[DiaryEventTypes] (
     [Active] bit NOT NULL CONSTRAINT DF_DiaryEventTypes_Active DEFAULT (1),
     [ColourCode] nvarchar(128) NOT NULL,
     [IsSystem] bit NOT NULL,
+    -- Maps to MyPortal.Common.Enums.DiaryEventKind. 0 = User (anything user-created).
+    [Kind] tinyint NOT NULL CONSTRAINT DF_DiaryEventTypes_Kind DEFAULT (0),
     CONSTRAINT PK_DiaryEventTypes PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -4016,6 +4029,32 @@ END
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Detentions_SupervisorId' AND object_id = OBJECT_ID(N'[dbo].[Detentions]'))
 BEGIN
 CREATE INDEX [IX_Detentions_SupervisorId] ON [dbo].[Detentions]([SupervisorId]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_SchoolHolidays_EventId_DiaryEvents' AND parent_object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+ALTER TABLE [dbo].[SchoolHolidays]
+    ADD CONSTRAINT [FK_SchoolHolidays_EventId_DiaryEvents] FOREIGN KEY ([EventId]) REFERENCES [dbo].[DiaryEvents]([Id]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SchoolHolidays_EventId' AND object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+CREATE INDEX [IX_SchoolHolidays_EventId] ON [dbo].[SchoolHolidays]([EventId]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_SchoolHolidays_AcademicYearId_AcademicYears' AND parent_object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+ALTER TABLE [dbo].[SchoolHolidays]
+    ADD CONSTRAINT [FK_SchoolHolidays_AcademicYearId_AcademicYears] FOREIGN KEY ([AcademicYearId]) REFERENCES [dbo].[AcademicYears]([Id]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SchoolHolidays_AcademicYearId' AND object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+CREATE INDEX [IX_SchoolHolidays_AcademicYearId] ON [dbo].[SchoolHolidays]([AcademicYearId]);
 END
 
 

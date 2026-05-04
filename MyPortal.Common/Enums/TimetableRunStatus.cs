@@ -1,4 +1,4 @@
-namespace MyPortal.Core.Enums;
+namespace MyPortal.Common.Enums;
 
 public enum TimetableRunStatus
 {

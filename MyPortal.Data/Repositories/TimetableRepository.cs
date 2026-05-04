@@ -1,9 +1,9 @@
 using System.Transactions;
 using Dapper;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
-using MyPortal.Core.Enums;
 using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using Task = System.Threading.Tasks.Task;

@@ -2414,25 +2414,33 @@ UPDATE SET ParentId = Source.ParentId, Name = Source.Name, IsPrivate = Source.Pr
 INSERT (Id, ParentId, Name, IsPrivate, CreatedAt, CreatedByIpAddress, LastModifiedAt, LastModifiedByIpAddress)
 VALUES (Id, ParentId, Name, Private, SYSUTCDATETIME(), '::1', SYSUTCDATETIME(), '::1');
 
+-- Kind values map to MyPortal.Common.Enums.DiaryEventKind:
+--   0=User, 1=ECActivity, 2=Lesson, 3=Cover, 4=Detention, 5=NCC,
+--   6=PPA, 7=SchoolHoliday, 8=PublicHoliday, 9=TeacherTraining, 10=ParentEvening
 MERGE INTO [dbo].[DiaryEventTypes] AS Target
     USING (VALUES
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F22','EC Activity', '1', '#c2fdff', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F23','Lesson', '1', '#2677d4', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F24','Cover', '1', '#f0f029', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F25','Detention', '1', '#d62a24', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F26','NCC', '1', '#24d6ac', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F27','PPA', '1', '#24d653', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F28','School Holiday', '1', '#c300ff', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F29','Teacher Training', '1', '#ff9500', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2B', 'Parent Evening', '1', '#d10486', 1),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2A','General', '1', '#c9c9c9', 0)
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F22','EC Activity',      '1', '#c2fdff', 1, 1),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F23','Lesson',           '1', '#2677d4', 1, 2),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F24','Cover',            '1', '#f0f029', 1, 3),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F25','Detention',        '1', '#d62a24', 1, 4),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F26','NCC',              '1', '#24d6ac', 1, 5),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F27','PPA',              '1', '#24d653', 1, 6),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F28','School Holiday',   '1', '#c300ff', 1, 7),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F29','Teacher Training', '1', '#ff9500', 1, 9),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2B','Parent Evening',   '1', '#d10486', 1, 10),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2C','Public Holiday',   '1', '#9b00ff', 1, 8),
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2A','General',          '1', '#c9c9c9', 0, 0)
     )
-    AS Source (Id, Description, Active, ColourCode, System)
+    AS Source (Id, Description, Active, ColourCode, System, Kind)
     ON Target.Id = Source.Id
 
     WHEN NOT MATCHED THEN
-    INSERT (Id, Description, Active, ColourCode, IsSystem)
-    VALUES (Id, Description, Active, ColourCode, System);
+    INSERT (Id, Description, Active, ColourCode, IsSystem, Kind)
+    VALUES (Id, Description, Active, ColourCode, System, Kind)
+
+    WHEN MATCHED THEN
+    UPDATE SET Description = Source.Description, Active = Source.Active,
+               ColourCode = Source.ColourCode, IsSystem = Source.System, Kind = Source.Kind;
 
 MERGE INTO [dbo].[TaskTypes] AS Target
     USING (VALUES

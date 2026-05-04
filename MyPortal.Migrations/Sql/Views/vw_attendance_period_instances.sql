@@ -70,15 +70,24 @@ SELECT DISTINCT
     i.IsAmReg,
     i.IsPmReg
 FROM Inst AS i
-    OUTER APPLY dbo.fn_diary_event_get_overlapping(
-               i.ActualStartTime, i.ActualEndTime,
-               CAST('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F28' AS uniqueidentifier)) AS OE
 WHERE
     i.ActualStartTime >= i.TermStartDate
   AND i.ActualEndTime < DATEADD(DAY, 1, i.TermEndDate)
   AND (
-    (OE.Id IS NULL AND i.IsNonTimetable = 0)
-   OR i.IsAmReg = 1
-   OR i.IsPmReg = 1
+        -- Skip periods inside a non-timetabled week (e.g. INSET) or overlapped by a
+        -- non-teaching diary event. AM/PM reg always shows so registers can still be
+        -- taken on those days. Kind values map to MyPortal.Common.Enums.DiaryEventKind:
+        -- 7 = SchoolHoliday, 8 = PublicHoliday, 9 = TeacherTraining.
+        (
+            i.IsNonTimetable = 0
+            AND NOT EXISTS (
+                SELECT 1
+                FROM dbo.fn_diary_event_get_overlapping(i.ActualStartTime, i.ActualEndTime) AS OE
+                JOIN dbo.DiaryEventTypes AS DET ON DET.Id = OE.EventTypeId
+                WHERE DET.Kind IN (7, 8, 9)
+            )
+        )
+        OR i.IsAmReg = 1
+        OR i.IsPmReg = 1
     );
 GO
