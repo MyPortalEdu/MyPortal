@@ -48,7 +48,7 @@ public class TimetableInputBuilder
         // when the next period in the same day starts after this one ends (i.e., a gap —
         // break, lunch, or transit). Last period of each day is always NoDoubleAfter.
         var ordered = entities
-            .OrderBy(p => p.Weekday)
+            .OrderBy(p => p.CycleDayIndex)
             .ThenBy(p => p.StartTime)
             .ToArray();
 
@@ -56,14 +56,14 @@ public class TimetableInputBuilder
         for (var i = 0; i < ordered.Length; i++)
         {
             var p = ordered[i];
-            var sameDayIndex = ordered.Take(i).Count(x => x.Weekday == p.Weekday) + 1;
+            var sameDayIndex = ordered.Take(i).Count(x => x.CycleDayIndex == p.CycleDayIndex) + 1;
 
-            var nextSameDay = i + 1 < ordered.Length && ordered[i + 1].Weekday == p.Weekday
+            var nextSameDay = i + 1 < ordered.Length && ordered[i + 1].CycleDayIndex == p.CycleDayIndex
                 ? ordered[i + 1]
                 : null;
             var noDoubleAfter = nextSameDay is null || nextSameDay.StartTime > p.EndTime;
 
-            result.Add(new PeriodSlot(p.Id.ToString(), (int)p.Weekday, sameDayIndex, noDoubleAfter));
+            result.Add(new PeriodSlot(p.Id.ToString(), p.CycleDayIndex, sameDayIndex, noDoubleAfter));
         }
         return result;
     }

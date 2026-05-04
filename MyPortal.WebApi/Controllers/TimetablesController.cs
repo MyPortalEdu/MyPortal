@@ -75,15 +75,13 @@ public sealed class TimetablesController : BaseApiController<TimetablesControlle
     }
 
     [HttpPost("{timetableId:guid}/runs")]
-    [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Timetable.EditTimetables)]
-    public async Task<IActionResult> RunAsync([FromRoute] Guid timetableId,
-        [FromBody] TimetableRunRequest model)
+    public async Task<IActionResult> RunAsync([FromRoute] Guid timetableId)
     {
         // Returns immediately — the BackgroundService picks up the queued item and
         // executes the solve. Caller polls GET /runs/{runId} for status.
-        var run = await _solveService.QueueRunAsync(timetableId, model.WeekPatternId, CancellationToken);
+        var run = await _solveService.QueueRunAsync(timetableId, CancellationToken);
         return Accepted(new
         {
             id = run.Id,

@@ -44,8 +44,7 @@ public class TimetableRunWorker : BackgroundService
             var solveService = scope.ServiceProvider.GetRequiredService<ITimetableSolveService>();
             try
             {
-                await solveService.ExecuteRunAsync(item.RunId, item.TimetableId, item.WeekPatternId,
-                    stoppingToken);
+                await solveService.ExecuteRunAsync(item.RunId, item.TimetableId, stoppingToken);
             }
             catch (Exception ex)
             {

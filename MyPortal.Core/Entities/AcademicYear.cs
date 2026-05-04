@@ -7,11 +7,15 @@ namespace MyPortal.Core.Entities
     [Table("AcademicYears")]
     public class AcademicYear : Entity, IAuditableEntity, IVersionedEntity
     {
-        [Required] 
-        [StringLength(128)] 
+        [Required]
+        [StringLength(128)]
         public string Name { get; set; } = null!;
 
         public bool IsLocked { get; set; }
+
+        // Number of distinct days in the timetable cycle. 5 = standard weekly,
+        // 10 = fortnightly (Week A / Week B), 6 = six-day rotation, etc.
+        public int TimetableCycleLength { get; set; }
         
         // Audit
         public Guid CreatedById { get; set; }

@@ -23,8 +23,8 @@ public interface ITimetableRepository : IEntityRepository<Timetable>
 
     Task UpdateStatusAsync(Guid timetableId, TimetableStatus status, CancellationToken cancellationToken);
 
-    /// Loads every AttendancePeriod in the same WeekPattern(s) as the timetable's assignments.
-    /// Used by materialisation to walk consecutive periods for multi-size slots.
+    /// Loads every AttendancePeriod in the timetable's AcademicYear. Used by materialisation
+    /// to walk consecutive periods for multi-size slots.
     Task<IList<AttendancePeriod>> GetAttendancePeriodsForAssignmentsAsync(Guid timetableId,
         CancellationToken cancellationToken);
 

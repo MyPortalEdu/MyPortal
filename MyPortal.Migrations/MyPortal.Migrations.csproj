@@ -108,6 +108,10 @@
     <EmbeddedResource Include="Sql\Updates\0016_add_timetable_permissions.sql" />
     <None Remove="Sql\Updates\0017_add_staff_non_contact_allocations.sql" />
     <EmbeddedResource Include="Sql\Updates\0017_add_staff_non_contact_allocations.sql" />
+    <None Remove="Sql\Updates\0018_attendance_week_pattern_cycle_day.sql" />
+    <EmbeddedResource Include="Sql\Updates\0018_attendance_week_pattern_cycle_day.sql" />
+    <None Remove="Sql\Updates\0019_collapse_attendance_week_pattern.sql" />
+    <EmbeddedResource Include="Sql\Updates\0019_collapse_attendance_week_pattern.sql" />
   </ItemGroup>
 
   <ItemGroup>

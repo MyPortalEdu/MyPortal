@@ -150,17 +150,13 @@ public class TimetableRepository : EntityRepository<Timetable>, ITimetableReposi
         CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
-        // Pull every period in the same WeekPattern as any of the timetable's assignments —
-        // materialisation needs the full set in order to walk consecutive periods within a day.
+        // Pull every period in the timetable's AcademicYear — materialisation needs the full
+        // set in order to walk consecutive periods within a day.
         var rows = await conn.QueryAsync<AttendancePeriod>(new CommandDefinition(
             @"SELECT AP.*
                 FROM dbo.AttendancePeriods AP
-               WHERE AP.WeekPatternId IN (
-                   SELECT DISTINCT P.WeekPatternId
-                     FROM dbo.AttendancePeriods P
-                     JOIN dbo.TimetableAssignments TA ON TA.StartAttendancePeriodId = P.Id
-                    WHERE TA.TimetableId = @timetableId
-               );",
+                JOIN dbo.Timetables T ON T.AcademicYearId = AP.AcademicYearId
+               WHERE T.Id = @timetableId;",
             new { timetableId }, cancellationToken: cancellationToken));
         return rows.ToList();
     }

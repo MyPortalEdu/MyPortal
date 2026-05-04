@@ -33,10 +33,10 @@ public class TimetableMaterialisationService : BaseService, ITimetableMaterialis
         var periods = await _timetableRepository.GetAttendancePeriodsForAssignmentsAsync(
             timetableId, cancellationToken);
 
-        // For each (WeekPattern, Weekday), build a chain so we can walk a slot of size N from
-        // its start period to N consecutive same-day periods. Solver-side guarantees the start
-        // period has enough successors, but the materialiser still throws defensively if a
-        // size-N slot runs off the end of the day.
+        // For each (AcademicYear, CycleDayIndex), build a chain so we can walk a slot of size N
+        // from its start period to N consecutive same-day periods. Solver-side guarantees the
+        // start period has enough successors, but the materialiser still throws defensively if
+        // a size-N slot runs off the end of the day.
         var nextByPeriod = BuildNextPeriodMap(periods);
 
         var resolvedEndDate = endDate ?? startDate.AddYears(1);
@@ -119,7 +119,7 @@ public class TimetableMaterialisationService : BaseService, ITimetableMaterialis
         // Take the first N free periods in chronological order. Deterministic; if a school
         // wants PPA on different days, an admin can reassign.
         var orderedPeriods = periods
-            .OrderBy(p => p.Weekday)
+            .OrderBy(p => p.CycleDayIndex)
             .ThenBy(p => p.StartTime)
             .ToArray();
 
@@ -155,7 +155,7 @@ public class TimetableMaterialisationService : BaseService, ITimetableMaterialis
     private static Dictionary<Guid, Guid?> BuildNextPeriodMap(IList<AttendancePeriod> periods)
     {
         var next = new Dictionary<Guid, Guid?>(periods.Count);
-        foreach (var dayGroup in periods.GroupBy(p => (p.WeekPatternId, p.Weekday)))
+        foreach (var dayGroup in periods.GroupBy(p => (p.AcademicYearId, p.CycleDayIndex)))
         {
             var ordered = dayGroup.OrderBy(p => p.StartTime).ToArray();
             for (var i = 0; i < ordered.Length; i++)

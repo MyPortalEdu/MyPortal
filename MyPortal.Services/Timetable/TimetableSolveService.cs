@@ -37,8 +37,7 @@ public class TimetableSolveService : BaseService, ITimetableSolveService
         _queue = queue;
     }
 
-    public async Task<TimetableRun> QueueRunAsync(Guid timetableId, Guid weekPatternId,
-        CancellationToken cancellationToken)
+    public async Task<TimetableRun> QueueRunAsync(Guid timetableId, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
@@ -49,8 +48,7 @@ public class TimetableSolveService : BaseService, ITimetableSolveService
         var run = await _runRepository.CreateRunAsync(timetableId, triggeredById,
             inputSnapshot: null, cancellationToken);
 
-        await _queue.EnqueueAsync(new TimetableRunWorkItem(run.Id, timetableId, weekPatternId),
-            cancellationToken);
+        await _queue.EnqueueAsync(new TimetableRunWorkItem(run.Id, timetableId), cancellationToken);
 
         Logger.LogInformation("Timetable run queued: {runId} (timetable {timetableId})",
             run.Id, timetableId);
@@ -58,8 +56,7 @@ public class TimetableSolveService : BaseService, ITimetableSolveService
         return run;
     }
 
-    public async Task ExecuteRunAsync(Guid runId, Guid timetableId, Guid weekPatternId,
-        CancellationToken cancellationToken)
+    public async Task ExecuteRunAsync(Guid runId, Guid timetableId, CancellationToken cancellationToken)
     {
         await _runRepository.UpdateRunStatusAsync(runId, TimetableRunStatus.Running, cancellationToken);
 
@@ -67,7 +64,7 @@ public class TimetableSolveService : BaseService, ITimetableSolveService
 
         try
         {
-            var sources = await _sourceRepository.LoadAsync(timetableId, weekPatternId, cancellationToken);
+            var sources = await _sourceRepository.LoadAsync(timetableId, cancellationToken);
             var input = _builder.Build(sources);
             var output = _solver.Solve(input);
 

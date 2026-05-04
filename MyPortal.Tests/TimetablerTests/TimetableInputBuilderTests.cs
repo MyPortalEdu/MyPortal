@@ -23,10 +23,10 @@ public class TimetableInputBuilderTests
         // Two days, P1/P2 each, supplied in shuffled order to prove ordering happens.
         fx.Periods = new[]
         {
-            Period("D1P2", DayOfWeek.Tuesday, "10:00", "10:55"),
-            Period("D0P1", DayOfWeek.Monday, "09:00", "09:55"),
-            Period("D0P2", DayOfWeek.Monday, "10:00", "10:55"),
-            Period("D1P1", DayOfWeek.Tuesday, "09:00", "09:55"),
+            Period("D1P2", cycleDay: 1, "10:00", "10:55"),
+            Period("D0P1", cycleDay: 0, "09:00", "09:55"),
+            Period("D0P2", cycleDay: 0, "10:00", "10:55"),
+            Period("D1P1", cycleDay: 1, "09:00", "09:55"),
         };
 
         var result = _builder.Build(fx.ToSources());
@@ -34,10 +34,10 @@ public class TimetableInputBuilderTests
         Assert.That(result.Periods.Select(p => p.Id),
             Is.EqualTo(new[]
             {
-                fx.Periods[1].Id.ToString(), // Mon P1
-                fx.Periods[2].Id.ToString(), // Mon P2
-                fx.Periods[3].Id.ToString(), // Tue P1
-                fx.Periods[0].Id.ToString(), // Tue P2
+                fx.Periods[1].Id.ToString(), // Day 0, P1
+                fx.Periods[2].Id.ToString(), // Day 0, P2
+                fx.Periods[3].Id.ToString(), // Day 1, P1
+                fx.Periods[0].Id.ToString(), // Day 1, P2
             }));
         Assert.That(result.Periods.Select(p => p.OrderInDay), Is.EqualTo(new[] { 1, 2, 1, 2 }));
     }
@@ -50,9 +50,9 @@ public class TimetableInputBuilderTests
         // P2 ends 10:55, P3 starts 10:55 → no gap → P2.NoDoubleAfter=false.
         fx.Periods = new[]
         {
-            Period("P1", DayOfWeek.Monday, "09:00", "09:55"),
-            Period("P2", DayOfWeek.Monday, "10:00", "10:55"),
-            Period("P3", DayOfWeek.Monday, "10:55", "11:50"),
+            Period("P1", cycleDay: 0, "09:00", "09:55"),
+            Period("P2", cycleDay: 0, "10:00", "10:55"),
+            Period("P3", cycleDay: 0, "10:55", "11:50"),
         };
 
         var result = _builder.Build(fx.ToSources());
@@ -203,15 +203,15 @@ public class TimetableInputBuilderTests
 
     // ─── fixture builders ───────────────────────────────────────────────────
 
-    private static AttendancePeriod Period(string name, DayOfWeek day, string start, string end) =>
+    private static AttendancePeriod Period(string name, int cycleDay, string start, string end) =>
         new()
         {
             Id = Guid.NewGuid(),
             Name = name,
-            Weekday = day,
+            CycleDayIndex = cycleDay,
             StartTime = TimeOnly.Parse(start),
             EndTime = TimeOnly.Parse(end),
-            WeekPatternId = Guid.NewGuid(),
+            AcademicYearId = Guid.NewGuid(),
         };
 
     private static StaffMember Staff(string code, bool isTeaching, int ppa = 0) =>
@@ -278,7 +278,7 @@ public class TimetableInputBuilderTests
         return new Fixture
         {
             MathsSubjectId = maths,
-            Periods = new[] { Period("P1", DayOfWeek.Monday, "09:00", "09:55") },
+            Periods = new[] { Period("P1", cycleDay: 0, "09:00", "09:55") },
             Teachers = new[] { teacher },
             StaffSubjects = new[]
             {

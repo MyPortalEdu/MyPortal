@@ -11,8 +11,8 @@ namespace MyPortal.Tests.TimetablerTests;
 [TestFixture]
 public class TimetableMaterialisationServiceTests
 {
-    private static readonly Guid TimetableId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-    private static readonly Guid PatternId   = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+    private static readonly Guid TimetableId    = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    private static readonly Guid AcademicYearId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
     private Mock<ITimetableRepository> _repository = null!;
     private TimetableMaterialisationService _service = null!;
@@ -65,8 +65,8 @@ public class TimetableMaterialisationServiceTests
     {
         Id = Guid.Parse(id),
         Name = $"P{hour}",
-        WeekPatternId = PatternId,
-        Weekday = DayOfWeek.Monday,
+        AcademicYearId = AcademicYearId,
+        CycleDayIndex = 0,
         StartTime = new TimeOnly(hour, 0),
         EndTime = new TimeOnly(hour, 55),
     };

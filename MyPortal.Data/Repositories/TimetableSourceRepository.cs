@@ -17,7 +17,7 @@ public class TimetableSourceRepository : ITimetableSourceRepository
         _factory = factory;
     }
 
-    public async Task<TimetableInputSources> LoadAsync(Guid timetableId, Guid weekPatternId,
+    public async Task<TimetableInputSources> LoadAsync(Guid timetableId,
         CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
@@ -31,10 +31,10 @@ public class TimetableSourceRepository : ITimetableSourceRepository
         if (academicYearId is null)
             throw new NotFoundException($"Timetable '{timetableId}' not found.");
 
-        // 1) Period set for the supplied week pattern.
+        // 1) The AY's attendance periods (the cycle).
         var periods = (await conn.QueryAsync<AttendancePeriod>(new CommandDefinition(
-            "SELECT * FROM dbo.AttendancePeriods WHERE WeekPatternId = @weekPatternId;",
-            new { weekPatternId }, cancellationToken: cancellationToken))).ToArray();
+            "SELECT * FROM dbo.AttendancePeriods WHERE AcademicYearId = @academicYearId;",
+            new { academicYearId }, cancellationToken: cancellationToken))).ToArray();
 
         // 2) Teaching staff (all teachers, not just those who'll appear in the curriculum —
         //    the solver picks among any qualified teacher per class).

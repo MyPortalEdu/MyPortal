@@ -1,16 +1,24 @@
-﻿SET QUOTED_IDENTIFIER ON;
+SET QUOTED_IDENTIFIER ON;
 SET ANSI_NULLS ON;
 GO
 
 CREATE OR ALTER VIEW dbo.vw_attendance_period_instances
 AS
+-- An AttendancePeriod belongs to an AcademicYear's TimetableCycleLength-day cycle
+-- (5 = weekly, 10 = fortnightly, …). Each AttendanceWeek records which cycle-day
+-- Monday of that calendar week corresponds to (CycleOffset). For a period to
+-- render in a given calendar week, its (CycleDayIndex - CycleOffset) mod
+-- TimetableCycleLength must fall within the school's operating week — currently
+-- hardcoded to Mon-Fri.
 WITH Base AS
 (
     SELECT
-        AP.Id                               AS PeriodId,
-        AW.Id                               AS AttendanceWeekId,
-        AP.WeekPatternId,
-        AP.Weekday,
+        AP.Id                                AS PeriodId,
+        AW.Id                                AS AttendanceWeekId,
+        AP.AcademicYearId,
+        AP.CycleDayIndex,
+        AW.CycleOffset,
+        AY.TimetableCycleLength,
         AP.[Name],
         AP.StartTime,
         AP.EndTime,
@@ -18,24 +26,28 @@ WITH Base AS
         AP.IsPmReg,
         AW.Beginning,
         AW.IsNonTimetable,
-        AT.StartDate       AS TermStartDate,
-        AT.EndDate         AS TermEndDate
-    FROM dbo.AttendancePeriods        AS AP
-    LEFT JOIN dbo.AttendanceWeekPatterns AS AWP ON AWP.Id = AP.WeekPatternId
-    LEFT JOIN dbo.AttendanceWeeks        AS AW  ON AW.WeekPatternId = AWP.Id
-    LEFT JOIN dbo.AcademicTerms          AS AT  ON AT.Id = AW.AcademicTermId
+        AT.StartDate                         AS TermStartDate,
+        AT.EndDate                           AS TermEndDate,
+        ((AP.CycleDayIndex - AW.CycleOffset + AY.TimetableCycleLength) % AY.TimetableCycleLength)
+                                             AS RelativeDay
+    FROM dbo.AttendancePeriods         AS AP
+    JOIN dbo.AcademicYears             AS AY ON AY.Id = AP.AcademicYearId
+    JOIN dbo.AcademicTerms             AS AT ON AT.AcademicYearId = AY.Id
+    JOIN dbo.AttendanceWeeks           AS AW ON AW.AcademicTermId = AT.Id
 ),
 Times AS
 (
     SELECT
         b.*,
-        -- Shift week beginning to the specific weekday (0=Sun → +6, else weekday-1)
-        CAST(DATEADD(DAY, CASE WHEN b.Weekday = 0 THEN 6 ELSE b.Weekday - 1 END,
-                     CAST(b.Beginning AS date)) AS datetime2(7)) AS BaseDate,
-        -- Seconds since midnight for start/end
+        -- Beginning is the Monday of the calendar week; RelativeDay (0..4) gives the
+        -- Mon-Fri offset to land on the period's actual date.
+        CAST(DATEADD(DAY, b.RelativeDay, CAST(b.Beginning AS date)) AS datetime2(7)) AS BaseDate,
         DATEDIFF(SECOND, CAST('00:00:00' AS time(0)), CAST(b.StartTime AS time(0))) AS StartSec,
         DATEDIFF(SECOND, CAST('00:00:00' AS time(0)), CAST(b.EndTime   AS time(0))) AS EndSec
     FROM Base AS b
+    -- Mon-Fri school week. A period whose RelativeDay >= 5 belongs to a different
+    -- calendar week of the cycle (e.g. a Week B period viewed from a Week A week).
+    WHERE b.RelativeDay < 5
 ),
 Inst AS
 (
@@ -50,8 +62,8 @@ SELECT DISTINCT
     i.ActualEndTime,
     i.PeriodId,
     i.AttendanceWeekId,
-    i.WeekPatternId,
-    i.Weekday,
+    i.AcademicYearId,
+    i.CycleDayIndex,
     i.[Name],
     i.StartTime,
     i.EndTime,
@@ -62,11 +74,10 @@ FROM Inst AS i
                i.ActualStartTime, i.ActualEndTime,
                CAST('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F28' AS uniqueidentifier)) AS OE
 WHERE
--- keep periods within the term window [StartDate, EndDate + 1 day)
     i.ActualStartTime >= i.TermStartDate
   AND i.ActualEndTime < DATEADD(DAY, 1, i.TermEndDate)
   AND (
-    (OE.Id IS NULL AND i.IsNonTimetable = 0)  -- include all lesson periods unless week is “non-timetable”
+    (OE.Id IS NULL AND i.IsNonTimetable = 0)
    OR i.IsAmReg = 1
    OR i.IsPmReg = 1
     );

@@ -11,7 +11,7 @@ public class TimetableRunQueueTests
     public void Setup() => _queue = new TimetableRunQueue();
 
     private static TimetableRunWorkItem Item() =>
-        new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        new(Guid.NewGuid(), Guid.NewGuid());
 
     [Test]
     public async Task Enqueue_And_Read_RoundtripsItem()

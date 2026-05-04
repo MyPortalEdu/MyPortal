@@ -2,7 +2,7 @@ using System.Threading.Channels;
 
 namespace MyPortal.Services.Timetable;
 
-public record TimetableRunWorkItem(Guid RunId, Guid TimetableId, Guid WeekPatternId);
+public record TimetableRunWorkItem(Guid RunId, Guid TimetableId);
 
 /// In-process FIFO queue of solver runs waiting to execute. Single host, ephemeral —
 /// items not yet picked up by the worker are lost on host restart, and the worker's
