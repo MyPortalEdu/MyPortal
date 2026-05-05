@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Data;
+using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Constants;
@@ -23,6 +24,11 @@ public class AcademicYearService : BaseService, IAcademicYearService
     private readonly IAttendanceWeekRepository _attendanceWeekRepository;
     private readonly ISchoolHolidayRepository _schoolHolidayRepository;
     private readonly IDiaryEventRepository _diaryEventRepository;
+    private readonly IStudentGroupRepository _studentGroupRepository;
+    private readonly IStudentGroupSupervisorRepository _studentGroupSupervisorRepository;
+    private readonly IYearGroupRepository _yearGroupRepository;
+    private readonly IRegGroupRepository _regGroupRepository;
+    private readonly IHouseRepository _houseRepository;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IValidationService _validationService;
 
@@ -38,7 +44,11 @@ public class AcademicYearService : BaseService, IAcademicYearService
         IAcademicYearRepository academicYearRepository, IAcademicTermRepository academicTermRepository,
         IAttendancePeriodRepository attendancePeriodRepository, IAttendanceWeekRepository attendanceWeekRepository,
         ISchoolHolidayRepository schoolHolidayRepository, IDiaryEventRepository diaryEventRepository,
-        IUnitOfWorkFactory unitOfWorkFactory, IValidationService validationService) : base(authorizationService, logger)
+        IStudentGroupRepository studentGroupRepository,
+        IStudentGroupSupervisorRepository studentGroupSupervisorRepository,
+        IYearGroupRepository yearGroupRepository, IRegGroupRepository regGroupRepository,
+        IHouseRepository houseRepository, IUnitOfWorkFactory unitOfWorkFactory,
+        IValidationService validationService) : base(authorizationService, logger)
     {
         _academicYearRepository = academicYearRepository;
         _academicTermRepository = academicTermRepository;
@@ -46,6 +56,11 @@ public class AcademicYearService : BaseService, IAcademicYearService
         _attendanceWeekRepository = attendanceWeekRepository;
         _schoolHolidayRepository = schoolHolidayRepository;
         _diaryEventRepository = diaryEventRepository;
+        _studentGroupRepository = studentGroupRepository;
+        _studentGroupSupervisorRepository = studentGroupSupervisorRepository;
+        _yearGroupRepository = yearGroupRepository;
+        _regGroupRepository = regGroupRepository;
+        _houseRepository = houseRepository;
         _unitOfWorkFactory = unitOfWorkFactory;
         _validationService = validationService;
     }
@@ -194,8 +209,119 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 }
             }
 
+            if (model.CopyPastoralStructureFromAcademicYearId.HasValue)
+            {
+                await CopyPastoralStructure(model.CopyPastoralStructureFromAcademicYearId.Value, academicYearId,
+                    uow.Transaction, cancellationToken);
+            }
+
             return academicYear.Id;
         }, cancellationToken);
+    }
+
+    private async Task CopyPastoralStructure(Guid sourceAcademicYearId, Guid targetAcademicYearId,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var sourceStudentGroups =
+            await _studentGroupRepository.GetStudentGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
+        var sourceSupervisors =
+            await _studentGroupSupervisorRepository.GetStudentGroupSupervisorsByAcademicYear(sourceAcademicYearId,
+                cancellationToken);
+        var sourceYearGroups =
+            await _yearGroupRepository.GetYearGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
+        var sourceRegGroups =
+            await _regGroupRepository.GetRegGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
+        var sourceHouses =
+            await _houseRepository.GetHousesByAcademicYear(sourceAcademicYearId, cancellationToken);
+
+        // Pre-allocate IDs so cross-row references can be remapped without ordering hacks.
+        var studentGroupIdMap = sourceStudentGroups.ToDictionary(sg => sg.Id, _ => SqlConvention.SequentialGuid());
+        var supervisorIdMap = sourceSupervisors.ToDictionary(s => s.Id, _ => SqlConvention.SequentialGuid());
+        var yearGroupIdMap = sourceYearGroups.ToDictionary(yg => yg.Id, _ => SqlConvention.SequentialGuid());
+
+        // StudentGroup.MainSupervisorId points at StudentGroupSupervisor.Id, but
+        // StudentGroupSupervisor.StudentGroupId points back at StudentGroup.Id — a circular
+        // FK that we break by inserting groups with MainSupervisorId=null first, then
+        // backfilling once supervisors exist. PromoteToGroupId is also left null here:
+        // it gets set by the end-of-year promotion routine, not by structure copy.
+        var insertedStudentGroups = new Dictionary<Guid, StudentGroup>();
+        foreach (var src in sourceStudentGroups)
+        {
+            var studentGroup = new StudentGroup
+            {
+                Id = studentGroupIdMap[src.Id],
+                Description = src.Description,
+                Active = src.Active,
+                Code = src.Code,
+                AcademicYearId = targetAcademicYearId,
+                PromoteToGroupId = null,
+                MainSupervisorId = null,
+                MaxMembers = src.MaxMembers,
+                Notes = src.Notes,
+                IsSystem = src.IsSystem
+            };
+
+            var inserted = await _studentGroupRepository.InsertAsync(studentGroup, cancellationToken, transaction);
+            insertedStudentGroups[src.Id] = inserted;
+        }
+
+        foreach (var src in sourceSupervisors)
+        {
+            var supervisor = new StudentGroupSupervisor
+            {
+                Id = supervisorIdMap[src.Id],
+                StudentGroupId = studentGroupIdMap[src.StudentGroupId],
+                SupervisorId = src.SupervisorId,
+                Title = src.Title
+            };
+
+            await _studentGroupSupervisorRepository.InsertAsync(supervisor, cancellationToken, transaction);
+        }
+
+        foreach (var src in sourceStudentGroups.Where(sg => sg.MainSupervisorId.HasValue))
+        {
+            var inserted = insertedStudentGroups[src.Id];
+            inserted.MainSupervisorId = supervisorIdMap[src.MainSupervisorId!.Value];
+
+            await _studentGroupRepository.UpdateAsync(inserted, cancellationToken, transaction);
+        }
+
+        foreach (var src in sourceYearGroups)
+        {
+            var yearGroup = new YearGroup
+            {
+                Id = yearGroupIdMap[src.Id],
+                StudentGroupId = studentGroupIdMap[src.StudentGroupId],
+                CurriculumYearGroupId = src.CurriculumYearGroupId
+            };
+
+            await _yearGroupRepository.InsertAsync(yearGroup, cancellationToken, transaction);
+        }
+
+        foreach (var src in sourceRegGroups)
+        {
+            var regGroup = new RegGroup
+            {
+                Id = SqlConvention.SequentialGuid(),
+                StudentGroupId = studentGroupIdMap[src.StudentGroupId],
+                YearGroupId = yearGroupIdMap[src.YearGroupId],
+                RoomId = src.RoomId
+            };
+
+            await _regGroupRepository.InsertAsync(regGroup, cancellationToken, transaction);
+        }
+
+        foreach (var src in sourceHouses)
+        {
+            var house = new House
+            {
+                Id = SqlConvention.SequentialGuid(),
+                StudentGroupId = studentGroupIdMap[src.StudentGroupId],
+                ColourCode = src.ColourCode
+            };
+
+            await _houseRepository.InsertAsync(house, cancellationToken, transaction);
+        }
     }
 
     public Task<Guid> UpdateAcademicYear(Guid academicYearId, AcademicYearUpsertRequest model, CancellationToken cancellationToken)

@@ -14,6 +14,7 @@ public class AcademicYearUpsertRequest
     public int SchoolWeekLength { get; set; }
     public int FirstWeekOffset { get; set; }
     public Guid? CopyPeriodsFromAcademicYearId { get; set; }
+    public Guid? CopyPastoralStructureFromAcademicYearId { get; set; }
     
     public AcademicTermUpsertRequest[] AcademicTerms { get; set; }
     public AttendancePeriodUpsertRequest[] AttendancePeriods { get; set; }

@@ -18,16 +18,21 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDirectoryRepository, DirectoryRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
+        services.AddScoped<IHouseRepository, HouseRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IPersonRepository, PersonRepository>();
+        services.AddScoped<IRegGroupRepository, RegGroupRepository>();
         services.AddScoped<IRegisterRepository, RegisterRepository>();
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddScoped<ISchoolHolidayRepository, SchoolHolidayRepository>();
+        services.AddScoped<IStudentGroupRepository, StudentGroupRepository>();
+        services.AddScoped<IStudentGroupSupervisorRepository, StudentGroupSupervisorRepository>();
         services.AddScoped<ITimetableRepository, TimetableRepository>();
         services.AddScoped<ITimetableRunRepository, TimetableRunRepository>();
         services.AddScoped<ITimetableSourceRepository, TimetableSourceRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IYearGroupRepository, YearGroupRepository>();
     }
 }
