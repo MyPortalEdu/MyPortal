@@ -11,6 +11,7 @@ public class AcademicYearUpsertRequest
     }
     
     public int TimetableCycleLength { get; set; }
+    public int SchoolWeekLength { get; set; }
     public int FirstWeekOffset { get; set; }
     public Guid? CopyPeriodsFromAcademicYearId { get; set; }
     

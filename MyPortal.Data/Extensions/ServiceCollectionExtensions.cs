@@ -10,7 +10,11 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IAcademicYearRepository, AcademicYearRepository>();
         services.AddScoped<IAcademicTermRepository, AcademicTermRepository>();
+        services.AddScoped<IAttendanceCodeRepository, AttendanceCodeRepository>();
+        services.AddScoped<IAttendancePeriodRepository, AttendancePeriodRepository>();
+        services.AddScoped<IAttendanceWeekRepository, AttendanceWeekRepository>();
         services.AddScoped<IBulletinRepository, BulletinRepository>();
+        services.AddScoped<IDiaryEventRepository, DiaryEventRepository>();
         services.AddScoped<IDirectoryRepository, DirectoryRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
@@ -20,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
+        services.AddScoped<ISchoolHolidayRepository, SchoolHolidayRepository>();
         services.AddScoped<ITimetableRepository, TimetableRepository>();
         services.AddScoped<ITimetableRunRepository, TimetableRunRepository>();
         services.AddScoped<ITimetableSourceRepository, TimetableSourceRepository>();

@@ -47,7 +47,7 @@ public static class Permissions
         public const string EditAttendanceSetup = "Attendance.EditAttendanceSetup";
         public const string ViewAttendanceMarks = "Attendance.ViewAttendanceMarks";
         public const string EditAttendanceMarks = "Attendance.EditAttendanceMarks";
-        // public const string UseRestrictedCodes   = "Attendance.UseRestrictedCodes";
+        public const string UseRestrictedCodes  = "Attendance.UseRestrictedCodes";
     }
 
     public static class Timetable
@@ -74,7 +74,7 @@ public static class Permissions
     public static class Curriculum
     {
         // public const string AcademicStructure = "Curriculum.AcademicStructure";
-        // public const string EditAcademicYears = "Curriculum.EditAcademicYears";
+        public const string EditAcademicYears = "Curriculum.EditAcademicYears";
         // public const string ArrangeCover      = "Curriculum.ArrangeCover";
         // public const string ViewHomework      = "Curriculum.ViewHomework";
         // public const string EditHomework      = "Curriculum.EditHomework";

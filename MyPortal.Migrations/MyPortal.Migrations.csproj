@@ -114,6 +114,16 @@
     <EmbeddedResource Include="Sql\Updates\0019_collapse_attendance_week_pattern.sql" />
     <None Remove="Sql\Updates\0020_diary_event_kind_and_school_holidays.sql" />
     <EmbeddedResource Include="Sql\Updates\0020_diary_event_kind_and_school_holidays.sql" />
+    <None Remove="Sql\StoredProcedures\sp_attendance_period_get_by_academic_year_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_period_get_by_academic_year_id.sql" />
+    <None Remove="Sql\Updates\0021_add_academic_year_school_week_length.sql" />
+    <EmbeddedResource Include="Sql\Updates\0021_add_academic_year_school_week_length.sql" />
+    <None Remove="Sql\Updates\0022_drop_lesson_diary_event_type.sql" />
+    <EmbeddedResource Include="Sql\Updates\0022_drop_lesson_diary_event_type.sql" />
+    <None Remove="Sql\Updates\0023_add_missing_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\0023_add_missing_permissions.sql" />
+    <None Remove="Sql\StoredProcedures\sp_attendance_code_get_by_ids.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_code_get_by_ids.sql" />
   </ItemGroup>
 
   <ItemGroup>
