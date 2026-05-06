@@ -1,14 +1,16 @@
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Repositories.Base;
 using QueryKit.Extensions;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Data.Repositories;
 
-public class StudentGroupSupervisorRepository : BaseEntityRepository<StudentGroupSupervisor, Guid>, IStudentGroupSupervisorRepository
+public class StudentGroupSupervisorRepository : EntityRepository<StudentGroupSupervisor>, IStudentGroupSupervisorRepository
 {
-    public StudentGroupSupervisorRepository(IConnectionFactory factory) : base(factory)
+    public StudentGroupSupervisorRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : base(factory, authorizationService)
     {
     }
 

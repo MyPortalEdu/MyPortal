@@ -1,16 +1,17 @@
 using System.Data;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using QueryKit.Extensions;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class AcademicTermRepository : BaseEntityRepository<AcademicTerm, Guid>, IAcademicTermRepository
+public class AcademicTermRepository : Base.EntityRepository<AcademicTerm>, IAcademicTermRepository
 {
-    public AcademicTermRepository(IConnectionFactory factory) : base(factory)
+    public AcademicTermRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
+        factory, authorizationService)
     {
     }
 
@@ -29,15 +30,5 @@ public class AcademicTermRepository : BaseEntityRepository<AcademicTerm, Guid>, 
         {
             if (owns) conn.Dispose();
         }
-    }
-
-    private (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
-    {
-        if (transaction?.Connection is { } shared)
-        {
-            return (shared, false);
-        }
-
-        return (_factory.Create(), true);
     }
 }

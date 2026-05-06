@@ -1,9 +1,9 @@
 using MyPortal.Core.Entities;
-using QueryKit.Repositories.Interfaces;
+using MyPortal.Data.Interfaces.Base;
 
 namespace MyPortal.Data.Interfaces;
 
-public interface IYearGroupRepository : IBaseEntityRepository<YearGroup, Guid>
+public interface IYearGroupRepository : IEntityRepository<YearGroup>
 {
     Task<IList<YearGroup>> GetYearGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken);

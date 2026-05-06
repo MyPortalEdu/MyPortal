@@ -40,6 +40,16 @@ public class AcademicYearService : BaseService, IAcademicYearService
         { SchoolHolidayType.TeacherTraining, DiaryEventTypes.TeacherTraining }
     };
 
+    // Reverse of _schoolHolidayMap for surfacing holidays on read. Built in the
+    // field initialiser so it stays automatically consistent with the forward map.
+    private static readonly IReadOnlyDictionary<Guid, SchoolHolidayType> _eventTypeToHolidayType
+        = new Dictionary<Guid, SchoolHolidayType>
+        {
+            { DiaryEventTypes.SchoolHoliday,   SchoolHolidayType.HalfTerm },
+            { DiaryEventTypes.PublicHoliday,   SchoolHolidayType.PublicHoliday },
+            { DiaryEventTypes.TeacherTraining, SchoolHolidayType.TeacherTraining }
+        };
+
 
     public AcademicYearService(IAuthorizationService authorizationService, ILogger<AcademicYearService> logger,
         IAcademicYearRepository academicYearRepository, IAcademicTermRepository academicTermRepository,
@@ -64,6 +74,49 @@ public class AcademicYearService : BaseService, IAcademicYearService
         _houseRepository = houseRepository;
         _unitOfWorkFactory = unitOfWorkFactory;
         _validationService = validationService;
+    }
+
+    public async Task<IList<AcademicYearSummaryResponse>> ListAsync(CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.ViewAcademicYears,
+            cancellationToken);
+
+        return await _academicYearRepository.GetSummariesAsync(cancellationToken);
+    }
+
+    public async Task<AcademicYearDetailsResponse> GetByIdAsync(Guid academicYearId,
+        CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.ViewAcademicYears,
+            cancellationToken);
+
+        var result = await _academicYearRepository.GetDetailsByIdAsync(academicYearId, cancellationToken)
+                     ?? throw new NotFoundException("Academic year not found.");
+
+        result.Header.Terms = result.Terms;
+        result.Header.AttendancePeriods = result.AttendancePeriods;
+        result.Header.SchoolHolidays = result.Holidays.Select(h => new SchoolHolidayResponse
+        {
+            Id = h.Id,
+            Name = h.Name,
+            // Holidays were always created via _schoolHolidayMap, so every EventTypeId
+            // here should round-trip cleanly. If a row ever shows up with an unknown
+            // type (e.g. someone hand-inserts a SchoolHoliday with an unrelated
+            // DiaryEventType), defaulting to HalfTerm is the least-surprising fallback.
+            Type = _eventTypeToHolidayType.TryGetValue(h.EventTypeId, out var t) ? t : SchoolHolidayType.HalfTerm,
+            StartDate = h.StartDate,
+            EndDate = h.EndDate
+        }).ToList();
+
+        return result.Header;
+    }
+
+    public async Task<AcademicYearSummaryResponse?> GetCurrentAsync(CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.ViewAcademicYears,
+            cancellationToken);
+
+        return await _academicYearRepository.GetCurrentAsync(cancellationToken);
     }
 
     public async Task<Guid> CreateAcademicYear(AcademicYearUpsertRequest model, CancellationToken cancellationToken)

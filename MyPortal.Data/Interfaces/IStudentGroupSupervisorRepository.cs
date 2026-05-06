@@ -1,9 +1,9 @@
 using MyPortal.Core.Entities;
-using QueryKit.Repositories.Interfaces;
+using MyPortal.Data.Interfaces.Base;
 
 namespace MyPortal.Data.Interfaces;
 
-public interface IStudentGroupSupervisorRepository : IBaseEntityRepository<StudentGroupSupervisor, Guid>
+public interface IStudentGroupSupervisorRepository : IEntityRepository<StudentGroupSupervisor>
 {
     Task<IList<StudentGroupSupervisor>> GetStudentGroupSupervisorsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken);

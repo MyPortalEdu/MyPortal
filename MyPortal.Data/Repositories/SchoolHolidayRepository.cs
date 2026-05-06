@@ -1,16 +1,18 @@
 using System.Data;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Repositories.Base;
 using QueryKit.Extensions;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class SchoolHolidayRepository : BaseEntityRepository<SchoolHoliday, Guid>, ISchoolHolidayRepository
+public class SchoolHolidayRepository : EntityRepository<SchoolHoliday>, ISchoolHolidayRepository
 {
-    public SchoolHolidayRepository(IConnectionFactory factory) : base(factory)
+    public SchoolHolidayRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : base(factory, authorizationService)
     {
     }
 
@@ -28,15 +30,5 @@ public class SchoolHolidayRepository : BaseEntityRepository<SchoolHoliday, Guid>
         {
             if (owns) conn.Dispose();
         }
-    }
-
-    private (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
-    {
-        if (transaction?.Connection is { } shared)
-        {
-            return (shared, false);
-        }
-
-        return (_factory.Create(), true);
     }
 }

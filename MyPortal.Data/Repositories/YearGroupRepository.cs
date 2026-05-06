@@ -1,14 +1,16 @@
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Repositories.Base;
 using QueryKit.Extensions;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Data.Repositories;
 
-public class YearGroupRepository : BaseEntityRepository<YearGroup, Guid>, IYearGroupRepository
+public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupRepository
 {
-    public YearGroupRepository(IConnectionFactory factory) : base(factory)
+    public YearGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : base(factory, authorizationService)
     {
     }
 

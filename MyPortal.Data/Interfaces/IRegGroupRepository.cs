@@ -1,9 +1,9 @@
 using MyPortal.Core.Entities;
-using QueryKit.Repositories.Interfaces;
+using MyPortal.Data.Interfaces.Base;
 
 namespace MyPortal.Data.Interfaces;
 
-public interface IRegGroupRepository : IBaseEntityRepository<RegGroup, Guid>
+public interface IRegGroupRepository : IEntityRepository<RegGroup>
 {
     Task<IList<RegGroup>> GetRegGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken);

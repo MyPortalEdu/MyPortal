@@ -332,16 +332,4 @@ public class TimetableRepository : EntityRepository<Timetable>, ITimetableReposi
         }
     }
 
-    /// <summary>
-    /// If a transaction is supplied, borrow its connection; otherwise open a fresh one we own.
-    /// </summary>
-    private (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
-    {
-        if (transaction?.Connection is { } shared)
-        {
-            return (shared, false);
-        }
-
-        return (_factory.Create(), true);
-    }
 }

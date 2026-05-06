@@ -144,4 +144,14 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
 
         return await base.DeleteAsync(id, cancellationToken, softDelete, transaction);
     }
+    
+    protected (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
+    {
+        if (transaction?.Connection is { } shared)
+        {
+            return (shared, false);
+        }
+
+        return (_factory.Create(), true);
+    }
 }

@@ -158,6 +158,14 @@
     <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_marks_submit_bulk.sql" />
     <None Remove="Sql\StoredProcedures\sp_attendance_code_get_active.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_code_get_active.sql" />
+    <None Remove="Sql\Updates\0025_add_view_academic_years_permission.sql" />
+    <EmbeddedResource Include="Sql\Updates\0025_add_view_academic_years_permission.sql" />
+    <None Remove="Sql\StoredProcedures\sp_academic_year_get_summaries.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_academic_year_get_summaries.sql" />
+    <None Remove="Sql\StoredProcedures\sp_academic_year_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_academic_year_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_academic_year_get_current.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_academic_year_get_current.sql" />
   </ItemGroup>
 
   <ItemGroup>

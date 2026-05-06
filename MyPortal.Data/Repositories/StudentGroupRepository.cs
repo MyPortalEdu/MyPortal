@@ -1,16 +1,18 @@
 using System.Data;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Repositories.Base;
 using QueryKit.Extensions;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class StudentGroupRepository : BaseEntityRepository<StudentGroup, Guid>, IStudentGroupRepository
+public class StudentGroupRepository : EntityRepository<StudentGroup>, IStudentGroupRepository
 {
-    public StudentGroupRepository(IConnectionFactory factory) : base(factory)
+    public StudentGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : base(factory, authorizationService)
     {
     }
 
@@ -19,9 +21,12 @@ public class StudentGroupRepository : BaseEntityRepository<StudentGroup, Guid>, 
     {
         using var conn = _factory.Create();
 
-        var result = await conn.ExecuteStoredProcedureAsync<StudentGroup>(
-            "[dbo].[sp_student_group_get_by_academic_year_id]",
-            new { academicYearId }, cancellationToken: cancellationToken);
+        var sql = @"[dbo].[sp_student_group_get_by_academic_year_id]";
+
+        var param = new { academicYearId };
+
+        var result = await conn.ExecuteStoredProcedureAsync<StudentGroup>(sql, param,
+            cancellationToken: cancellationToken);
 
         return result.ToList();
     }
@@ -40,15 +45,5 @@ public class StudentGroupRepository : BaseEntityRepository<StudentGroup, Guid>, 
         {
             if (owns) conn.Dispose();
         }
-    }
-
-    private (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
-    {
-        if (transaction?.Connection is { } shared)
-        {
-            return (shared, false);
-        }
-
-        return (_factory.Create(), true);
     }
 }

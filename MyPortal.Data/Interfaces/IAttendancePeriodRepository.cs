@@ -1,11 +1,11 @@
 using System.Data;
 using MyPortal.Core.Entities;
-using QueryKit.Repositories.Interfaces;
+using MyPortal.Data.Interfaces.Base;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Interfaces;
 
-public interface IAttendancePeriodRepository : IBaseEntityRepository<AttendancePeriod, Guid>
+public interface IAttendancePeriodRepository : IEntityRepository<AttendancePeriod>
 {
     Task<IList<AttendancePeriod>> GetAttendancePeriodsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken);

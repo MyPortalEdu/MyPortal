@@ -1,13 +1,15 @@
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
+using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class DiaryEventRepository : BaseEntityRepository<DiaryEvent, Guid>, IDiaryEventRepository
+public class DiaryEventRepository : EntityRepository<DiaryEvent>, IDiaryEventRepository
 {
-    protected DiaryEventRepository(IConnectionFactory factory) : base(factory)
+    public DiaryEventRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : base(factory, authorizationService)
     {
     }
 }

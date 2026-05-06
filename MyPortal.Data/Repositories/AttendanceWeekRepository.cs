@@ -1,16 +1,18 @@
 using System.Data;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Repositories.Base;
 using QueryKit.Extensions;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class AttendanceWeekRepository : BaseEntityRepository<AttendanceWeek, Guid>, IAttendanceWeekRepository
+public class AttendanceWeekRepository : EntityRepository<AttendanceWeek>, IAttendanceWeekRepository
 {
-    public AttendanceWeekRepository(IConnectionFactory factory) : base(factory)
+    public AttendanceWeekRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : base(factory, authorizationService)
     {
     }
 
@@ -28,15 +30,5 @@ public class AttendanceWeekRepository : BaseEntityRepository<AttendanceWeek, Gui
         {
             if (owns) conn.Dispose();
         }
-    }
-
-    private (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
-    {
-        if (transaction?.Connection is { } shared)
-        {
-            return (shared, false);
-        }
-
-        return (_factory.Create(), true);
     }
 }

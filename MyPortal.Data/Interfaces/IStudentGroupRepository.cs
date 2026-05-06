@@ -1,11 +1,11 @@
 using System.Data;
 using MyPortal.Core.Entities;
-using QueryKit.Repositories.Interfaces;
+using MyPortal.Data.Interfaces.Base;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Interfaces;
 
-public interface IStudentGroupRepository : IBaseEntityRepository<StudentGroup, Guid>
+public interface IStudentGroupRepository : IEntityRepository<StudentGroup>
 {
     Task<IList<StudentGroup>> GetStudentGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken);

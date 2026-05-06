@@ -75,6 +75,7 @@ public static class Permissions
     public static class Curriculum
     {
         // public const string AcademicStructure = "Curriculum.AcademicStructure";
+        public const string ViewAcademicYears = "Curriculum.ViewAcademicYears";
         public const string EditAcademicYears = "Curriculum.EditAcademicYears";
         // public const string ArrangeCover      = "Curriculum.ArrangeCover";
         // public const string ViewHomework      = "Curriculum.ViewHomework";

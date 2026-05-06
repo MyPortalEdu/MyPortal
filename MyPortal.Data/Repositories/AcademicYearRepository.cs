@@ -1,15 +1,19 @@
 using System.Data;
+using Dapper;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models.Curriculum;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Repositories.Base;
 using QueryKit.Extensions;
-using QueryKit.Repositories;
-using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Data.Repositories;
 
-public class AcademicYearRepository : BaseEntityRepository<AcademicYear, Guid>, IAcademicYearRepository
+public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicYearRepository
 {
-    public AcademicYearRepository(IConnectionFactory factory) : base(factory)
+    public AcademicYearRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : base(factory, authorizationService)
     {
     }
 
@@ -68,13 +72,57 @@ public class AcademicYearRepository : BaseEntityRepository<AcademicYear, Guid>, 
         }
     }
 
-    private (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
+    public async Task<IList<AcademicYearSummaryResponse>> GetSummariesAsync(
+        CancellationToken cancellationToken)
     {
-        if (transaction?.Connection is { } shared)
+        using var conn = _factory.Create();
+
+        var rows = await conn.ExecuteStoredProcedureAsync<AcademicYearSummaryResponse>(
+            "[dbo].[sp_academic_year_get_summaries]", parameters: null,
+            cancellationToken: cancellationToken);
+
+        return rows.ToList();
+    }
+
+    public async Task<AcademicYearDetailsResult?> GetDetailsByIdAsync(Guid academicYearId,
+        CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+
+        var command = new CommandDefinition("[dbo].[sp_academic_year_get_details_by_id]",
+            new { academicYearId },
+            commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+        using var reader = await conn.QueryMultipleAsync(command);
+
+        var header = await reader.ReadFirstOrDefaultAsync<AcademicYearDetailsResponse>();
+        if (header is null)
         {
-            return (shared, false);
+            return null;
         }
 
-        return (_factory.Create(), true);
+        // Order matches the SP: header, terms, holidays, periods.
+        var terms     = (await reader.ReadAsync<AcademicTermResponse>()).ToList();
+        var holidays  = (await reader.ReadAsync<SchoolHolidayRow>()).ToList();
+        var periods   = (await reader.ReadAsync<AttendancePeriodResponse>()).ToList();
+
+        return new AcademicYearDetailsResult
+        {
+            Header = header,
+            Terms = terms,
+            Holidays = holidays,
+            AttendancePeriods = periods
+        };
+    }
+
+    public async Task<AcademicYearSummaryResponse?> GetCurrentAsync(CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+
+        var rows = await conn.ExecuteStoredProcedureAsync<AcademicYearSummaryResponse>(
+            "[dbo].[sp_academic_year_get_current]", parameters: null,
+            cancellationToken: cancellationToken);
+
+        return rows.FirstOrDefault();
     }
 }
