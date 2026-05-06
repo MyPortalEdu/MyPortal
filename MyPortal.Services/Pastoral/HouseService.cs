@@ -8,6 +8,9 @@ using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces.Pastoral;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
@@ -26,6 +29,29 @@ public class HouseService : BaseService, IHouseService
         _unitOfWorkFactory = unitOfWorkFactory;
         _houseRepository = houseRepository;
         _studentGroupService = studentGroupService;
+    }
+
+    public async Task<PageResult<HouseSummaryResponse>> GetSummariesAsync(Guid academicYearId,
+        FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+        CancellationToken cancellationToken = default)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure,
+            cancellationToken);
+
+        return await _houseRepository.GetSummariesAsync(academicYearId, filter, sort, paging,
+            cancellationToken);
+    }
+
+    public async Task<HouseDetailsResponse> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure,
+            cancellationToken);
+
+        var result = await _houseRepository.GetDetailsByIdAsync(id, cancellationToken)
+                     ?? throw new NotFoundException("House not found.");
+
+        result.Header.Supervisors = result.Supervisors;
+        return result.Header;
     }
 
     public async Task<Guid> CreateHouseAsync(HouseUpsertRequest model, CancellationToken cancellationToken)

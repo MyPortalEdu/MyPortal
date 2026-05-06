@@ -123,6 +123,7 @@ public static class Permissions
 
     public static class School
     {
+        public const string ViewPastoralStructure       = "School.ViewPastoralStructure";
         public const string EditPastoralStructure       = "School.EditPastoralStructure";
         // public const string ViewRooms               = "School.ViewRooms";
         // public const string EditRooms               = "School.EditRooms";
