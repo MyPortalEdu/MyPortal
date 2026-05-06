@@ -1,6 +1,6 @@
 namespace MyPortal.Contracts.Models.Attendance;
 
-public class RegisterStudentResponse
+public class BulkAttendanceStudentResponse
 {
     public Guid StudentId { get; set; }
 
@@ -12,9 +12,8 @@ public class RegisterStudentResponse
 
     public int? AdmissionNumber { get; set; }
 
-    // True when this student is on the register via a SessionExtraName for this
-    // Session+Week, rather than the regular StudentGroupMembership. They still
-    // appear on their usual register too — extras add a student to a register,
-    // they don't remove them from the original.
+    // True when this student appears solely via SessionExtraNames (no regular
+    // StudentGroupMembership in the requested range). Useful for the UI to mark
+    // them visually distinct from the regular roster.
     public bool IsExtra { get; set; }
 }

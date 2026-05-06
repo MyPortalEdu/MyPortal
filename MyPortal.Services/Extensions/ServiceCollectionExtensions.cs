@@ -45,6 +45,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPermissionService, PermissionService>();
 
         services.AddScoped<IAcademicYearService, AcademicYearService>();
+        services.AddScoped<IAttendanceCodeService, AttendanceCodeService>();
+        services.AddScoped<IAttendanceMarkService, AttendanceMarkService>();
         services.AddScoped<IBulletinService, BulletinService>();
         services.AddScoped<IDirectoryService, DirectoryService>();
         services.AddScoped<IDocumentService, DocumentService>();

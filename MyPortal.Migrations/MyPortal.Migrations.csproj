@@ -134,6 +134,30 @@
     <EmbeddedResource Include="Sql\StoredProcedures\sp_house_get_by_academic_year_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_student_group_supervisor_get_by_academic_year_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_student_group_supervisor_get_by_academic_year_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_academic_year_get_earliest_term_start_date_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_academic_year_get_earliest_term_start_date_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_academic_year_has_downstream_data_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_academic_year_has_downstream_data_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_academic_year_check_overlap.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_academic_year_check_overlap.sql" />
+    <None Remove="Sql\StoredProcedures\sp_academic_term_delete_by_academic_year_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_academic_term_delete_by_academic_year_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_attendance_week_delete_by_academic_year_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_week_delete_by_academic_year_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_attendance_period_delete_by_academic_year_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_period_delete_by_academic_year_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_school_holiday_delete_by_academic_year_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_school_holiday_delete_by_academic_year_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_student_group_delete_by_academic_year_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_student_group_delete_by_academic_year_id.sql" />
+    <None Remove="Sql\Updates\0024_add_bulk_attendance_marks.sql" />
+    <EmbeddedResource Include="Sql\Updates\0024_add_bulk_attendance_marks.sql" />
+    <None Remove="Sql\StoredProcedures\sp_attendance_marks_get_bulk.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_marks_get_bulk.sql" />
+    <None Remove="Sql\StoredProcedures\sp_attendance_marks_submit_bulk.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_marks_submit_bulk.sql" />
+    <None Remove="Sql\StoredProcedures\sp_attendance_code_get_active.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_attendance_code_get_active.sql" />
   </ItemGroup>
 
   <ItemGroup>

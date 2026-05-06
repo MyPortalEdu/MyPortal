@@ -5,10 +5,10 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.Attendance;
-using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Attendance;
 using MyPortal.Services.Interfaces;
+using MyPortal.Services.Interfaces.Attendance;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Tests.ServiceTests;
@@ -19,7 +19,7 @@ public class RegisterServiceTests
     private Mock<IAuthorizationService> _authorizationService;
     private Mock<ILogger<RegisterService>> _logger;
     private Mock<IRegisterRepository> _registerRepository;
-    private Mock<IAttendanceCodeRepository> _attendanceCodeRepository;
+    private Mock<IAttendanceCodeService> _attendanceCodeService;
     private Mock<IValidationService> _validationService;
 
     private RegisterService _service;
@@ -30,44 +30,37 @@ public class RegisterServiceTests
         _authorizationService = new Mock<IAuthorizationService>(MockBehavior.Strict);
         _logger = new Mock<ILogger<RegisterService>>(MockBehavior.Loose);
         _registerRepository = new Mock<IRegisterRepository>(MockBehavior.Strict);
-        _attendanceCodeRepository = new Mock<IAttendanceCodeRepository>(MockBehavior.Strict);
+        _attendanceCodeService = new Mock<IAttendanceCodeService>(MockBehavior.Strict);
         _validationService = new Mock<IValidationService>(MockBehavior.Strict);
 
         _service = new RegisterService(
             _authorizationService.Object,
             _logger.Object,
             _registerRepository.Object,
-            _attendanceCodeRepository.Object,
+            _attendanceCodeService.Object,
             _validationService.Object
         );
     }
 
-    private void StubCodes(params AttendanceCode[] codes)
-    {
-        _attendanceCodeRepository
-            .Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(codes.ToList());
-    }
-
     /// <summary>
-    /// Returns one active+unrestricted AttendanceCode for every Id the service asks about,
-    /// so callers using random-Guid codeIds (the default in MakeRequest) don't have to
-    /// pre-build matching code fixtures.
+    /// Default stub: code policy passes silently. Tests that need a failing policy
+    /// override this with their own setup.
     /// </summary>
     private void StubAllCodesValid()
     {
-        _attendanceCodeRepository
-            .Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IEnumerable<Guid> ids, CancellationToken _) =>
-                ids.Select(id => Code(id)).ToList());
+        _attendanceCodeService
+            .Setup(s => s.EnsureCodesAreUsableAsync(It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
     }
 
-    private static AttendanceCode Code(Guid id, string codeChar = "/", bool active = true, bool restricted = false)
-        => new()
-        {
-            Id = id, Code = codeChar, Description = "code", AttendanceCodeTypeId = Guid.NewGuid(),
-            IsActive = active, IsRestricted = restricted, IsSystem = false
-        };
+    private void StubCodePolicyThrows(Exception ex)
+    {
+        _attendanceCodeService
+            .Setup(s => s.EnsureCodesAreUsableAsync(It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(ex);
+    }
 
     private void RequirePermission(string permission, bool succeeds = true)
     {
@@ -217,6 +210,7 @@ public class RegisterServiceTests
 
         RequirePermission(Permissions.Attendance.EditAttendanceMarks);
         _validationService.Setup(v => v.ValidateAsync(request)).Returns(Task.CompletedTask);
+        StubAllCodesValid();
         _registerRepository.Setup(r => r.SubmitLessonRegisterAsync(sessionPeriodId, weekId,
                 It.IsAny<IReadOnlyCollection<SubmitMarkRequest>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -247,21 +241,20 @@ public class RegisterServiceTests
     [Test]
     public void SubmitLessonRegisterAsync_RejectsInactiveCode()
     {
-        var codeId = Guid.NewGuid();
         var request = new SubmitRegisterRequest
         {
             Marks = new List<SubmitMarkRequest>
-                { new() { StudentId = Guid.NewGuid(), AttendanceCodeId = codeId } }
+                { new() { StudentId = Guid.NewGuid(), AttendanceCodeId = Guid.NewGuid() } }
         };
 
         RequirePermission(Permissions.Attendance.EditAttendanceMarks);
         _validationService.Setup(v => v.ValidateAsync(request)).Returns(Task.CompletedTask);
-        StubCodes(Code(codeId, active: false));
+        StubCodePolicyThrows(new InvalidOperationException("Cannot submit inactive attendance code(s): X"));
 
         Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.SubmitLessonRegisterAsync(Guid.NewGuid(), Guid.NewGuid(), request, CancellationToken.None));
 
-        // Repo write must not happen when a code is inactive — the row would survive in DB.
+        // Repo write must not happen when the policy fails — the row would survive in DB.
         _registerRepository.Verify(r => r.SubmitLessonRegisterAsync(It.IsAny<Guid>(), It.IsAny<Guid>(),
             It.IsAny<IReadOnlyCollection<SubmitMarkRequest>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -273,8 +266,7 @@ public class RegisterServiceTests
 
         RequirePermission(Permissions.Attendance.EditAttendanceMarks);
         _validationService.Setup(v => v.ValidateAsync(request)).Returns(Task.CompletedTask);
-        // Repo returns no matching codes — the lookup miss should hard-fail the submit.
-        StubCodes();
+        StubCodePolicyThrows(new NotFoundException("Unknown attendance code(s)"));
 
         Assert.ThrowsAsync<NotFoundException>(() =>
             _service.SubmitLessonRegisterAsync(Guid.NewGuid(), Guid.NewGuid(), request, CancellationToken.None));
@@ -284,23 +276,17 @@ public class RegisterServiceTests
     }
 
     [Test]
-    public async Task SubmitLessonRegisterAsync_AllowsRestrictedCode_WhenUserHasUseRestrictedCodes()
+    public async Task SubmitLessonRegisterAsync_AllowsRestrictedCode_WhenPolicyAccepts()
     {
+        // Restricted-code auth lives inside IAttendanceCodeService now; this test asserts
+        // RegisterService delegates to it and proceeds with the write when it passes.
         var sessionPeriodId = Guid.NewGuid();
         var weekId = Guid.NewGuid();
-        var codeId = Guid.NewGuid();
-        var request = new SubmitRegisterRequest
-        {
-            Marks = new List<SubmitMarkRequest>
-                { new() { StudentId = Guid.NewGuid(), AttendanceCodeId = codeId } }
-        };
+        var request = MakeRequest(Guid.NewGuid());
 
         RequirePermission(Permissions.Attendance.EditAttendanceMarks);
         _validationService.Setup(v => v.ValidateAsync(request)).Returns(Task.CompletedTask);
-        StubCodes(Code(codeId, restricted: true));
-        _authorizationService.Setup(a => a.HasPermissionAsync(Permissions.Attendance.UseRestrictedCodes,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+        StubAllCodesValid();
         _registerRepository.Setup(r => r.SubmitLessonRegisterAsync(sessionPeriodId, weekId,
                 It.IsAny<IReadOnlyCollection<SubmitMarkRequest>>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -312,21 +298,13 @@ public class RegisterServiceTests
     }
 
     [Test]
-    public void SubmitLessonRegisterAsync_RejectsRestrictedCode_WhenUserLacksUseRestrictedCodes()
+    public void SubmitLessonRegisterAsync_RejectsRestrictedCode_WhenPolicyForbids()
     {
-        var codeId = Guid.NewGuid();
-        var request = new SubmitRegisterRequest
-        {
-            Marks = new List<SubmitMarkRequest>
-                { new() { StudentId = Guid.NewGuid(), AttendanceCodeId = codeId } }
-        };
+        var request = MakeRequest(Guid.NewGuid());
 
         RequirePermission(Permissions.Attendance.EditAttendanceMarks);
         _validationService.Setup(v => v.ValidateAsync(request)).Returns(Task.CompletedTask);
-        StubCodes(Code(codeId, restricted: true));
-        _authorizationService.Setup(a => a.HasPermissionAsync(Permissions.Attendance.UseRestrictedCodes,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+        StubCodePolicyThrows(new ForbiddenException("restricted code"));
 
         Assert.ThrowsAsync<ForbiddenException>(() =>
             _service.SubmitLessonRegisterAsync(Guid.NewGuid(), Guid.NewGuid(), request, CancellationToken.None));

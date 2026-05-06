@@ -7,4 +7,6 @@ public interface IAttendanceCodeRepository : IEntityRepository<AttendanceCode>
 {
     Task<IList<AttendanceCode>> GetByIdsAsync(IEnumerable<Guid> attendanceCodeIds,
         CancellationToken cancellationToken);
+
+    Task<IList<AttendanceCode>> GetActiveAsync(CancellationToken cancellationToken);
 }

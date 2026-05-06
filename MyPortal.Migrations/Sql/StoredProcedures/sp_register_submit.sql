@@ -22,6 +22,7 @@ BEGIN
     DECLARE @actualEnd      DATETIME2(7);
     DECLARE @periodId       UNIQUEIDENTIFIER;
     DECLARE @studentGroupId UNIQUEIDENTIFIER;
+    DECLARE @sessionId      UNIQUEIDENTIFIER;
 
     IF @sessionPeriodId IS NOT NULL
     BEGIN
@@ -29,7 +30,8 @@ BEGIN
             @actualStart    = API.ActualStartTime,
             @actualEnd      = API.ActualEndTime,
             @periodId       = API.PeriodId,
-            @studentGroupId = CG.StudentGroupId
+            @studentGroupId = CG.StudentGroupId,
+            @sessionId      = S.Id
         FROM dbo.SessionPeriods                  AS SP
         JOIN dbo.Sessions                        AS S   ON S.Id = SP.SessionId
         JOIN dbo.Classes                         AS C   ON C.Id = S.ClassId
@@ -59,7 +61,10 @@ BEGIN
         THROW 50002, 'No attendance-period instance for the supplied register / week.', 1;
     END
 
-    -- Materialise the date-effective roster once.
+    -- Materialise the date-effective roster once. For lesson registers this is the
+    -- StudentGroup's members PLUS any SessionExtraNames for this Session+Week — extras
+    -- need to be acceptable submit targets too. Reg-group registers don't carry a Session,
+    -- so the extras leg is skipped (@sessionId stays NULL).
     DECLARE @roster TABLE ([StudentId] UNIQUEIDENTIFIER PRIMARY KEY);
 
     INSERT INTO @roster ([StudentId])
@@ -69,6 +74,17 @@ BEGIN
     WHERE SGM.StudentGroupId = @studentGroupId
       AND SGM.StartDate <= @actualEnd
       AND (SGM.EndDate IS NULL OR SGM.EndDate >= @actualStart);
+
+    IF @sessionId IS NOT NULL
+    BEGIN
+        INSERT INTO @roster ([StudentId])
+        SELECT SEN.StudentId
+        FROM dbo.SessionExtraNames AS SEN
+        JOIN dbo.Students          AS St ON St.Id = SEN.StudentId AND St.IsDeleted = 0
+        WHERE SEN.SessionId = @sessionId
+          AND SEN.AttendanceWeekId = @attendanceWeekId
+          AND NOT EXISTS (SELECT 1 FROM @roster R WHERE R.StudentId = SEN.StudentId);
+    END
 
     -- Reject students that aren't on the roster.
     IF EXISTS (SELECT 1 FROM @marks M WHERE NOT EXISTS (SELECT 1 FROM @roster R WHERE R.StudentId = M.StudentId))

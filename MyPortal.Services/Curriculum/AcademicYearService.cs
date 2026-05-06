@@ -4,6 +4,7 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
+using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Curriculum;
 using MyPortal.Core.Entities;
@@ -40,7 +41,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
     };
 
 
-    public AcademicYearService(IAuthorizationService authorizationService, ILogger<BaseService> logger,
+    public AcademicYearService(IAuthorizationService authorizationService, ILogger<AcademicYearService> logger,
         IAcademicYearRepository academicYearRepository, IAcademicTermRepository academicTermRepository,
         IAttendancePeriodRepository attendancePeriodRepository, IAttendanceWeekRepository attendanceWeekRepository,
         ISchoolHolidayRepository schoolHolidayRepository, IDiaryEventRepository diaryEventRepository,
@@ -73,141 +74,21 @@ public class AcademicYearService : BaseService, IAcademicYearService
 
         return await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
+            await EnsureNoOverlapAsync(excludeAcademicYearId: null, model, uow.Transaction, cancellationToken);
+
             var academicYearId = SqlConvention.SequentialGuid();
-            var academicYearName =
-                $"{model.AcademicTerms.Min(a => a.StartDate.Year)}/{model.AcademicTerms.Max(a => a.StartDate.Year)}";
 
             var academicYear = new AcademicYear
             {
                 Id = academicYearId,
-                Name = academicYearName,
+                Name = BuildAcademicYearName(model),
                 TimetableCycleLength = model.TimetableCycleLength,
                 SchoolWeekLength = model.SchoolWeekLength
             };
-            
+
             await _academicYearRepository.InsertAsync(academicYear, cancellationToken, uow.Transaction);
 
-            // Sort terms chronologically so weekIndex (calendar weeks since the year's first
-            // Monday) is deterministic regardless of caller input order. The cycle counter ticks
-            // continuously across terms — including holiday weeks that get skipped below — so
-            // anchoring it on the year's first Monday is what gives us "continuous" semantics.
-            var orderedTerms = model.AcademicTerms.OrderBy(t => t.StartDate).ToArray();
-            var yearStartMonday = MondayOf(orderedTerms[0].StartDate);
-
-            foreach (var termModel in orderedTerms)
-            {
-                var academicTerm = new AcademicTerm
-                {
-                    Id = SqlConvention.SequentialGuid(),
-                    AcademicYearId = academicYearId,
-                    Name = termModel.Name,
-                    StartDate = termModel.StartDate,
-                    EndDate = termModel.EndDate
-                };
-
-                await _academicTermRepository.InsertAsync(academicTerm, cancellationToken, uow.Transaction);
-
-                // Walk every calendar week that touches the term, anchored on Monday. Every week
-                // gets a row — weeks where the entire Mon-Fri block is covered by SchoolHoliday
-                // rows are flagged IsNonTimetable so the attendance flow knows to write '#' marks
-                // instead of expecting real codes. Single mid-week holidays (May Day etc.) leave
-                // IsNonTimetable false and are resolved per-day at the attendance level. The
-                // cycleOffset is computed for every week regardless so downstream cycle-aware
-                // code doesn't need a special case.
-                for (var monday = MondayOf(termModel.StartDate);
-                     monday <= termModel.EndDate;
-                     monday = monday.AddDays(7))
-                {
-                    var weekIndex = (monday - yearStartMonday).Days / 7;
-                    var cycleOffset =
-                        (model.FirstWeekOffset + weekIndex * model.SchoolWeekLength) % model.TimetableCycleLength;
-
-                    var attendanceWeek = new AttendanceWeek
-                    {
-                        Id = SqlConvention.SequentialGuid(),
-                        AcademicTermId = academicTerm.Id,
-                        Beginning = monday,
-                        CycleOffset = cycleOffset,
-                        IsNonTimetable = IsFullHolidayWeek(monday, model.SchoolWeekLength, model.SchoolHolidays)
-                    };
-
-                    await _attendanceWeekRepository.InsertAsync(attendanceWeek, cancellationToken, uow.Transaction);
-                }
-            }
-
-            foreach (var holidayModel in model.SchoolHolidays)
-            {
-                var diaryEvent = new DiaryEvent
-                {
-                    Id = SqlConvention.SequentialGuid(),
-                    Subject = holidayModel.Name,
-                    StartTime = holidayModel.StartDate,
-                    EndTime = holidayModel.EndDate,
-                    // IsAllDay=true tells fn_diary_event_get_overlapping to extend the end
-                    // by a day so the last calendar day of the holiday is covered. Without
-                    // this, EndTime defaults to midnight at the start of EndDate and lessons
-                    // on that final day would slip past the holiday filter.
-                    IsAllDay = true,
-                    IsPublic = true,
-                    IsSystem = true,
-                    EventTypeId = _schoolHolidayMap[holidayModel.Type]
-                };
-
-                var diaryEventEntity =
-                    await _diaryEventRepository.InsertAsync(diaryEvent, cancellationToken, uow.Transaction);
-
-                var schoolHoliday = new SchoolHoliday
-                {
-                    Id = SqlConvention.SequentialGuid(),
-                    AcademicYearId = academicYearId,
-                    EventId = diaryEventEntity.Id
-                };
-                
-                await _schoolHolidayRepository.InsertAsync(schoolHoliday, cancellationToken, uow.Transaction);
-            }
-
-            if (model.CopyPeriodsFromAcademicYearId.HasValue)
-            {
-                var periodsToCopy =
-                    await _attendancePeriodRepository.GetAttendancePeriodsByAcademicYear(
-                        model.CopyPeriodsFromAcademicYearId.Value, cancellationToken);
-
-                foreach (var periodModel in periodsToCopy)
-                {
-                    var attendancePeriod = new AttendancePeriod
-                    {
-                        Id = SqlConvention.SequentialGuid(),
-                        AcademicYearId = academicYearId,
-                        Name = periodModel.Name,
-                        CycleDayIndex = periodModel.CycleDayIndex,
-                        StartTime = periodModel.StartTime,
-                        EndTime = periodModel.EndTime,
-                        IsAmReg = periodModel.IsAmReg,
-                        IsPmReg = periodModel.IsPmReg
-                    };
-
-                    await _attendancePeriodRepository.InsertAsync(attendancePeriod, cancellationToken, uow.Transaction);
-                }
-            }
-            else
-            {
-                foreach (var periodModel in model.AttendancePeriods)
-                {
-                    var attendancePeriod = new AttendancePeriod
-                    {
-                        Id = SqlConvention.SequentialGuid(),
-                        AcademicYearId = academicYearId,
-                        Name = periodModel.Name,
-                        CycleDayIndex = periodModel.CycleDayIndex,
-                        StartTime = periodModel.StartTime,
-                        EndTime = periodModel.EndTime,
-                        IsAmReg = periodModel.IsAmReg,
-                        IsPmReg = periodModel.IsPmReg
-                    };
-
-                    await _attendancePeriodRepository.InsertAsync(attendancePeriod, cancellationToken, uow.Transaction);
-                }
-            }
+            await InsertCalendarArtefactsAsync(academicYearId, model, uow.Transaction, cancellationToken);
 
             if (model.CopyPastoralStructureFromAcademicYearId.HasValue)
             {
@@ -218,6 +99,144 @@ public class AcademicYearService : BaseService, IAcademicYearService
             return academicYear.Id;
         }, cancellationToken);
     }
+
+    private async Task EnsureNoOverlapAsync(Guid? excludeAcademicYearId, AcademicYearUpsertRequest model,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var rangeStart = model.AcademicTerms.Min(t => t.StartDate);
+        var rangeEnd = model.AcademicTerms.Max(t => t.EndDate);
+
+        if (await _academicYearRepository.HasOverlapAsync(excludeAcademicYearId, rangeStart, rangeEnd,
+                cancellationToken, transaction))
+        {
+            throw new ArgumentException(
+                "The academic year's term dates overlap with another existing academic year.");
+        }
+    }
+
+    private async Task InsertCalendarArtefactsAsync(Guid academicYearId, AcademicYearUpsertRequest model,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        // Sort terms chronologically so weekIndex (calendar weeks since the year's first
+        // Monday) is deterministic regardless of caller input order. The cycle counter ticks
+        // continuously across terms — including holiday weeks that get skipped below — so
+        // anchoring it on the year's first Monday is what gives us "continuous" semantics.
+        var orderedTerms = model.AcademicTerms.OrderBy(t => t.StartDate).ToArray();
+        var yearStartMonday = MondayOf(orderedTerms[0].StartDate);
+
+        foreach (var termModel in orderedTerms)
+        {
+            var academicTerm = new AcademicTerm
+            {
+                Id = SqlConvention.SequentialGuid(),
+                AcademicYearId = academicYearId,
+                Name = termModel.Name,
+                StartDate = termModel.StartDate,
+                EndDate = termModel.EndDate
+            };
+
+            await _academicTermRepository.InsertAsync(academicTerm, cancellationToken, transaction);
+
+            // Walk every calendar week that touches the term, anchored on Monday. Every week
+            // gets a row — weeks where the entire Mon-Fri block is covered by SchoolHoliday
+            // rows are flagged IsNonTimetable so the attendance flow knows to write '#' marks
+            // instead of expecting real codes. Single mid-week holidays (May Day etc.) leave
+            // IsNonTimetable false and are resolved per-day at the attendance level. The
+            // cycleOffset is computed for every week regardless so downstream cycle-aware
+            // code doesn't need a special case.
+            for (var monday = MondayOf(termModel.StartDate);
+                 monday <= termModel.EndDate;
+                 monday = monday.AddDays(7))
+            {
+                var weekIndex = (monday - yearStartMonday).Days / 7;
+                var cycleOffset =
+                    (model.FirstWeekOffset + weekIndex * model.SchoolWeekLength) % model.TimetableCycleLength;
+
+                var attendanceWeek = new AttendanceWeek
+                {
+                    Id = SqlConvention.SequentialGuid(),
+                    AcademicTermId = academicTerm.Id,
+                    Beginning = monday,
+                    CycleOffset = cycleOffset,
+                    IsNonTimetable = IsFullHolidayWeek(monday, model.SchoolWeekLength, model.SchoolHolidays)
+                };
+
+                await _attendanceWeekRepository.InsertAsync(attendanceWeek, cancellationToken, transaction);
+            }
+        }
+
+        foreach (var holidayModel in model.SchoolHolidays)
+        {
+            var diaryEvent = new DiaryEvent
+            {
+                Id = SqlConvention.SequentialGuid(),
+                Subject = holidayModel.Name,
+                StartTime = holidayModel.StartDate,
+                EndTime = holidayModel.EndDate,
+                // IsAllDay=true tells fn_diary_event_get_overlapping to extend the end
+                // by a day so the last calendar day of the holiday is covered. Without
+                // this, EndTime defaults to midnight at the start of EndDate and lessons
+                // on that final day would slip past the holiday filter.
+                IsAllDay = true,
+                IsPublic = true,
+                IsSystem = true,
+                EventTypeId = _schoolHolidayMap[holidayModel.Type]
+            };
+
+            var diaryEventEntity =
+                await _diaryEventRepository.InsertAsync(diaryEvent, cancellationToken, transaction);
+
+            var schoolHoliday = new SchoolHoliday
+            {
+                Id = SqlConvention.SequentialGuid(),
+                AcademicYearId = academicYearId,
+                EventId = diaryEventEntity.Id
+            };
+
+            await _schoolHolidayRepository.InsertAsync(schoolHoliday, cancellationToken, transaction);
+        }
+
+        IEnumerable<AttendancePeriodUpsertRequest> periodSource;
+        if (model.CopyPeriodsFromAcademicYearId.HasValue)
+        {
+            var periodsToCopy = await _attendancePeriodRepository.GetAttendancePeriodsByAcademicYear(
+                model.CopyPeriodsFromAcademicYearId.Value, cancellationToken);
+
+            periodSource = periodsToCopy.Select(p => new AttendancePeriodUpsertRequest
+            {
+                Name = p.Name,
+                CycleDayIndex = p.CycleDayIndex,
+                StartTime = p.StartTime,
+                EndTime = p.EndTime,
+                IsAmReg = p.IsAmReg,
+                IsPmReg = p.IsPmReg
+            });
+        }
+        else
+        {
+            periodSource = model.AttendancePeriods;
+        }
+
+        foreach (var periodModel in periodSource)
+        {
+            var attendancePeriod = new AttendancePeriod
+            {
+                Id = SqlConvention.SequentialGuid(),
+                AcademicYearId = academicYearId,
+                Name = periodModel.Name,
+                CycleDayIndex = periodModel.CycleDayIndex,
+                StartTime = periodModel.StartTime,
+                EndTime = periodModel.EndTime,
+                IsAmReg = periodModel.IsAmReg,
+                IsPmReg = periodModel.IsPmReg
+            };
+
+            await _attendancePeriodRepository.InsertAsync(attendancePeriod, cancellationToken, transaction);
+        }
+    }
+
+    private static string BuildAcademicYearName(AcademicYearUpsertRequest model) =>
+        $"{model.AcademicTerms.Min(a => a.StartDate.Year)}/{model.AcademicTerms.Max(a => a.StartDate.Year)}";
 
     private async Task CopyPastoralStructure(Guid sourceAcademicYearId, Guid targetAcademicYearId,
         IDbTransaction? transaction, CancellationToken cancellationToken)
@@ -324,14 +343,137 @@ public class AcademicYearService : BaseService, IAcademicYearService
         }
     }
 
-    public Task<Guid> UpdateAcademicYear(Guid academicYearId, AcademicYearUpsertRequest model, CancellationToken cancellationToken)
+    public async Task<Guid> UpdateAcademicYear(Guid academicYearId, AcademicYearUpsertRequest model,
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.EditAcademicYears, cancellationToken);
+
+        // The Copy* fields seed structure at create time only — re-applying them on update is
+        // ambiguous (would we wipe the existing pastoral hierarchy? merge?). Reject up-front so
+        // the caller gets a precise error instead of the validator's "either Copy or inline"
+        // message, which would be misleading here.
+        if (model.CopyPeriodsFromAcademicYearId.HasValue ||
+            model.CopyPastoralStructureFromAcademicYearId.HasValue)
+        {
+            throw new ArgumentException(
+                "Copy fields are only valid when creating a new academic year. " +
+                "Delete and recreate the year if you want to re-copy structure.");
+        }
+
+        await _validationService.ValidateAsync(model);
+
+        return await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        {
+            var academicYear = await _academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
+                                   uow.Transaction)
+                               ?? throw new NotFoundException("Academic year not found.");
+
+            if (academicYear.IsLocked)
+            {
+                throw new AcademicYearLockedException(
+                    "This academic year is locked and cannot be edited.");
+            }
+
+            // Once the earliest term has started (or starts today) the calendar is live —
+            // attendance weeks are being read by the register flow, sessions reference
+            // periods, etc. Blocking updates from this point keeps regen safe even if no
+            // marks have been written yet.
+            var earliestStart = await _academicYearRepository.GetEarliestTermStartDateAsync(
+                academicYearId, cancellationToken, uow.Transaction);
+
+            if (earliestStart.HasValue && earliestStart.Value.Date <= DateTime.UtcNow.Date)
+            {
+                throw new AcademicYearLockedException(
+                    "This academic year has already started and cannot be edited.");
+            }
+
+            if (await _academicYearRepository.HasDownstreamDataAsync(academicYearId, cancellationToken,
+                    uow.Transaction))
+            {
+                throw new AcademicYearLockedException(
+                    "This academic year has data attached to it and cannot be edited. " +
+                    "Delete the dependent data first, or create a new year.");
+            }
+
+            await EnsureNoOverlapAsync(excludeAcademicYearId: academicYearId, model, uow.Transaction,
+                cancellationToken);
+
+            // FK-safe wipe order: periods (no children — marks already proven absent),
+            // weeks (parent of marks), terms (parent of weeks), holidays + their backing
+            // diary events. Pastoral hierarchy is intentionally left in place.
+            await _attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+            await _attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+            await _academicTermRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+            await _schoolHolidayRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+
+            academicYear.Name = BuildAcademicYearName(model);
+            academicYear.TimetableCycleLength = model.TimetableCycleLength;
+            academicYear.SchoolWeekLength = model.SchoolWeekLength;
+
+            await _academicYearRepository.UpdateAsync(academicYear, cancellationToken, uow.Transaction);
+
+            await InsertCalendarArtefactsAsync(academicYearId, model, uow.Transaction, cancellationToken);
+
+            return academicYear.Id;
+        }, cancellationToken);
     }
 
-    public Task DeleteAcademicYear(Guid academicYearId, CancellationToken cancellationToken)
+    public async Task DeleteAcademicYear(Guid academicYearId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.EditAcademicYears, cancellationToken);
+
+        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        {
+            var academicYear = await _academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
+                                   uow.Transaction)
+                               ?? throw new NotFoundException("Academic year not found.");
+
+            if (academicYear.IsLocked)
+            {
+                throw new AcademicYearLockedException(
+                    "This academic year is locked and cannot be deleted.");
+            }
+
+            // Same gate as update: once the calendar is live other systems read from it,
+            // and once any user data is attached we can't tear the AY down without
+            // orphaning that data.
+            var earliestStart = await _academicYearRepository.GetEarliestTermStartDateAsync(
+                academicYearId, cancellationToken, uow.Transaction);
+
+            if (earliestStart.HasValue && earliestStart.Value.Date <= DateTime.UtcNow.Date)
+            {
+                throw new AcademicYearLockedException(
+                    "This academic year has already started and cannot be deleted.");
+            }
+
+            if (await _academicYearRepository.HasDownstreamDataAsync(academicYearId, cancellationToken,
+                    uow.Transaction))
+            {
+                throw new AcademicYearLockedException(
+                    "This academic year has data attached to it and cannot be deleted. " +
+                    "Delete the dependent data first.");
+            }
+
+            // Same FK-safe wipe as update, then add the pastoral hierarchy on top (which
+            // update leaves alone) and finally the AY row itself.
+            await _attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+            await _attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+            await _academicTermRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+            await _schoolHolidayRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+            await _studentGroupRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+                uow.Transaction);
+
+            await _academicYearRepository.DeleteAsync(academicYearId, cancellationToken,
+                transaction: uow.Transaction);
+        }, cancellationToken);
     }
 
     private static DateTime MondayOf(DateTime date)

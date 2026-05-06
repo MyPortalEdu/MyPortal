@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAcademicYearRepository, AcademicYearRepository>();
         services.AddScoped<IAcademicTermRepository, AcademicTermRepository>();
         services.AddScoped<IAttendanceCodeRepository, AttendanceCodeRepository>();
+        services.AddScoped<IAttendanceMarkRepository, AttendanceMarkRepository>();
         services.AddScoped<IAttendancePeriodRepository, AttendancePeriodRepository>();
         services.AddScoped<IAttendanceWeekRepository, AttendanceWeekRepository>();
         services.AddScoped<IBulletinRepository, BulletinRepository>();

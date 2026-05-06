@@ -29,4 +29,15 @@ public class AttendanceCodeRepository : EntityRepository<AttendanceCode>, IAtten
 
         return rows.ToList();
     }
+
+    public async Task<IList<AttendanceCode>> GetActiveAsync(CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+
+        var rows = await conn.ExecuteStoredProcedureAsync<AttendanceCode>(
+            "[dbo].[sp_attendance_code_get_active]", parameters: null,
+            cancellationToken: cancellationToken);
+
+        return rows.ToList();
+    }
 }

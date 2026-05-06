@@ -72,6 +72,8 @@ public class RegisterRepository : IRegisterRepository
             return null;
         }
 
+        // Order matches the SPs: header, periods (day-of grid), students (roster), marks.
+        header.Periods  = (await reader.ReadAsync<RegisterPeriodResponse>()).ToList();
         header.Students = (await reader.ReadAsync<RegisterStudentResponse>()).ToList();
         header.Marks    = (await reader.ReadAsync<RegisterMarkResponse>()).ToList();
 
