@@ -1,3 +1,4 @@
+using System.Data;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces.Base;
 
@@ -7,4 +8,7 @@ public interface IStudentGroupSupervisorRepository : IEntityRepository<StudentGr
 {
     Task<IList<StudentGroupSupervisor>> GetStudentGroupSupervisorsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken);
+
+    Task<IList<StudentGroupSupervisor>> GetByStudentGroupAsync(Guid studentGroupId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null);
 }

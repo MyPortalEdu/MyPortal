@@ -1,3 +1,4 @@
+using System.Data;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
@@ -27,5 +28,23 @@ public class StudentGroupSupervisorRepository : EntityRepository<StudentGroupSup
             cancellationToken: cancellationToken);
 
         return result.ToList();
+    }
+
+    public async Task<IList<StudentGroupSupervisor>> GetByStudentGroupAsync(Guid studentGroupId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var result = await conn.ExecuteStoredProcedureAsync<StudentGroupSupervisor>(
+                "[dbo].[sp_student_group_supervisor_get_by_student_group_id]",
+                new { studentGroupId }, transaction, cancellationToken: cancellationToken);
+
+            return result.ToList();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 }

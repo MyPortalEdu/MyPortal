@@ -46,4 +46,22 @@ public class StudentGroupRepository : EntityRepository<StudentGroup>, IStudentGr
             if (owns) conn.Dispose();
         }
     }
+
+    public async Task<bool> HasDownstreamDataAsync(Guid studentGroupId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var result = await conn.ExecuteStoredProcedureAsync<bool>(
+                "[dbo].[sp_student_group_has_downstream_data_by_id]",
+                new { studentGroupId }, transaction, cancellationToken: cancellationToken);
+
+            return result.FirstOrDefault();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
+    }
 }

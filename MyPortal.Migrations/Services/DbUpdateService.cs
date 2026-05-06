@@ -423,7 +423,7 @@ VALUES (@name, @ms, @hash, @success, @err);";
     private static string GetFileName(string resource)
     {
         // Embedded resources use dots instead of slashes, so just take the last segment
-        // Example: "MyPortal.Migrations.Sql.Updates.0007_add_x.sql" -> "0007_add_x.sql"
+        // Example: "MyPortal.Migrations.Sql.Updates.20260101000000_add_x.sql" -> "20260101000000_add_x.sql"
         var parts = resource.Split('.');
         return parts.Length > 0 ? $"{parts[^2]}.{parts[^1]}" : resource;
     }

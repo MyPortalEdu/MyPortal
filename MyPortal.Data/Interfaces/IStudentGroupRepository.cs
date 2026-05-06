@@ -16,4 +16,10 @@ public interface IStudentGroupRepository : IEntityRepository<StudentGroup>
     // method does not check, it just deletes.
     Task DeleteByAcademicYearAsync(Guid academicYearId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null);
+
+    // True if any downstream rows (memberships, marksheets, curriculum groups,
+    // activities, parent-evening groups, result-set releases) reference this group.
+    // StudentGroup is not soft-deletable, so callers should gate hard-delete on this.
+    Task<bool> HasDownstreamDataAsync(Guid studentGroupId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null);
 }
