@@ -5,7 +5,7 @@ using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.Timetable;
 using MyPortal.Timetabler.Models;
 using MyPortal.Timetabler.Solver;
 using QueryKit.Sql;

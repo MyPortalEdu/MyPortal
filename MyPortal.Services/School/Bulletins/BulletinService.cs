@@ -12,13 +12,14 @@ using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Security;
-using MyPortal.Services.Interfaces.Services;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 using MyPortal.Data.Interfaces;
+using MyPortal.Services.Interfaces.Documents;
+using MyPortal.Services.Interfaces.School;
 
 namespace MyPortal.Services.School.Bulletins;
 

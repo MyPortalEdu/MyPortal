@@ -12,10 +12,10 @@ using MyPortal.FileStorage.Interfaces;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Filters;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 using MyPortal.Data.Interfaces;
+using MyPortal.Services.Interfaces.Documents;
 
 namespace MyPortal.Services.Documents;
 

@@ -12,11 +12,11 @@ using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Security;
-using MyPortal.Services.Interfaces.Services;
 using MyPortal.Services.School.Bulletins;
 using QueryKit.Repositories.Exceptions;
 using Task = System.Threading.Tasks.Task;
 using MyPortal.Data.Interfaces;
+using MyPortal.Services.Interfaces.Documents;
 
 namespace MyPortal.Tests.ServiceTests;
 

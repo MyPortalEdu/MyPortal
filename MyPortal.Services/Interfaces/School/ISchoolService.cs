@@ -1,6 +1,6 @@
 ﻿using MyPortal.Contracts.Models.School;
 
-namespace MyPortal.Services.Interfaces.Services;
+namespace MyPortal.Services.Interfaces.School;
 
 /// <summary>
 /// Defines methods for retrieving school details, including information about the local school and schools by unique

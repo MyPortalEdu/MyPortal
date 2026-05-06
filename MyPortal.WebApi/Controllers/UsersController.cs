@@ -5,7 +5,7 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.System.Users;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.System;
 using MyPortal.WebApi.Infrastructure.Attributes;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;

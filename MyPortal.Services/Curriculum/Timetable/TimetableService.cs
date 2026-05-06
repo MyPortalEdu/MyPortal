@@ -9,7 +9,7 @@ using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.Timetable;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 

@@ -4,7 +4,7 @@ using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 
-namespace MyPortal.Services.Interfaces.Services;
+namespace MyPortal.Services.Interfaces.System;
 
 /// <summary>
 /// Defines operations for managing roles, including retrieval, creation, updating, and deletion of role entities.

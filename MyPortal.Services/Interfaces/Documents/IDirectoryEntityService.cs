@@ -1,7 +1,7 @@
 ﻿using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Interfaces;
 
-namespace MyPortal.Services.Interfaces.Services;
+namespace MyPortal.Services.Interfaces.Documents;
 
 /// <summary>
 /// Defines operations for managing directories and documents within an entity's directory structure, including

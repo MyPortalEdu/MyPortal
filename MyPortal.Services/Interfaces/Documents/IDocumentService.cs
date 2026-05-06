@@ -3,7 +3,7 @@ using MyPortal.Contracts.Models.Documents;
 using MyPortal.Services.Filters;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Interfaces.Services
+namespace MyPortal.Services.Interfaces.Documents
 {
     public interface IDocumentService
     {

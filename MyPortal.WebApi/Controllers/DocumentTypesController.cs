@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Services.Filters;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.Documents;
 
 namespace MyPortal.WebApi.Controllers;
 

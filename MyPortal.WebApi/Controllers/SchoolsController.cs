@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.School;
 
 namespace MyPortal.WebApi.Controllers;
 

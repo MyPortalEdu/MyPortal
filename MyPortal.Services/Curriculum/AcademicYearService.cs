@@ -42,7 +42,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
 
     // Reverse of _schoolHolidayMap for surfacing holidays on read. Built in the
     // field initialiser so it stays automatically consistent with the forward map.
-    private static readonly IReadOnlyDictionary<Guid, SchoolHolidayType> _eventTypeToHolidayType
+    private static readonly IReadOnlyDictionary<Guid, SchoolHolidayType> EventTypeToHolidayType
         = new Dictionary<Guid, SchoolHolidayType>
         {
             { DiaryEventTypes.SchoolHoliday,   SchoolHolidayType.HalfTerm },
@@ -103,7 +103,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
             // here should round-trip cleanly. If a row ever shows up with an unknown
             // type (e.g. someone hand-inserts a SchoolHoliday with an unrelated
             // DiaryEventType), defaulting to HalfTerm is the least-surprising fallback.
-            Type = _eventTypeToHolidayType.TryGetValue(h.EventTypeId, out var t) ? t : SchoolHolidayType.HalfTerm,
+            Type = EventTypeToHolidayType.TryGetValue(h.EventTypeId, out var t) ? t : SchoolHolidayType.HalfTerm,
             StartDate = h.StartDate,
             EndDate = h.EndDate
         }).ToList();

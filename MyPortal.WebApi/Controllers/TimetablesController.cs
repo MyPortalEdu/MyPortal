@@ -5,7 +5,7 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.Timetabler;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.Timetable;
 using MyPortal.WebApi.Infrastructure.Attributes;
 
 namespace MyPortal.WebApi.Controllers;

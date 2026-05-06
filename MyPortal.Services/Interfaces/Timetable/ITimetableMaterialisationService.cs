@@ -1,6 +1,6 @@
 using MyPortal.Common.Interfaces;
 
-namespace MyPortal.Services.Interfaces.Services;
+namespace MyPortal.Services.Interfaces.Timetable;
 
 public interface ITimetableMaterialisationService
 {

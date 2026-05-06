@@ -1,4 +1,4 @@
-﻿namespace MyPortal.Services.Interfaces.Services
+﻿namespace MyPortal.Services.Interfaces.People
 {
     public interface IPersonService
     {

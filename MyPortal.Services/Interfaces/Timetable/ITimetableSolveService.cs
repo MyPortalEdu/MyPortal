@@ -1,7 +1,7 @@
 using MyPortal.Core.Entities;
 using Task = System.Threading.Tasks.Task;
 
-namespace MyPortal.Services.Interfaces.Services;
+namespace MyPortal.Services.Interfaces.Timetable;
 
 public interface ITimetableSolveService
 {

@@ -1,6 +1,6 @@
 using MyPortal.Contracts.Models.Timetabler;
 
-namespace MyPortal.Services.Interfaces.Services;
+namespace MyPortal.Services.Interfaces.Timetable;
 
 public interface ITimetableService
 {

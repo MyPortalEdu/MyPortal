@@ -1,7 +1,7 @@
 ﻿using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 
-namespace MyPortal.Services.Interfaces.Services
+namespace MyPortal.Services.Interfaces.Documents
 {
     public interface IDirectoryService
     {

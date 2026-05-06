@@ -6,7 +6,7 @@ using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.Documents;
 using QueryKit.Sql;
 using Directory = MyPortal.Core.Entities.Directory;
 

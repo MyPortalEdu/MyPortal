@@ -2,7 +2,7 @@
 using MyPortal.Auth.Interfaces;
 using MyPortal.Contracts.Models.School;
 using MyPortal.Data.Interfaces;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.School;
 
 namespace MyPortal.Services.School;
 

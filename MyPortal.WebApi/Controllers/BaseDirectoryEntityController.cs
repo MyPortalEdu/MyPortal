@@ -6,7 +6,7 @@ using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Interfaces;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.Documents;
 using MyPortal.WebApi.Infrastructure.Attributes;
 using MyPortal.WebApi.Models.Documents;
 

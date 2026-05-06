@@ -5,7 +5,7 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Interfaces;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.Documents;
 
 namespace MyPortal.Services.Documents;
 
