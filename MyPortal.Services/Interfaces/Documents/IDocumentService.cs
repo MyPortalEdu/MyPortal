@@ -7,9 +7,9 @@ namespace MyPortal.Services.Interfaces.Documents
 {
     public interface IDocumentService
     {
-        Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model, CancellationToken cancellationToken);
-        Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model, CancellationToken cancellationToken);
-        Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true);
+        Task<DocumentDetailsResponse> CreateAsync(DocumentUpsertRequest model, CancellationToken cancellationToken);
+        Task<DocumentDetailsResponse> UpdateAsync(Guid documentId, DocumentUpsertRequest model, CancellationToken cancellationToken);
+        Task DeleteAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true);
         Task<DocumentDetailsResponse> GetDocumentByIdAsync(Guid documentId, CancellationToken cancellationToken);
         Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId,
             CancellationToken cancellationToken);

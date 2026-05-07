@@ -63,7 +63,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         return await _bulletinRepository.GetSummariesAsync(scope, filter, sort, paging, cancellationToken);
     }
 
-    public async Task<Guid> CreateBulletinAsync(BulletinUpsertRequest model, CancellationToken cancellationToken)
+    public async Task<Guid> CreateAsync(BulletinUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
@@ -78,7 +78,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
         {
-            var directory = await DirectoryService.CreateDirectoryAsync(directoryRequest, cancellationToken, uow);
+            var directory = await DirectoryService.CreateAsync(directoryRequest, cancellationToken, uow);
 
             Logger.LogInformation("Directory created for bulletin: {bulletinId}", bulletinId);
 
@@ -100,7 +100,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         return bulletinId;
     }
 
-    public async Task UpdateBulletinAsync(Guid bulletinId, BulletinUpsertRequest model, CancellationToken cancellationToken)
+    public async Task UpdateAsync(Guid bulletinId, BulletinUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
@@ -133,7 +133,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         Logger.LogInformation("Bulletin updated: {bulletinId}", bulletinId);
     }
 
-    public async Task DeleteBulletinAsync(Guid bulletinId, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Guid bulletinId, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
@@ -150,7 +150,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         {
             await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken, transaction: uow.Transaction);
 
-            await DirectoryService.DeleteDirectoryAsync(bulletin.DirectoryId, cancellationToken, uow);
+            await DirectoryService.DeleteAsync(bulletin.DirectoryId, cancellationToken, uow);
         }, cancellationToken);
 
         Logger.LogInformation("Bulletin deleted: {bulletinId}", bulletinId);

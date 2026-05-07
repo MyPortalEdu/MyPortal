@@ -57,7 +57,7 @@ public sealed class RolesController : BaseApiController<RolesController>
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
     public async Task<IActionResult> CreateRoleAsync([FromBody] RoleUpsertRequest model)
     {
-        var result = await _roleService.CreateRoleAsync(model, CancellationToken);
+        var result = await _roleService.CreateAsync(model, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
@@ -68,7 +68,7 @@ public sealed class RolesController : BaseApiController<RolesController>
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
     public async Task<IActionResult> UpdateRoleAsync([FromRoute] Guid roleId, [FromBody] RoleUpsertRequest model)
     {
-        var result = await _roleService.UpdateRoleAsync(roleId, model, CancellationToken);
+        var result = await _roleService.UpdateAsync(roleId, model, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
@@ -78,7 +78,7 @@ public sealed class RolesController : BaseApiController<RolesController>
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
     public async Task<IActionResult> DeleteRoleAsync([FromRoute] Guid roleId)
     {
-        var result = await _roleService.DeleteRoleAsync(roleId, CancellationToken);
+        var result = await _roleService.DeleteAsync(roleId, CancellationToken);
         
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }

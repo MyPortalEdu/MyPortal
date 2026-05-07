@@ -60,7 +60,7 @@ public class UsersController : BaseApiController<UsersController>
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     public async Task<IActionResult> CreateUserAsync([FromBody] UserUpsertRequest model)
     {
-        var result = await _userService.CreateUserAsync(model, CancellationToken);
+        var result = await _userService.CreateAsync(model, CancellationToken);
         
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
@@ -71,7 +71,7 @@ public class UsersController : BaseApiController<UsersController>
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid userId, [FromBody] UserUpsertRequest model)
     {
-        var result = await _userService.UpdateUserAsync(userId, model, CancellationToken);
+        var result = await _userService.UpdateAsync(userId, model, CancellationToken);
         
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
@@ -92,7 +92,7 @@ public class UsersController : BaseApiController<UsersController>
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid userId)
     {
-        var result = await _userService.DeleteUserAsync(userId, CancellationToken);
+        var result = await _userService.DeleteAsync(userId, CancellationToken);
         
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }

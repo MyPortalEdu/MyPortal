@@ -79,10 +79,10 @@ public class DocumentServiceTests
             SizeBytes = sizeBytes
         };
 
-    // ─── CreateDocumentAsync ─────────────────────────────────────────────────
+    // ─── CreateAsync ─────────────────────────────────────────────────
 
     [Test]
-    public async Task CreateDocumentAsync_HappyPath_HashesAndSavesAndInserts()
+    public async Task CreateAsync_HappyPath_HashesAndSavesAndInserts()
     {
         const string body = "hello world";
         var bytes = Encoding.UTF8.GetBytes(body);
@@ -98,7 +98,7 @@ public class DocumentServiceTests
         _documentRepository.Setup(r => r.GetDetailsByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(detailsDto);
 
-        var result = await _service.CreateDocumentAsync(model, CancellationToken.None);
+        var result = await _service.CreateAsync(model, CancellationToken.None);
 
         Assert.That(result, Is.SameAs(detailsDto));
         // Persisted SizeBytes is the actual stream length, not whatever the client claimed.
@@ -108,29 +108,29 @@ public class DocumentServiceTests
     }
 
     [Test]
-    public void CreateDocumentAsync_Throws_WhenContentNull()
+    public void CreateAsync_Throws_WhenContentNull()
     {
         var model = MakeUpsert(content: null, sizeBytes: 10);
-        Assert.That(async () => await _service.CreateDocumentAsync(model, CancellationToken.None),
+        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
             Throws.TypeOf<ArgumentException>());
     }
 
     [Test]
-    public void CreateDocumentAsync_Throws_WhenSizeBytesZero()
+    public void CreateAsync_Throws_WhenSizeBytesZero()
     {
         var model = MakeUpsert(Stream("x"), 0);
-        Assert.That(async () => await _service.CreateDocumentAsync(model, CancellationToken.None),
+        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
             Throws.TypeOf<ArgumentException>());
     }
 
     [Test]
-    public void CreateDocumentAsync_Throws_Forbidden_WhenNonStaffUploadsPrivate()
+    public void CreateAsync_Throws_Forbidden_WhenNonStaffUploadsPrivate()
     {
         _authorizationService.Setup(a => a.GetCurrentUserType()).Returns(UserType.Student);
 
         var model = MakeUpsert(Stream("x"), 1, isPrivate: true);
 
-        Assert.That(async () => await _service.CreateDocumentAsync(model, CancellationToken.None),
+        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
 
         _storageProvider.Verify(s => s.SaveFileAsync(It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>(),
@@ -138,7 +138,7 @@ public class DocumentServiceTests
     }
 
     [Test]
-    public void CreateDocumentAsync_Throws_WhenDeclaredSizeDoesNotMatchActual()
+    public void CreateAsync_Throws_WhenDeclaredSizeDoesNotMatchActual()
     {
         const string body = "real content";
         var actualLength = Encoding.UTF8.GetByteCount(body);
@@ -147,7 +147,7 @@ public class DocumentServiceTests
 
         _storageKeyGenerator.Setup(g => g.Generate(It.IsAny<string>())).Returns("k");
 
-        Assert.That(async () => await _service.CreateDocumentAsync(model, CancellationToken.None),
+        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
             Throws.TypeOf<ArgumentException>().With.Property("ParamName").EqualTo("SizeBytes"));
 
         // Critical: storage save runs (it's needed to know the actual length on a non-seekable
@@ -158,7 +158,7 @@ public class DocumentServiceTests
     }
 
     [Test]
-    public void CreateDocumentAsync_Throws_WhenContentExceedsMaxFileSize()
+    public void CreateAsync_Throws_WhenContentExceedsMaxFileSize()
     {
         // Tighten the cap so we can hit it without allocating 50 MB.
         _fileStorageOptions.Setup(o => o.Value).Returns(new FileStorageOptions { MaxFileSizeBytes = 8 });
@@ -172,14 +172,14 @@ public class DocumentServiceTests
 
         _storageKeyGenerator.Setup(g => g.Generate(It.IsAny<string>())).Returns("k");
 
-        Assert.That(async () => await _service.CreateDocumentAsync(model, CancellationToken.None),
+        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
             Throws.TypeOf<InvalidOperationException>().With.Message.Contains("exceeds maximum size"));
     }
 
-    // ─── UpdateDocumentAsync ─────────────────────────────────────────────────
+    // ─── UpdateAsync ─────────────────────────────────────────────────
 
     [Test]
-    public async Task UpdateDocumentAsync_NoNewContent_UpdatesMetadataOnly()
+    public async Task UpdateAsync_NoNewContent_UpdatesMetadataOnly()
     {
         var docId = Guid.NewGuid();
         var existing = new Document
@@ -197,7 +197,7 @@ public class DocumentServiceTests
         var model = MakeUpsert(content: null, sizeBytes: null);
         model.Title = "new";
 
-        await _service.UpdateDocumentAsync(docId, model, CancellationToken.None);
+        await _service.UpdateAsync(docId, model, CancellationToken.None);
 
         Assert.That(existing.Title, Is.EqualTo("new"));
         Assert.That(existing.StorageKey, Is.EqualTo("old/key"));
@@ -208,7 +208,7 @@ public class DocumentServiceTests
     }
 
     [Test]
-    public async Task UpdateDocumentAsync_NewContent_SavesNew_UpdatesDb_DeletesOldBlob()
+    public async Task UpdateAsync_NewContent_SavesNew_UpdatesDb_DeletesOldBlob()
     {
         var docId = Guid.NewGuid();
         const string body = "new body";
@@ -234,7 +234,7 @@ public class DocumentServiceTests
         var model = MakeUpsert(Stream(body), bytes);
         model.Title = "new";
 
-        await _service.UpdateDocumentAsync(docId, model, CancellationToken.None);
+        await _service.UpdateAsync(docId, model, CancellationToken.None);
 
         Assert.That(existing.StorageKey, Is.EqualTo("new/key"));
         Assert.That(existing.SizeBytes, Is.EqualTo(bytes));
@@ -245,7 +245,7 @@ public class DocumentServiceTests
     }
 
     [Test]
-    public async Task UpdateDocumentAsync_DbUpdateFailure_CleansUpNewBlob()
+    public async Task UpdateAsync_DbUpdateFailure_CleansUpNewBlob()
     {
         var docId = Guid.NewGuid();
         var existing = new Document
@@ -268,7 +268,7 @@ public class DocumentServiceTests
         const string body = "x";
         var model = MakeUpsert(Stream(body), Encoding.UTF8.GetByteCount(body));
 
-        Assert.That(async () => await _service.UpdateDocumentAsync(docId, model, CancellationToken.None),
+        Assert.That(async () => await _service.UpdateAsync(docId, model, CancellationToken.None),
             Throws.TypeOf<InvalidOperationException>());
 
         // Old blob is preserved (DB update failed, so the row still points at it).
@@ -280,7 +280,7 @@ public class DocumentServiceTests
     }
 
     [Test]
-    public void UpdateDocumentAsync_Throws_Forbidden_WhenNonStaffNonOwner()
+    public void UpdateAsync_Throws_Forbidden_WhenNonStaffNonOwner()
     {
         _authorizationService.Setup(a => a.GetCurrentUserType()).Returns(UserType.Student);
         var docId = Guid.NewGuid();
@@ -292,13 +292,13 @@ public class DocumentServiceTests
         };
         _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
 
-        Assert.That(async () => await _service.UpdateDocumentAsync(docId, MakeUpsert(null, null),
+        Assert.That(async () => await _service.UpdateAsync(docId, MakeUpsert(null, null),
                 CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
     }
 
     [Test]
-    public void UpdateDocumentAsync_Throws_Forbidden_WhenNonStaffOwnerTriesToMakePrivate()
+    public void UpdateAsync_Throws_Forbidden_WhenNonStaffOwnerTriesToMakePrivate()
     {
         _authorizationService.Setup(a => a.GetCurrentUserType()).Returns(UserType.Student);
         var docId = Guid.NewGuid();
@@ -312,14 +312,14 @@ public class DocumentServiceTests
 
         var model = MakeUpsert(null, null, isPrivate: true);
 
-        Assert.That(async () => await _service.UpdateDocumentAsync(docId, model, CancellationToken.None),
+        Assert.That(async () => await _service.UpdateAsync(docId, model, CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
     }
 
-    // ─── DeleteDocumentAsync ─────────────────────────────────────────────────
+    // ─── DeleteAsync ─────────────────────────────────────────────────
 
     [Test]
-    public async Task DeleteDocumentAsync_SoftDelete_DoesNotTouchStorage()
+    public async Task DeleteAsync_SoftDelete_DoesNotTouchStorage()
     {
         var docId = Guid.NewGuid();
         var existing = new Document
@@ -331,14 +331,14 @@ public class DocumentServiceTests
         _documentRepository.Setup(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), true, It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
 
-        await _service.DeleteDocumentAsync(docId, CancellationToken.None, softDelete: true);
+        await _service.DeleteAsync(docId, CancellationToken.None, softDelete: true);
 
         _storageProvider.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Test]
-    public async Task DeleteDocumentAsync_HardDelete_DeletesDbThenStorage()
+    public async Task DeleteAsync_HardDelete_DeletesDbThenStorage()
     {
         var docId = Guid.NewGuid();
         var existing = new Document
@@ -357,14 +357,14 @@ public class DocumentServiceTests
             .Setup(s => s.DeleteFileAsync("k", It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        await _service.DeleteDocumentAsync(docId, CancellationToken.None, softDelete: false);
+        await _service.DeleteAsync(docId, CancellationToken.None, softDelete: false);
 
         _documentRepository.Verify(r => r.DeleteAsync(docId, It.IsAny<CancellationToken>(), false, It.IsAny<IDbTransaction?>()), Times.Once);
         _storageProvider.Verify(s => s.DeleteFileAsync("k", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
-    public async Task DeleteDocumentAsync_HardDelete_StorageFailure_LogsButDoesNotThrow()
+    public async Task DeleteAsync_HardDelete_StorageFailure_LogsButDoesNotThrow()
     {
         var docId = Guid.NewGuid();
         var existing = new Document
@@ -381,11 +381,11 @@ public class DocumentServiceTests
         // The DB row is already gone — we don't roll back. Storage-cleanup failure is logged
         // and the operation reports success (orphan blob, not a hard failure).
         Assert.DoesNotThrowAsync(async () =>
-            await _service.DeleteDocumentAsync(docId, CancellationToken.None, softDelete: false));
+            await _service.DeleteAsync(docId, CancellationToken.None, softDelete: false));
     }
 
     [Test]
-    public void DeleteDocumentAsync_Throws_Forbidden_WhenNonStaffDeletesPrivate()
+    public void DeleteAsync_Throws_Forbidden_WhenNonStaffDeletesPrivate()
     {
         _authorizationService.Setup(a => a.GetCurrentUserType()).Returns(UserType.Student);
         var docId = Guid.NewGuid();
@@ -396,18 +396,18 @@ public class DocumentServiceTests
         };
         _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>())).ReturnsAsync(existing);
 
-        Assert.That(async () => await _service.DeleteDocumentAsync(docId, CancellationToken.None),
+        Assert.That(async () => await _service.DeleteAsync(docId, CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
     }
 
     [Test]
-    public void DeleteDocumentAsync_Throws_NotFound_WhenMissing()
+    public void DeleteAsync_Throws_NotFound_WhenMissing()
     {
         var docId = Guid.NewGuid();
         _documentRepository.Setup(r => r.GetByIdAsync(docId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync((Document?)null);
 
-        Assert.That(async () => await _service.DeleteDocumentAsync(docId, CancellationToken.None),
+        Assert.That(async () => await _service.DeleteAsync(docId, CancellationToken.None),
             Throws.TypeOf<NotFoundException>());
     }
 }

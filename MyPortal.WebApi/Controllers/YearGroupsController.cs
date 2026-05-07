@@ -51,7 +51,7 @@ public sealed class YearGroupsController : BaseApiController<YearGroupsControlle
     [Permission(PermissionMode.RequireAny, Permissions.School.EditPastoralStructure)]
     public async Task<IActionResult> CreateAsync([FromBody] YearGroupUpsertRequest model)
     {
-        var id = await _yearGroupService.CreateYearGroupAsync(model, CancellationToken);
+        var id = await _yearGroupService.CreateAsync(model, CancellationToken);
 
         return Ok(new { id });
     }
@@ -63,7 +63,7 @@ public sealed class YearGroupsController : BaseApiController<YearGroupsControlle
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid yearGroupId,
         [FromBody] YearGroupUpsertRequest model)
     {
-        await _yearGroupService.UpdateYearGroupAsync(yearGroupId, model, CancellationToken);
+        await _yearGroupService.UpdateAsync(yearGroupId, model, CancellationToken);
 
         return NoContent();
     }
@@ -73,7 +73,7 @@ public sealed class YearGroupsController : BaseApiController<YearGroupsControlle
     [Permission(PermissionMode.RequireAny, Permissions.School.EditPastoralStructure)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid yearGroupId)
     {
-        await _yearGroupService.DeleteYearGroupAsync(yearGroupId, CancellationToken);
+        await _yearGroupService.DeleteAsync(yearGroupId, CancellationToken);
 
         return NoContent();
     }

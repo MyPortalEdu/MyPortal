@@ -152,7 +152,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
             throw new ForbiddenException("You do not have permission to create directories here.");
         }
 
-        return await DirectoryService.CreateDirectoryAsync(model, cancellationToken);
+        return await DirectoryService.CreateAsync(model, cancellationToken);
     }
 
     public async Task<DirectoryDetailsResponse> UpdateDirectoryAsync(Guid entityId, Guid directoryId,
@@ -166,7 +166,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
             throw new ForbiddenException("You do not have permission to edit this directory.");
         }
 
-        return await DirectoryService.UpdateDirectoryAsync(directoryId, model, cancellationToken);
+        return await DirectoryService.UpdateAsync(directoryId, model, cancellationToken);
     }
 
     public async Task DeleteDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken cancellationToken)
@@ -180,7 +180,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
                 throw new ForbiddenException("You cannot delete the root directory of this entity.");
             }
 
-            await DirectoryService.DeleteDirectoryAsync(directoryId, cancellationToken);
+            await DirectoryService.DeleteAsync(directoryId, cancellationToken);
         }
         else
         {
@@ -224,7 +224,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         if (await CanUploadToDirectoryAsync(entityId, model.DirectoryId, cancellationToken))
         {
-            return await _documentService.CreateDocumentAsync(model, cancellationToken);
+            return await _documentService.CreateAsync(model, cancellationToken);
         }
         
         throw new ForbiddenException("You do not have permission to create documents here.");
@@ -243,7 +243,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
             !await CanUploadToDirectoryAsync(entityId, model.DirectoryId, cancellationToken))
             throw new ForbiddenException("You do not have permission to edit the destination directory.");
 
-        return await _documentService.UpdateDocumentAsync(documentId, model, cancellationToken);
+        return await _documentService.UpdateAsync(documentId, model, cancellationToken);
     }
 
     public async Task DeleteDocumentAsync(Guid entityId, Guid documentId, CancellationToken cancellationToken,
@@ -253,7 +253,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
 
         if (await CanEditDocumentAsync(entityId, document, cancellationToken))
         {
-            await _documentService.DeleteDocumentAsync(documentId, cancellationToken, softDelete);
+            await _documentService.DeleteAsync(documentId, cancellationToken, softDelete);
         }
         else
         {

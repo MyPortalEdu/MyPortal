@@ -27,7 +27,7 @@ public class DirectoryService : BaseService, IDirectoryService
         _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    public async Task<DirectoryDetailsResponse> CreateDirectoryAsync(DirectoryUpsertRequest model,
+    public async Task<DirectoryDetailsResponse> CreateAsync(DirectoryUpsertRequest model,
         CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
         RequireStaff("create");
@@ -48,7 +48,7 @@ public class DirectoryService : BaseService, IDirectoryService
         return await GetDirectoryByIdAsync(id, cancellationToken);
     }
 
-    public async Task<DirectoryDetailsResponse> UpdateDirectoryAsync(Guid directoryId, DirectoryUpsertRequest model,
+    public async Task<DirectoryDetailsResponse> UpdateAsync(Guid directoryId, DirectoryUpsertRequest model,
         CancellationToken cancellationToken)
     {
         RequireStaff("update");
@@ -70,7 +70,7 @@ public class DirectoryService : BaseService, IDirectoryService
         return await GetDirectoryByIdAsync(directoryId, cancellationToken);
     }
 
-    public async Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken,
+    public async Task DeleteAsync(Guid directoryId, CancellationToken cancellationToken,
         IUnitOfWork? uow = null)
     {
         RequireStaff("delete");
@@ -85,7 +85,7 @@ public class DirectoryService : BaseService, IDirectoryService
         // Wrap the recursive walk + the root delete in one transaction so a failure halfway
         // through (cancellation, repo error) rolls back instead of leaving a half-deleted tree.
         // Note: this path always soft-deletes documents (via the repo default). If hard-delete
-        // with blob cleanup is ever needed here, route through IDocumentService.DeleteDocumentAsync
+        // with blob cleanup is ever needed here, route through IDocumentService.DeleteAsync
         // and trigger storage cleanup after this transaction commits.
         await _unitOfWorkFactory.RunInTransactionAsync(uow, async activeUow =>
         {

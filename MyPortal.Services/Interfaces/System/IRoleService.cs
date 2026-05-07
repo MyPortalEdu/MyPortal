@@ -47,7 +47,7 @@ public interface IRoleService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
     /// the role creation succeeded.</returns>
-    Task<IdentityResult> CreateRoleAsync(RoleUpsertRequest model, CancellationToken cancellationToken);
+    Task<IdentityResult> CreateAsync(RoleUpsertRequest model, CancellationToken cancellationToken);
 
     /// <summary>
     /// Asynchronously updates the details of an existing role identified by the specified ID.
@@ -59,7 +59,7 @@ public interface IRoleService
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
     /// the update succeeded.</returns>
-    Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken);
+    Task<IdentityResult> UpdateAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken);
 
     /// <summary>
     /// Deletes the role identified by the specified unique identifier asynchronously.
@@ -71,5 +71,5 @@ public interface IRoleService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
     /// the deletion succeeded.</returns>
-    Task<IdentityResult> DeleteRoleAsync(Guid roleId, CancellationToken cancellationToken);
+    Task<IdentityResult> DeleteAsync(Guid roleId, CancellationToken cancellationToken);
 }

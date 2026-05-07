@@ -52,7 +52,7 @@ namespace MyPortal.Services.System
             return result;
         }
 
-        public async Task<IdentityResult> CreateRoleAsync(RoleUpsertRequest model, CancellationToken cancellationToken)
+        public async Task<IdentityResult> CreateAsync(RoleUpsertRequest model, CancellationToken cancellationToken)
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
@@ -82,7 +82,7 @@ namespace MyPortal.Services.System
             return result;
         }
 
-        public async Task<IdentityResult> UpdateRoleAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken)
+        public async Task<IdentityResult> UpdateAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken)
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
@@ -119,7 +119,7 @@ namespace MyPortal.Services.System
             return result;
         }
 
-        public async Task<IdentityResult> DeleteRoleAsync(Guid roleId, CancellationToken cancellationToken)
+        public async Task<IdentityResult> DeleteAsync(Guid roleId, CancellationToken cancellationToken)
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 

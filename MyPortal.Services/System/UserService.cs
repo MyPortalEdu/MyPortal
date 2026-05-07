@@ -117,7 +117,7 @@ public class UserService : BaseService, IUserService
         return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.Password);
     }
 
-    public async Task<IdentityResult> CreateUserAsync(UserUpsertRequest model, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateAsync(UserUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
@@ -156,7 +156,7 @@ public class UserService : BaseService, IUserService
         return result;
     }
 
-    public async Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertRequest model,
+    public async Task<IdentityResult> UpdateAsync(Guid userId, UserUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
@@ -210,7 +210,7 @@ public class UserService : BaseService, IUserService
         return result;
     }
 
-    public async Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<IdentityResult> DeleteAsync(Guid userId, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 

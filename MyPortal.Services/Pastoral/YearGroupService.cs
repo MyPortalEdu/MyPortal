@@ -54,7 +54,7 @@ public class YearGroupService : BaseService, IYearGroupService
         return result.Header;
     }
 
-    public async Task<Guid> CreateYearGroupAsync(YearGroupUpsertRequest model,
+    public async Task<Guid> CreateAsync(YearGroupUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
@@ -78,7 +78,7 @@ public class YearGroupService : BaseService, IYearGroupService
         }, cancellationToken);
     }
 
-    public async Task UpdateYearGroupAsync(Guid id, YearGroupUpsertRequest model,
+    public async Task UpdateAsync(Guid id, YearGroupUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
@@ -96,7 +96,7 @@ public class YearGroupService : BaseService, IYearGroupService
         }, cancellationToken);
     }
 
-    public async Task DeleteYearGroupAsync(Guid id, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
             cancellationToken);

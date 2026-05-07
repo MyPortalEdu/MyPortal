@@ -54,7 +54,7 @@ public class HouseService : BaseService, IHouseService
         return result.Header;
     }
 
-    public async Task<Guid> CreateHouseAsync(HouseUpsertRequest model, CancellationToken cancellationToken)
+    public async Task<Guid> CreateAsync(HouseUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
             cancellationToken);
@@ -77,7 +77,7 @@ public class HouseService : BaseService, IHouseService
         }, cancellationToken);
     }
 
-    public async Task UpdateHouseAsync(Guid id, HouseUpsertRequest model, CancellationToken cancellationToken)
+    public async Task UpdateAsync(Guid id, HouseUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
             cancellationToken);
@@ -94,7 +94,7 @@ public class HouseService : BaseService, IHouseService
         }, cancellationToken);
     }
 
-    public async Task DeleteHouseAsync(Guid id, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
             cancellationToken);

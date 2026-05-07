@@ -53,7 +53,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
     public async Task<IActionResult> CreateBulletinAsync([FromBody] BulletinUpsertRequest model)
     {
-        var result = await _bulletinService.CreateBulletinAsync(model, CancellationToken);
+        var result = await _bulletinService.CreateAsync(model, CancellationToken);
 
         return Ok(result);
     }
@@ -65,7 +65,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     public async Task<IActionResult> UpdateBulletinAsync([FromRoute] Guid bulletinId,
         [FromBody] BulletinUpsertRequest model)
     {
-        await _bulletinService.UpdateBulletinAsync(bulletinId, model, CancellationToken);
+        await _bulletinService.UpdateAsync(bulletinId, model, CancellationToken);
 
         return NoContent();
     }
@@ -88,7 +88,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
     public async Task<IActionResult> DeleteBulletinAsync([FromRoute] Guid bulletinId)
     {
-        await _bulletinService.DeleteBulletinAsync(bulletinId, CancellationToken);
+        await _bulletinService.DeleteAsync(bulletinId, CancellationToken);
 
         return NoContent();
     }

@@ -11,7 +11,7 @@ public interface IHouseService
         FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default);
     Task<HouseDetailsResponse> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<Guid> CreateHouseAsync(HouseUpsertRequest model, CancellationToken cancellationToken);
-    Task UpdateHouseAsync(Guid id, HouseUpsertRequest model, CancellationToken cancellationToken);
-    Task DeleteHouseAsync(Guid id, CancellationToken cancellationToken);
+    Task<Guid> CreateAsync(HouseUpsertRequest model, CancellationToken cancellationToken);
+    Task UpdateAsync(Guid id, HouseUpsertRequest model, CancellationToken cancellationToken);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

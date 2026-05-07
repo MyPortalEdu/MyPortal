@@ -5,11 +5,11 @@ namespace MyPortal.Services.Interfaces.Documents
 {
     public interface IDirectoryService
     {
-        Task<DirectoryDetailsResponse> CreateDirectoryAsync(DirectoryUpsertRequest model,
+        Task<DirectoryDetailsResponse> CreateAsync(DirectoryUpsertRequest model,
             CancellationToken cancellationToken, IUnitOfWork? uow = null);
-        Task<DirectoryDetailsResponse> UpdateDirectoryAsync(Guid directoryId, DirectoryUpsertRequest model,
+        Task<DirectoryDetailsResponse> UpdateAsync(Guid directoryId, DirectoryUpsertRequest model,
             CancellationToken cancellationToken);
-        Task DeleteDirectoryAsync(Guid directoryId, CancellationToken cancellationToken, IUnitOfWork? uow = null);
+        Task DeleteAsync(Guid directoryId, CancellationToken cancellationToken, IUnitOfWork? uow = null);
         Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId, CancellationToken cancellationToken);
         Task<DirectoryDetailsResponse?> TryGetDirectoryByIdAsync(Guid directoryId,
             CancellationToken cancellationToken);

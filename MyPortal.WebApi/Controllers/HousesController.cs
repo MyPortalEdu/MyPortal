@@ -51,7 +51,7 @@ public sealed class HousesController : BaseApiController<HousesController>
     [Permission(PermissionMode.RequireAny, Permissions.School.EditPastoralStructure)]
     public async Task<IActionResult> CreateAsync([FromBody] HouseUpsertRequest model)
     {
-        var id = await _houseService.CreateHouseAsync(model, CancellationToken);
+        var id = await _houseService.CreateAsync(model, CancellationToken);
 
         return Ok(new { id });
     }
@@ -62,7 +62,7 @@ public sealed class HousesController : BaseApiController<HousesController>
     [Permission(PermissionMode.RequireAny, Permissions.School.EditPastoralStructure)]
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid houseId, [FromBody] HouseUpsertRequest model)
     {
-        await _houseService.UpdateHouseAsync(houseId, model, CancellationToken);
+        await _houseService.UpdateAsync(houseId, model, CancellationToken);
 
         return NoContent();
     }
@@ -72,7 +72,7 @@ public sealed class HousesController : BaseApiController<HousesController>
     [Permission(PermissionMode.RequireAny, Permissions.School.EditPastoralStructure)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid houseId)
     {
-        await _houseService.DeleteHouseAsync(houseId, CancellationToken);
+        await _houseService.DeleteAsync(houseId, CancellationToken);
 
         return NoContent();
     }

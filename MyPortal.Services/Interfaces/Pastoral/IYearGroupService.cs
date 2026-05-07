@@ -11,7 +11,7 @@ public interface IYearGroupService
         FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default);
     Task<YearGroupDetailsResponse> GetDetailsByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<Guid> CreateYearGroupAsync(YearGroupUpsertRequest model, CancellationToken cancellationToken);
-    Task UpdateYearGroupAsync(Guid id, YearGroupUpsertRequest model, CancellationToken cancellationToken);
-    Task DeleteYearGroupAsync(Guid id, CancellationToken cancellationToken);
+    Task<Guid> CreateAsync(YearGroupUpsertRequest model, CancellationToken cancellationToken);
+    Task UpdateAsync(Guid id, YearGroupUpsertRequest model, CancellationToken cancellationToken);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

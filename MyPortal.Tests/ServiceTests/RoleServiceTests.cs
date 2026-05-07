@@ -77,7 +77,7 @@ public class RoleServiceTests
     }
 
     [Test]
-    public async Task CreateRoleAsync_ValidatesModel_ThenCreatesRole_AndAssignsPermissions()
+    public async Task CreateAsync_ValidatesModel_ThenCreatesRole_AndAssignsPermissions()
     {
         var permId1 = Guid.NewGuid();
         var permId2 = Guid.NewGuid();
@@ -96,7 +96,7 @@ public class RoleServiceTests
             .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
 
-        var result = await _roleService.CreateRoleAsync(model, CancellationToken.None);
+        var result = await _roleService.CreateAsync(model, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.True);
         _validationService.Verify(v => v.ValidateAsync(model), Times.Once);
@@ -111,7 +111,7 @@ public class RoleServiceTests
     }
 
     [Test]
-    public async Task CreateRoleAsync_DoesNotAssignPermissions_WhenRoleManagerFails()
+    public async Task CreateAsync_DoesNotAssignPermissions_WhenRoleManagerFails()
     {
         var model = new RoleUpsertRequest
         {
@@ -122,7 +122,7 @@ public class RoleServiceTests
         _roleManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationRole>()))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Code = "X", Description = "no" }));
 
-        var result = await _roleService.CreateRoleAsync(model, CancellationToken.None);
+        var result = await _roleService.CreateAsync(model, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.False);
         _rolePermissionRepository.Verify(r => r.GetByRoleIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
@@ -132,7 +132,7 @@ public class RoleServiceTests
     }
 
     [Test]
-    public async Task UpdateRoleAsync_ValidatesModel_AndUpdatesPermissions()
+    public async Task UpdateAsync_ValidatesModel_AndUpdatesPermissions()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "Old", IsSystem = false };
@@ -165,7 +165,7 @@ public class RoleServiceTests
             PermissionIds = new List<Guid> { keptPermId, addedPermId }
         };
 
-        var result = await _roleService.UpdateRoleAsync(roleId, model, CancellationToken.None);
+        var result = await _roleService.UpdateAsync(roleId, model, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.True);
         Assert.That(role.Name, Is.EqualTo("New"));
@@ -183,30 +183,30 @@ public class RoleServiceTests
     }
 
     [Test]
-    public void UpdateRoleAsync_Throws_NotFound_WhenRoleMissing()
+    public void UpdateAsync_Throws_NotFound_WhenRoleMissing()
     {
         var roleId = Guid.NewGuid();
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync((ApplicationRole?)null);
 
-        Assert.That(async () => await _roleService.UpdateRoleAsync(roleId, new RoleUpsertRequest { Name = "X" },
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest { Name = "X" },
                 CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("Role not found."));
     }
 
     [Test]
-    public void UpdateRoleAsync_Throws_SystemEntityException_WhenRoleIsSystem()
+    public void UpdateAsync_Throws_SystemEntityException_WhenRoleIsSystem()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "System Administrator", IsSystem = true };
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
 
-        Assert.That(async () => await _roleService.UpdateRoleAsync(roleId, new RoleUpsertRequest { Name = "X" },
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest { Name = "X" },
                 CancellationToken.None),
             Throws.TypeOf<SystemEntityException>());
     }
 
     [Test]
-    public async Task DeleteRoleAsync_DeletesPermissions_AndRole_AndInvalidatesCache()
+    public async Task DeleteAsync_DeletesPermissions_AndRole_AndInvalidatesCache()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "Custom", IsSystem = false };
@@ -220,7 +220,7 @@ public class RoleServiceTests
             .ReturnsAsync(true);
         _roleManager.Setup(m => m.DeleteAsync(role)).ReturnsAsync(IdentityResult.Success);
 
-        var result = await _roleService.DeleteRoleAsync(roleId, CancellationToken.None);
+        var result = await _roleService.DeleteAsync(roleId, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.True);
         _rolePermissionRepository.Verify(r => r.DeleteAsync(existingRolePermission.Id,
@@ -230,7 +230,7 @@ public class RoleServiceTests
     }
 
     [Test]
-    public async Task DeleteRoleAsync_DoesNotInvalidateCache_WhenRoleManagerFails()
+    public async Task DeleteAsync_DoesNotInvalidateCache_WhenRoleManagerFails()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "Custom", IsSystem = false };
@@ -241,30 +241,30 @@ public class RoleServiceTests
         _roleManager.Setup(m => m.DeleteAsync(role))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Code = "X", Description = "no" }));
 
-        var result = await _roleService.DeleteRoleAsync(roleId, CancellationToken.None);
+        var result = await _roleService.DeleteAsync(roleId, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.False);
         _rolePermissionCache.Verify(c => c.Invalidate(It.IsAny<Guid>()), Times.Never);
     }
 
     [Test]
-    public void DeleteRoleAsync_Throws_NotFound_WhenRoleMissing()
+    public void DeleteAsync_Throws_NotFound_WhenRoleMissing()
     {
         var roleId = Guid.NewGuid();
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync((ApplicationRole?)null);
 
-        Assert.That(async () => await _roleService.DeleteRoleAsync(roleId, CancellationToken.None),
+        Assert.That(async () => await _roleService.DeleteAsync(roleId, CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("Role not found."));
     }
 
     [Test]
-    public void DeleteRoleAsync_Throws_SystemEntityException_WhenRoleIsSystem()
+    public void DeleteAsync_Throws_SystemEntityException_WhenRoleIsSystem()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "System Administrator", IsSystem = true };
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
 
-        Assert.That(async () => await _roleService.DeleteRoleAsync(roleId, CancellationToken.None),
+        Assert.That(async () => await _roleService.DeleteAsync(roleId, CancellationToken.None),
             Throws.TypeOf<SystemEntityException>());
     }
 }

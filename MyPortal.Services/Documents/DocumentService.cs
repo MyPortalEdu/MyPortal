@@ -45,7 +45,7 @@ public class DocumentService : BaseService, IDocumentService
 
     private long MaxFileSizeBytes => _fileStorageOptions.Value.MaxFileSizeBytes;
 
-    public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model,
+    public async Task<DocumentDetailsResponse> CreateAsync(DocumentUpsertRequest model,
         CancellationToken cancellationToken)
     {
         if (model.Content == null || model.SizeBytes <= 0 || !model.Content.CanRead)
@@ -102,7 +102,7 @@ public class DocumentService : BaseService, IDocumentService
         return response;
     }
 
-    public async Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model,
+    public async Task<DocumentDetailsResponse> UpdateAsync(Guid documentId, DocumentUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await _validationService.ValidateAsync(model);
@@ -207,7 +207,7 @@ public class DocumentService : BaseService, IDocumentService
         return response;
     }
         
-    public async Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true)
+    public async Task DeleteAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true)
     {
         var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
 

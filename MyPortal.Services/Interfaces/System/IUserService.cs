@@ -81,7 +81,7 @@ public interface IUserService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
     /// the user creation succeeded or failed.</returns>
-    Task<IdentityResult> CreateUserAsync(UserUpsertRequest model, CancellationToken cancellationToken);
+    Task<IdentityResult> CreateAsync(UserUpsertRequest model, CancellationToken cancellationToken);
     
     /// <summary>
     /// Asynchronously updates the user identified by the specified user ID with the provided data.
@@ -94,7 +94,7 @@ public interface IUserService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the update operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
     /// the update succeeded and any associated errors.</returns>
-    Task<IdentityResult> UpdateUserAsync(Guid userId, UserUpsertRequest model, CancellationToken cancellationToken);
+    Task<IdentityResult> UpdateAsync(Guid userId, UserUpsertRequest model, CancellationToken cancellationToken);
     
     /// <summary>
     /// Asynchronously deletes the user identified by the specified unique identifier.
@@ -103,5 +103,5 @@ public interface IUserService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
     /// <returns>A task that represents the asynchronous delete operation. The task result contains an IdentityResult indicating
     /// whether the deletion succeeded.</returns>
-    Task<IdentityResult> DeleteUserAsync(Guid userId, CancellationToken cancellationToken);
+    Task<IdentityResult> DeleteAsync(Guid userId, CancellationToken cancellationToken);
 }
