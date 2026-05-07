@@ -1,6 +1,6 @@
 namespace MyPortal.Contracts.Models.Pastoral;
 
-public class HouseSupervisorResponse
+public class StudentGroupSupervisorResponse
 {
     public Guid Id { get; set; }
     public Guid StaffMemberId { get; set; }

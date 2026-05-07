@@ -59,7 +59,7 @@ public class HouseRepository : EntityRepository<House>, IHouseRepository
             return null;
         }
 
-        var supervisors = (await reader.ReadAsync<HouseSupervisorResponse>()).ToList();
+        var supervisors = (await reader.ReadAsync<StudentGroupSupervisorResponse>()).ToList();
 
         return new HouseDetailsResult
         {

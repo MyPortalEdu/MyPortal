@@ -24,6 +24,6 @@ public interface IHouseRepository : IEntityRepository<House>
 public class HouseDetailsResult
 {
     public HouseDetailsResponse Header { get; set; } = null!;
-    public IList<HouseSupervisorResponse> Supervisors { get; set; } = new List<HouseSupervisorResponse>();
+    public IList<StudentGroupSupervisorResponse> Supervisors { get; set; } = new List<StudentGroupSupervisorResponse>();
 }
 

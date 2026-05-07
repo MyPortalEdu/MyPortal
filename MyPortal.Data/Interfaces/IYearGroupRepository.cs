@@ -26,5 +26,5 @@ public interface IYearGroupRepository : IEntityRepository<YearGroup>
 public class YearGroupDetailsResult
 {
     public YearGroupDetailsResponse Header { get; set; } = null!;
-    public IList<YearGroupSupervisorResponse> Supervisors { get; set; } = new List<YearGroupSupervisorResponse>();
+    public IList<StudentGroupSupervisorResponse> Supervisors { get; set; } = new List<StudentGroupSupervisorResponse>();
 }

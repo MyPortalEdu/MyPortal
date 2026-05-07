@@ -60,7 +60,7 @@ public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupReposi
             return null;
         }
 
-        var supervisors = (await reader.ReadAsync<YearGroupSupervisorResponse>()).ToList();
+        var supervisors = (await reader.ReadAsync<StudentGroupSupervisorResponse>()).ToList();
 
         return new YearGroupDetailsResult
         {
