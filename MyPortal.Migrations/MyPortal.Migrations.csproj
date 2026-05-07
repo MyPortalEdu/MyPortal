@@ -130,6 +130,8 @@
     <EmbeddedResource Include="Sql\StoredProcedures\sp_reg_group_get_by_academic_year_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_year_group_get_by_academic_year_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_year_group_get_by_academic_year_id.sql" />
+    <None Remove="Sql\StoredProcedures\sp_year_group_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\sp_year_group_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_house_get_by_academic_year_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\sp_house_get_by_academic_year_id.sql" />
     <None Remove="Sql\StoredProcedures\sp_house_get_details_by_id.sql" />

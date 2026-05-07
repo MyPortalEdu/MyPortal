@@ -66,6 +66,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITimetableService, TimetableService>();
         services.AddScoped<ITimetableSolveService, TimetableSolveService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IYearGroupService, YearGroupService>();
 
         services.AddScoped<IDirectoryEntityService<Bulletin>, BulletinService>();
     }

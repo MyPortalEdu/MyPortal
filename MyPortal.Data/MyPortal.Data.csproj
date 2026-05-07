@@ -20,6 +20,8 @@
     <EmbeddedResource Include="Sql\Bulletins\GetBulletinSummaries.sql" />
     <None Remove="Sql\Pastoral\GetHouseSummaries.sql" />
     <EmbeddedResource Include="Sql\Pastoral\GetHouseSummaries.sql" />
+    <None Remove="Sql\Pastoral\GetYearGroupSummaries.sql" />
+    <EmbeddedResource Include="Sql\Pastoral\GetYearGroupSummaries.sql" />
   </ItemGroup>
 
   <ItemGroup>
