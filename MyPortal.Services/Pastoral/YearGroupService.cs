@@ -49,9 +49,7 @@ public class YearGroupService : BaseService, IYearGroupService
 
         var result = await _yearGroupRepository.GetDetailsByIdAsync(id, cancellationToken)
                      ?? throw new NotFoundException("Year group not found.");
-
-        result.Header.Supervisors = result.Supervisors;
-        return result.Header;
+        return result;
     }
 
     public async Task<Guid> CreateAsync(YearGroupUpsertRequest model,

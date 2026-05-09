@@ -10,7 +10,7 @@ public interface IRegGroupService
     Task<PageResult<RegGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
         FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default);
-    Task<RegGroupSummaryResponse> GetDetailsByIdAsync(Guid regGroupId,
+    Task<RegGroupDetailsResponse> GetDetailsByIdAsync(Guid regGroupId,
         CancellationToken cancellationToken);
 
     Task<Guid> CreateAsync(RegGroupUpsertRequest model, CancellationToken cancellationToken);

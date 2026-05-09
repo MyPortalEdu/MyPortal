@@ -19,12 +19,6 @@ public interface IYearGroupRepository : IEntityRepository<YearGroup>
     // Returns null when the year group doesn't exist (caller maps to 404). Internal
     // carrier bundles the header + supervisors so the service can flatten into
     // YearGroupDetailsResponse.
-    Task<YearGroupDetailsResult?> GetDetailsByIdAsync(Guid yearGroupId,
+    Task<YearGroupDetailsResponse?> GetDetailsByIdAsync(Guid yearGroupId,
         CancellationToken cancellationToken);
-}
-
-public class YearGroupDetailsResult
-{
-    public YearGroupDetailsResponse Header { get; set; } = null!;
-    public IList<StudentGroupSupervisorResponse> Supervisors { get; set; } = new List<StudentGroupSupervisorResponse>();
 }

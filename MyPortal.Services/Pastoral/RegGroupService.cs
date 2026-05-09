@@ -32,15 +32,30 @@ public class RegGroupService : BaseService, IRegGroupService
         _studentGroupService = studentGroupService;
     }
 
-    public async Task<PageResult<RegGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId, FilterOptions? filter = null, SortOptions? sort = null,
+    public async Task<PageResult<RegGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
+        FilterOptions? filter = null, SortOptions? sort = null,
         PageOptions? paging = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure, cancellationToken);
+
+        var result =
+            await _regGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging, cancellationToken);
+
+        return result;
     }
 
-    public async Task<RegGroupSummaryResponse> GetDetailsByIdAsync(Guid regGroupId, CancellationToken cancellationToken)
+    public async Task<RegGroupDetailsResponse> GetDetailsByIdAsync(Guid regGroupId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure, cancellationToken);
+        
+        var result = await _regGroupRepository.GetDetailsByIdAsync(regGroupId, cancellationToken);
+
+        if (result == null)
+        {
+            throw new NotFoundException("Reg group not found.");
+        }
+
+        return result;
     }
 
     public async Task<Guid> CreateAsync(RegGroupUpsertRequest model, CancellationToken cancellationToken)

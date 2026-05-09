@@ -43,7 +43,7 @@ public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupReposi
             filter, sort, paging, false, cancellationToken);
     }
 
-    public async Task<YearGroupDetailsResult?> GetDetailsByIdAsync(Guid yearGroupId,
+    public async Task<YearGroupDetailsResponse?> GetDetailsByIdAsync(Guid yearGroupId,
         CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
@@ -62,10 +62,8 @@ public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupReposi
 
         var supervisors = (await reader.ReadAsync<StudentGroupSupervisorResponse>()).ToList();
 
-        return new YearGroupDetailsResult
-        {
-            Header = header,
-            Supervisors = supervisors
-        };
+        header.Supervisors = supervisors;
+
+        return header;
     }
 }
