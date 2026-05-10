@@ -1,13 +1,20 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
-import { Observable } from 'rxjs';
+import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { MeService } from '../../../core/services/me-service';
+import { SchoolService } from '../../../core/services/school-service';
+import { AcademicYearService } from '../../../core/services/academic-year-service';
 import { AsyncPipe } from '@angular/common';
 import { ButtonDirective, ButtonIcon } from 'primeng/button';
 import { RouterLink } from '@angular/router';
 import { Popover } from 'primeng/popover';
 import { UserType } from '../../../core/enums/user-type';
 import { Me } from '../../../core/interfaces/me';
+
+interface SiteLabel {
+  school: string | null;
+  year: string | null;
+}
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -22,15 +29,30 @@ export class Topbar implements OnInit {
   @Output() menuToggle = new EventEmitter<void>();
 
   me$!: Observable<Me>;
+  siteLabel$!: Observable<SiteLabel>;
   theme: Theme = 'system';
 
   // TODO: wire to the current-academic-year service once a switcher flow exists.
   currentAcademicYear = '2025/26';
 
-  constructor(private me: MeService) {}
+  constructor(
+    private me: MeService,
+    private schools: SchoolService,
+    private academicYears: AcademicYearService,
+  ) {}
 
   ngOnInit(): void {
     this.me$ = this.me.me();
+
+    // Either request can 403 for users without view permissions (e.g. students for
+    // academic years); fall back to null so the label just hides that segment.
+    this.siteLabel$ = combineLatest([
+      this.schools.getLocalName().pipe(catchError(() => of<string | null>(null))),
+      this.academicYears.getCurrent().pipe(catchError(() => of(null))),
+    ]).pipe(
+      map(([school, year]) => ({ school, year: year?.name ?? null })),
+    );
+
     this.theme = (localStorage.getItem('mp:theme') as Theme | null) ?? 'system';
     this.applyTheme();
 

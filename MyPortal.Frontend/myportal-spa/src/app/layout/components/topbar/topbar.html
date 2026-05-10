@@ -23,6 +23,22 @@
       </svg>
       <span class="text-base md:text-lg font-semibold tracking-tight">MyPortal</span>
     </a>
+
+    @if (siteLabel$ | async; as label) {
+      @if (label.school || label.year) {
+        <div
+          class="hidden md:flex items-center gap-1.5 text-sm
+                 text-[var(--p-text-color)] opacity-75
+                 border-l border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]
+                 pl-3 ml-1 truncate"
+          aria-label="Context"
+        >
+          @if (label.school) { <span class="truncate">{{ label.school }}</span> }
+          @if (label.school && label.year) { <span aria-hidden="true">•</span> }
+          @if (label.year) { <span class="truncate">{{ label.year }}</span> }
+        </div>
+      }
+    }
   </div>
 
   <!-- right -->
