@@ -20,14 +20,116 @@
   <!-- right -->
   <div class="flex items-center gap-2 sm:gap-3">
     @if (me$ | async; as me) {
-      <span class="hidden sm:inline text-sm opacity-70">{{ me.displayName }}</span>
-
-      <!-- popup user menu -->
-      <p-menu #menu [model]="userMenu" [popup]="true"></p-menu>
-
-      <button pButton class="!p-0 !rounded-full w-9 h-9" (click)="menu.toggle($event)" aria-label="User menu">
-        <p-avatar shape="circle" [label]="(me.displayName || 'U').slice(0,1) | uppercase"></p-avatar>
+      <button pButton class="!p-0 !rounded-full w-9 h-9" (click)="userMenu.toggle($event)" aria-label="User menu">
+        <p-avatar
+          shape="circle"
+          [label]="initials(me.displayName)"
+          styleClass="!bg-indigo-500 !text-white !w-9 !h-9 !text-sm font-medium"
+        ></p-avatar>
       </button>
+
+      <p-popover #userMenu styleClass="user-menu-popover">
+        <div class="w-72">
+          <!-- Header -->
+          <div class="flex items-center gap-3 p-4">
+            <p-avatar
+              shape="circle"
+              [label]="initials(me.displayName)"
+              size="large"
+              styleClass="!bg-indigo-500 !text-white !w-12 !h-12 !text-base font-semibold"
+            ></p-avatar>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold truncate">{{ me.displayName }}</span>
+                @if (userTypeLabel(me.userType); as label) {
+                  <span class="text-xs px-2 py-0.5 rounded
+                               bg-indigo-100 text-indigo-700
+                               dark:bg-indigo-900/40 dark:text-indigo-300">{{ label }}</span>
+                }
+              </div>
+              @if (me.email) {
+                <div class="text-sm opacity-70 truncate">{{ me.email }}</div>
+              }
+            </div>
+          </div>
+
+          <div class="border-t border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]"></div>
+
+          <!-- Main actions -->
+          <ul class="py-1 list-none m-0 p-0">
+            <li>
+              <a routerLink="/portal/profile" (click)="userMenu.hide()" class="menu-row">
+                <i class="pi pi-user"></i>
+                <span class="flex-1">Profile</span>
+              </a>
+            </li>
+            <li>
+              <a routerLink="/portal/settings" (click)="userMenu.hide()" class="menu-row">
+                <i class="pi pi-cog"></i>
+                <span class="flex-1">Account settings</span>
+              </a>
+            </li>
+            <!--<li>
+              <button type="button" class="menu-row" (click)="onSwitchAcademicYear()">
+                <i class="pi pi-calendar"></i>
+                <span class="flex-1 text-left">Switch academic year</span>
+                <span class="text-sm opacity-70">{{ currentAcademicYear }}</span>
+                <i class="pi pi-chevron-right text-xs opacity-60"></i>
+              </button>
+            </li>-->
+            <li class="px-4 py-2 flex items-center gap-3 text-sm">
+              <i class="pi pi-palette opacity-75"></i>
+              <span class="flex-1">Theme</span>
+              <div class="theme-switch">
+                <button
+                  type="button"
+                  class="theme-btn"
+                  [class.active]="theme === 'light'"
+                  (click)="setTheme('light')"
+                  aria-label="Light"
+                >
+                  <i class="pi pi-sun"></i>
+                </button>
+                <button
+                  type="button"
+                  class="theme-btn"
+                  [class.active]="theme === 'dark'"
+                  (click)="setTheme('dark')"
+                  aria-label="Dark"
+                >
+                  <i class="pi pi-moon"></i>
+                </button>
+                <button
+                  type="button"
+                  class="theme-btn"
+                  [class.active]="theme === 'system'"
+                  (click)="setTheme('system')"
+                  aria-label="System"
+                >
+                  <i class="pi pi-desktop"></i>
+                </button>
+              </div>
+            </li>
+            <li>
+              <a routerLink="/portal/help" (click)="userMenu.hide()" class="menu-row">
+                <i class="pi pi-question-circle"></i>
+                <span class="flex-1">Help &amp; support</span>
+              </a>
+            </li>
+          </ul>
+
+          <div class="border-t border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]"></div>
+
+          <ul class="py-1 list-none m-0 p-0">
+            <li>
+              <button type="button" class="menu-row menu-row--danger" (click)="logout()">
+                <i class="pi pi-sign-out"></i>
+                <span class="flex-1 text-left">Sign out</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </p-popover>
     }
   </div>
 </div>

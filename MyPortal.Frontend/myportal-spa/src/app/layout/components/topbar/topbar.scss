@@ -1,1 +1,136 @@
 :host { display: contents; }
+
+// PrimeNG's Popover portals its content to document.body, AND Angular's view
+// encapsulation rewrites every non-pseudo selector to include the [_ngcontent-X]
+// attribute — including `.mp-dark`. Since `.mp-dark` lives on <html> and doesn't
+// have that attribute, ancestor-style dark-mode rules never match. ::ng-deep
+// opts the entire selector chain out of encapsulation, so the rules apply to
+// the portaled popover content regardless of where it ends up in the DOM.
+// All popover-content styles are scoped under `.user-menu-popover` to avoid
+// leaking globally.
+
+::ng-deep .user-menu-popover {
+  border-radius: 0.875rem;
+
+  .p-popover-content {
+    padding: 0 !important;
+    border-radius: 0.875rem;
+    overflow: hidden;
+  }
+
+  // Inset the menu rows from the popover edges so their hover backgrounds can
+  // round without bleeding into the popover border. The lists own the inset;
+  // each row inside fills the resulting content area at 100% width.
+  ul {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .menu-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: inherit;
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    outline: none;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--p-surface-100);
+    }
+
+    i {
+      font-size: 0.95rem;
+      opacity: 0.75;
+    }
+  }
+
+  .menu-row--danger {
+    color: rgb(220 38 38); // tailwind red-600
+
+    i {
+      opacity: 1;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: rgb(254 242 242); // tailwind red-50
+    }
+  }
+
+  .theme-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: 0.125rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--p-surface-200);
+    background: var(--p-surface-50);
+  }
+
+  .theme-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.6;
+    transition: opacity 120ms, background-color 120ms;
+
+    i {
+      font-size: 0.8rem;
+    }
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &.active {
+      background: var(--p-surface-0);
+      opacity: 1;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+::ng-deep .mp-dark .user-menu-popover {
+  .menu-row {
+    &:hover,
+    &:focus-visible {
+      background: var(--p-surface-800);
+    }
+  }
+
+  .menu-row--danger {
+    color: rgb(248 113 113); // tailwind red-400
+
+    &:hover,
+    &:focus-visible {
+      background: rgb(127 29 29 / 0.35); // tailwind red-900 with transparency
+    }
+  }
+
+  .theme-switch {
+    border-color: var(--p-surface-700);
+    background: var(--p-surface-800);
+  }
+
+  .theme-btn.active {
+    background: var(--p-surface-900);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+}
