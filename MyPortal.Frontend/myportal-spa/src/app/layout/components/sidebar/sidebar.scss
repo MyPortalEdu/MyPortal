@@ -82,6 +82,14 @@
   }
 }
 
+// Rail mode: icon-only, centered. Existing `.active` rules still apply, so a
+// group with `hasActiveChild` gets the indigo accent bar and icon tint for free.
+.nav-row--rail {
+  justify-content: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
 // Dark mode
 :host-context(.mp-dark) .nav-row {
   &:hover,

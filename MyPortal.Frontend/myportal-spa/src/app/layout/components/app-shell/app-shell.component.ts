@@ -14,6 +14,7 @@ import { ButtonDirective } from 'primeng/button';
 export class AppShell implements OnInit, OnDestroy {
   isDesktop = false;
   sidebarOpen = false;
+  sidebarCollapsed = false;
 
   private mq = window.matchMedia('(min-width: 1024px)');
   private mqHandler = (e: MediaQueryListEvent) => {
@@ -25,6 +26,7 @@ export class AppShell implements OnInit, OnDestroy {
   ngOnInit() {
     this.setDesktop(this.mq.matches);
     this.mq.addEventListener('change', this.mqHandler);
+    this.sidebarCollapsed = localStorage.getItem('mp:sidebar') === 'collapsed';
   }
 
   ngOnDestroy() {
@@ -36,6 +38,22 @@ export class AppShell implements OnInit, OnDestroy {
     this.sidebarOpen = flag; // open by default on desktop, closed on mobile
   }
 
-  toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; }
-  closeSidebar()  { if (!this.isDesktop) this.sidebarOpen = false; }
+  // On desktop the burger collapses/expands the rail; on mobile it opens the drawer.
+  toggleSidebar() {
+    if (this.isDesktop) {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+      localStorage.setItem('mp:sidebar', this.sidebarCollapsed ? 'collapsed' : 'expanded');
+    } else {
+      this.sidebarOpen = !this.sidebarOpen;
+    }
+  }
+
+  expandSidebar() {
+    if (this.isDesktop && this.sidebarCollapsed) {
+      this.sidebarCollapsed = false;
+      localStorage.setItem('mp:sidebar', 'expanded');
+    }
+  }
+
+  closeSidebar() { if (!this.isDesktop) this.sidebarOpen = false; }
 }

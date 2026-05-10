@@ -8,18 +8,25 @@
             <button
               type="button"
               class="nav-row"
+              [class.nav-row--rail]="collapsed"
+              [class.active]="collapsed && hasActiveChild(item)"
               (click)="toggle(item)"
-              [attr.aria-expanded]="isExpanded(item)"
+              [attr.aria-expanded]="!collapsed && isExpanded(item)"
+              [pTooltip]="item.label ?? ''"
+              tooltipPosition="right"
+              [tooltipDisabled]="!collapsed"
             >
               @if (item.icon) { <i [class]="item.icon"></i> }
-              <span class="flex-1 text-left">{{ item.label }}</span>
-              <i
-                class="pi pi-chevron-right nav-chevron"
-                [class.expanded]="isExpanded(item)"
-              ></i>
+              @if (!collapsed) {
+                <span class="flex-1 text-left">{{ item.label }}</span>
+                <i
+                  class="pi pi-chevron-right nav-chevron"
+                  [class.expanded]="isExpanded(item)"
+                ></i>
+              }
             </button>
 
-            @if (isExpanded(item)) {
+            @if (!collapsed && isExpanded(item)) {
               <ul class="list-none m-0 p-0 flex flex-col gap-0.5 mt-0.5">
                 @for (child of item.items!; track child.label) {
                   <li>
@@ -44,9 +51,15 @@
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: isExactMatch(item) }"
               class="nav-row"
+              [class.nav-row--rail]="collapsed"
+              [pTooltip]="item.label ?? ''"
+              tooltipPosition="right"
+              [tooltipDisabled]="!collapsed"
             >
               @if (item.icon) { <i [class]="item.icon"></i> }
-              <span class="flex-1">{{ item.label }}</span>
+              @if (!collapsed) {
+                <span class="flex-1">{{ item.label }}</span>
+              }
             </a>
           </li>
         }
