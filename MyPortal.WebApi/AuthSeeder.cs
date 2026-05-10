@@ -21,38 +21,46 @@ public static class AuthSeeder
         var env     = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
         var config  = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        if (await manager.FindByClientIdAsync("myportal-client") is null)
+        // Build the descriptor every run so changes here (new redirect URIs, scopes,
+        // permissions) flow into the existing client without requiring a DB reset.
+        var desc = new OpenIddictApplicationDescriptor
         {
-            var desc = new OpenIddictApplicationDescriptor
+            ClientId = "myportal-client",
+            DisplayName = "MyPortal Public Client",
+            ClientType = OpenIddictConstants.ClientTypes.Public,
+            ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
+            Permissions =
             {
-                ClientId = "myportal-client",
-                DisplayName = "MyPortal Public Client",
-                ClientType = OpenIddictConstants.ClientTypes.Public,
-                ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
-                Permissions =
-                {
-                    OpenIddictConstants.Permissions.Endpoints.Token,
-                    OpenIddictConstants.Permissions.Endpoints.Authorization,
-                    OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
-                    OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-                    OpenIddictConstants.Permissions.ResponseTypes.Code,
-                    OpenIddictConstants.Permissions.Scopes.Email,
-                    OpenIddictConstants.Permissions.Scopes.Profile,
-                    $"{OpenIddictConstants.Permissions.Prefixes.Scope}{OpenIddictConstants.Scopes.OfflineAccess}",
-                    $"{OpenIddictConstants.Permissions.Prefixes.Scope}api"
-                },
-                Requirements =
-                {
-                    OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange
-                }
-            };
-
-            if (env.IsDevelopment())
+                OpenIddictConstants.Permissions.Endpoints.Token,
+                OpenIddictConstants.Permissions.Endpoints.Authorization,
+                OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                OpenIddictConstants.Permissions.ResponseTypes.Code,
+                OpenIddictConstants.Permissions.Scopes.Email,
+                OpenIddictConstants.Permissions.Scopes.Profile,
+                $"{OpenIddictConstants.Permissions.Prefixes.Scope}{OpenIddictConstants.Scopes.OfflineAccess}",
+                $"{OpenIddictConstants.Permissions.Prefixes.Scope}api"
+            },
+            Requirements =
             {
-                desc.RedirectUris.Add(new Uri("https://oauth.pstmn.io/v1/callback"));
+                OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange
             }
+        };
 
+        if (env.IsDevelopment())
+        {
+            desc.RedirectUris.Add(new Uri("https://oauth.pstmn.io/v1/callback"));
+            desc.RedirectUris.Add(new Uri("https://localhost:7201/scalar/v1"));
+        }
+
+        var existingClient = await manager.FindByClientIdAsync("myportal-client");
+        if (existingClient is null)
+        {
             await manager.CreateAsync(desc);
+        }
+        else
+        {
+            await manager.UpdateAsync(existingClient, desc);
         }
         
         var connFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
