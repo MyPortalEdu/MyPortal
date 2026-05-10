@@ -23,7 +23,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
             
-            var sql = "[dbo].[sp_role_get_details_by_id]";
+            var sql = "[dbo].[usp_role_get_details_by_id]";
 
             var p = new { roleId };
             

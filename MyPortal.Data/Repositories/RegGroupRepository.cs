@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
@@ -26,7 +26,7 @@ public class RegGroupRepository : EntityRepository<RegGroup>, IRegGroupRepositor
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_reg_group_get_by_academic_year_id]";
+        var sql = @"[dbo].[usp_reg_group_get_by_academic_year_id]";
 
         var param = new { academicYearId };
 
@@ -49,7 +49,7 @@ public class RegGroupRepository : EntityRepository<RegGroup>, IRegGroupRepositor
     {
         using var conn = _factory.Create();
 
-        var command = new CommandDefinition("[dbo].[sp_reg_group_get_details_by_id]",
+        var command = new CommandDefinition("[dbo].[usp_reg_group_get_details_by_id]",
             new { regGroupId },
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 

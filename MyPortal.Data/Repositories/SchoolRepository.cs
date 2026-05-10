@@ -21,7 +21,7 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_school_get_details_local]";
+        var sql = @"[dbo].[usp_school_get_details_local]";
         var result =
             await conn.ExecuteStoredProcedureAsync<SchoolDetailsResponse>(sql, cancellationToken: cancellationToken);
 
@@ -32,7 +32,7 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_school_get_details_by_id]";
+        var sql = @"[dbo].[usp_school_get_details_by_id]";
         var p = new { schoolId };
         var result =
             await conn.ExecuteStoredProcedureAsync<SchoolDetailsResponse>(sql, p, cancellationToken: cancellationToken);

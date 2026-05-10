@@ -1,9 +1,9 @@
--- ============================================================================
+﻿-- ============================================================================
 -- Bulk-edit attendance marks support:
 --   * Attendance.EditAttendanceMarksBulk permission (reception/admin can edit
 --     any cell in a (StudentGroup, date range) grid, beyond the single-period
 --     scope of the regular register flow).
---   * BulkAttendanceMarkList TVP — input shape for sp_attendance_marks_submit_bulk.
+--   * BulkAttendanceMarkList TVP — input shape for usp_attendance_marks_submit_bulk.
 --     AttendanceCodeId is nullable: NULL signals "delete the existing mark for
 --     this (Student, Week, Period) cell" so corrections can clear an entry.
 -- ============================================================================

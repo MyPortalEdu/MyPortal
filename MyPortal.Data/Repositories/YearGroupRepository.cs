@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
@@ -27,7 +27,7 @@ public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupReposi
         using var conn = _factory.Create();
 
         var result = await conn.ExecuteStoredProcedureAsync<YearGroup>(
-            "[dbo].[sp_year_group_get_by_academic_year_id]", new { academicYearId },
+            "[dbo].[usp_year_group_get_by_academic_year_id]", new { academicYearId },
             cancellationToken: cancellationToken);
 
         return result.ToList();
@@ -48,7 +48,7 @@ public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupReposi
     {
         using var conn = _factory.Create();
 
-        var command = new CommandDefinition("[dbo].[sp_year_group_get_details_by_id]",
+        var command = new CommandDefinition("[dbo].[usp_year_group_get_details_by_id]",
             new { yearGroupId },
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 

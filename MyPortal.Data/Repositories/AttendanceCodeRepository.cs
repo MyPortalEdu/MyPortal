@@ -1,4 +1,4 @@
-using MyPortal.Auth.Interfaces;
+﻿using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
@@ -18,7 +18,7 @@ public class AttendanceCodeRepository : EntityRepository<AttendanceCode>, IAtten
     public async Task<IList<AttendanceCode>> GetByIdsAsync(IEnumerable<Guid> attendanceCodeIds,
         CancellationToken cancellationToken)
     {
-        var sql = "[dbo].[sp_attendance_code_get_by_ids]";
+        var sql = "[dbo].[usp_attendance_code_get_by_ids]";
 
         var p = new { attendanceCodeIds = attendanceCodeIds.ToGuidTvp() };
 
@@ -35,7 +35,7 @@ public class AttendanceCodeRepository : EntityRepository<AttendanceCode>, IAtten
         using var conn = _factory.Create();
 
         var rows = await conn.ExecuteStoredProcedureAsync<AttendanceCode>(
-            "[dbo].[sp_attendance_code_get_active]", parameters: null,
+            "[dbo].[usp_attendance_code_get_active]", parameters: null,
             cancellationToken: cancellationToken);
 
         return rows.ToList();

@@ -26,4 +26,23 @@
     <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\3rdpartylicenses.txt" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-5GU6TEWN.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-K73RCNQH.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-SSVOHEUM.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YOHC5UYE.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YTPQTW2T.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\favicon.ico" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\index.html" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\main-AWCIGP2M.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\polyfills-5CFQRCPP.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\styles-5INURTSO.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\prerendered-routes.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
@@ -23,7 +23,7 @@ public class AcademicTermRepository : Base.EntityRepository<AcademicTerm>, IAcad
         {
             // The SP returns no result set; pick a discardable element type.
             await conn.ExecuteStoredProcedureAsync<int>(
-                "[dbo].[sp_academic_term_delete_by_academic_year_id]",
+                "[dbo].[usp_academic_term_delete_by_academic_year_id]",
                 new { academicYearId }, transaction, cancellationToken: cancellationToken);
         }
         finally

@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
@@ -24,7 +24,7 @@ public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicY
         try
         {
             var result = await conn.ExecuteStoredProcedureAsync<DateTime?>(
-                "[dbo].[sp_academic_year_get_earliest_term_start_date_by_id]",
+                "[dbo].[usp_academic_year_get_earliest_term_start_date_by_id]",
                 new { academicYearId }, transaction, cancellationToken: cancellationToken);
 
             return result.FirstOrDefault();
@@ -42,7 +42,7 @@ public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicY
         try
         {
             var result = await conn.ExecuteStoredProcedureAsync<bool>(
-                "[dbo].[sp_academic_year_has_downstream_data_by_id]",
+                "[dbo].[usp_academic_year_has_downstream_data_by_id]",
                 new { academicYearId }, transaction, cancellationToken: cancellationToken);
 
             return result.FirstOrDefault();
@@ -60,7 +60,7 @@ public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicY
         try
         {
             var result = await conn.ExecuteStoredProcedureAsync<bool>(
-                "[dbo].[sp_academic_year_check_overlap]",
+                "[dbo].[usp_academic_year_check_overlap]",
                 new { excludeAcademicYearId, rangeStart, rangeEnd },
                 transaction, cancellationToken: cancellationToken);
 
@@ -78,7 +78,7 @@ public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicY
         using var conn = _factory.Create();
 
         var rows = await conn.ExecuteStoredProcedureAsync<AcademicYearSummaryResponse>(
-            "[dbo].[sp_academic_year_get_summaries]", parameters: null,
+            "[dbo].[usp_academic_year_get_summaries]", parameters: null,
             cancellationToken: cancellationToken);
 
         return rows.ToList();
@@ -89,7 +89,7 @@ public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicY
     {
         using var conn = _factory.Create();
 
-        var command = new CommandDefinition("[dbo].[sp_academic_year_get_details_by_id]",
+        var command = new CommandDefinition("[dbo].[usp_academic_year_get_details_by_id]",
             new { academicYearId },
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 
@@ -120,7 +120,7 @@ public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicY
         using var conn = _factory.Create();
 
         var rows = await conn.ExecuteStoredProcedureAsync<AcademicYearSummaryResponse>(
-            "[dbo].[sp_academic_year_get_current]", parameters: null,
+            "[dbo].[usp_academic_year_get_current]", parameters: null,
             cancellationToken: cancellationToken);
 
         return rows.FirstOrDefault();

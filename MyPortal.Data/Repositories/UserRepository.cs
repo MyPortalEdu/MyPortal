@@ -23,7 +23,7 @@ public class UserRepository : EntityRepository<User>, IUserRepository
     {
         using var conn = _factory.Create();
         
-        var sql = @"[dbo].[sp_user_get_details_by_id]";
+        var sql = @"[dbo].[usp_user_get_details_by_id]";
         
         var result = await conn.ExecuteStoredProcedureAsync<UserDetailsResponse>(sql, new { userId }, 
             cancellationToken: cancellationToken);
@@ -35,7 +35,7 @@ public class UserRepository : EntityRepository<User>, IUserRepository
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_user_get_info_by_id]";
+        var sql = @"[dbo].[usp_user_get_info_by_id]";
 
         var result = await conn.ExecuteStoredProcedureAsync<UserInfoResponse>(sql, new { userId }, 
             cancellationToken: cancellationToken);

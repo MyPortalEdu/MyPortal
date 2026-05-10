@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
@@ -21,7 +21,7 @@ public class AttendancePeriodRepository : EntityRepository<AttendancePeriod>, IA
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_attendance_period_get_by_academic_year_id]";
+        var sql = @"[dbo].[usp_attendance_period_get_by_academic_year_id]";
 
         var param = new { academicYearId };
 
@@ -38,7 +38,7 @@ public class AttendancePeriodRepository : EntityRepository<AttendancePeriod>, IA
         try
         {
             await conn.ExecuteStoredProcedureAsync<int>(
-                "[dbo].[sp_attendance_period_delete_by_academic_year_id]",
+                "[dbo].[usp_attendance_period_delete_by_academic_year_id]",
                 new { academicYearId }, transaction, cancellationToken: cancellationToken);
         }
         finally

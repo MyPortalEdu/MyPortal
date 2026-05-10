@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Attendance;
@@ -19,14 +19,14 @@ public class RegisterRepository : IRegisterRepository
         CancellationToken cancellationToken)
     {
         
-        return GetRegisterAsync("[dbo].[sp_register_get_lesson]",
+        return GetRegisterAsync("[dbo].[usp_register_get_lesson]",
             new { sessionPeriodId, attendanceWeekId }, cancellationToken);
     }
 
     public Task<RegisterResponse?> GetRegGroupRegisterAsync(Guid regGroupId, Guid attendancePeriodId,
         Guid attendanceWeekId, CancellationToken cancellationToken)
     {
-        return GetRegisterAsync("[dbo].[sp_register_get_reg_group]",
+        return GetRegisterAsync("[dbo].[usp_register_get_reg_group]",
             new { regGroupId, attendancePeriodId, attendanceWeekId }, cancellationToken);
     }
 
@@ -84,7 +84,7 @@ public class RegisterRepository : IRegisterRepository
     {
         using var conn = _factory.Create();
 
-        var command = new CommandDefinition("[dbo].[sp_register_submit]", parameters,
+        var command = new CommandDefinition("[dbo].[usp_register_submit]", parameters,
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 
         await conn.ExecuteAsync(command);

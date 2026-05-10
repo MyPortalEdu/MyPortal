@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Attendance;
@@ -21,7 +21,7 @@ public class AttendanceMarkRepository : IAttendanceMarkRepository
     {
         using var conn = _factory.Create();
 
-        var command = new CommandDefinition("[dbo].[sp_attendance_marks_get_bulk]",
+        var command = new CommandDefinition("[dbo].[usp_attendance_marks_get_bulk]",
             new { studentGroupId, from, to },
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 
@@ -46,7 +46,7 @@ public class AttendanceMarkRepository : IAttendanceMarkRepository
     {
         using var conn = _factory.Create();
 
-        var command = new CommandDefinition("[dbo].[sp_attendance_marks_submit_bulk]",
+        var command = new CommandDefinition("[dbo].[usp_attendance_marks_submit_bulk]",
             new
             {
                 studentGroupId,

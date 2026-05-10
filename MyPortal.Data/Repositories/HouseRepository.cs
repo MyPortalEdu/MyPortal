@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
@@ -27,7 +27,7 @@ public class HouseRepository : EntityRepository<House>, IHouseRepository
         using var conn = _factory.Create();
 
         var result = await conn.ExecuteStoredProcedureAsync<House>(
-            "[dbo].[sp_house_get_by_academic_year_id]", new { academicYearId },
+            "[dbo].[usp_house_get_by_academic_year_id]", new { academicYearId },
             cancellationToken: cancellationToken);
 
         return result.ToList();
@@ -47,7 +47,7 @@ public class HouseRepository : EntityRepository<House>, IHouseRepository
     {
         using var conn = _factory.Create();
 
-        var command = new CommandDefinition("[dbo].[sp_house_get_details_by_id]",
+        var command = new CommandDefinition("[dbo].[usp_house_get_details_by_id]",
             new { houseId },
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 

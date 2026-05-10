@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
@@ -20,7 +20,7 @@ public class StudentGroupSupervisorRepository : EntityRepository<StudentGroupSup
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_student_group_supervisor_get_by_academic_year_id]";
+        var sql = @"[dbo].[usp_student_group_supervisor_get_by_academic_year_id]";
 
         var param = new { academicYearId };
 
@@ -37,7 +37,7 @@ public class StudentGroupSupervisorRepository : EntityRepository<StudentGroupSup
         try
         {
             var result = await conn.ExecuteStoredProcedureAsync<StudentGroupSupervisor>(
-                "[dbo].[sp_student_group_supervisor_get_by_student_group_id]",
+                "[dbo].[usp_student_group_supervisor_get_by_student_group_id]",
                 new { studentGroupId }, transaction, cancellationToken: cancellationToken);
 
             return result.ToList();

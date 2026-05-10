@@ -1,16 +1,5 @@
 ﻿EXEC sp_MSforeachtable "ALTER TABLE ? NOCHECK CONSTRAINT all";
 
-MERGE INTO [dbo].[SystemSettings] AS Target
-    USING (VALUES
-    ('086f2c0a-56d5-4b60-a9d1-76253d852691', 'iBillPaymntPeriodLength', '6')
-    )
-    AS Source(Id, SystemSetting, Setting)
-    ON Target.SystemSetting = Source.SystemSetting
-
-    WHEN NOT MATCHED THEN
-    INSERT (Id, SystemSetting, Setting)
-    VALUES (Id, SystemSetting, Setting);
-
 MERGE INTO [dbo].[AspectTypes] AS Target
     USING (VALUES
     ('84F43913-ED25-4839-B130-62AC605DEBFA', 'Grade'),
