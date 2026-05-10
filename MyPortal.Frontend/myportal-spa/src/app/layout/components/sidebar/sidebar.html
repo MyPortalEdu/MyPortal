@@ -1,7 +1,56 @@
-<nav class="h-full flex flex-col text-surface-0" aria-label="Main navigation">
-  <div class="flex-1 overflow-auto p-2">
-    <p-panelMenu class="sidebar-menu" [model]="items" [multiple]="false" [transitionOptions]="'150ms'">
+<nav class="h-full flex flex-col" aria-label="Main navigation">
+  <div class="flex-1 overflow-auto py-3 px-2">
+    <ul class="list-none m-0 p-0 flex flex-col gap-0.5">
+      @for (item of items; track item.label) {
+        @if (item.items?.length) {
+          <!-- Expandable group -->
+          <li>
+            <button
+              type="button"
+              class="nav-row"
+              (click)="toggle(item)"
+              [attr.aria-expanded]="isExpanded(item)"
+            >
+              @if (item.icon) { <i [class]="item.icon"></i> }
+              <span class="flex-1 text-left">{{ item.label }}</span>
+              <i
+                class="pi pi-chevron-right nav-chevron"
+                [class.expanded]="isExpanded(item)"
+              ></i>
+            </button>
 
-    </p-panelMenu>
+            @if (isExpanded(item)) {
+              <ul class="list-none m-0 p-0 flex flex-col gap-0.5 mt-0.5">
+                @for (child of item.items!; track child.label) {
+                  <li>
+                    <a
+                      [routerLink]="child.routerLink"
+                      routerLinkActive="active"
+                      [routerLinkActiveOptions]="{ exact: isExactMatch(child) }"
+                      class="nav-row nav-row--sub"
+                    >
+                      <span class="flex-1">{{ child.label }}</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        } @else {
+          <!-- Leaf item -->
+          <li>
+            <a
+              [routerLink]="item.routerLink"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: isExactMatch(item) }"
+              class="nav-row"
+            >
+              @if (item.icon) { <i [class]="item.icon"></i> }
+              <span class="flex-1">{{ item.label }}</span>
+            </a>
+          </li>
+        }
+      }
+    </ul>
   </div>
 </nav>
