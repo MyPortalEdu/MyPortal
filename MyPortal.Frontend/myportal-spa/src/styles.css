@@ -23,3 +23,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* PrimeNG card title size override — Aura's default sits around 1.25rem which is
+   too prominent for our compact card density. Centralised here so individual
+   components don't need per-card overrides. */
+.p-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
