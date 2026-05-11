@@ -1,4 +1,4 @@
-<nav class="h-full flex flex-col" aria-label="Main navigation">
+<nav class="h-full flex flex-col" [attr.aria-label]="'sidebar.mainNav' | transloco">
   <div class="flex-1 overflow-auto py-3 px-2">
     <ul class="list-none m-0 p-0 flex flex-col gap-0.5">
       @for (item of items; track item.label) {
@@ -12,13 +12,13 @@
               [class.active]="collapsed && hasActiveChild(item)"
               (click)="toggle(item)"
               [attr.aria-expanded]="!collapsed && isExpanded(item)"
-              [pTooltip]="item.label ?? ''"
+              [pTooltip]="(item.label || '') | transloco"
               tooltipPosition="right"
               [tooltipDisabled]="!collapsed"
             >
               @if (item.icon) { <i [class]="item.icon"></i> }
               @if (!collapsed) {
-                <span class="flex-1 text-left">{{ item.label }}</span>
+                <span class="flex-1 text-left">{{ item.label | transloco }}</span>
                 <i
                   class="pi pi-chevron-right nav-chevron"
                   [class.expanded]="isExpanded(item)"
@@ -36,7 +36,7 @@
                       [routerLinkActiveOptions]="{ exact: isExactMatch(child) }"
                       class="nav-row nav-row--sub"
                     >
-                      <span class="flex-1">{{ child.label }}</span>
+                      <span class="flex-1">{{ child.label | transloco }}</span>
                     </a>
                   </li>
                 }
@@ -52,13 +52,13 @@
               [routerLinkActiveOptions]="{ exact: isExactMatch(item) }"
               class="nav-row"
               [class.nav-row--rail]="collapsed"
-              [pTooltip]="item.label ?? ''"
+              [pTooltip]="(item.label || '') | transloco"
               tooltipPosition="right"
               [tooltipDisabled]="!collapsed"
             >
               @if (item.icon) { <i [class]="item.icon"></i> }
               @if (!collapsed) {
-                <span class="flex-1">{{ item.label }}</span>
+                <span class="flex-1">{{ item.label | transloco }}</span>
               }
             </a>
           </li>

@@ -1,0 +1,51 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading…",
+    "redirecting": "Redirecting…",
+    "new": "New"
+  },
+  "topbar": {
+    "appName": "MyPortal",
+    "toggleNavigation": "Toggle navigation",
+    "context": "Context",
+    "userMenu": "User menu",
+    "userType": {
+      "staff": "Staff",
+      "student": "Student",
+      "parent": "Parent"
+    }
+  },
+  "userMenu": {
+    "profile": "Profile",
+    "accountSettings": "Account settings",
+    "switchAcademicYear": "Switch academic year",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "helpAndSupport": "Help & support",
+    "signOut": "Sign out"
+  },
+  "sidebar": {
+    "mainNav": "Main navigation"
+  },
+  "nav": {
+    "system": "System",
+    "users": "Users"
+  },
+  "pages": {
+    "home": {
+      "title": "Home",
+      "timetable": "Timetable",
+      "timetablePlaceholder": "This is a placeholder for the timetable."
+    },
+    "users": {
+      "title": "Users"
+    }
+  }
+}

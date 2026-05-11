@@ -1,3 +1,4 @@
+<ng-container *transloco="let t; prefix: 'bulletins'">
 <p-dialog
   [visible]="visible"
   [modal]="true"
@@ -14,9 +15,9 @@
   <div class="flex items-center justify-between p-3 border-b border-surface">
     <div class="flex items-center gap-2">
       <i class="pi pi-bell text-primary"></i>
-      <h3 class="text-sm font-semibold m-0">{{ isEdit() ? 'Edit bulletin' : 'New bulletin' }}</h3>
+      <h3 class="text-sm font-semibold m-0">{{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}</h3>
     </div>
-    <button type="button" class="mp-icon-button" (click)="onCancel()" aria-label="Close">
+    <button type="button" class="mp-icon-button" (click)="onCancel()" [attr.aria-label]="t('detail.close')">
       <i class="pi pi-times"></i>
     </button>
   </div>
@@ -24,10 +25,10 @@
   <div class="p-4 flex flex-col gap-3">
     <!-- Title -->
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">Title</label>
+      <label class="text-xs font-medium text-muted-color">{{ t('form.titleLabel') }}</label>
       <input
         pInputText
-placeholder="What is this about?"
+        [placeholder]="t('form.titlePlaceholder')"
         [ngModel]="title()"
         (ngModelChange)="title.set($event)" />
     </div>
@@ -35,12 +36,12 @@ placeholder="What is this about?"
     <!-- Category + Pin -->
     <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">Category</label>
+        <label class="text-xs font-medium text-muted-color">{{ t('form.category') }}</label>
         <p-select
           [options]="categories()"
           optionLabel="name"
           optionValue="id"
-          placeholder="Select a category"
+          [placeholder]="t('form.categoryPlaceholder')"
           appendTo="body"
           [ngModel]="categoryId()"
           (ngModelChange)="categoryId.set($event)"
@@ -50,14 +51,14 @@ placeholder="What is this about?"
 
       @if (canPin()) {
         <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-muted-color">Pin to top</label>
+          <label class="text-xs font-medium text-muted-color">{{ t('form.pinLabel') }}</label>
           <label class="flex items-start gap-2 text-sm">
             <p-checkbox
               [binary]="true"
               [ngModel]="isPinned()"
               (ngModelChange)="isPinned.set($event)">
             </p-checkbox>
-            <span class="text-muted-color text-xs leading-snug">Pinned bulletins appear above the feed.</span>
+            <span class="text-muted-color text-xs leading-snug">{{ t('form.pinHint') }}</span>
           </label>
         </div>
       }
@@ -66,7 +67,7 @@ placeholder="What is this about?"
     <!-- Audience. Active state is fixed primary tint (unlike the feed's
          category chips which use per-category colours). -->
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">Audience</label>
+      <label class="text-xs font-medium text-muted-color">{{ t('form.audienceLabel') }}</label>
       <div class="flex flex-wrap gap-2">
         @for (a of audienceChoices(); track a.key) {
           <button
@@ -77,7 +78,7 @@ placeholder="What is this about?"
             @if (isSelected(a.key)) {
               <i class="pi pi-check"></i>
             }
-            {{ a.label }}
+            {{ audienceLabel(a) }}
           </button>
         }
       </div>
@@ -85,11 +86,11 @@ placeholder="What is this about?"
 
     <!-- Body -->
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">Body</label>
+      <label class="text-xs font-medium text-muted-color">{{ t('form.bodyLabel') }}</label>
       <textarea
         pInputTextarea
-rows="5"
-        placeholder="Write your bulletin. Markdown supported."
+        rows="5"
+        [placeholder]="t('form.bodyPlaceholder')"
         [ngModel]="detail()"
         (ngModelChange)="detail.set($event)">
       </textarea>
@@ -98,10 +99,10 @@ rows="5"
     <!-- Attachments. Placeholder UI: file upload is a follow-up; the dropzone
          is here so the layout matches the spec but it's a no-op for now. -->
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">Attachments</label>
+      <label class="text-xs font-medium text-muted-color">{{ t('form.attachmentsLabel') }}</label>
       <div class="flex items-center justify-center gap-2 p-3 border border-dashed border-surface rounded-lg bg-surface-50 text-xs text-muted-color">
         <i class="pi pi-paperclip"></i>
-        <span>Drop files or <a class="underline">browse</a></span>
+        <span>{{ t('form.attachmentsDrop') }} <a class="underline">{{ t('form.attachmentsBrowse') }}</a></span>
       </div>
     </div>
   </div>
@@ -114,13 +115,13 @@ rows="5"
         [ngModel]="requiresAck()"
         (ngModelChange)="requiresAck.set($event)">
       </p-checkbox>
-      Require acknowledgement
+      {{ t('form.requireAck') }}
     </label>
 
     <div class="flex items-center gap-2">
-      <p-button label="Cancel" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
+      <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
       <p-button
-        [label]="isEdit() ? 'Save changes' : 'Publish'"
+        [label]="isEdit() ? t('form.saveChanges') : t('form.publish')"
         [icon]="isEdit() ? 'pi pi-check' : 'pi pi-send'"
         [disabled]="!isValid()"
         [loading]="submitting()"
@@ -129,3 +130,4 @@ rows="5"
     </div>
   </div>
 </p-dialog>
+</ng-container>

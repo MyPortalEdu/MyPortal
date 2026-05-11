@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { MeService } from '../../../core/services/me-service';
@@ -8,6 +8,7 @@ import { AsyncPipe } from '@angular/common';
 import { ButtonDirective, ButtonIcon } from 'primeng/button';
 import { RouterLink } from '@angular/router';
 import { Popover } from 'primeng/popover';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserType } from '../../../core/enums/user-type';
 import { Me } from '../../../core/interfaces/me';
 
@@ -21,12 +22,14 @@ type Theme = 'light' | 'dark' | 'system';
 @Component({
   selector: 'mp-topbar',
   standalone: true,
-  imports: [Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover],
+  imports: [Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover, TranslocoDirective],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
 })
 export class Topbar implements OnInit {
   @Output() menuToggle = new EventEmitter<void>();
+
+  private readonly transloco = inject(TranslocoService);
 
   me$!: Observable<Me>;
   siteLabel$!: Observable<SiteLabel>;
@@ -85,16 +88,15 @@ export class Topbar implements OnInit {
   }
 
   userTypeLabel(t: UserType | undefined): string {
-    switch (t) {
-      case UserType.Staff:
-        return 'Staff';
-      case UserType.Student:
-        return 'Student';
-      case UserType.Parent:
-        return 'Parent';
-      default:
-        return '';
-    }
+    const key = (() => {
+      switch (t) {
+        case UserType.Staff:   return 'staff';
+        case UserType.Student: return 'student';
+        case UserType.Parent:  return 'parent';
+        default:               return null;
+      }
+    })();
+    return key ? this.transloco.translate(`topbar.userType.${key}`) : '';
   }
 
   onSwitchAcademicYear(): void {

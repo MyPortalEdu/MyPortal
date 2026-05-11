@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Tooltip } from 'primeng/tooltip';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { MenuService } from '../../services/menu-service';
 
 @Component({
   selector: 'mp-sidebar',
-  imports: [RouterLink, RouterLinkActive, Tooltip],
+  imports: [RouterLink, RouterLinkActive, Tooltip, TranslocoPipe],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })

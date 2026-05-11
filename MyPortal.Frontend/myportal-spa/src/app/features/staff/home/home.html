@@ -1,11 +1,13 @@
+<ng-container *transloco="let t">
 <mp-page-header
-  title="Home"
+  [title]="t('pages.home.title')"
   icon="pi pi-home"
 ></mp-page-header>
 
 <div class="flex flex-col md:flex-row gap-4">
-  <p-card class="flex-1" header="Timetable">
-    <div class="p-text-secondary">This is a placeholder for the timetable.</div>
+  <p-card class="flex-1" [header]="t('pages.home.timetable')">
+    <div class="p-text-secondary">{{ t('pages.home.timetablePlaceholder') }}</div>
   </p-card>
   <mp-bulletins-feed class="flex-1"></mp-bulletins-feed>
 </div>
+</ng-container>

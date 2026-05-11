@@ -11,8 +11,9 @@ export function buildMenu(
   // Home routes to the caller's portal root (e.g. '/staff', '/student'). It's marked
   // exact-match so it doesn't also highlight when a deeper portal route is active
   // (e.g. /staff/system/users would otherwise prefix-match /staff).
+  // Label is a Transloco key — see public/i18n/<lang>.json `pages.home.title`.
   menu.push({
-    label: 'Home',
+    label: 'pages.home.title',
     icon: 'pi pi-home',
     routerLink: homeLink,
     state: { exact: true }

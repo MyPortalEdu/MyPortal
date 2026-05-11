@@ -1,11 +1,12 @@
+<ng-container *transloco="let t; prefix: 'bulletins'">
 <section class="flex flex-col bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 gap-3">
   <!-- Header -->
   <div class="flex items-center gap-3">
     <i class="pi pi-bell text-primary text-xl"></i>
-    <h3 class="text-base font-semibold m-0">Bulletins</h3>
+    <h3 class="text-base font-semibold m-0">{{ t('feed.title') }}</h3>
     @if (newCount() > 0) {
       <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-        {{ newCount() }} new
+        {{ t('feed.newCount', { count: newCount() }) }}
       </span>
     }
   </div>
@@ -19,7 +20,7 @@
       class="mp-chip"
       [class.mp-chip-active]="selectedCategoryId() === null"
       (click)="selectCategory(null)">
-      All
+      {{ t('feed.filterAll') }}
     </button>
     @for (cat of categories(); track cat.id) {
       <button
@@ -41,9 +42,9 @@
        on top of each tile's right edge. -->
   <div class="flex flex-col gap-2 max-h-[26rem] overflow-y-auto pr-1">
     @if (loading()) {
-      <div class="text-sm text-muted-color px-1 py-2">Loading bulletins…</div>
+      <div class="text-sm text-muted-color px-1 py-2">{{ t('feed.loading') }}</div>
     } @else if (filteredBulletins().length === 0) {
-      <div class="text-sm text-muted-color px-1 py-6 text-center">No bulletins to show.</div>
+      <div class="text-sm text-muted-color px-1 py-6 text-center">{{ t('feed.empty') }}</div>
     } @else {
       @for (b of filteredBulletins(); track b.id) {
         <button
@@ -76,16 +77,16 @@
                   @if (b.requiresAcknowledgement) {
                     @if (b.hasAcknowledged) {
                       <span class="inline-flex items-center gap-1 font-medium text-[var(--p-green-600)]">
-                        <i class="pi pi-check-circle"></i>Acknowledged
+                        <i class="pi pi-check-circle"></i>{{ t('feed.acknowledged') }}
                       </span>
                     } @else {
                       <span class="inline-flex items-center gap-1 font-medium text-[var(--p-amber-600)]">
-                        <i class="pi pi-exclamation-circle"></i>Acknowledge
+                        <i class="pi pi-exclamation-circle"></i>{{ t('feed.ackRequired') }}
                       </span>
                     }
                   }
                   @if (b.pinnedAt) {
-                    <i class="pi pi-bookmark-fill text-primary" title="Pinned"></i>
+                    <i class="pi pi-bookmark-fill text-primary" [title]="t('feed.pinned')"></i>
                   }
                 </div>
               }
@@ -101,9 +102,9 @@
   <!-- Footer -->
   <div class="flex items-center justify-between mt-1">
     <a routerLink="/bulletins" class="text-sm text-primary font-medium hover:underline">
-      See all bulletins →
+      {{ t('feed.seeAll') }}
     </a>
-    <p-button label="New" icon="pi pi-plus" size="small" (click)="openNew()"></p-button>
+    <p-button [label]="t('feed.new')" icon="pi pi-plus" size="small" (click)="openNew()"></p-button>
   </div>
 
   <!-- Dialogs -->
@@ -122,3 +123,4 @@
     (saved)="onSaved()">
   </mp-bulletin-form-dialog>
 </section>
+</ng-container>

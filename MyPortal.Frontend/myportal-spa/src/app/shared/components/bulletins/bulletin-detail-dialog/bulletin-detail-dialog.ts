@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
+import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -29,13 +30,15 @@ import {
   selector: 'mp-bulletin-detail-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, Dialog, Button],
+  imports: [CommonModule, RouterLink, Dialog, Button, TranslocoDirective],
+  providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-detail-dialog.html',
 })
 export class BulletinDetailDialog implements OnInit {
   private readonly data = inject(BulletinsDataService);
   private readonly meService = inject(MeService);
   private readonly notify = inject(NotificationService);
+  private readonly transloco = inject(TranslocoService);
 
   /** When set to a non-null id the dialog opens and fetches the bulletin. */
   @Input()
@@ -117,7 +120,7 @@ export class BulletinDetailDialog implements OnInit {
       },
       error: (err: unknown) => {
         this.acknowledging.set(false);
-        this.notify.apiError(err, "Couldn't acknowledge bulletin");
+        this.notify.apiError(err, this.transloco.translate('bulletins.detail.errorAcknowledge'));
       },
     });
   }
@@ -134,14 +137,14 @@ export class BulletinDetailDialog implements OnInit {
     // require provisioning PrimeNG's ConfirmationService. Swap in a styled
     // p-confirmdialog later if the UX bar moves up — the contract is the
     // same: only emit on positive confirmation.
-    const ok = window.confirm(`Delete bulletin "${b.title}"? This can't be undone.`);
+    const ok = window.confirm(this.transloco.translate('bulletins.detail.deleteConfirm', { title: b.title }));
     if (ok) this.deleteRequested.emit(b.id);
   }
 
   formatDateTime(iso: string | null | undefined): string {
     if (!iso) return '';
     const d = new Date(iso);
-    return d.toLocaleString(undefined, {
+    return d.toLocaleString(this.transloco.getActiveLang(), {
       weekday: 'short',
       day: '2-digit',
       month: 'short',
@@ -162,11 +165,12 @@ export class BulletinDetailDialog implements OnInit {
   }
 
   private formatAudience(a: BulletinAudienceResponse): string {
+    const t = (key: string) => this.transloco.translate(`bulletins.audience.${key}`);
     switch (a.audienceKind) {
-      case BulletinAudienceKind.AllStaff:    return 'All staff';
-      case BulletinAudienceKind.AllPupils:   return 'All pupils';
-      case BulletinAudienceKind.AllParents:  return 'All parents';
-      case BulletinAudienceKind.StudentGroup: return a.studentGroupName ?? 'Group';
+      case BulletinAudienceKind.AllStaff:     return t('allStaff');
+      case BulletinAudienceKind.AllPupils:    return t('allPupils');
+      case BulletinAudienceKind.AllParents:   return t('allParents');
+      case BulletinAudienceKind.StudentGroup: return a.studentGroupName ?? t('group');
       default: return '';
     }
   }

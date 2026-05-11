@@ -1,4 +1,4 @@
-import { ApplicationConfig, ErrorHandler, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, isDevMode, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import Aura from '@primeuix/themes/aura';
 
@@ -7,12 +7,14 @@ import {provideAnimationsAsync} from '@angular/platform-browser/animations/async
 import {providePrimeNG} from 'primeng/config';
 import {MessageService} from 'primeng/api';
 import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angular/common/http';
+import {provideTransloco} from '@jsverse/transloco';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
 import {definePreset} from '@primeng/themes';
 import {apiBaseInterceptor} from './core/interceptors/api-base-interceptor';
 import {authErrorInterceptor} from './core/interceptors/auth-error-interceptor';
 import {AppErrorHandler} from './core/error/app-error-handler';
+import {TranslocoHttpLoader} from './core/i18n/transloco-loader';
 
 const MyPortal = definePreset(Aura, {
   semantic: {
@@ -73,6 +75,21 @@ export const appConfig: ApplicationConfig = {
     // MessageService provided the <p-toast> in the tree — root-scoped is what
     // we want, because <p-toast> lives in the root App component.
     MessageService,
+    // Transloco. `en` is the only locale today; the config is structured so
+    // adding `cy` (or anything else) is a one-line change to availableLangs
+    // plus dropping the new <lang>.json files into public/i18n/. Feature
+    // scopes (e.g. "bulletins") are loaded lazily via provideTranslocoScope
+    // on the consuming components.
+    provideTransloco({
+      config: {
+        availableLangs: ['en'],
+        defaultLang: 'en',
+        fallbackLang: 'en',
+        reRenderOnLangChange: true,
+        prodMode: !isDevMode(),
+      },
+      loader: TranslocoHttpLoader,
+    }),
     { provide: MENU_CONTRIBUTORS, useClass: StaffMenuContributor, multi: true },
     { provide: ErrorHandler, useClass: AppErrorHandler }
   ]

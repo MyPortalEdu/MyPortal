@@ -9,6 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
+import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { forkJoin } from 'rxjs';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
@@ -25,7 +26,10 @@ import { BulletinFormDialog } from '../bulletin-form-dialog/bulletin-form-dialog
   selector: 'mp-bulletins-feed',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, Button, BulletinDetailDialog, BulletinFormDialog],
+  imports: [CommonModule, RouterLink, Button, BulletinDetailDialog, BulletinFormDialog, TranslocoDirective],
+  // The bulletins scope lazy-loads public/i18n/bulletins/<lang>.json the first
+  // time this component (or any other consumer) renders.
+  providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletins-feed.html',
   // display:block on the host so parent flex containers (e.g. <home> with
   // flex-1 on this element) can size it. Custom elements default to inline.
@@ -34,6 +38,7 @@ import { BulletinFormDialog } from '../bulletin-form-dialog/bulletin-form-dialog
 export class BulletinsFeed implements OnInit {
   private readonly data = inject(BulletinsDataService);
   private readonly notify = inject(NotificationService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly loading = signal(true);
   readonly bulletins = signal<BulletinSummaryResponse[]>([]);
@@ -133,10 +138,10 @@ export class BulletinsFeed implements OnInit {
     this.data.delete(id).subscribe({
       next: () => {
         this.closeDetail();
-        this.notify.success('Bulletin deleted');
+        this.notify.success(this.transloco.translate('bulletins.toasts.deleted'));
         this.refresh();
       },
-      error: err => this.notify.apiError(err, "Couldn't delete bulletin"),
+      error: err => this.notify.apiError(err, this.transloco.translate('bulletins.toasts.errorDelete')),
     });
   }
 
@@ -150,21 +155,25 @@ export class BulletinsFeed implements OnInit {
     );
   }
 
-  // Lightweight time-ago. Not localisation-aware; good enough for a dashboard widget.
+  // Lightweight time-ago. The numeric thresholds are locale-neutral; only the
+  // resulting label is translated. For the >7-day fallback we hand off to the
+  // platform's locale-aware date formatter.
   timeAgo(iso?: string | null): string {
     if (!iso) return '';
     const then = new Date(iso).getTime();
     const diffSec = Math.max(0, Math.floor((Date.now() - then) / 1000));
-    if (diffSec < 60) return 'just now';
+    const t = (key: string, params?: Record<string, unknown>) =>
+      this.transloco.translate(`bulletins.timeAgo.${key}`, params);
+    if (diffSec < 60) return t('justNow');
     const diffMin = Math.floor(diffSec / 60);
-    if (diffMin < 60) return `${diffMin} min ago`;
+    if (diffMin < 60) return t('minutes', { value: diffMin });
     const diffHr = Math.floor(diffMin / 60);
-    if (diffHr < 24) return `${diffHr} hr ago`;
+    if (diffHr < 24) return t('hours', { value: diffHr });
     const diffDay = Math.floor(diffHr / 24);
-    if (diffDay === 1) return 'yesterday';
-    if (diffDay < 7) return `${diffDay} days ago`;
+    if (diffDay === 1) return t('yesterday');
+    if (diffDay < 7) return t('days', { value: diffDay });
     const date = new Date(iso);
-    return date.toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+    return date.toLocaleDateString(this.transloco.getActiveLang(), { day: '2-digit', month: 'short' });
   }
 
   // PrimeNG hex colours don't have built-in alpha helpers; we just append an opacity

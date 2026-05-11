@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Card } from 'primeng/card';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { BulletinsFeed } from '../../../shared/components/bulletins/bulletins-feed/bulletins-feed';
 
@@ -9,6 +10,7 @@ import { BulletinsFeed } from '../../../shared/components/bulletins/bulletins-fe
     Card,
     PageHeader,
     BulletinsFeed,
+    TranslocoDirective,
   ],
   templateUrl: './home.html',
   styleUrl: './home.scss',

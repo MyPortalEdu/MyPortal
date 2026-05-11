@@ -4,10 +4,11 @@ import { SidebarComponent } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
 import { Drawer } from 'primeng/drawer';
 import { ButtonDirective } from 'primeng/button';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
   selector: 'mp-app-shell',
-  imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, ButtonDirective],
+  imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, ButtonDirective, TranslocoDirective],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })

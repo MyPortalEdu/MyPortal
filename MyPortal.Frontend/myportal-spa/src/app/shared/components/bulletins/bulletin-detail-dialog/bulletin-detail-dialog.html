@@ -1,3 +1,4 @@
+<ng-container *transloco="let t; prefix: 'bulletins'">
 <p-dialog
   [visible]="visible()"
   [modal]="true"
@@ -20,7 +21,7 @@
         <i [class]="b.categoryIcon"></i>
         {{ b.categoryName }}
       </span>
-      <button type="button" class="mp-icon-button" (click)="onHide()" aria-label="Close">
+      <button type="button" class="mp-icon-button" (click)="onHide()" [attr.aria-label]="t('detail.close')">
         <i class="pi pi-times"></i>
       </button>
     </div>
@@ -44,13 +45,13 @@
 
       <!-- Audience summary -->
       <div class="pt-3 border-t border-surface">
-        <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-color mb-1">SENT TO</div>
+        <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-color mb-1">{{ t('detail.sentTo') }}</div>
         <div class="flex items-center gap-2 text-xs">
           <i class="pi pi-users text-muted-color"></i>
           <span>{{ audienceSummary() }}</span>
           @if (b.acknowledgedCount !== null && b.acknowledgedCount !== undefined) {
             <span class="text-muted-color">·</span>
-            <span class="text-muted-color">{{ b.acknowledgedCount }} acknowledged</span>
+            <span class="text-muted-color">{{ t('detail.acknowledgedCount', { count: b.acknowledgedCount }) }}</span>
           }
         </div>
       </div>
@@ -60,14 +61,14 @@
     <div class="flex items-center justify-between gap-3 p-3 border-t border-surface">
       @if (b.requiresAcknowledgement && !b.hasAcknowledged) {
         <p-button
-          label="Acknowledge"
+          [label]="t('detail.acknowledge')"
           icon="pi pi-check"
           [loading]="acknowledging()"
           (click)="acknowledge()">
         </p-button>
       } @else if (b.requiresAcknowledgement && b.hasAcknowledged) {
         <span class="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--p-green-600)]">
-          <i class="pi pi-check-circle"></i> Acknowledged
+          <i class="pi pi-check-circle"></i> {{ t('detail.acknowledged') }}
         </span>
       } @else {
         <span></span>
@@ -76,14 +77,14 @@
       <div class="flex items-center gap-1">
         @if (canEdit()) {
           <p-button
-            label="Edit"
+            [label]="t('detail.edit')"
             icon="pi pi-pencil"
             severity="secondary"
             [text]="true"
               (click)="requestEdit()">
           </p-button>
           <p-button
-            label="Delete"
+            [label]="t('detail.delete')"
             icon="pi pi-trash"
             severity="danger"
             [text]="true"
@@ -92,12 +93,13 @@
         }
         <a class="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1.5 ml-2"
            [routerLink]="['/bulletins', b.id]">
-          Open full page
+          {{ t('detail.openFullPage') }}
           <i class="pi pi-external-link text-[0.6rem]"></i>
         </a>
       </div>
     </div>
   } @else if (loading()) {
-    <div class="p-4 text-sm text-muted-color">Loading…</div>
+    <div class="p-4 text-sm text-muted-color">{{ t('detail.loading') }}</div>
   }
 </p-dialog>
+</ng-container>

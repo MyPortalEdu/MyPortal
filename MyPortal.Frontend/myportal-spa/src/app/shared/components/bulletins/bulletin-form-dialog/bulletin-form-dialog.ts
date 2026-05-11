@@ -18,6 +18,7 @@ import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { Checkbox } from 'primeng/checkbox';
+import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -34,7 +35,8 @@ import {
 
 interface AudienceChoice {
   key: string;            // dedup key
-  label: string;
+  labelKey: string;       // bulletins.audience.<key>
+  fallbackLabel?: string; // for student groups whose names come from the API
   kind: BulletinAudienceKind;
   studentGroupId?: string;
 }
@@ -43,13 +45,15 @@ interface AudienceChoice {
   selector: 'mp-bulletin-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox],
+  imports: [CommonModule, FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox, TranslocoDirective, TranslocoPipe],
+  providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-form-dialog.html',
 })
 export class BulletinFormDialog implements OnChanges {
   private readonly data = inject(BulletinsDataService);
   private readonly meService = inject(MeService);
   private readonly notify = inject(NotificationService);
+  private readonly transloco = inject(TranslocoService);
 
   @Input({ required: true }) visible = false;
 
@@ -88,9 +92,9 @@ export class BulletinFormDialog implements OnChanges {
     // Fixed audiences come first so they read like a sentence: "all staff / all
     // pupils / all parents", then any allowlisted student groups.
     const choices: AudienceChoice[] = [
-      { key: 'all-staff',   label: 'All staff',   kind: BulletinAudienceKind.AllStaff },
-      { key: 'all-pupils',  label: 'All pupils',  kind: BulletinAudienceKind.AllPupils },
-      { key: 'all-parents', label: 'All parents', kind: BulletinAudienceKind.AllParents },
+      { key: 'all-staff',   labelKey: 'allStaff',   kind: BulletinAudienceKind.AllStaff },
+      { key: 'all-pupils',  labelKey: 'allPupils',  kind: BulletinAudienceKind.AllPupils },
+      { key: 'all-parents', labelKey: 'allParents', kind: BulletinAudienceKind.AllParents },
     ];
 
     // De-dup student-group entries by id: the allowlist is the canonical source,
@@ -101,7 +105,8 @@ export class BulletinFormDialog implements OnChanges {
     for (const g of this.allowedGroups()) {
       groups.set(g.studentGroupId, {
         key: `sg-${g.studentGroupId}`,
-        label: g.name,
+        labelKey: 'group',
+        fallbackLabel: g.name,
         kind: BulletinAudienceKind.StudentGroup,
         studentGroupId: g.studentGroupId,
       });
@@ -114,7 +119,8 @@ export class BulletinFormDialog implements OnChanges {
             && !groups.has(a.studentGroupId)) {
           groups.set(a.studentGroupId, {
             key: `sg-${a.studentGroupId}`,
-            label: a.studentGroupName ?? 'Group',
+            labelKey: 'group',
+            fallbackLabel: a.studentGroupName ?? undefined,
             kind: BulletinAudienceKind.StudentGroup,
             studentGroupId: a.studentGroupId,
           });
@@ -155,6 +161,13 @@ export class BulletinFormDialog implements OnChanges {
     });
   }
 
+  audienceLabel(choice: AudienceChoice): string {
+    // Student groups use the live name from the API rather than a translation
+    // (group names are tenant data, not UI copy). Fixed audiences resolve to
+    // the per-locale "All staff/pupils/parents" string.
+    return choice.fallbackLabel ?? this.transloco.translate(`bulletins.audience.${choice.labelKey}`);
+  }
+
   onCancel(): void {
     this.closed.emit();
   }
@@ -193,16 +206,17 @@ export class BulletinFormDialog implements OnChanges {
     };
 
     const isEdit = existing !== null;
+    const t = (key: string) => this.transloco.translate(`bulletins.form.${key}`);
     const onSuccess = () => {
       this.submitting.set(false);
-      this.notify.success(isEdit ? 'Bulletin updated' : 'Bulletin published');
+      this.notify.success(t(isEdit ? 'updatedToast' : 'publishedToast'));
       this.saved.emit();
     };
     const onError = () => {
       this.submitting.set(false);
       this.notify.error(
-        isEdit ? "Couldn't save changes" : "Couldn't publish bulletin",
-        'Something went wrong. Check the details and try again.',
+        t(isEdit ? 'errorUpdate' : 'errorPublish'),
+        t('errorBody'),
       );
     };
 

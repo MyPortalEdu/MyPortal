@@ -4,9 +4,11 @@ import {MeService} from '../../services/me-service';
 import {firstValueFrom} from 'rxjs';
 import {UserType} from '../../enums/user-type';
 
+import {TranslocoPipe} from '@jsverse/transloco';
+
 @Component({
   selector: 'mp-portal-redirect',
-  imports: [],
+  imports: [TranslocoPipe],
   templateUrl: './portal-redirect.html'
 })
 export class PortalRedirectComponent implements OnInit {

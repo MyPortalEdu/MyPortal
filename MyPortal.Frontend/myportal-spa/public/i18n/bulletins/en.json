@@ -1,0 +1,68 @@
+{
+  "feed": {
+    "title": "Bulletins",
+    "newCount": "{{ count }} new",
+    "filterAll": "All",
+    "loading": "Loading bulletins…",
+    "empty": "No bulletins to show.",
+    "pinned": "Pinned",
+    "ackRequired": "Acknowledge",
+    "acknowledged": "Acknowledged",
+    "seeAll": "See all bulletins →",
+    "new": "New"
+  },
+  "detail": {
+    "close": "Close",
+    "sentTo": "SENT TO",
+    "acknowledgedCount": "{{ count }} acknowledged",
+    "acknowledge": "Acknowledge",
+    "acknowledged": "Acknowledged",
+    "edit": "Edit",
+    "delete": "Delete",
+    "openFullPage": "Open full page",
+    "loading": "Loading…",
+    "deleteConfirm": "Delete bulletin \"{{ title }}\"? This can't be undone.",
+    "errorAcknowledge": "Couldn't acknowledge bulletin"
+  },
+  "form": {
+    "titleEdit": "Edit bulletin",
+    "titleCreate": "New bulletin",
+    "titleLabel": "Title",
+    "titlePlaceholder": "What is this about?",
+    "category": "Category",
+    "categoryPlaceholder": "Select a category",
+    "pinLabel": "Pin to top",
+    "pinHint": "Pinned bulletins appear above the feed.",
+    "audienceLabel": "Audience",
+    "bodyLabel": "Body",
+    "bodyPlaceholder": "Write your bulletin. Markdown supported.",
+    "attachmentsLabel": "Attachments",
+    "attachmentsDrop": "Drop files or",
+    "attachmentsBrowse": "browse",
+    "requireAck": "Require acknowledgement",
+    "publish": "Publish",
+    "saveChanges": "Save changes",
+    "publishedToast": "Bulletin published",
+    "updatedToast": "Bulletin updated",
+    "errorPublish": "Couldn't publish bulletin",
+    "errorUpdate": "Couldn't save changes",
+    "errorBody": "Something went wrong. Check the details and try again."
+  },
+  "audience": {
+    "allStaff": "All staff",
+    "allPupils": "All pupils",
+    "allParents": "All parents",
+    "group": "Group"
+  },
+  "timeAgo": {
+    "justNow": "just now",
+    "minutes": "{{ value }} min ago",
+    "hours": "{{ value }} hr ago",
+    "yesterday": "yesterday",
+    "days": "{{ value }} days ago"
+  },
+  "toasts": {
+    "deleted": "Bulletin deleted",
+    "errorDelete": "Couldn't delete bulletin"
+  }
+}
