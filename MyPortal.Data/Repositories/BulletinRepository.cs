@@ -1,4 +1,6 @@
-﻿using MyPortal.Auth.Interfaces;
+using System.Data;
+using Dapper;
+using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Core.Entities;
@@ -10,6 +12,7 @@ using QueryKit.Extensions;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
+using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
@@ -25,24 +28,42 @@ public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepositor
     {
         using var conn = _factory.Create();
 
-        var sql = "[dbo].[usp_bulletin_get_details_by_id]";
-
         var p = new
         {
             bulletinId,
             currentUserId = scope.CurrentUserId,
             isStaff = scope.IsStaff,
+            isPupil = scope.IsPupil,
+            isParent = scope.IsParent,
             canView = scope.CanView,
             canEdit = scope.CanEdit,
-            canApprove = scope.CanApprove,
-            nowUtc = DateTime.UtcNow
+            canPin = scope.CanPin
         };
 
-        var result =
-            await conn.ExecuteStoredProcedureAsync<BulletinDetailsResponse>(sql, p,
-                cancellationToken: cancellationToken);
+        var command = new CommandDefinition("[dbo].[usp_bulletin_get_details_by_id]", p,
+            commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 
-        return result.FirstOrDefault();
+        using var reader = await conn.QueryMultipleAsync(command);
+
+        var header = await reader.ReadFirstOrDefaultAsync<BulletinDetailsResponse>();
+        if (header is null)
+        {
+            return null;
+        }
+
+        header.Audiences = (await reader.ReadAsync<BulletinAudienceResponse>()).ToList();
+
+        // Third result set is a single-row ack rollup: AcknowledgedCount + HasAcknowledged.
+        // Both are nullable on the DTO; the SP returns NULL when the bulletin does not
+        // require acknowledgement.
+        var ack = await reader.ReadFirstOrDefaultAsync<AckRollup>();
+        if (ack is not null)
+        {
+            header.AcknowledgedCount = ack.AcknowledgedCount;
+            header.HasAcknowledged = ack.HasAcknowledged;
+        }
+
+        return header;
     }
 
     public async Task<PageResult<BulletinSummaryResponse>> GetSummariesAsync(BulletinVisibilityScope scope,
@@ -52,11 +73,50 @@ public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepositor
     {
         var sql = SqlResourceLoader.Load("Bulletins.GetBulletinSummaries.sql");
 
-        var p = scope.ToSqlParams(DateTime.UtcNow);
+        var p = scope.ToSqlParams();
 
-        var result =
-            await GetListPagedAsync<BulletinSummaryResponse>(sql, p, filter, sort, paging, false, cancellationToken);
+        return await GetListPagedAsync<BulletinSummaryResponse>(sql, p, filter, sort, paging, false, cancellationToken);
+    }
 
-        return result;
+    public async Task ReplaceAudiencesAsync(Guid bulletinId, IList<BulletinAudience> audiences,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            const string deleteSql = "DELETE FROM dbo.BulletinAudiences WHERE BulletinId = @bulletinId;";
+            await conn.ExecuteAsync(new CommandDefinition(deleteSql, new { bulletinId },
+                transaction: transaction, cancellationToken: cancellationToken));
+
+            if (audiences.Count == 0)
+            {
+                return;
+            }
+
+            const string insertSql = @"
+INSERT INTO dbo.BulletinAudiences (Id, BulletinId, AudienceKind, StudentGroupId)
+VALUES (@Id, @BulletinId, @AudienceKind, @StudentGroupId);";
+
+            var rows = audiences.Select(a => new
+            {
+                Id = a.Id == Guid.Empty ? Guid.NewGuid() : a.Id,
+                BulletinId = bulletinId,
+                AudienceKind = (byte)a.AudienceKind,
+                a.StudentGroupId
+            });
+
+            await conn.ExecuteAsync(new CommandDefinition(insertSql, rows,
+                transaction: transaction, cancellationToken: cancellationToken));
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
+    }
+
+    private sealed class AckRollup
+    {
+        public int? AcknowledgedCount { get; set; }
+        public bool? HasAcknowledged { get; set; }
     }
 }

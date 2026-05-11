@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+using FluentValidation;
+using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Services.Interfaces.Providers;
 
@@ -16,10 +17,28 @@ public class BulletinValidator : AbstractValidator<BulletinUpsertRequest>
             .NotEmpty().WithMessage("Detail is required.")
             .MaximumLength(2000).WithMessage("Detail must not exceed 2000 characters.");
 
-        // Use the injected provider so validation and BulletinAccessPolicy share one clock —
+        RuleFor(x => x.CategoryId)
+            .NotEqual(Guid.Empty).WithMessage("Category is required.");
+
+        // Use the injected provider so validation and downstream code share one clock —
         // and so tests can pin time without flake.
-        RuleFor(y => y.ExpiresAt)
+        RuleFor(x => x.ExpiresAt)
             .Must(exp => exp == null || exp > dateTimeProvider.UtcNow)
             .WithMessage("Expiry date must be in the future.");
+
+        RuleFor(x => x.Audiences)
+            .NotEmpty().WithMessage("At least one audience is required.");
+
+        // Each audience entry: StudentGroupId required iff kind = StudentGroup.
+        RuleForEach(x => x.Audiences).ChildRules(child =>
+        {
+            child.RuleFor(a => a)
+                .Must(a => a.AudienceKind != BulletinAudienceKind.StudentGroup || a.StudentGroupId.HasValue)
+                .WithMessage("StudentGroup audience entries require a StudentGroupId.");
+
+            child.RuleFor(a => a)
+                .Must(a => a.AudienceKind == BulletinAudienceKind.StudentGroup || !a.StudentGroupId.HasValue)
+                .WithMessage("StudentGroupId must only be set when AudienceKind is StudentGroup.");
+        });
     }
 }

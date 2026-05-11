@@ -135,7 +135,7 @@ public static class Permissions
         // public const string EditSchoolDocuments     = "School.EditSchoolDocuments";
         public const string ViewSchoolBulletins     = "School.ViewSchoolBulletins";
         public const string EditSchoolBulletins     = "School.EditSchoolBulletins";
-        public const string ApproveSchoolBulletins  = "School.ApproveSchoolBulletins";
+        public const string PinSchoolBulletins      = "School.PinSchoolBulletins";
     }
 
     public static class Student
