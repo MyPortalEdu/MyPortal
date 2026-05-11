@@ -1,290 +1,122 @@
 # <img src="https://i.imgur.com/dAVgTNy.png" alt="MyPortal" width="500"/>
 
-**MyPortal** is a modern, open-source, cloud-first **School Information Management System (MIS)** designed for real school workflows — not vendor lock-in.
-
-It brings together **staff, students, parents, and administrators** into a single, coherent platform covering attendance, assessments, behaviour, communication, and core school operations.
-
-MyPortal is built to be **transparent, extensible, and self-hostable**, giving schools full control over their data and infrastructure.
+An open-source School Information Management System (MIS) for UK schools. ASP.NET Core Web API + Angular SPA + SQL Server, designed to be self-hostable, modular, and transparent.
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 ---
 
-## 🎯 Project Goals
+## Status
 
-MyPortal exists to challenge the status quo of opaque, expensive, legacy MIS platforms.
+Under active development. Core services and foundational modules are in place; additional functionality is being built iteratively. Not yet production-ready.
 
-Its core goals are:
+## Modules
 
-- Open, inspectable source code  
-- Modern web architecture  
-- Support for UK school workflows  
-- Strong permissions and safeguarding controls  
-- Freedom to self-host or deploy in the cloud  
-- A system that schools *own*, not rent  
+Attendance, behaviour, exams, assessment, profiles and reporting, curriculum and timetabling, student management, staff management, SEND, documents and attachments, admissions, school configuration, and system administration.
 
----
+Each module is designed to stand on its own while contributing to a coherent whole. Permissions, auditing, and safeguarding controls are first-class concerns.
 
-## 🧩 Core Modules & Features
+## Tech stack
 
-MyPortal is built as a modular MIS, with each area designed to work independently while integrating cleanly with the rest of the system.
+- **Backend** — ASP.NET Core 8 Web API
+- **Frontend** — Angular 20 SPA (PrimeNG, Tailwind) serving staff, students, and parents via role-based routing
+- **Database** — SQL Server 2019+ (additional providers planned)
+- **Auth** — OAuth 2.0 / OpenID Connect
+- **Architecture** — Modular, API-first; SQL stored in versioned migrations and embedded resources
 
----
+## Repository layout
 
-### 🕒 Attendance
-
-Comprehensive attendance tracking designed around real school operations.
-
-- Daily, session, and lesson registers  
-- Configurable registration periods  
-- Late marks, authorised/unauthorised absence, codes  
-- Lesson-by-lesson attendance  
-- Attendance summaries and analytics  
-- Trend tracking over time (student, group, cohort)  
-- Persistent absence monitoring  
-- Exportable reports for statutory returns  
-- Integration with behaviour and safeguarding workflows  
+```
+MyPortal.WebApi/         ASP.NET Core host
+MyPortal.Data/           Repositories, Dapper queries, embedded SQL
+MyPortal.Migrations/     Console runner — creates/updates the database schema
+MyPortal.Core/           Domain entities
+MyPortal.Contracts/      Request/response DTOs
+MyPortal.Common/         Shared interfaces and utilities
+MyPortal.Auth/           Authentication and authorisation
+MyPortal.Frontend/myportal-spa/   Angular SPA
+```
 
 ---
 
-### ⚖️ Behaviour
+## Getting started
 
-A structured, auditable behaviour management system.
+### Prerequisites
 
-- Behaviour incidents with categorisation and severity  
-- Positive behaviour and achievement tracking  
-- Detentions (lunch, after-school, internal)  
-- Exclusions (internal, fixed-term, permanent)  
-- Report cards and monitoring periods  
-- Staff follow-up actions and outcomes  
-- Chronological behaviour timelines per student  
-- Analysis by student, group, year, or behaviour type  
+- .NET 8 SDK
+- Node.js 20+ and npm
+- SQL Server 2019+ (Developer, Express, or LocalDB)
+- A SQL login with permission to create databases
 
----
+### 1. Clone
 
-### 📝 Exams
+```bash
+git clone https://github.com/<owner>/MyPortal.git
+cd MyPortal
+```
 
-Support for both internal and external examination workflows.
+### 2. Configure the database connection
 
-- Exam basedata management  
-- Result embargo handling  
-- Internal assessment results  
-- External exam board results  
-- Multiple exam series support  
-- Domestic exams and formal qualifications  
-- Grade boundaries and mappings  
-- Secure access controls for sensitive data  
-- Results analysis and exports  
+Both `MyPortal.Migrations` and `MyPortal.WebApi` read their connection string from `Database:ConnectionString`. Use user-secrets so it stays out of source control:
 
----
+```bash
+dotnet user-secrets init --project MyPortal.Migrations
+dotnet user-secrets set "Database:ConnectionString" "Server=.;Database=MyPortal;Trusted_Connection=True;TrustServerCertificate=True" --project MyPortal.Migrations
 
-### 📊 Assessment
+dotnet user-secrets init --project MyPortal.WebApi
+dotnet user-secrets set "Database:ConnectionString" "Server=.;Database=MyPortal;Trusted_Connection=True;TrustServerCertificate=True" --project MyPortal.WebApi
+```
 
-Flexible assessment modelling that adapts to different school philosophies.
+Alternatives: set `Database__ConnectionString` as an environment variable, or pass `--Database:ConnectionString=...` on the command line.
 
-- Marksheets and assessment entry  
-- Result sets and grade sets  
-- Aspects and assessment frameworks  
-- Custom grading scales (numeric, letter, banded)  
-- Assessment windows and cycles  
-- Teacher and departmental ownership  
-- Longitudinal progress tracking  
-- Integration with reporting and analytics  
+### 3. Create / update the database
 
----
+The migrations runner creates the database if it does not exist and applies any pending updates, views, functions, and stored procedures.
 
-### 📄 Profiles & Reporting
+```bash
+dotnet run --project MyPortal.Migrations
+```
 
-Powerful reporting without rigid templates.
+Re-run this whenever you pull changes that include new SQL.
 
-- End-of-year and interim reports  
-- Comment banks (departmental and school-wide)  
-- Teacher-written comments  
-- Structured and free-text inputs  
-- Report builder with configurable sections  
-- Per-student report history  
-- Export to PDF and other formats  
+### 4. Run the Web API
 
----
+```bash
+dotnet run --project MyPortal.WebApi
+```
 
-### 📚 Curriculum & Timetabling
+The API listens on the URLs configured in `MyPortal.WebApi/Properties/launchSettings.json`.
 
-Core academic structure management.
+### 5. Run the SPA
 
-- Subjects and courses  
-- Curriculum pathways  
-- Teaching groups and classes  
-- Timetabling data model  
-- Room and resource allocation  
-- Staff deployment  
-- Cover and absence handling  
-- Academic year and term structures  
+```bash
+cd MyPortal.Frontend/myportal-spa
+npm install
+npm start
+```
+
+The dev server runs on `http://localhost:4200`. Use `npm run start:https` to serve over HTTPS with the proxy config in `proxy.conf.json`.
 
 ---
 
-### 🎓 Student Management
+## Development
 
-A complete, centralised student record.
+- **Build everything** — `dotnet build MyPortal.sln`
+- **Run backend tests** — `dotnet test`
+- **Run SPA tests** — `npm test` from `MyPortal.Frontend/myportal-spa`
 
-- Personal and contact details  
-- Guardian and contact relationships  
-- Curriculum group memberships  
-- Medical information and alerts  
-- Safeguarding flags  
-- Behaviour and attendance summaries  
-- Historical data retention  
-- Secure access based on role  
+SQL changes live in `MyPortal.Migrations/Sql`:
+- `Updates/` — one-shot migrations, applied in filename order
+- `StoredProcedures/`, `Functions/`, `Views/`, `Indexes/` — re-applied on every run (idempotent `CREATE OR ALTER`)
 
----
-
-### 👩‍🏫 Staff Management
-
-Staff records designed for operational reality.
-
-- Personal and professional details  
-- Roles and responsibilities  
-- Service terms and contracts  
-- Training and CPD records  
-- Qualifications and compliance tracking  
-- Department and pastoral assignments  
-- Historical employment data  
+New SQL files must be registered as `EmbeddedResource` in `MyPortal.Migrations.csproj`. Query templates used by repositories at runtime live under `MyPortal.Data/Sql` and are registered in `MyPortal.Data.csproj` the same way.
 
 ---
 
-### 🧩 SEND
+## Contributing
 
-Support for Special Educational Needs and Disabilities.
+Issues, discussions, and pull requests are welcome. Useful areas include backend services, frontend UI/UX, documentation, UK education domain modelling, and deployment tooling. Open an issue or discussion before starting non-trivial work so we can align on direction.
 
-- SEND status tracking  
-- Provisions and support strategies  
-- IEPs and support plans  
-- Review schedules and outcomes  
-- Staff visibility controls  
-- Integration with attendance, behaviour, and assessment  
-- Chronological SEND history  
+## License
 
----
-
-### 📁 Documents & Attachments
-
-Secure, auditable document management.
-
-- File storage and attachments  
-- Linked to students, staff, or records  
-- Versioning and auditing  
-- Access control by role  
-- Cloud or self-hosted storage options  
-- Activity logging  
-
----
-
-### 📨 Admissions
-
-Tools to support the admissions pipeline.
-
-- Enquiries and applications  
-- Applicant records  
-- Status tracking  
-- Conversion to enrolled students  
-- Historical admissions data  
-
----
-
-### 🏫 School Configuration
-
-School-wide structure and operational settings.
-
-- School details and metadata  
-- Pastoral structure (houses, forms, year groups)  
-- Academic structure (years, terms, cycles)  
-- End-of-year routines and rollover  
-- Bulletins and announcements  
-- Calendar and key dates  
-
----
-
-### ⚙️ System Administration
-
-Fine-grained control and governance.
-
-- User accounts  
-- Roles and permissions  
-- Feature access controls  
-- Audit logging  
-- Security and authentication settings  
-- Integration points and APIs  
-- System-wide configuration  
-
----
-
-## 🧠 Design Philosophy
-
-MyPortal prioritises:
-
-- Data integrity over convenience  
-- Explicit modelling over hidden logic  
-- Auditable decisions and changes  
-- Real school workflows over theoretical ones  
-
-Each module is designed to stand on its own while contributing to a coherent whole.
-
-
----
-
-## 🏗️ Tech Stack
-
-- **Backend:** ASP.NET Core Web API  
-- **Frontend:** Angular  
-- **Database:** SQL Server (with support for additional providers planned)  
-- **Authentication:** OAuth 2.0 / OpenID Connect  
-- **Architecture:** Modular, API-first design  
-
----
-
-## 🚀 Getting Started
-
-Setup and deployment documentation is **coming soon**.
-
-In the meantime:
-- Watch this repository for updates
-- Follow the project on Twitter for progress and previews
-
-👉 **https://twitter.com/MyPortalEDU**
-
----
-
-## 📢 Project Status
-
-MyPortal is under **active development**.
-
-Core services and foundational modules are in place, with additional functionality being built iteratively. Stability, data integrity, and correctness take priority over rapid feature churn.
-
-This is a long-term project, not a throwaway prototype.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome from developers, educators, and anyone interested in improving school systems.
-
-Good areas to contribute include:
-- Backend services
-- Frontend UI/UX
-- Documentation
-- UK education domain knowledge
-- Testing and deployment tooling
-
-Open an issue or discussion to get started.
-
----
-
-## 📄 License
-
-MyPortal is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
-
-This ensures:
-- The software remains free and open
-- Improvements must be shared if deployed publicly
-- Schools retain freedom and transparency
-
-See the [LICENSE](https://www.gnu.org/licenses/agpl-3.0) file for details.
+Licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0). Modifications deployed over a network must be made available under the same licence.
