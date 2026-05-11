@@ -9,12 +9,13 @@ using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
 using MyPortal.FileStorage.Helpers;
 using MyPortal.FileStorage.Interfaces;
+using MyPortal.Services.Extensions;
 using MyPortal.Services.Filters;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Repositories;
-using MyPortal.Services.Interfaces.Services;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
+using MyPortal.Data.Interfaces;
+using MyPortal.Services.Interfaces.Documents;
 
 namespace MyPortal.Services.Documents;
 
@@ -44,7 +45,7 @@ public class DocumentService : BaseService, IDocumentService
 
     private long MaxFileSizeBytes => _fileStorageOptions.Value.MaxFileSizeBytes;
 
-    public async Task<DocumentDetailsResponse> CreateDocumentAsync(DocumentUpsertRequest model,
+    public async Task<DocumentDetailsResponse> CreateAsync(DocumentUpsertRequest model,
         CancellationToken cancellationToken)
     {
         if (model.Content == null || model.SizeBytes <= 0 || !model.Content.CanRead)
@@ -101,7 +102,7 @@ public class DocumentService : BaseService, IDocumentService
         return response;
     }
 
-    public async Task<DocumentDetailsResponse> UpdateDocumentAsync(Guid documentId, DocumentUpsertRequest model,
+    public async Task<DocumentDetailsResponse> UpdateAsync(Guid documentId, DocumentUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await _validationService.ValidateAsync(model);
@@ -206,7 +207,7 @@ public class DocumentService : BaseService, IDocumentService
         return response;
     }
         
-    public async Task DeleteDocumentAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true)
+    public async Task DeleteAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true)
     {
         var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
 
@@ -300,7 +301,15 @@ public class DocumentService : BaseService, IDocumentService
     public async Task<IList<LookupResponse>> GetDocumentTypesAsync(DocumentTypeFilter filter,
         CancellationToken cancellationToken)
     {
-        return await _documentTypeRepository.GetDocumentTypes(filter, cancellationToken);
+        var all = await _documentTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+
+        return all
+            .Where(t => t.Active)
+            .Where(t => (filter.General && t.General) || (filter.Student && t.Student) ||
+                        (filter.Contact && t.Contact) || (filter.Send && t.IsSend) ||
+                        (filter.Staff && t.Staff))
+            .Select(t => t.ToResponseModel())
+            .ToList();
     }
 
     private static void VerifyContentLength(long actual, long? claimed)

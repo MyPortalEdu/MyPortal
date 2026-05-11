@@ -1,15 +1,15 @@
+using System.Data;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Interfaces;
-using MyPortal.Services.Interfaces.Repositories.Base;
+using MyPortal.Data.Interfaces.Base;
 using QueryKit.Repositories;
 using QueryKit.Repositories.Enums;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 using System.Security.Authentication;
-using System.Transactions;
 
 namespace MyPortal.Data.Repositories.Base;
 
@@ -17,7 +17,7 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
     where TEntity : class, IEntity
 {
     protected IAuthorizationService AuthorizationService { get; }
-    
+
     public EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
     {
         AuthorizationService = authorizationService;
@@ -29,28 +29,30 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
     };
 
     protected override Task<PageResult<T>> GetListPagedAsync<T>(string sql, object? parameters, FilterOptions? filter, SortOptions? sort, PageOptions? paging,
-        bool includeDeleted = false, CancellationToken cancellationToken = new())
+        bool includeDeleted = false, CancellationToken cancellationToken = new(), IDbTransaction? transaction = null)
     {
         if (paging != null && sort == null)
         {
             sort = _defaultSort;
         }
 
-        return base.GetListPagedAsync<T>(sql, parameters, filter, sort, paging, includeDeleted, cancellationToken);
+        return base.GetListPagedAsync<T>(sql, parameters, filter, sort, paging, includeDeleted, cancellationToken,
+            transaction);
     }
 
     public override Task<PageResult<TEntity>> GetListPagedAsync(FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
-        bool includeDeleted = false, CancellationToken cancellationToken = default)
+        bool includeDeleted = false, CancellationToken cancellationToken = default, IDbTransaction? transaction = null)
     {
         if (paging != null && sort == null)
         {
             sort = _defaultSort;
         }
 
-        return base.GetListPagedAsync(filter, sort, paging, includeDeleted, cancellationToken);
+        return base.GetListPagedAsync(filter, sort, paging, includeDeleted, cancellationToken, transaction);
     }
 
-    public override Task<TEntity> InsertAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public override Task<TEntity> InsertAsync(TEntity entity, CancellationToken cancellationToken = default,
+        IDbTransaction? transaction = null)
     {
         if (entity is IAuditableEntity auditable)
         {
@@ -60,9 +62,9 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             {
                 throw new AuthenticationException("Not authenticated.");
             }
-            
+
             var ipAddress = AuthorizationService.GetCurrentUserIpAddress() ?? "";
-            
+
             auditable.CreatedAt = DateTime.UtcNow;
             auditable.CreatedById = userId.Value;
             auditable.CreatedByIpAddress = ipAddress;
@@ -70,24 +72,24 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             auditable.LastModifiedAt = DateTime.UtcNow;
             auditable.LastModifiedById = userId.Value;
         }
-        
+
         if (entity is IVersionedEntity { Version: 0 } versionedEntity)
         {
             versionedEntity.Version = 1;
         }
-        
-        return base.InsertAsync(entity, cancellationToken);
+
+        return base.InsertAsync(entity, cancellationToken, transaction);
     }
 
-    public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default,
+        IDbTransaction? transaction = null)
     {
-        // The system-entity check and the actual UPDATE are two separate Dapper calls.
-        // Wrap them in an ambient transaction so they enlist on the same connection /
-        // commit together — and so they enlist into any outer scope (e.g. a service
-        // that's already inside CreateTransactionScope).
-        using var tx = CreateTransactionScope();
-
-        var entityInDb = await GetByIdAsync(entity.Id, cancellationToken);
+        // For versioned entities, UpdateWithVersionAsync's row-version guard is the atomicity
+        // guarantee — no transaction needed around the read+write. For non-versioned entities
+        // the only thing in the read-then-write window is the IsSystem check, and IsSystem is a
+        // near-immutable seed-time property; the race is theoretical. Callers needing stronger
+        // atomicity should pass an IDbTransaction.
+        var entityInDb = await GetByIdAsync(entity.Id, cancellationToken, transaction);
 
         if (entityInDb is null)
         {
@@ -115,47 +117,41 @@ public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IE
             auditable.LastModifiedByIpAddress = ipAddress;
         }
 
-        TEntity result;
         if (entity is IVersionedEntity versioned)
         {
             var expected = versioned.Version;
 
             // Will throw ConcurrencyException if 0 rows (version mismatch or deleted)
-            // This is most likely a conflict since we've already had to retrieve the original entity by this point
-            await base.UpdateWithVersionAsync(entity, expected, cancellationToken);
+            await base.UpdateWithVersionAsync(entity, expected, cancellationToken, transaction);
 
             versioned.Version = expected + 1;
 
-            result = entity;
-        }
-        else
-        {
-            result = await base.UpdateAsync(entity, cancellationToken);
+            return entity;
         }
 
-        tx.Complete();
-        return result;
+        return await base.UpdateAsync(entity, cancellationToken, transaction);
     }
 
-    public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default, bool softDelete = true)
+    public override async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default,
+        bool softDelete = true, IDbTransaction? transaction = null)
     {
-        using var tx = CreateTransactionScope();
-
-        var entity = await GetByIdAsync(id, cancellationToken);
+        var entity = await GetByIdAsync(id, cancellationToken, transaction);
 
         if (entity is ISystemEntity { IsSystem: true })
         {
             throw new SystemEntityException("You cannot delete a system entity.");
         }
 
-        var result = await base.DeleteAsync(id, cancellationToken, softDelete);
-
-        tx.Complete();
-        return result;
+        return await base.DeleteAsync(id, cancellationToken, softDelete, transaction);
     }
+    
+    protected (IDbConnection conn, bool owns) AcquireConnection(IDbTransaction? transaction)
+    {
+        if (transaction?.Connection is { } shared)
+        {
+            return (shared, false);
+        }
 
-    private static TransactionScope CreateTransactionScope() =>
-        new(TransactionScopeOption.Required,
-            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
-            TransactionScopeAsyncFlowOption.Enabled);
+        return (_factory.Create(), true);
+    }
 }

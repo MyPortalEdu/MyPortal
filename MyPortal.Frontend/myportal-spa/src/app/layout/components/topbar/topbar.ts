@@ -1,62 +1,108 @@
-import {Component, EventEmitter, OnInit, Output} from '@angular/core';
-import {MenuItem} from 'primeng/api';
-import {Menu} from 'primeng/menu';
-import {Avatar} from 'primeng/avatar';
-import {Observable} from 'rxjs';
-import {MeService} from '../../../core/services/me-service';
-import {HttpClient} from '@angular/common/http';
-import {Me} from '../../../core/interfaces/me';
-import {AsyncPipe, UpperCasePipe} from '@angular/common';
-import {ButtonDirective, ButtonIcon} from 'primeng/button';
-import {RouterLink} from '@angular/router';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Avatar } from 'primeng/avatar';
+import { Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { MeService } from '../../../core/services/me-service';
+import { SchoolService } from '../../../core/services/school-service';
+import { AcademicYearService } from '../../../core/services/academic-year-service';
+import { AsyncPipe } from '@angular/common';
+import { ButtonDirective, ButtonIcon } from 'primeng/button';
+import { RouterLink } from '@angular/router';
+import { Popover } from 'primeng/popover';
+import { UserType } from '../../../core/enums/user-type';
+import { Me } from '../../../core/interfaces/me';
+
+interface SiteLabel {
+  school: string | null;
+  year: string | null;
+}
+
+type Theme = 'light' | 'dark' | 'system';
 
 @Component({
   selector: 'mp-topbar',
   standalone: true,
-  imports: [Menu, Avatar, UpperCasePipe, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink],
+  imports: [Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover],
   templateUrl: './topbar.html',
-  styleUrl: './topbar.scss'
+  styleUrl: './topbar.scss',
 })
 export class Topbar implements OnInit {
   @Output() menuToggle = new EventEmitter<void>();
-  me$!: Observable<Me>;
-  userMenu: MenuItem[] = [];
 
-  constructor(private http: HttpClient, private me: MeService) {}
+  me$!: Observable<Me>;
+  siteLabel$!: Observable<SiteLabel>;
+  theme: Theme = 'system';
+
+  // TODO: wire to the current-academic-year service once a switcher flow exists.
+  currentAcademicYear = '2025/26';
+
+  constructor(
+    private me: MeService,
+    private schools: SchoolService,
+    private academicYears: AcademicYearService,
+  ) {}
 
   ngOnInit(): void {
-    // Dark-mode class is applied in index.html before bootstrap to avoid FOUC.
     this.me$ = this.me.me();
-    this.updateUserMenu();
+
+    // Either request can 403 for users without view permissions (e.g. students for
+    // academic years); fall back to null so the label just hides that segment.
+    this.siteLabel$ = combineLatest([
+      this.schools.getLocalName().pipe(catchError(() => of<string | null>(null))),
+      this.academicYears.getCurrent().pipe(catchError(() => of(null))),
+    ]).pipe(
+      map(([school, year]) => ({ school, year: year?.name ?? null })),
+    );
+
+    this.theme = (localStorage.getItem('mp:theme') as Theme | null) ?? 'system';
+    this.applyTheme();
+
+    // Re-evaluate the resolved theme when the OS preference changes — only matters
+    // when the user has picked 'system'. Modern browsers fire `change` on the media
+    // query when the OS toggles between light/dark.
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (this.theme === 'system') this.applyTheme();
+    });
   }
 
-  private get isDark(): boolean {
-    return document.documentElement.classList.contains('mp-dark');
+  setTheme(next: Theme): void {
+    this.theme = next;
+    localStorage.setItem('mp:theme', next);
+    this.applyTheme();
   }
 
-  toggleDarkMode(): void {
-    const root = document.documentElement;
-    root.classList.toggle('mp-dark');
-    localStorage.setItem('mp:dark', this.isDark ? '1' : '0');
-    this.updateUserMenu();
+  private applyTheme(): void {
+    const dark =
+      this.theme === 'dark' ||
+      (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('mp-dark', dark);
   }
 
-  private updateUserMenu(): void {
-    const darkToggle: MenuItem = this.isDark
-      ? { label: 'Light mode', icon: 'pi pi-sun',  command: () => this.toggleDarkMode() }
-      : { label: 'Dark mode',  icon: 'pi pi-moon', command: () => this.toggleDarkMode() };
-
-    this.userMenu = [
-      { label: 'Profile',  icon: 'pi pi-user',  routerLink: ['/portal'] },
-      { label: 'Settings', icon: 'pi pi-cog',   routerLink: ['/portal'] },
-      { separator: true },
-      darkToggle,
-      { separator: true },
-      { label: 'Sign out', icon: 'pi pi-sign-out', command: () => this.logout() },
-    ];
+  initials(displayName: string | undefined): string {
+    if (!displayName) return 'U';
+    const parts = displayName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+    return (parts[0]![0] + parts[parts.length - 1]![0]).toUpperCase();
   }
 
-  logout() {
+  userTypeLabel(t: UserType | undefined): string {
+    switch (t) {
+      case UserType.Staff:
+        return 'Staff';
+      case UserType.Student:
+        return 'Student';
+      case UserType.Parent:
+        return 'Parent';
+      default:
+        return '';
+    }
+  }
+
+  onSwitchAcademicYear(): void {
+    // TODO: open the academic year picker (sub-menu or modal). For now, no-op so
+    // the row renders as a placeholder matching the design.
+  }
+
+  logout(): void {
     this.me.clearCache?.();
     location.href = '/account/logout';
   }

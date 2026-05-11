@@ -1,3 +1,4 @@
+@import "@fontsource-variable/inter";
 @import "primeicons/primeicons.css";
 
 @layer tailwind-base, primeng, tailwind-utilities;
@@ -12,3 +13,21 @@
 }
 
 html, body { height: 100%; }
+
+/* MyPortal brand font. Aura preset doesn't set a font-family of its own, so the
+   body declaration here flows through to every PrimeNG component too. */
+body {
+  font-family: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system,
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* PrimeNG card title size override — Aura's default sits around 1.25rem which is
+   too prominent for our compact card density. Centralised here so individual
+   components don't need per-card overrides. */
+.p-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+}

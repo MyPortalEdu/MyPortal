@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Contracts.Models.School;
-using MyPortal.Services.Interfaces.Repositories;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Data.Interfaces;
+using MyPortal.Services.Interfaces.School;
 
 namespace MyPortal.Services.School;
 

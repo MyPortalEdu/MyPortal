@@ -61,6 +61,7 @@ CREATE TABLE [dbo].[AcademicYears] (
     [Id] uniqueidentifier NOT NULL,
     [Name] nvarchar(128) NOT NULL,
     [IsLocked] bit NOT NULL,
+    [TimetableCycleLength] int NOT NULL,
     [CreatedById] UNIQUEIDENTIFIER NOT NULL,
     [CreatedByIpAddress] NVARCHAR(45) NOT NULL,
     [CreatedAt] DATETIME2(7) NOT NULL,
@@ -327,8 +328,8 @@ IF OBJECT_ID(N'[dbo].[AttendancePeriods]', N'U') IS NULL
 BEGIN
 CREATE TABLE [dbo].[AttendancePeriods] (
     [Id] uniqueidentifier NOT NULL,
-    [WeekPatternId] uniqueidentifier NOT NULL,
-    [Weekday] nvarchar(256) NOT NULL,
+    [AcademicYearId] uniqueidentifier NOT NULL,
+    [CycleDayIndex] int NOT NULL,
     [Name] nvarchar(256) NOT NULL,
     [StartTime] time(7) NOT NULL,
     [EndTime] time(7) NOT NULL,
@@ -339,23 +340,13 @@ CREATE TABLE [dbo].[AttendancePeriods] (
 END
 
 
-IF OBJECT_ID(N'[dbo].[AttendanceWeekPatterns]', N'U') IS NULL
-BEGIN
-CREATE TABLE [dbo].[AttendanceWeekPatterns] (
-    [Id] uniqueidentifier NOT NULL,
-    [Description] nvarchar(256) NOT NULL,
-    CONSTRAINT PK_AttendanceWeekPatterns PRIMARY KEY CLUSTERED ([Id])
-    );
-END
-
-
 IF OBJECT_ID(N'[dbo].[AttendanceWeeks]', N'U') IS NULL
 BEGIN
 CREATE TABLE [dbo].[AttendanceWeeks] (
     [Id] uniqueidentifier NOT NULL,
-    [WeekPatternId] uniqueidentifier NOT NULL,
     [AcademicTermId] uniqueidentifier NOT NULL,
     [Beginning] datetime2(7) NOT NULL,
+    [CycleOffset] int NOT NULL,
     [IsNonTimetable] bit NOT NULL,
     CONSTRAINT PK_AttendanceWeeks PRIMARY KEY CLUSTERED ([Id])
     );
@@ -848,6 +839,17 @@ CREATE TABLE [dbo].[Detentions] (
 END
 
 
+IF OBJECT_ID(N'[dbo].[SchoolHolidays]', N'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[SchoolHolidays] (
+    [Id] uniqueidentifier NOT NULL,
+    [EventId] uniqueidentifier NOT NULL,
+    [AcademicYearId] uniqueidentifier NOT NULL,
+    CONSTRAINT PK_SchoolHolidays PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+
+
 IF OBJECT_ID(N'[dbo].[DiaryEventAttendeeResponses]', N'U') IS NULL
 BEGIN
 CREATE TABLE [dbo].[DiaryEventAttendeeResponses] (
@@ -897,6 +899,8 @@ CREATE TABLE [dbo].[DiaryEventTypes] (
     [Active] bit NOT NULL CONSTRAINT DF_DiaryEventTypes_Active DEFAULT (1),
     [ColourCode] nvarchar(128) NOT NULL,
     [IsSystem] bit NOT NULL,
+    -- Maps to MyPortal.Common.Enums.DiaryEventKind. 0 = User (anything user-created).
+    [Kind] tinyint NOT NULL CONSTRAINT DF_DiaryEventTypes_Kind DEFAULT (0),
     CONSTRAINT PK_DiaryEventTypes PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -3352,16 +3356,16 @@ CREATE INDEX [IX_AttendanceMarks_LastModifiedById] ON [dbo].[AttendanceMarks]([L
 END
 
 
-IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_AttendancePeriods_WeekPatternId_AttendanceWeekPatterns' AND parent_object_id = OBJECT_ID(N'[dbo].[AttendancePeriods]'))
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_AttendancePeriods_AcademicYears' AND parent_object_id = OBJECT_ID(N'[dbo].[AttendancePeriods]'))
 BEGIN
 ALTER TABLE [dbo].[AttendancePeriods]
-    ADD CONSTRAINT [FK_AttendancePeriods_WeekPatternId_AttendanceWeekPatterns] FOREIGN KEY ([WeekPatternId]) REFERENCES [dbo].[AttendanceWeekPatterns]([Id]);
+    ADD CONSTRAINT [FK_AttendancePeriods_AcademicYears] FOREIGN KEY ([AcademicYearId]) REFERENCES [dbo].[AcademicYears]([Id]);
 END
 
 
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AttendancePeriods_WeekPatternId' AND object_id = OBJECT_ID(N'[dbo].[AttendancePeriods]'))
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AttendancePeriods_AcademicYearId' AND object_id = OBJECT_ID(N'[dbo].[AttendancePeriods]'))
 BEGIN
-CREATE INDEX [IX_AttendancePeriods_WeekPatternId] ON [dbo].[AttendancePeriods]([WeekPatternId]);
+CREATE INDEX [IX_AttendancePeriods_AcademicYearId] ON [dbo].[AttendancePeriods]([AcademicYearId]);
 END
 
 
@@ -3375,19 +3379,6 @@ END
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AttendanceWeeks_AcademicTermId' AND object_id = OBJECT_ID(N'[dbo].[AttendanceWeeks]'))
 BEGIN
 CREATE INDEX [IX_AttendanceWeeks_AcademicTermId] ON [dbo].[AttendanceWeeks]([AcademicTermId]);
-END
-
-
-IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_AttendanceWeeks_WeekPatternId_AttendanceWeekPatterns' AND parent_object_id = OBJECT_ID(N'[dbo].[AttendanceWeeks]'))
-BEGIN
-ALTER TABLE [dbo].[AttendanceWeeks]
-    ADD CONSTRAINT [FK_AttendanceWeeks_WeekPatternId_AttendanceWeekPatterns] FOREIGN KEY ([WeekPatternId]) REFERENCES [dbo].[AttendanceWeekPatterns]([Id]);
-END
-
-
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_AttendanceWeeks_WeekPatternId' AND object_id = OBJECT_ID(N'[dbo].[AttendanceWeeks]'))
-BEGIN
-CREATE INDEX [IX_AttendanceWeeks_WeekPatternId] ON [dbo].[AttendanceWeeks]([WeekPatternId]);
 END
 
 
@@ -4038,6 +4029,32 @@ END
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Detentions_SupervisorId' AND object_id = OBJECT_ID(N'[dbo].[Detentions]'))
 BEGIN
 CREATE INDEX [IX_Detentions_SupervisorId] ON [dbo].[Detentions]([SupervisorId]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_SchoolHolidays_EventId_DiaryEvents' AND parent_object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+ALTER TABLE [dbo].[SchoolHolidays]
+    ADD CONSTRAINT [FK_SchoolHolidays_EventId_DiaryEvents] FOREIGN KEY ([EventId]) REFERENCES [dbo].[DiaryEvents]([Id]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SchoolHolidays_EventId' AND object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+CREATE INDEX [IX_SchoolHolidays_EventId] ON [dbo].[SchoolHolidays]([EventId]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_SchoolHolidays_AcademicYearId_AcademicYears' AND parent_object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+ALTER TABLE [dbo].[SchoolHolidays]
+    ADD CONSTRAINT [FK_SchoolHolidays_AcademicYearId_AcademicYears] FOREIGN KEY ([AcademicYearId]) REFERENCES [dbo].[AcademicYears]([Id]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SchoolHolidays_AcademicYearId' AND object_id = OBJECT_ID(N'[dbo].[SchoolHolidays]'))
+BEGIN
+CREATE INDEX [IX_SchoolHolidays_AcademicYearId] ON [dbo].[SchoolHolidays]([AcademicYearId]);
 END
 
 

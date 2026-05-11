@@ -3,14 +3,19 @@ import { LinkItem, MenuCategory } from './menu-types';
 
 export function buildMenu(
   categories: MenuCategory[],
-  has: (perm: string) => boolean
+  has: (perm: string) => boolean,
+  homeLink: string | any[] = ['/']
 ): MenuItem[] {
   const menu: MenuItem[] = [];
 
+  // Home routes to the caller's portal root (e.g. '/staff', '/student'). It's marked
+  // exact-match so it doesn't also highlight when a deeper portal route is active
+  // (e.g. /staff/system/users would otherwise prefix-match /staff).
   menu.push({
     label: 'Home',
     icon: 'pi pi-home',
-    routerLink: ['/']
+    routerLink: homeLink,
+    state: { exact: true }
   });
 
   const categoryItems = categories

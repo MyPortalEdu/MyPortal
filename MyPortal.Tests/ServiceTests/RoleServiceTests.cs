@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -8,10 +9,10 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.System;
 using MyPortal.Tests.Mocks;
 using Task = System.Threading.Tasks.Task;
+using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Tests.ServiceTests;
 
@@ -76,7 +77,7 @@ public class RoleServiceTests
     }
 
     [Test]
-    public async Task CreateRoleAsync_ValidatesModel_ThenCreatesRole_AndAssignsPermissions()
+    public async Task CreateAsync_ValidatesModel_ThenCreatesRole_AndAssignsPermissions()
     {
         var permId1 = Guid.NewGuid();
         var permId2 = Guid.NewGuid();
@@ -92,10 +93,10 @@ public class RoleServiceTests
         _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RolePermission>());
         _rolePermissionRepository
-            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RolePermission rp, CancellationToken _) => rp);
+            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
 
-        var result = await _roleService.CreateRoleAsync(model, CancellationToken.None);
+        var result = await _roleService.CreateAsync(model, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.True);
         _validationService.Verify(v => v.ValidateAsync(model), Times.Once);
@@ -104,13 +105,13 @@ public class RoleServiceTests
             Times.Once);
         // Two new permissions, no removals.
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == permId1), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<RolePermission>(rp => rp.PermissionId == permId1), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == permId2), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<RolePermission>(rp => rp.PermissionId == permId2), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
     }
 
     [Test]
-    public async Task CreateRoleAsync_DoesNotAssignPermissions_WhenRoleManagerFails()
+    public async Task CreateAsync_DoesNotAssignPermissions_WhenRoleManagerFails()
     {
         var model = new RoleUpsertRequest
         {
@@ -121,17 +122,17 @@ public class RoleServiceTests
         _roleManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationRole>()))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Code = "X", Description = "no" }));
 
-        var result = await _roleService.CreateRoleAsync(model, CancellationToken.None);
+        var result = await _roleService.CreateAsync(model, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.False);
         _rolePermissionRepository.Verify(r => r.GetByRoleIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        _rolePermissionRepository.Verify(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>()),
+        _rolePermissionRepository.Verify(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()),
             Times.Never);
     }
 
     [Test]
-    public async Task UpdateRoleAsync_ValidatesModel_AndUpdatesPermissions()
+    public async Task UpdateAsync_ValidatesModel_AndUpdatesPermissions()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "Old", IsSystem = false };
@@ -151,10 +152,10 @@ public class RoleServiceTests
         _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
         _rolePermissionRepository
-            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((RolePermission rp, CancellationToken _) => rp);
+            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
         _rolePermissionRepository
-            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<bool>()))
+            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
 
         var model = new RoleUpsertRequest
@@ -164,7 +165,7 @@ public class RoleServiceTests
             PermissionIds = new List<Guid> { keptPermId, addedPermId }
         };
 
-        var result = await _roleService.UpdateRoleAsync(roleId, model, CancellationToken.None);
+        var result = await _roleService.UpdateAsync(roleId, model, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.True);
         Assert.That(role.Name, Is.EqualTo("New"));
@@ -172,40 +173,40 @@ public class RoleServiceTests
         _validationService.Verify(v => v.ValidateAsync(model), Times.Once);
         // Only the new permission is inserted; only the dropped one is deleted.
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == addedPermId), It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<RolePermission>(rp => rp.PermissionId == addedPermId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
         _rolePermissionRepository.Verify(r => r.DeleteAsync(
             It.Is<Guid>(id => existing.Any(e => e.Id == id && e.PermissionId == removedPermId)),
-            It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Once);
         // The kept permission is neither re-inserted nor deleted.
         _rolePermissionRepository.Verify(r => r.InsertAsync(
-            It.Is<RolePermission>(rp => rp.PermissionId == keptPermId), It.IsAny<CancellationToken>()), Times.Never);
+            It.Is<RolePermission>(rp => rp.PermissionId == keptPermId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     [Test]
-    public void UpdateRoleAsync_Throws_NotFound_WhenRoleMissing()
+    public void UpdateAsync_Throws_NotFound_WhenRoleMissing()
     {
         var roleId = Guid.NewGuid();
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync((ApplicationRole?)null);
 
-        Assert.That(async () => await _roleService.UpdateRoleAsync(roleId, new RoleUpsertRequest { Name = "X" },
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest { Name = "X" },
                 CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("Role not found."));
     }
 
     [Test]
-    public void UpdateRoleAsync_Throws_SystemEntityException_WhenRoleIsSystem()
+    public void UpdateAsync_Throws_SystemEntityException_WhenRoleIsSystem()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "System Administrator", IsSystem = true };
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
 
-        Assert.That(async () => await _roleService.UpdateRoleAsync(roleId, new RoleUpsertRequest { Name = "X" },
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest { Name = "X" },
                 CancellationToken.None),
             Throws.TypeOf<SystemEntityException>());
     }
 
     [Test]
-    public async Task DeleteRoleAsync_DeletesPermissions_AndRole_AndInvalidatesCache()
+    public async Task DeleteAsync_DeletesPermissions_AndRole_AndInvalidatesCache()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "Custom", IsSystem = false };
@@ -215,21 +216,21 @@ public class RoleServiceTests
         _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<RolePermission> { existingRolePermission });
         _rolePermissionRepository
-            .Setup(r => r.DeleteAsync(existingRolePermission.Id, It.IsAny<CancellationToken>(), It.IsAny<bool>()))
+            .Setup(r => r.DeleteAsync(existingRolePermission.Id, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
         _roleManager.Setup(m => m.DeleteAsync(role)).ReturnsAsync(IdentityResult.Success);
 
-        var result = await _roleService.DeleteRoleAsync(roleId, CancellationToken.None);
+        var result = await _roleService.DeleteAsync(roleId, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.True);
         _rolePermissionRepository.Verify(r => r.DeleteAsync(existingRolePermission.Id,
-            It.IsAny<CancellationToken>(), It.IsAny<bool>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Once);
         _roleManager.Verify(m => m.DeleteAsync(role), Times.Once);
         _rolePermissionCache.Verify(c => c.Invalidate(roleId), Times.Once);
     }
 
     [Test]
-    public async Task DeleteRoleAsync_DoesNotInvalidateCache_WhenRoleManagerFails()
+    public async Task DeleteAsync_DoesNotInvalidateCache_WhenRoleManagerFails()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "Custom", IsSystem = false };
@@ -240,30 +241,30 @@ public class RoleServiceTests
         _roleManager.Setup(m => m.DeleteAsync(role))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Code = "X", Description = "no" }));
 
-        var result = await _roleService.DeleteRoleAsync(roleId, CancellationToken.None);
+        var result = await _roleService.DeleteAsync(roleId, CancellationToken.None);
 
         Assert.That(result.Succeeded, Is.False);
         _rolePermissionCache.Verify(c => c.Invalidate(It.IsAny<Guid>()), Times.Never);
     }
 
     [Test]
-    public void DeleteRoleAsync_Throws_NotFound_WhenRoleMissing()
+    public void DeleteAsync_Throws_NotFound_WhenRoleMissing()
     {
         var roleId = Guid.NewGuid();
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync((ApplicationRole?)null);
 
-        Assert.That(async () => await _roleService.DeleteRoleAsync(roleId, CancellationToken.None),
+        Assert.That(async () => await _roleService.DeleteAsync(roleId, CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("Role not found."));
     }
 
     [Test]
-    public void DeleteRoleAsync_Throws_SystemEntityException_WhenRoleIsSystem()
+    public void DeleteAsync_Throws_SystemEntityException_WhenRoleIsSystem()
     {
         var roleId = Guid.NewGuid();
         var role = new ApplicationRole { Id = roleId, Name = "System Administrator", IsSystem = true };
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
 
-        Assert.That(async () => await _roleService.DeleteRoleAsync(roleId, CancellationToken.None),
+        Assert.That(async () => await _roleService.DeleteAsync(roleId, CancellationToken.None),
             Throws.TypeOf<SystemEntityException>());
     }
 }

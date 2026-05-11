@@ -11,12 +11,15 @@ namespace MyPortal.Core.Entities
 
         public Guid? RoomId { get; set; }
 
+        public Guid? TimetableId { get; set; }
+
         public DateTime StartDate { get; set; }
 
         public DateTime EndDate { get; set; }
-
+        
         public StaffMember? Teacher { get; set; }
         public Class? Class { get; set; }
         public Room? Room { get; set; }
+        public Timetable? Timetable { get; set; }
     }
 }

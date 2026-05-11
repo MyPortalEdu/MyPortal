@@ -2,9 +2,9 @@
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
@@ -23,7 +23,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
             
-            var sql = "[dbo].[sp_role_get_details_by_id]";
+            var sql = "[dbo].[usp_role_get_details_by_id]";
 
             var p = new { roleId };
             

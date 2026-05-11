@@ -4,8 +4,8 @@ using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 using Directory = MyPortal.Core.Entities.Directory;
 
@@ -22,7 +22,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_directory_get_details_by_id]";
+            var sql = @"[dbo].[usp_directory_get_details_by_id]";
 
             var param = new
                 { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
@@ -37,7 +37,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_directory_get_details_by_parent_id]";
+            var sql = @"[dbo].[usp_directory_get_details_by_parent_id]";
 
             var param = new
                 { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
@@ -53,7 +53,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_directory_get_tree_by_id]";
+            var sql = @"[dbo].[usp_directory_get_tree_by_id]";
 
             var param = new
                 { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
@@ -69,7 +69,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_directory_is_in_subtree]";
+            var sql = @"[dbo].[usp_directory_is_in_subtree]";
 
             var param = new { rootDirectoryId, candidateDirectoryId };
 

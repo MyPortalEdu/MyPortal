@@ -2,10 +2,10 @@
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
-using MyPortal.Services.Interfaces.Repositories;
-using MyPortal.Services.School.Bulletins;
+using MyPortal.Data.VisibilityScopes;
 using QueryKit.Extensions;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
@@ -25,7 +25,7 @@ public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepositor
     {
         using var conn = _factory.Create();
 
-        var sql = "[dbo].[sp_bulletin_get_details_by_id]";
+        var sql = "[dbo].[usp_bulletin_get_details_by_id]";
 
         var p = new
         {

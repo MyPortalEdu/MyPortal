@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using MyPortal.Core.Enums;
+using MyPortal.Common.Enums;
 
 namespace MyPortal.Core.Entities
 {
