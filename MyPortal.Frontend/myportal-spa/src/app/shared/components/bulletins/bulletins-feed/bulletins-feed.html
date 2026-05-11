@@ -35,8 +35,11 @@
     }
   </div>
 
-  <!-- Items -->
-  <div class="flex flex-col gap-2">
+  <!-- Items. Capped to ~5 tiles before scroll so the widget doesn't grow
+       indefinitely on busy weeks — the card header/filters/footer stay in
+       place; only the list scrolls. pr-1 keeps the scrollbar from sitting
+       on top of each tile's right edge. -->
+  <div class="flex flex-col gap-2 max-h-[26rem] overflow-y-auto pr-1">
     @if (loading()) {
       <div class="text-sm text-muted-color px-1 py-2">Loading bulletins…</div>
     } @else if (filteredBulletins().length === 0) {
@@ -54,22 +57,41 @@
             <i [class]="b.categoryIcon" [style.color]="b.categoryColourCode"></i>
           </div>
           <div class="flex-1 min-w-0 flex flex-col gap-0.5">
-            <div class="flex items-center gap-2 text-xs">
-              <span class="font-semibold uppercase tracking-wide" [style.color]="b.categoryColourCode">
+            <!-- Meta row: category · time · author, with status badges (ack +
+                 pin) right-aligned. Author folded in here so each tile is one
+                 line shorter — saves vertical mass when the widget shows many
+                 bulletins. The right-side wrapper only renders when there's a
+                 badge to show, so the parent flex's gap doesn't leave a blank
+                 trailing slot. -->
+            <div class="flex items-center gap-2 text-xs min-w-0">
+              <span class="font-semibold uppercase tracking-wide shrink-0" [style.color]="b.categoryColourCode">
                 {{ b.categoryName }}
               </span>
               <span class="text-muted-color">·</span>
-              <span class="text-muted-color">{{ timeAgo(b.createdAt) }}</span>
-              @if (b.pinnedAt) {
-                <span class="text-muted-color">·</span>
-                <i class="pi pi-bookmark-fill text-primary" title="Pinned"></i>
+              <span class="text-muted-color shrink-0">{{ timeAgo(b.createdAt) }}</span>
+              <span class="text-muted-color">·</span>
+              <span class="text-muted-color truncate">{{ b.createdByName }}</span>
+              @if (b.requiresAcknowledgement || b.pinnedAt) {
+                <div class="ml-auto flex items-center gap-2 shrink-0">
+                  @if (b.requiresAcknowledgement) {
+                    @if (b.hasAcknowledged) {
+                      <span class="inline-flex items-center gap-1 font-medium text-[var(--p-green-600)]">
+                        <i class="pi pi-check-circle"></i>Acknowledged
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1 font-medium text-[var(--p-amber-600)]">
+                        <i class="pi pi-exclamation-circle"></i>Acknowledge
+                      </span>
+                    }
+                  }
+                  @if (b.pinnedAt) {
+                    <i class="pi pi-bookmark-fill text-primary" title="Pinned"></i>
+                  }
+                </div>
               }
             </div>
             <div class="text-color font-semibold leading-snug truncate">{{ b.title }}</div>
             <div class="text-color text-sm opacity-80 line-clamp-2">{{ b.detail }}</div>
-            <div class="text-muted-color text-xs mt-1 truncate">
-              {{ b.createdByName }}
-            </div>
           </div>
         </button>
       }
