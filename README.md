@@ -51,7 +51,7 @@ MyPortal.Frontend/myportal-spa/   Angular SPA
 ### 1. Clone
 
 ```bash
-git clone https://github.com/<owner>/MyPortal.git
+git clone https://github.com/MyPortalEdu/MyPortal.git
 cd MyPortal
 ```
 
