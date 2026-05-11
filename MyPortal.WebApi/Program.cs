@@ -26,6 +26,7 @@ using MyPortal.FileStorage.Extensions;
 using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Filters;
+using MyPortal.WebApi.Infrastructure.Extensions;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
@@ -387,25 +388,20 @@ app.UseAuthorization();
 
 app.Use(async (ctx, next) =>
 {
-    // Issue the XSRF-TOKEN cookie on any browser navigation that returns the SPA shell —
-    // not just `/`. Deep links (handled by MapFallbackToFile) need it too. We gate on the
-    // Accept header so API/XHR/asset requests don't unnecessarily mint a token.
+    // Mint / re-issue the XSRF-TOKEN cookie on every SPA-shell navigation that
+    // flows through this server. In production this covers every initial load
+    // and full page navigation; in dev `ng serve` proxies only /api, /connect,
+    // and /account back here, so SPA-route navigations (e.g. /staff) bypass
+    // this middleware entirely — that's why the login flow also calls
+    // RefreshXsrfCookie() after sign-in (see Areas/Account/Pages/Login.cshtml.cs).
+    // Gated on Accept: text/html so asset requests don't pay the cost.
     if (HttpMethods.IsGet(ctx.Request.Method) &&
-        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN") &&
         !ctx.Request.Path.StartsWithSegments("/api") &&
         !ctx.Request.Path.StartsWithSegments("/connect") &&
         ctx.Request.Headers["Accept"].ToString()
             .Contains("text/html", StringComparison.OrdinalIgnoreCase))
     {
-        var anti = ctx.RequestServices.GetRequiredService<IAntiforgery>();
-        var tokens = anti.GetAndStoreTokens(ctx);
-        ctx.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
-        {
-            HttpOnly = false,
-            Secure = true,
-            SameSite = SameSiteMode.Lax,
-            Path = "/"
-        });
+        ctx.RefreshXsrfCookie();
     }
     await next();
 });

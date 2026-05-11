@@ -1,0 +1,56 @@
+.close-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--p-text-muted-color);
+
+  &:hover {
+    background: var(--p-content-hover-background);
+    color: var(--p-text-color);
+  }
+}
+
+.audience-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid var(--p-content-border-color);
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--p-text-muted-color);
+  cursor: pointer;
+  transition: background-color 120ms, color 120ms, border-color 120ms;
+
+  &:hover {
+    background: var(--p-content-hover-background);
+    color: var(--p-text-color);
+  }
+
+  &.is-selected {
+    color: var(--p-primary-color);
+    border-color: color-mix(in srgb, var(--p-primary-color) 40%, transparent);
+    background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+  }
+}
+
+.attachments-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  border: 1px dashed var(--p-content-border-color);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--p-content-background) 60%, transparent);
+  font-size: 0.875rem;
+  color: var(--p-text-muted-color);
+}

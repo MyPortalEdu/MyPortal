@@ -1,0 +1,97 @@
+<section class="bulletins-feed flex flex-col bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 gap-3">
+  <!-- Header -->
+  <div class="flex items-center gap-3">
+    <i class="pi pi-bell text-primary text-xl"></i>
+    <h3 class="text-base font-semibold m-0">Bulletins</h3>
+    @if (newCount() > 0) {
+      <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+        {{ newCount() }} new
+      </span>
+    }
+  </div>
+
+  <!-- Category filter chips -->
+  <div class="flex flex-wrap gap-2">
+    <button
+      type="button"
+      class="category-chip"
+      [class.is-selected]="selectedCategoryId() === null"
+      (click)="selectCategory(null)">
+      All
+    </button>
+    @for (cat of categories(); track cat.id) {
+      <button
+        type="button"
+        class="category-chip"
+        [class.is-selected]="selectedCategoryId() === cat.id"
+        [style.--chip-colour]="cat.colourCode"
+        (click)="selectCategory(cat.id)">
+        <i [class]="cat.icon"></i>
+        {{ cat.name }}
+      </button>
+    }
+  </div>
+
+  <!-- Items -->
+  <div class="flex flex-col gap-2">
+    @if (loading()) {
+      <div class="text-sm opacity-60 px-1 py-2">Loading bulletins…</div>
+    } @else if (filteredBulletins().length === 0) {
+      <div class="text-sm opacity-60 px-1 py-6 text-center">No bulletins to show.</div>
+    } @else {
+      @for (b of filteredBulletins(); track b.id) {
+        <button
+          type="button"
+          class="bulletin-row"
+          [style.border-left-color]="b.categoryColourCode"
+          (click)="openDetail(b.id)">
+          <div class="icon-square" [style.background-color]="tint(b.categoryColourCode)">
+            <i [class]="b.categoryIcon" [style.color]="b.categoryColourCode"></i>
+          </div>
+          <div class="content min-w-0">
+            <div class="meta flex items-center gap-2 text-xs">
+              <span class="font-semibold uppercase tracking-wide" [style.color]="b.categoryColourCode">
+                {{ b.categoryName }}
+              </span>
+              <span class="opacity-60">·</span>
+              <span class="opacity-70">{{ timeAgo(b.createdAt) }}</span>
+              @if (b.pinnedAt) {
+                <span class="opacity-60">·</span>
+                <i class="pi pi-bookmark-fill text-primary" title="Pinned"></i>
+              }
+            </div>
+            <div class="title font-semibold leading-snug truncate">{{ b.title }}</div>
+            <div class="snippet text-sm opacity-80 line-clamp-2">{{ b.detail }}</div>
+            <div class="footer-meta text-xs opacity-70 mt-1 truncate">
+              {{ b.createdByName }}
+            </div>
+          </div>
+        </button>
+      }
+    }
+  </div>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-between mt-1">
+    <a routerLink="/bulletins" class="text-sm text-primary font-medium hover:underline">
+      See all bulletins →
+    </a>
+    <p-button label="New" icon="pi pi-plus" size="small" (click)="openNew()"></p-button>
+  </div>
+
+  <!-- Dialogs -->
+  <mp-bulletin-detail-dialog
+    [bulletinId]="detailId()"
+    (closed)="closeDetail()"
+    (acknowledged)="onAcknowledged()"
+    (editRequested)="onEditRequested($event)"
+    (deleteRequested)="onDeleteRequested($event)">
+  </mp-bulletin-detail-dialog>
+
+  <mp-bulletin-form-dialog
+    [visible]="formOpen()"
+    [existing]="editingBulletin()"
+    (closed)="closeForm()"
+    (saved)="onSaved()">
+  </mp-bulletin-form-dialog>
+</section>

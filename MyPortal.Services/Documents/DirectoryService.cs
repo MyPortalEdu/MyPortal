@@ -45,7 +45,7 @@ public class DirectoryService : BaseService, IDirectoryService
 
         await _directoryRepository.InsertAsync(directory, cancellationToken, uow?.Transaction);
 
-        return await GetDirectoryByIdAsync(id, cancellationToken);
+        return await GetDirectoryByIdAsync(id, cancellationToken, uow);
     }
 
     public async Task<DirectoryDetailsResponse> UpdateAsync(Guid directoryId, DirectoryUpsertRequest model,
@@ -97,9 +97,10 @@ public class DirectoryService : BaseService, IDirectoryService
     }
 
     public async Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        var result = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
+        var result = await _directoryRepository.GetDetailsByIdAsync(directoryId,
+            cancellationToken, uow?.Transaction);
 
         if (result == null)
         {

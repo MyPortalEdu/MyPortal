@@ -10,7 +10,8 @@ namespace MyPortal.Services.Interfaces.Documents
         Task<DirectoryDetailsResponse> UpdateAsync(Guid directoryId, DirectoryUpsertRequest model,
             CancellationToken cancellationToken);
         Task DeleteAsync(Guid directoryId, CancellationToken cancellationToken, IUnitOfWork? uow = null);
-        Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId, CancellationToken cancellationToken);
+        Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId, CancellationToken cancellationToken,
+            IUnitOfWork? uow = null);
         Task<DirectoryDetailsResponse?> TryGetDirectoryByIdAsync(Guid directoryId,
             CancellationToken cancellationToken);
         Task<DirectoryContentsResponse>

@@ -5,6 +5,7 @@ import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {providePrimeNG} from 'primeng/config';
+import {MessageService} from 'primeng/api';
 import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angular/common/http';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
@@ -53,6 +54,11 @@ export const appConfig: ApplicationConfig = {
         },
       }
     }),
+    // Single MessageService instance shared by everything that toasts via
+    // NotificationService. PrimeNG ties toast messages to whichever
+    // MessageService provided the <p-toast> in the tree — root-scoped is what
+    // we want, because <p-toast> lives in the root App component.
+    MessageService,
     { provide: MENU_CONTRIBUTORS, useClass: StaffMenuContributor, multi: true },
     { provide: ErrorHandler, useClass: AppErrorHandler }
   ]
