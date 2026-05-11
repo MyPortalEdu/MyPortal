@@ -62,7 +62,6 @@
         <p-button
           label="Acknowledge"
           icon="pi pi-check"
-          size="small"
           [loading]="acknowledging()"
           (click)="acknowledge()">
         </p-button>
@@ -81,16 +80,14 @@
             icon="pi pi-pencil"
             severity="secondary"
             [text]="true"
-            size="small"
-            (click)="requestEdit()">
+              (click)="requestEdit()">
           </p-button>
           <p-button
             label="Delete"
             icon="pi pi-trash"
             severity="danger"
             [text]="true"
-            size="small"
-            (click)="requestDelete()">
+              (click)="requestDelete()">
           </p-button>
         }
         <a class="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1.5 ml-2"

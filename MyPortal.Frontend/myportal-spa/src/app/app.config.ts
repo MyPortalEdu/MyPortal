@@ -28,6 +28,20 @@ const MyPortal = definePreset(Aura, {
       800: '{indigo.800}',
       900: '{indigo.900}',
       950: '{indigo.950}'
+    },
+    // Promote Aura's "small" form-field density to the new default so we don't
+    // litter every template with size="small" / pSize="small". Buttons inherit
+    // padding via {form.field.padding.x|y} so they pick this up automatically.
+    // The `sm` and `lg` variants still work — they're just now relative to this
+    // tighter baseline. Source of token defaults: @primeuix/themes/aura/base.
+    //
+    // Font-size is dropped to 0.875rem via `.p-component` in styles.css —
+    // padding alone doesn't shrink the visible mass enough, and PrimeNG's
+    // typings only expose fontSize on the sm/lg variants so we can't set it
+    // here.
+    formField: {
+      paddingX: '0.625rem',     // was 0.75rem
+      paddingY: '0.375rem'      // was 0.5rem
     }
   }
 })

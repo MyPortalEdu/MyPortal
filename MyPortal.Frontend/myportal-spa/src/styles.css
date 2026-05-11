@@ -31,6 +31,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Global PrimeNG density. Aura's default form-field fontSize is 1rem and the
+   preset's typings only expose fontSize overrides on the sm/lg variants — so
+   to make the *default* size feel like "small" we drop the base .p-component
+   font-size here. Buttons, inputs, selects, checkboxes all inherit from this.
+   Pair with the formField paddingX/Y override in app.config.ts.
+   Components with their own typography (dialog header, card title) keep
+   their explicit sizes via higher-specificity rules. */
+.p-component {
+  font-size: 0.875rem;
+}
+
 /* PrimeNG card title size override — Aura's default sits around 1.25rem which is
    too prominent for our compact card density. Centralised here so individual
    components don't need per-card overrides. */
