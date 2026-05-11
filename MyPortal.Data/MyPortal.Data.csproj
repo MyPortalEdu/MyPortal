@@ -22,6 +22,8 @@
     <EmbeddedResource Include="Sql\Pastoral\GetHouseSummaries.sql" />
     <None Remove="Sql\Pastoral\GetYearGroupSummaries.sql" />
     <EmbeddedResource Include="Sql\Pastoral\GetYearGroupSummaries.sql" />
+    <None Remove="Sql\Pastoral\GetRegGroupSummaries.sql" />
+    <EmbeddedResource Include="Sql\Pastoral\GetRegGroupSummaries.sql" />
   </ItemGroup>
 
   <ItemGroup>
