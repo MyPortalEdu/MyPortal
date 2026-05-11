@@ -1,4 +1,4 @@
-<section class="bulletins-feed flex flex-col bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 gap-3">
+<section class="flex flex-col bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 gap-3">
   <!-- Header -->
   <div class="flex items-center gap-3">
     <i class="pi pi-bell text-primary text-xl"></i>
@@ -10,23 +10,26 @@
     }
   </div>
 
-  <!-- Category filter chips -->
+  <!-- Category filter chips. "All" uses primary tint when active; per-category
+       chips use their own colourCode via inline styles so each category gets
+       its own active treatment. -->
   <div class="flex flex-wrap gap-2">
     <button
       type="button"
-      class="category-chip"
-      [class.is-selected]="selectedCategoryId() === null"
+      class="mp-chip"
+      [class.mp-chip-active]="selectedCategoryId() === null"
       (click)="selectCategory(null)">
       All
     </button>
     @for (cat of categories(); track cat.id) {
       <button
         type="button"
-        class="category-chip"
-        [class.is-selected]="selectedCategoryId() === cat.id"
-        [style.--chip-colour]="cat.colourCode"
+        class="mp-chip"
+        [style.color]="selectedCategoryId() === cat.id ? cat.colourCode : null"
+        [style.borderColor]="selectedCategoryId() === cat.id ? tint(cat.colourCode, '59') : null"
+        [style.backgroundColor]="selectedCategoryId() === cat.id ? tint(cat.colourCode, '1A') : null"
         (click)="selectCategory(cat.id)">
-        <i [class]="cat.icon"></i>
+        <i [class]="cat.icon" [style.color]="cat.colourCode"></i>
         {{ cat.name }}
       </button>
     }
@@ -35,34 +38,36 @@
   <!-- Items -->
   <div class="flex flex-col gap-2">
     @if (loading()) {
-      <div class="text-sm opacity-60 px-1 py-2">Loading bulletins…</div>
+      <div class="text-sm text-muted-color px-1 py-2">Loading bulletins…</div>
     } @else if (filteredBulletins().length === 0) {
-      <div class="text-sm opacity-60 px-1 py-6 text-center">No bulletins to show.</div>
+      <div class="text-sm text-muted-color px-1 py-6 text-center">No bulletins to show.</div>
     } @else {
       @for (b of filteredBulletins(); track b.id) {
         <button
           type="button"
-          class="bulletin-row"
-          [style.border-left-color]="b.categoryColourCode"
+          class="flex gap-3 px-3.5 py-3 rounded-lg border border-surface border-l-4 bg-[var(--p-card-background)] text-left cursor-pointer transition-colors hover:bg-emphasis hover:shadow-sm"
+          [style.borderLeftColor]="b.categoryColourCode"
           (click)="openDetail(b.id)">
-          <div class="icon-square" [style.background-color]="tint(b.categoryColourCode)">
+          <div
+            class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-base"
+            [style.backgroundColor]="tint(b.categoryColourCode)">
             <i [class]="b.categoryIcon" [style.color]="b.categoryColourCode"></i>
           </div>
-          <div class="content min-w-0">
-            <div class="meta flex items-center gap-2 text-xs">
+          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+            <div class="flex items-center gap-2 text-xs">
               <span class="font-semibold uppercase tracking-wide" [style.color]="b.categoryColourCode">
                 {{ b.categoryName }}
               </span>
-              <span class="opacity-60">·</span>
-              <span class="opacity-70">{{ timeAgo(b.createdAt) }}</span>
+              <span class="text-muted-color">·</span>
+              <span class="text-muted-color">{{ timeAgo(b.createdAt) }}</span>
               @if (b.pinnedAt) {
-                <span class="opacity-60">·</span>
+                <span class="text-muted-color">·</span>
                 <i class="pi pi-bookmark-fill text-primary" title="Pinned"></i>
               }
             </div>
-            <div class="title font-semibold leading-snug truncate">{{ b.title }}</div>
-            <div class="snippet text-sm opacity-80 line-clamp-2">{{ b.detail }}</div>
-            <div class="footer-meta text-xs opacity-70 mt-1 truncate">
+            <div class="text-color font-semibold leading-snug truncate">{{ b.title }}</div>
+            <div class="text-color text-sm opacity-80 line-clamp-2">{{ b.detail }}</div>
+            <div class="text-muted-color text-xs mt-1 truncate">
               {{ b.createdByName }}
             </div>
           </div>

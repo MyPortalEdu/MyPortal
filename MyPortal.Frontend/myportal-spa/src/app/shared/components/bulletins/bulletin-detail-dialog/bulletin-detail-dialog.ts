@@ -31,7 +31,6 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, Dialog, Button],
   templateUrl: './bulletin-detail-dialog.html',
-  styleUrl: './bulletin-detail-dialog.scss',
 })
 export class BulletinDetailDialog implements OnInit {
   private readonly data = inject(BulletinsDataService);

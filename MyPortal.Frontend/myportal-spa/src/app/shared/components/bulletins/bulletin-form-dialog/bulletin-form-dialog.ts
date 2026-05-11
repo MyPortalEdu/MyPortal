@@ -45,7 +45,6 @@ interface AudienceChoice {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox],
   templateUrl: './bulletin-form-dialog.html',
-  styleUrl: './bulletin-form-dialog.scss',
 })
 export class BulletinFormDialog implements OnChanges {
   private readonly data = inject(BulletinsDataService);

@@ -27,7 +27,9 @@ import { BulletinFormDialog } from '../bulletin-form-dialog/bulletin-form-dialog
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, Button, BulletinDetailDialog, BulletinFormDialog],
   templateUrl: './bulletins-feed.html',
-  styleUrl: './bulletins-feed.scss',
+  // display:block on the host so parent flex containers (e.g. <home> with
+  // flex-1 on this element) can size it. Custom elements default to inline.
+  host: { class: 'block' },
 })
 export class BulletinsFeed implements OnInit {
   private readonly data = inject(BulletinsDataService);

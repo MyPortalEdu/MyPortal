@@ -5,43 +5,45 @@
   [resizable]="false"
   [dismissableMask]="false"
   [closeOnEscape]="true"
-  [style]="{ width: 'min(48rem, 94vw)' }"
+  [style]="{ width: 'min(44rem, 94vw)' }"
   styleClass="bulletin-form-dialog"
   (onHide)="onHide()"
   [showHeader]="false">
 
   <!-- Header -->
-  <div class="flex items-center justify-between p-4 border-b border-[var(--p-content-border-color)]">
+  <div class="flex items-center justify-between p-3 border-b border-surface">
     <div class="flex items-center gap-2">
-      <i class="pi pi-bell text-primary text-lg"></i>
-      <h3 class="text-base font-semibold m-0">{{ isEdit() ? 'Edit bulletin' : 'New bulletin' }}</h3>
+      <i class="pi pi-bell text-primary"></i>
+      <h3 class="text-sm font-semibold m-0">{{ isEdit() ? 'Edit bulletin' : 'New bulletin' }}</h3>
     </div>
-    <button type="button" class="close-btn" (click)="onCancel()" aria-label="Close">
+    <button type="button" class="mp-icon-button" (click)="onCancel()" aria-label="Close">
       <i class="pi pi-times"></i>
     </button>
   </div>
 
-  <div class="p-5 flex flex-col gap-4">
+  <div class="p-4 flex flex-col gap-3">
     <!-- Title -->
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium">Title</label>
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">Title</label>
       <input
         pInputText
+        pSize="small"
         placeholder="What is this about?"
         [ngModel]="title()"
         (ngModelChange)="title.set($event)" />
     </div>
 
     <!-- Category + Pin -->
-    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-4 sm:items-end">
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium">Category</label>
+    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-color">Category</label>
         <p-select
           [options]="categories()"
           optionLabel="name"
           optionValue="id"
           placeholder="Select a category"
           appendTo="body"
+          size="small"
           [ngModel]="categoryId()"
           (ngModelChange)="categoryId.set($event)"
           [style]="{ width: '100%' }">
@@ -49,29 +51,30 @@
       </div>
 
       @if (canPin()) {
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium">Pin to top</label>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-muted-color">Pin to top</label>
           <label class="flex items-start gap-2 text-sm">
             <p-checkbox
               [binary]="true"
               [ngModel]="isPinned()"
               (ngModelChange)="isPinned.set($event)">
             </p-checkbox>
-            <span class="opacity-70 leading-snug">Pinned bulletins appear above the feed.</span>
+            <span class="text-muted-color text-xs leading-snug">Pinned bulletins appear above the feed.</span>
           </label>
         </div>
       }
     </div>
 
-    <!-- Audience -->
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium">Audience</label>
+    <!-- Audience. Active state is fixed primary tint (unlike the feed's
+         category chips which use per-category colours). -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">Audience</label>
       <div class="flex flex-wrap gap-2">
         @for (a of audienceChoices(); track a.key) {
           <button
             type="button"
-            class="audience-chip"
-            [class.is-selected]="isSelected(a.key)"
+            class="mp-chip"
+            [class.mp-chip-active]="isSelected(a.key)"
             (click)="toggleAudience(a.key)">
             @if (isSelected(a.key)) {
               <i class="pi pi-check"></i>
@@ -83,11 +86,12 @@
     </div>
 
     <!-- Body -->
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium">Body</label>
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">Body</label>
       <textarea
         pInputTextarea
-        rows="6"
+        pSize="small"
+        rows="5"
         placeholder="Write your bulletin. Markdown supported."
         [ngModel]="detail()"
         (ngModelChange)="detail.set($event)">
@@ -96,17 +100,17 @@
 
     <!-- Attachments. Placeholder UI: file upload is a follow-up; the dropzone
          is here so the layout matches the spec but it's a no-op for now. -->
-    <div class="flex flex-col gap-1.5">
-      <label class="text-sm font-medium">Attachments</label>
-      <div class="attachments-dropzone">
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">Attachments</label>
+      <div class="flex items-center justify-center gap-2 p-3 border border-dashed border-surface rounded-lg bg-surface-50 text-xs text-muted-color">
         <i class="pi pi-paperclip"></i>
-        <span class="opacity-70">Drop files or <a class="underline">browse</a></span>
+        <span>Drop files or <a class="underline">browse</a></span>
       </div>
     </div>
   </div>
 
   <!-- Footer -->
-  <div class="flex items-center justify-between gap-3 p-4 border-t border-[var(--p-content-border-color)]">
+  <div class="flex items-center justify-between gap-3 p-3 border-t border-surface">
     <label class="flex items-center gap-2 text-sm">
       <p-checkbox
         [binary]="true"
@@ -117,10 +121,11 @@
     </label>
 
     <div class="flex items-center gap-2">
-      <p-button label="Cancel" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
+      <p-button label="Cancel" severity="secondary" [text]="true" size="small" (click)="onCancel()"></p-button>
       <p-button
         [label]="isEdit() ? 'Save changes' : 'Publish'"
         [icon]="isEdit() ? 'pi pi-check' : 'pi pi-send'"
+        size="small"
         [disabled]="!isValid()"
         [loading]="submitting()"
         (click)="publish()">

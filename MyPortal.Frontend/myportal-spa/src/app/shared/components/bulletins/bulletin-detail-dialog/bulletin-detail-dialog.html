@@ -5,66 +5,69 @@
   [resizable]="false"
   [dismissableMask]="true"
   [closeOnEscape]="true"
-  [style]="{ width: 'min(46rem, 92vw)' }"
+  [style]="{ width: 'min(44rem, 92vw)' }"
   styleClass="bulletin-detail-dialog"
   (onHide)="onHide()"
   [showHeader]="false">
 
   @if (bulletin(); as b) {
     <!-- Top bar: category badge + close -->
-    <div class="flex items-center justify-between p-4 border-b border-[var(--p-content-border-color)]">
+    <div class="flex items-center justify-between p-3 border-b border-surface">
       <span
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-semibold"
+        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold"
         [style.color]="b.categoryColourCode"
-        [style.background-color]="b.categoryColourCode + '1A'">
+        [style.backgroundColor]="b.categoryColourCode + '1A'">
         <i [class]="b.categoryIcon"></i>
         {{ b.categoryName }}
       </span>
-      <button type="button" class="close-btn" (click)="onHide()" aria-label="Close">
+      <button type="button" class="mp-icon-button" (click)="onHide()" aria-label="Close">
         <i class="pi pi-times"></i>
       </button>
     </div>
 
-    <div class="p-5 flex flex-col gap-4">
+    <div class="p-4 flex flex-col gap-3">
       <!-- Title -->
-      <h2 class="text-xl font-bold leading-snug m-0">{{ b.title }}</h2>
+      <h2 class="text-lg font-bold leading-snug m-0">{{ b.title }}</h2>
 
       <!-- Author chip -->
-      <div class="flex items-center gap-2 text-sm">
-        <span class="avatar">{{ initials() }}</span>
-        <span class="font-medium">{{ b.createdByName }}</span>
-        <span class="opacity-50">·</span>
-        <span class="opacity-70">{{ formatDateTime(b.createdAt) }}</span>
+      <div class="flex items-center gap-2 text-xs">
+        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/15 text-primary text-[0.6875rem] font-bold">
+          {{ initials() }}
+        </span>
+        <span class="font-medium text-sm">{{ b.createdByName }}</span>
+        <span class="text-muted-color">·</span>
+        <span class="text-muted-color">{{ formatDateTime(b.createdAt) }}</span>
       </div>
 
       <!-- Body. Plain text for now; renderer is a follow-up. -->
       <div class="whitespace-pre-wrap text-sm leading-relaxed">{{ b.detail }}</div>
 
       <!-- Audience summary -->
-      <div class="section">
-        <div class="section-title">SENT TO</div>
-        <div class="flex items-center gap-2 text-sm">
-          <i class="pi pi-users opacity-70"></i>
+      <div class="pt-3 border-t border-surface">
+        <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-color mb-1">SENT TO</div>
+        <div class="flex items-center gap-2 text-xs">
+          <i class="pi pi-users text-muted-color"></i>
           <span>{{ audienceSummary() }}</span>
           @if (b.acknowledgedCount !== null && b.acknowledgedCount !== undefined) {
-            <span class="opacity-50">·</span>
-            <span class="opacity-70">{{ b.acknowledgedCount }} acknowledged</span>
+            <span class="text-muted-color">·</span>
+            <span class="text-muted-color">{{ b.acknowledgedCount }} acknowledged</span>
           }
         </div>
       </div>
     </div>
 
     <!-- Footer -->
-    <div class="flex items-center justify-between gap-3 p-4 border-t border-[var(--p-content-border-color)]">
+    <div class="flex items-center justify-between gap-3 p-3 border-t border-surface">
       @if (b.requiresAcknowledgement && !b.hasAcknowledged) {
         <p-button
           label="Acknowledge"
           icon="pi pi-check"
+          size="small"
           [loading]="acknowledging()"
           (click)="acknowledge()">
         </p-button>
       } @else if (b.requiresAcknowledgement && b.hasAcknowledged) {
-        <span class="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--p-green-600)]">
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--p-green-600)]">
           <i class="pi pi-check-circle"></i> Acknowledged
         </span>
       } @else {
@@ -90,14 +93,14 @@
             (click)="requestDelete()">
           </p-button>
         }
-        <a class="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1.5 ml-2"
+        <a class="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1.5 ml-2"
            [routerLink]="['/bulletins', b.id]">
           Open full page
-          <i class="pi pi-external-link text-xs"></i>
+          <i class="pi pi-external-link text-[0.6rem]"></i>
         </a>
       </div>
     </div>
   } @else if (loading()) {
-    <div class="p-6 text-sm opacity-70">Loading…</div>
+    <div class="p-4 text-sm text-muted-color">Loading…</div>
   }
 </p-dialog>
