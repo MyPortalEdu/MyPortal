@@ -1,14 +1,14 @@
-﻿SET QUOTED_IDENTIFIER ON;
+SET QUOTED_IDENTIFIER ON;
 SET ANSI_NULLS ON;
 GO
 
 -- Returns events that overlap the [@StartTime, @EndTime] window.
 -- All-day events are treated as [StartTime, EndDate + 1 day] so they cover the whole calendar day.
+-- Filtering by event kind/type is the caller's responsibility (join DiaryEventTypes on EventTypeId).
 CREATE OR ALTER FUNCTION dbo.fn_diary_event_get_overlapping
     (
-        @StartTime      datetime2(7),
-        @EndTime        datetime2(7),
-        @EventTypeFilter uniqueidentifier = NULL
+        @StartTime datetime2(7),
+        @EndTime   datetime2(7)
     )
     RETURNS TABLE
     WITH SCHEMABINDING
@@ -31,21 +31,14 @@ SELECT
 FROM dbo.DiaryEvents AS DE
 WHERE
     (
-        (
-    -- Non-all-day: overlap if Start < @End AND End > @Start  (half-open interval)
-            DE.IsAllDay = 0
-          AND DE.StartTime < @EndTime
-          AND DE.EndTime   > @StartTime
-        )
-        OR
-        (
-    -- All-day: treat as [Start, End + 1d)
-            DE.IsAllDay = 1
-          AND DE.StartTime < DATEADD(day, 1, @EndTime)
-          AND DE.EndTime   > @StartTime
-        )
+        DE.IsAllDay = 0
+      AND DE.StartTime < @EndTime
+      AND DE.EndTime   > @StartTime
     )
-  AND (
-        @EventTypeFilter IS NULL OR DE.EventTypeId = @EventTypeFilter
+    OR
+    (
+        DE.IsAllDay = 1
+      AND DE.StartTime < DATEADD(day, 1, @EndTime)
+      AND DE.EndTime   > @StartTime
     );
 GO

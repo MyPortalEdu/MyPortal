@@ -1,8 +1,8 @@
 ﻿using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories
@@ -16,7 +16,7 @@ namespace MyPortal.Data.Repositories
 
         public async Task<IList<RolePermission>> GetByRoleIdAsync(Guid roleId, CancellationToken cancellationToken)
         {
-            var sql = "[dbo].[sp_role_permission_get_by_role_id]";
+            var sql = "[dbo].[usp_role_permission_get_by_role_id]";
 
             var p = new { roleId };
 

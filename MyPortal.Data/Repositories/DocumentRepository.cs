@@ -3,8 +3,8 @@ using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories
@@ -20,7 +20,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = "[dbo].[sp_document_get_details_by_id]";
+            var sql = "[dbo].[usp_document_get_details_by_id]";
 
             var param = new { documentId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
 
@@ -35,7 +35,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = "[dbo].[sp_document_get_details_by_directory]";
+            var sql = "[dbo].[usp_document_get_details_by_directory]";
 
             var param = new
                 { directoryId, includeDeleted, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
@@ -52,7 +52,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = "[dbo].[sp_document_get_tree_by_directory_id]";
+            var sql = "[dbo].[usp_document_get_tree_by_directory_id]";
 
             var param = new
                 { directoryId, includeDeleted, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };

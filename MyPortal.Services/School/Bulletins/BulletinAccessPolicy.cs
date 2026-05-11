@@ -1,4 +1,5 @@
 ﻿using MyPortal.Core.Entities;
+using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Providers;
 using MyPortal.Services.Interfaces.Security;
 

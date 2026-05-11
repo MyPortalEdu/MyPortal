@@ -2,9 +2,9 @@
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
@@ -23,7 +23,7 @@ public class UserRepository : EntityRepository<User>, IUserRepository
     {
         using var conn = _factory.Create();
         
-        var sql = @"[dbo].[sp_user_get_details_by_id]";
+        var sql = @"[dbo].[usp_user_get_details_by_id]";
         
         var result = await conn.ExecuteStoredProcedureAsync<UserDetailsResponse>(sql, new { userId }, 
             cancellationToken: cancellationToken);
@@ -35,7 +35,7 @@ public class UserRepository : EntityRepository<User>, IUserRepository
     {
         using var conn = _factory.Create();
 
-        var sql = @"[dbo].[sp_user_get_info_by_id]";
+        var sql = @"[dbo].[usp_user_get_info_by_id]";
 
         var result = await conn.ExecuteStoredProcedureAsync<UserInfoResponse>(sql, new { userId }, 
             cancellationToken: cancellationToken);

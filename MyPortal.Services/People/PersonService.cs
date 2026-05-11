@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
-using MyPortal.Services.Interfaces.Services;
+using MyPortal.Services.Interfaces.People;
 
 namespace MyPortal.Services.People
 {

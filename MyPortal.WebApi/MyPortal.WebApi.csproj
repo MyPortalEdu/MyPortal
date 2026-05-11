@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aed3fac6-d4a0-4a5b-8e9d-5b74b0589884</UserSecretsId>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +17,7 @@
     <PackageReference Include="OpenIddict.Server.AspNetCore" Version="7.1.0" />
     <PackageReference Include="OpenIddict.Validation.AspNetCore" Version="7.1.0" />
     <PackageReference Include="OpenIddict.Validation.ServerIntegration" Version="7.1.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.6.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
@@ -24,6 +27,25 @@
     <ProjectReference Include="..\MyPortal.Data\MyPortal.Data.csproj" />
     <ProjectReference Include="..\MyPortal.FileStorage\MyPortal.FileStorage.csproj" />
     <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\3rdpartylicenses.txt" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-5GU6TEWN.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-K73RCNQH.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-SSVOHEUM.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YOHC5UYE.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\chunk-YTPQTW2T.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\favicon.ico" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\index.html" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\main-AWCIGP2M.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\polyfills-5CFQRCPP.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\browser\styles-5INURTSO.css" />
+    <_ContentIncludedByDefault Remove="wwwroot\prerendered-routes.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

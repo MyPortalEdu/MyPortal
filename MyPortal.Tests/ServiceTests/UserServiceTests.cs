@@ -9,10 +9,10 @@ using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces;
-using MyPortal.Services.Interfaces.Repositories;
 using MyPortal.Services.System;
 using MyPortal.Tests.Mocks;
 using Task = System.Threading.Tasks.Task;
+using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Tests.ServiceTests;
 
@@ -235,7 +235,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task CreateUserAsync_CreatesUser_AndUpdatesRoles()
+    public async Task CreateAsync_CreatesUser_AndUpdatesRoles()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -254,7 +254,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Success);
 
-        var result = await _userService.CreateUserAsync(new UserUpsertRequest
+        var result = await _userService.CreateAsync(new UserUpsertRequest
         {
             Username = "staff",
             Email = "staff@test.com",
@@ -269,7 +269,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task UpdateUserAsync_UpdatesSecurityStamp_WhenUserDisabled()
+    public async Task UpdateAsync_UpdatesSecurityStamp_WhenUserDisabled()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -282,7 +282,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(Array.Empty<string>());
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest
+        var res = await _userService.UpdateAsync(id, new UserUpsertRequest
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -297,7 +297,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task UpdateUserAsync_UpdatesSecurityStamp_WhenRolesChanged()
+    public async Task UpdateAsync_UpdatesSecurityStamp_WhenRolesChanged()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -319,7 +319,7 @@ public class UserServiceTests
 
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest
+        var res = await _userService.UpdateAsync(id, new UserUpsertRequest
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -334,7 +334,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task UpdateUserAsync_UpdatesUser_WhenNoStateChange()
+    public async Task UpdateAsync_UpdatesUser_WhenNoStateChange()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -355,7 +355,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest()
+        var res = await _userService.UpdateAsync(id, new UserUpsertRequest()
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -372,7 +372,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task UpdateUserAsync_SkipsAddingRole_WhenRoleNameEmpty()
+    public async Task UpdateAsync_SkipsAddingRole_WhenRoleNameEmpty()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -392,7 +392,7 @@ public class UserServiceTests
         // No add/remove expected; since no other changes, UpdateAsync should be called
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateUserAsync(id, new UserUpsertRequest()
+        var res = await _userService.UpdateAsync(id, new UserUpsertRequest()
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -407,7 +407,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public void UpdateUserAsync_Throws_NotFound_WhenRoleMissing()
+    public void UpdateAsync_Throws_NotFound_WhenRoleMissing()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -432,12 +432,12 @@ public class UserServiceTests
             RoleIds = new List<Guid> { missingRoleId }
         };
 
-        Assert.That(async () => await _userService.UpdateUserAsync(id, dto, CancellationToken.None),
+        Assert.That(async () => await _userService.UpdateAsync(id, dto, CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("Role not found."));
     }
 
     [Test]
-    public void DeleteUserAsync_Throws_NotFound_WhenMissing()
+    public void DeleteAsync_Throws_NotFound_WhenMissing()
     {
         _authorizationService
             .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
@@ -446,7 +446,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.FindByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((ApplicationUser?)null);
 
-        Assert.That(async () => await _userService.DeleteUserAsync(Guid.NewGuid(), CancellationToken.None),
+        Assert.That(async () => await _userService.DeleteAsync(Guid.NewGuid(), CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("User not found."));
     }
 }

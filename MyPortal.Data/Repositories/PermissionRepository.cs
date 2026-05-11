@@ -1,8 +1,8 @@
 ﻿using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories
@@ -18,7 +18,7 @@ namespace MyPortal.Data.Repositories
         {
             using var conn = _factory.Create();
 
-            var sql = @"[dbo].[sp_permission_get_by_user_id]";
+            var sql = @"[dbo].[usp_permission_get_by_user_id]";
 
             var result = await conn.ExecuteStoredProcedureAsync<PermissionResponse>(sql, new { userId }, cancellationToken: cancellationToken);
             return result;

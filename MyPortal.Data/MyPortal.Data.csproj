@@ -18,6 +18,12 @@
     <EmbeddedResource Include="Sql\System\Users\GetUserSummaries.sql" />
     <None Remove="Sql\Bulletins\GetBulletinSummaries.sql" />
     <EmbeddedResource Include="Sql\Bulletins\GetBulletinSummaries.sql" />
+    <None Remove="Sql\Pastoral\GetHouseSummaries.sql" />
+    <EmbeddedResource Include="Sql\Pastoral\GetHouseSummaries.sql" />
+    <None Remove="Sql\Pastoral\GetYearGroupSummaries.sql" />
+    <EmbeddedResource Include="Sql\Pastoral\GetYearGroupSummaries.sql" />
+    <None Remove="Sql\Pastoral\GetRegGroupSummaries.sql" />
+    <EmbeddedResource Include="Sql\Pastoral\GetRegGroupSummaries.sql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,12 +31,11 @@
     <ProjectReference Include="..\MyPortal.Common\MyPortal.Common.csproj" />
     <ProjectReference Include="..\MyPortal.Contracts\MyPortal.Contracts.csproj" />
     <ProjectReference Include="..\MyPortal.Core\MyPortal.Core.csproj" />
-    <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
-    <PackageReference Include="Rowan.QueryKit.Repositories" Version="0.9.15" />
+    <PackageReference Include="Rowan.QueryKit.Repositories" Version="0.9.17" />
   </ItemGroup>
 
 </Project>

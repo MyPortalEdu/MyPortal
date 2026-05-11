@@ -7,7 +7,7 @@ namespace MyPortal.Core.Entities
     [Table("AttendanceCodes")]
     public class AttendanceCode : Entity, ISystemEntity
     {
-        [Required, StringLength(1)] 
+        [Required, StringLength(2)]
         public string Code { get; set; } = null!;
 
         [Required, StringLength(128)] 

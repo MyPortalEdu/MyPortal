@@ -29,6 +29,7 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@fontsource-variable/inter": "^5.1.1",
     "@primeng/themes": "^20.2.0",
     "primeicons": "^7.0.0",
     "primeng": "^20.2.0",

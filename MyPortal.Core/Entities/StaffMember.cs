@@ -32,6 +32,12 @@ namespace MyPortal.Core.Entities
 
         public bool IsTeachingStaff { get; set; }
 
+        // Weekly PPA (planning, preparation, assessment) allocation. Caps the solver-assigned
+        // teaching load at (TotalPeriodsPerWeek - PpaPeriodsPerWeek); the actual periods left
+        // free fall out of the solution.
+        [Range(0, int.MaxValue)]
+        public int PpaPeriodsPerWeek { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public Person? Person { get; set; }

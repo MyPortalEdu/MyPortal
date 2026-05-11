@@ -43,9 +43,18 @@ public static class Permissions
 
     public static class Attendance
     {
-        // public const string ViewAttendanceMarks  = "Attendance.ViewAttendanceMarks";
-        // public const string EditAttendanceMarks  = "Attendance.EditAttendanceMarks";
-        // public const string UseRestrictedCodes   = "Attendance.UseRestrictedCodes";
+        public const string ViewAttendanceSetup     = "Attendance.ViewAttendanceSetup";
+        public const string EditAttendanceSetup     = "Attendance.EditAttendanceSetup";
+        public const string ViewAttendanceMarks     = "Attendance.ViewAttendanceMarks";
+        public const string EditAttendanceMarks     = "Attendance.EditAttendanceMarks";
+        public const string EditAttendanceMarksBulk = "Attendance.EditAttendanceMarksBulk";
+        public const string UseRestrictedCodes      = "Attendance.UseRestrictedCodes";
+    }
+
+    public static class Timetable
+    {
+        public const string ViewTimetables = "Timetable.ViewTimetables";
+        public const string EditTimetables = "Timetable.EditTimetables";
     }
 
     public static class Behaviour
@@ -66,7 +75,8 @@ public static class Permissions
     public static class Curriculum
     {
         // public const string AcademicStructure = "Curriculum.AcademicStructure";
-        // public const string EditAcademicYears = "Curriculum.EditAcademicYears";
+        public const string ViewAcademicYears = "Curriculum.ViewAcademicYears";
+        public const string EditAcademicYears = "Curriculum.EditAcademicYears";
         // public const string ArrangeCover      = "Curriculum.ArrangeCover";
         // public const string ViewHomework      = "Curriculum.ViewHomework";
         // public const string EditHomework      = "Curriculum.EditHomework";
@@ -113,7 +123,8 @@ public static class Permissions
 
     public static class School
     {
-        // public const string PastoralStructure       = "School.PastoralStructure";
+        public const string ViewPastoralStructure       = "School.ViewPastoralStructure";
+        public const string EditPastoralStructure       = "School.EditPastoralStructure";
         // public const string ViewRooms               = "School.ViewRooms";
         // public const string EditRooms               = "School.EditRooms";
         // public const string ViewSchoolDetails       = "School.ViewSchoolDetails";

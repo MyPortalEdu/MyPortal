@@ -18,8 +18,10 @@ using MyPortal.Auth.Providers;
 using MyPortal.Auth.Stores;
 using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
+using MyPortal.Data.Extensions;
 using MyPortal.Data.Factories;
 using MyPortal.Data.Security;
+using MyPortal.Data.UnitOfWork;
 using MyPortal.FileStorage.Extensions;
 using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
@@ -27,10 +29,12 @@ using MyPortal.WebApi.Filters;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
+using MyPortal.WebApi.Services.Background;
 using MyPortal.WebApi.Swagger;
 using MyPortal.WebApi.Transformers;
 using OpenIddict.Validation.AspNetCore;
 using QueryKit.Dialects;
+using Scalar.AspNetCore;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Sorting;
 using PasswordOptions = MyPortal.Common.Options.PasswordOptions;
@@ -86,6 +90,7 @@ builder.Services.AddOptions<CertificateOptions>()
 QueryKit.Extensions.ConnectionExtensions.UseDialect(Dialect.SQLServer);
 
 builder.Services.AddScoped<IDbConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
 
@@ -263,6 +268,8 @@ builder.Services.AddScoped<IRolePermissionProvider, SqlRolePermissionProvider>()
 builder.Services.AddRepositories();
 builder.Services.AddMyPortalServices();
 
+builder.Services.AddHostedService<TimetableRunWorker>();
+
 builder.Services.AddScoped<CookieAntiforgeryFilter>();
 
 builder.Services.AddControllers(o =>
@@ -288,14 +295,39 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.OperationFilter<AuthorizeCheckOperationFilter>();
-    
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.OperationFilter<ResponseTypesOperationFilter>();
+    c.DocumentFilter<OAuth2AbsoluteUrlDocumentFilter>();
+
+    // Pull XML doc comments into the OpenAPI document so Scalar can render
+    // controller / endpoint summaries and remarks.
+    foreach (var xml in Directory.GetFiles(AppContext.BaseDirectory, "MyPortal.*.xml"))
     {
-        Description =  "JWT Authorization header using the Bearer scheme.",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer"
+        c.IncludeXmlComments(xml, includeControllerXmlComments: true);
+    }
+
+    // OAuth2 Authorization Code + PKCE against the OpenIddict server. URLs here are
+    // placeholders; OAuth2AbsoluteUrlDocumentFilter rewrites them to absolute URLs
+    // based on the current request host at the moment swagger.json is served, so the
+    // same code works for any dev port AND production without hardcoding.
+    c.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("https://placeholder.invalid/connect/authorize"),
+                TokenUrl = new Uri("https://placeholder.invalid/connect/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    { "openid",         "OpenID" },
+                    { "profile",        "Profile" },
+                    { "email",          "Email" },
+                    { "offline_access", "Refresh tokens" },
+                    { "api",            "MyPortal API access" }
+                }
+            }
+        }
     });
 });
 
@@ -310,8 +342,39 @@ app.UseMiddleware<ExceptionMiddleware>();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Swashbuckle continues to generate the OpenAPI document at /swagger/v1/swagger.json;
+    // Scalar consumes it and renders the modern UI at /scalar/v1.
     app.UseSwagger();
-    app.UseSwaggerUI();
+    // MyPortal-branded Scalar. Indigo accent matches the SPA's PrimeNG theme;
+    // Scalar already loads Inter as its default font so no font override needed.
+    const string scalarBrandingCss = """
+        :root, .light-mode {
+            /* indigo-600 / indigo-50 — matches the SPA's primary scale */
+            --scalar-color-accent: #4f46e5;
+            --scalar-background-accent: #eef2ff;
+        }
+        .dark-mode {
+            /* indigo-400 / indigo-950 — readable on dark backgrounds */
+            --scalar-color-accent: #818cf8;
+            --scalar-background-accent: #1e1b4b;
+        }
+        """;
+
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("MyPortal API")
+            .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
+            .WithFavicon("/favicon.ico")
+            .WithCustomCss(scalarBrandingCss)
+            .AddPreferredSecuritySchemes(["OAuth2"])
+            .AddAuthorizationCodeFlow("OAuth2", flow =>
+            {
+                flow.ClientId = "myportal-client";
+                flow.SelectedScopes = new[] { "openid", "profile", "email", "offline_access", "api" };
+                flow.Pkce = Pkce.Sha256;
+            });
+    });
 }
 
 app.UseHttpsRedirection();

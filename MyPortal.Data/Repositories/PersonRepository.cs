@@ -2,9 +2,9 @@
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
-using MyPortal.Services.Interfaces.Repositories;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;

@@ -3,7 +3,7 @@ using Moq;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Enums;
-using MyPortal.Services.Interfaces.Repositories;
+using MyPortal.Data.Interfaces;
 using MyPortal.Services.Security;
 using MyPortal.Tests.Mocks;
 using Task = System.Threading.Tasks.Task;

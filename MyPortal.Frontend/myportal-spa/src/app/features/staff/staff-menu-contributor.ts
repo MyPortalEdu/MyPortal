@@ -26,6 +26,6 @@ export class StaffMenuContributor implements AppMenuContributor {
       }
     ];
 
-    return  buildMenu(cats, has);
+    return buildMenu(cats, has, ['/staff']);
   }
 }

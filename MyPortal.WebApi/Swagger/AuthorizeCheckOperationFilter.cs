@@ -31,10 +31,10 @@ public class AuthorizeCheckOperationFilter : IOperationFilter
                     Reference = new OpenApiReference
                     {
                         Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
+                        Id = "OAuth2"
                     }
                 },
-                Array.Empty<string>()
+                new[] { "api" }
             }
         });
     }
