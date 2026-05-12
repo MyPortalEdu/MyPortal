@@ -38,6 +38,12 @@ FROM dbo.Bulletins         B
 JOIN dbo.BulletinCategories BC  ON BC.Id = B.CategoryId
 JOIN dbo.Users              CBU ON CBU.Id = B.CreatedById
 OUTER APPLY dbo.fn_person_get_name(CBU.PersonId, 2, 0, 0) AS CBUN
+-- Capture a single "now" for the whole row so expiry and membership-window
+-- checks agree on a boundary and SYSUTCDATETIME() is evaluated once instead
+-- of five times per row. QueryKit wraps this template in a subquery, so we
+-- can't DECLARE at the top — CROSS APPLY scopes the value to the outer row
+-- and is visible to the correlated EXISTS subqueries below.
+CROSS APPLY (SELECT SYSUTCDATETIME() AS NowUtc) NW
 WHERE
     -- Staff pinners see everything (admin oversight).
     (@isStaff = 1 AND @canPin = 1)
@@ -45,7 +51,7 @@ WHERE
     (@isStaff = 1 AND @canEdit = 1 AND B.CreatedById = @currentUserId)
  OR -- Otherwise: not expired AND audience matches the caller's role.
     (
-        (B.ExpiresAt IS NULL OR B.ExpiresAt > SYSUTCDATETIME())
+        (B.ExpiresAt IS NULL OR B.ExpiresAt > NW.NowUtc)
         AND EXISTS (
             SELECT 1
             FROM dbo.BulletinAudiences BA
@@ -61,8 +67,8 @@ WHERE
                         JOIN dbo.Users                   U   ON U.PersonId = S.PersonId
                         WHERE U.Id = @currentUserId
                           AND SGM.StudentGroupId = BA.StudentGroupId
-                          AND SGM.StartDate <= SYSUTCDATETIME()
-                          AND (SGM.EndDate IS NULL OR SGM.EndDate > SYSUTCDATETIME())
+                          AND SGM.StartDate <= NW.NowUtc
+                          AND (SGM.EndDate IS NULL OR SGM.EndDate > NW.NowUtc)
                     ))
                  OR (@isParent = 1 AND BA.AudienceKind = 4 AND EXISTS (
                         SELECT 1
@@ -73,8 +79,8 @@ WHERE
                         JOIN dbo.Users                       U   ON U.PersonId = C.PersonId
                         WHERE U.Id = @currentUserId
                           AND SGM.StudentGroupId = BA.StudentGroupId
-                          AND SGM.StartDate <= SYSUTCDATETIME()
-                          AND (SGM.EndDate IS NULL OR SGM.EndDate > SYSUTCDATETIME())
+                          AND SGM.StartDate <= NW.NowUtc
+                          AND (SGM.EndDate IS NULL OR SGM.EndDate > NW.NowUtc)
                     ))
               )
         )
