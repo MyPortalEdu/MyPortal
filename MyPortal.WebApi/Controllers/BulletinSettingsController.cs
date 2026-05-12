@@ -38,10 +38,11 @@ public sealed class BulletinSettingsController : BaseApiController<BulletinSetti
     }
 
     /// <summary>Replace the allowlist of bulletin-audience-pickable student groups.</summary>
+    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>.</remarks>
     [HttpPut]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAll, Permissions.School.PinSchoolBulletins)]
+    [Permission(PermissionMode.RequireAll, Permissions.SystemAdmin.BulletinSettings)]
     [ProducesResponseType(204)]
     public async Task<IActionResult> UpdateAsync([FromBody] BulletinSettingsUpdateRequest model)
     {

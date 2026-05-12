@@ -6,7 +6,8 @@ export const Permissions = {
     ViewUsers:           'System.ViewUsers',
     EditUsers:           'System.EditUsers',
     ViewGroups:          'System.ViewGroups',
-    EditGroups:          'System.EditGroups'
+    EditGroups:          'System.EditGroups',
+    BulletinSettings:    'System.BulletinSettings'
   }
 } as const;
 

@@ -109,7 +109,14 @@ BEGIN
         LastModifiedByName       = COALESCE(MBUN.[Name], MBU.UserName),
         LastModifiedByIpAddress  = B.LastModifiedByIpAddress,
         LastModifiedAt           = B.LastModifiedAt,
-        Version                  = B.Version
+        Version                  = B.Version,
+        -- Attachments live directly in the bulletin's root directory (flat —
+        -- the UI doesn't expose subdirectories), so this counts documents at
+        -- DirectoryId without recursing into any sub-directory tree.
+        AttachmentCount          = (
+            SELECT COUNT(*) FROM dbo.Documents D
+            WHERE D.DirectoryId = B.DirectoryId AND D.IsDeleted = 0
+        )
     FROM dbo.Bulletins         B
     JOIN dbo.BulletinCategories BC  ON BC.Id = B.CategoryId
     JOIN dbo.Users              CBU ON CBU.Id = B.CreatedById

@@ -6,6 +6,7 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  ViewChild,
   computed,
   inject,
   signal,
@@ -23,6 +24,7 @@ import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoSc
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
+import { BulletinAttachments } from '../bulletin-attachments/bulletin-attachments';
 import {
   BulletinAllowedGroupResponse,
   BulletinAudienceKind,
@@ -45,7 +47,7 @@ interface AudienceChoice {
   selector: 'mp-bulletin-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox, TranslocoDirective, TranslocoPipe],
+  imports: [CommonModule, FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox, TranslocoDirective, TranslocoPipe, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-form-dialog.html',
 })
@@ -66,6 +68,10 @@ export class BulletinFormDialog implements OnChanges {
 
   @Output() readonly closed = new EventEmitter<void>();
   @Output() readonly saved = new EventEmitter<void>();
+
+  // Used to flush staged attachments after a create succeeds, or to read its
+  // existing-attachments state in edit mode (it manages that itself).
+  @ViewChild(BulletinAttachments) attachments?: BulletinAttachments;
 
   readonly title = signal('');
   readonly detail = signal('');
@@ -207,7 +213,7 @@ export class BulletinFormDialog implements OnChanges {
 
     const isEdit = existing !== null;
     const t = (key: string) => this.transloco.translate(`bulletins.form.${key}`);
-    const onSuccess = () => {
+    const finishOk = () => {
       this.submitting.set(false);
       this.notify.success(t(isEdit ? 'updatedToast' : 'publishedToast'));
       this.saved.emit();
@@ -221,10 +227,29 @@ export class BulletinFormDialog implements OnChanges {
     };
 
     if (existing) {
-      this.data.update(existing.id, payload).subscribe({ next: onSuccess, error: onError });
-    } else {
-      this.data.create(payload).subscribe({ next: onSuccess, error: onError });
+      this.data.update(existing.id, payload).subscribe({ next: finishOk, error: onError });
+      return;
     }
+
+    // Create path: post the bulletin, then if files were staged we need the
+    // new bulletin's directoryId to upload them — fetch the details and
+    // hand the queue to the attachments component. The bulletin is already
+    // published either way; failed attachment uploads don't roll it back.
+    this.data.create(payload).subscribe({
+      next: ({ id }) => {
+        if (this.attachments?.hasStaged()) {
+          this.data.getById(id).subscribe({
+            next: details => {
+              this.attachments!.uploadStaged(id, details.directoryId).finally(() => finishOk());
+            },
+            error: () => finishOk(),
+          });
+        } else {
+          finishOk();
+        }
+      },
+      error: onError,
+    });
   }
 
   private reset(): void {

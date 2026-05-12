@@ -5,9 +5,30 @@
     "delete": "Delete",
     "edit": "Edit",
     "close": "Close",
+    "confirm": "Confirm",
+    "confirmHeader": "Please confirm",
     "loading": "Loading…",
     "redirecting": "Redirecting…",
-    "new": "New"
+    "new": "New",
+    "studentGroupPicker": {
+      "title": "Pick a student group",
+      "add": "Add student group…",
+      "code": "Code",
+      "name": "Name",
+      "inactive": "inactive",
+      "alreadyPicked": "already added",
+      "empty": "No student groups found.",
+      "confirm": "Add {{ count }}",
+      "kind": {
+        "header": "Kind",
+        "allKinds": "All kinds",
+        "House": "House",
+        "YearGroup": "Year group",
+        "RegGroup": "Reg group",
+        "CurriculumGroup": "Curriculum group",
+        "Other": "Other"
+      }
+    }
   },
   "topbar": {
     "appName": "MyPortal",
@@ -36,7 +57,8 @@
   },
   "nav": {
     "system": "System",
-    "users": "Users"
+    "users": "Users",
+    "bulletinSettings": "Bulletin settings"
   },
   "pages": {
     "home": {

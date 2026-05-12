@@ -1,0 +1,127 @@
+<ng-container *transloco="let t; prefix: 'bulletin-settings'">
+<mp-page-header
+  [title]="t('title')"
+  icon="pi pi-bell"
+></mp-page-header>
+
+<div class="flex flex-col gap-4">
+  <!-- Categories section -->
+  <section class="bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex flex-col gap-0.5">
+        <h2 class="text-base font-semibold m-0">{{ t('categories.title') }}</h2>
+        <p class="text-sm text-muted-color m-0">{{ t('categories.description') }}</p>
+      </div>
+      <p-button
+        [label]="t('categories.add')"
+        icon="pi pi-plus"
+        (click)="openNewCategory()">
+      </p-button>
+    </div>
+
+    @if (categoriesLoading()) {
+      <div class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</div>
+    } @else if (categories().length === 0) {
+      <div class="text-sm text-muted-color py-6 text-center border border-dashed border-surface rounded-lg">
+        {{ t('categories.empty') }}
+      </div>
+    } @else {
+      <ul class="list-none m-0 p-0 flex flex-col gap-2">
+        @for (c of categories(); track c.id) {
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-card-background)]">
+            <div
+              class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
+              [style.backgroundColor]="c.colourCode + '1A'">
+              <i [class]="c.icon" [style.color]="c.colourCode"></i>
+            </div>
+            <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+              <div class="flex items-center gap-2">
+                <span class="font-medium truncate">{{ c.name }}</span>
+                @if (!c.active) {
+                  <span class="text-[0.6875rem] uppercase tracking-wide px-1.5 py-0.5 rounded bg-surface-200 text-muted-color">
+                    {{ t('categories.inactive') }}
+                  </span>
+                }
+                @if (c.isSystem) {
+                  <span class="text-[0.6875rem] uppercase tracking-wide text-muted-color">system</span>
+                }
+              </div>
+              <span class="text-xs text-muted-color">
+                {{ c.icon }} · {{ c.colourCode }} · #{{ c.displayOrder }}
+              </span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <p-button
+                [label]="t('categories.edit')"
+                icon="pi pi-pencil"
+                severity="secondary"
+                [text]="true"
+                (click)="openEditCategory(c)">
+              </p-button>
+              <p-button
+                [label]="t('categories.delete')"
+                icon="pi pi-trash"
+                severity="danger"
+                [text]="true"
+                [disabled]="c.isSystem"
+                (click)="deleteCategory(c)">
+              </p-button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <!-- Audiences section -->
+  <section class="bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex flex-col gap-0.5">
+        <h2 class="text-base font-semibold m-0">{{ t('audiences.title') }}</h2>
+        <p class="text-sm text-muted-color m-0">{{ t('audiences.description') }}</p>
+      </div>
+      @if (academicYearId(); as ayId) {
+        <mp-student-group-picker
+          [academicYearId]="ayId"
+          [allowMultiple]="true"
+          [excludeIds]="excludeIds()"
+          (picked)="onGroupsPicked($event)">
+        </mp-student-group-picker>
+      }
+    </div>
+
+    @if (allowedGroupsLoading()) {
+      <div class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</div>
+    } @else if (allowedGroups().length === 0) {
+      <div class="text-sm text-muted-color py-6 text-center border border-dashed border-surface rounded-lg">
+        {{ t('audiences.empty') }}
+      </div>
+    } @else {
+      <ul class="list-none m-0 p-0 flex flex-col gap-2">
+        @for (g of allowedGroups(); track g.studentGroupId) {
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-card-background)]">
+            <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+              <span class="font-medium truncate">{{ g.name }}</span>
+              <span class="text-xs text-muted-color font-mono">{{ g.code }}</span>
+            </div>
+            <p-button
+              [label]="t('audiences.remove')"
+              icon="pi pi-times"
+              severity="danger"
+              [text]="true"
+              (click)="removeGroup(g)">
+            </p-button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>
+
+<mp-bulletin-category-form-dialog
+  [visible]="categoryFormOpen()"
+  [existing]="editingCategory()"
+  (closed)="closeCategoryForm()"
+  (saved)="onCategorySaved()">
+</mp-bulletin-category-form-dialog>
+</ng-container>

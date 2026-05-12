@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Options;
@@ -20,6 +21,13 @@ namespace MyPortal.WebApi.Models.Binders
             {
                 MaxDepth = MaxJsonDepth
             };
+            // QueryKit's FilterOperator / SortDirection / BoolJoin are plain
+            // enums and System.Text.Json otherwise insists on numeric input,
+            // which would force every JS caller to hard-code the integer order
+            // of QueryKit's enum members (and silently break if they ever
+            // reorder). Accepting string names here is local to filter/sort
+            // binding — response serialization elsewhere keeps numeric enums.
+            _json.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: true));
         }
 
         public Task BindModelAsync(ModelBindingContext bindingContext)

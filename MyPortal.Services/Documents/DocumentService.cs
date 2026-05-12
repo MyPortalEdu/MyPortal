@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
+using MyPortal.Common.Interfaces;
 using MyPortal.Common.Options;
 using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Documents;
@@ -206,8 +207,9 @@ public class DocumentService : BaseService, IDocumentService
 
         return response;
     }
-        
-    public async Task DeleteAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true)
+
+    public async Task DeleteAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true,
+        IUnitOfWork? uow = null)
     {
         var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
 
@@ -223,7 +225,7 @@ public class DocumentService : BaseService, IDocumentService
 
         // Delete the DB row first; only purge the blob on success. Reverse order would orphan
         // the row pointing at a missing blob if storage delete succeeded but DB delete failed.
-        await _documentRepository.DeleteAsync(documentId, cancellationToken, softDelete);
+        await _documentRepository.DeleteAsync(documentId, cancellationToken, softDelete, uow?.Transaction);
 
         Logger.LogInformation("Document deleted: {documentId}, soft delete: {softDelete}", documentId, softDelete);
 
@@ -310,6 +312,18 @@ public class DocumentService : BaseService, IDocumentService
                         (filter.Staff && t.Staff))
             .Select(t => t.ToResponseModel())
             .ToList();
+    }
+
+    public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId,
+        CancellationToken cancellationToken, bool includeDeleted = false)
+    {
+        return await _documentRepository.GetDocumentsByDirectoryId(directoryId, cancellationToken, includeDeleted);
+    }
+
+    public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsInSubtreeAsync(Guid directoryId,
+        CancellationToken cancellationToken, bool includeDeleted = false)
+    {
+        return await _documentRepository.GetDocumentsInSubtreeAsync(directoryId, cancellationToken, includeDeleted);
     }
 
     private static void VerifyContentLength(long actual, long? claimed)

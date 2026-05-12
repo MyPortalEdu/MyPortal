@@ -46,4 +46,10 @@ public class BulletinDetailsResponse
     /// bulletin does not require acknowledgement.
     /// </summary>
     public int? AcknowledgedCount { get; set; }
+
+    /// <summary>
+    /// Number of (non-deleted) documents attached to the bulletin. Counts the
+    /// root directory only — bulletins don't expose sub-folders.
+    /// </summary>
+    public int AttachmentCount { get; set; }
 }

@@ -34,6 +34,12 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
         _bulletinService = bulletinService;
     }
 
+    // Bulletins are broadcast messages with no retention requirement; the
+    // bulletin itself hard-deletes on DELETE /bulletins/{id}, so its
+    // attachments should hard-delete to match. Without this override the
+    // inherited attachment endpoint would soft-delete and leave orphan rows.
+    protected override bool HardDeleteDocuments => true;
+
     /// <summary>Get the full details of a bulletin by id.</summary>
     /// <param name="bulletinId">The id of the bulletin.</param>
     [HttpGet("{bulletinId:guid}")]

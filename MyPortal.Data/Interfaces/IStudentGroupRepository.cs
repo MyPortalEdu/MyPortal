@@ -1,6 +1,11 @@
 using System.Data;
+using MyPortal.Contracts.Models;
+using MyPortal.Contracts.Models.Pastoral;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces.Base;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Interfaces;
@@ -9,6 +14,16 @@ public interface IStudentGroupRepository : IEntityRepository<StudentGroup>
 {
     Task<IList<StudentGroup>> GetStudentGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Paged summary of student groups in an academic year, with a Kind
+    /// discriminator derived from which subtype table claims each base row.
+    /// Backs the cross-subtype picker used by bulletins (and any other "pick
+    /// a student group" UI).
+    /// </summary>
+    Task<PageResult<StudentGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
+        FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+        CancellationToken cancellationToken = default);
 
     // Wipes the entire pastoral hierarchy for the AY (StudentGroups + Supervisors +
     // YearGroups + RegGroups + Houses) in FK-safe order. Caller must have already

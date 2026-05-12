@@ -10,14 +10,15 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
+import { ConfirmationDialog } from '../../../services/confirmation.service';
 import { NotificationService } from '../../../services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
+import { BulletinAttachments } from '../bulletin-attachments/bulletin-attachments';
 import { UserType } from '../../../../core/enums/user-type';
 import { Me } from '../../../../core/interfaces/me';
 import {
@@ -30,7 +31,7 @@ import {
   selector: 'mp-bulletin-detail-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, Dialog, Button, TranslocoDirective],
+  imports: [CommonModule, Dialog, Button, TranslocoDirective, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-detail-dialog.html',
 })
@@ -38,6 +39,7 @@ export class BulletinDetailDialog implements OnInit {
   private readonly data = inject(BulletinsDataService);
   private readonly meService = inject(MeService);
   private readonly notify = inject(NotificationService);
+  private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
 
   /** When set to a non-null id the dialog opens and fetches the bulletin. */
@@ -130,14 +132,12 @@ export class BulletinDetailDialog implements OnInit {
     if (b) this.editRequested.emit(b);
   }
 
-  requestDelete(): void {
+  async requestDelete(): Promise<void> {
     const b = this.bulletin();
     if (!b) return;
-    // Native confirm is the simplest destructive-action guard that doesn't
-    // require provisioning PrimeNG's ConfirmationService. Swap in a styled
-    // p-confirmdialog later if the UX bar moves up — the contract is the
-    // same: only emit on positive confirmation.
-    const ok = window.confirm(this.transloco.translate('bulletins.detail.deleteConfirm', { title: b.title }));
+    const ok = await this.confirm.danger({
+      message: this.transloco.translate('bulletins.detail.deleteConfirm', { title: b.title }),
+    });
     if (ok) this.deleteRequested.emit(b.id);
   }
 

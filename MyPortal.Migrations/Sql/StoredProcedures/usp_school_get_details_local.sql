@@ -38,7 +38,7 @@ FROM [dbo].[Schools] [S]
     INNER JOIN [dbo].[SchoolTypes] [ST] ON [S].[SchoolTypeId] = [ST].[Id]
     INNER JOIN [dbo].[GovernanceTypes] [GT] ON [S].[GovernanceTypeId] = [GT].[Id]
     INNER JOIN [dbo].[IntakeTypes] [IT] ON [S].[IntakeTypeId] = [IT].[Id]
-    CROSS APPLY [dbo].[fn_person_get_name]([S].[HeadTeacherId], 2, 0 ,1) HT
+    OUTER APPLY [dbo].[fn_person_get_name]([S].[HeadTeacherId], 2, 0 ,1) HT
 
 WHERE [S].[IsLocal] = 1
 END;

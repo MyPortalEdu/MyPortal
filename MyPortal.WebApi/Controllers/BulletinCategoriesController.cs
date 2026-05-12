@@ -49,10 +49,11 @@ public sealed class BulletinCategoriesController : BaseApiController<BulletinCat
     }
 
     /// <summary>Create a new bulletin category.</summary>
+    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>.</remarks>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
+    [Permission(PermissionMode.RequireAll, Permissions.SystemAdmin.BulletinSettings)]
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateAsync([FromBody] BulletinCategoryUpsertRequest model)
     {
@@ -61,11 +62,11 @@ public sealed class BulletinCategoriesController : BaseApiController<BulletinCat
     }
 
     /// <summary>Update a bulletin category.</summary>
-    /// <remarks>Uses optimistic concurrency on <c>ExpectedVersion</c>.</remarks>
+    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>. Uses optimistic concurrency on <c>ExpectedVersion</c>.</remarks>
     [HttpPut("{categoryId:guid}")]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
+    [Permission(PermissionMode.RequireAll, Permissions.SystemAdmin.BulletinSettings)]
     [ProducesResponseType(204)]
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid categoryId,
         [FromBody] BulletinCategoryUpsertRequest model)
@@ -75,10 +76,10 @@ public sealed class BulletinCategoriesController : BaseApiController<BulletinCat
     }
 
     /// <summary>Delete a bulletin category.</summary>
-    /// <remarks>Fails if any bulletin still references the category.</remarks>
+    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>. Fails if any bulletin still references the category.</remarks>
     [HttpDelete("{categoryId:guid}")]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAny, Permissions.School.EditSchoolBulletins)]
+    [Permission(PermissionMode.RequireAll, Permissions.SystemAdmin.BulletinSettings)]
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid categoryId)
     {

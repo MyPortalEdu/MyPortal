@@ -1,0 +1,45 @@
+{
+  "title": "Bulletin settings",
+  "subtitle": "Manage categories and the student-group audience allowlist",
+  "categories": {
+    "title": "Categories",
+    "description": "Categories appear as filter chips on the feed and as labels on each bulletin.",
+    "add": "New category",
+    "edit": "Edit",
+    "delete": "Delete",
+    "inactive": "Inactive",
+    "empty": "No categories yet. Add one to get started.",
+    "deleteConfirm": "Delete category \"{{ name }}\"? Bulletins using it will block the delete.",
+    "deletedToast": "Category deleted",
+    "errorDelete": "Couldn't delete category",
+    "errorLoad": "Couldn't load categories"
+  },
+  "audiences": {
+    "title": "Audience allowlist",
+    "description": "Student groups in this list can be picked as a bulletin audience. Only allowlisted groups appear in the audience chips when creating a bulletin.",
+    "empty": "No groups allowlisted yet. Add one with the picker above.",
+    "remove": "Remove",
+    "removeConfirm": "Remove \"{{ name }}\" from the allowlist? Existing bulletins still targeted at this group are not affected.",
+    "updatedToast": "Audience allowlist updated",
+    "errorUpdate": "Couldn't update audience allowlist",
+    "errorLoad": "Couldn't load settings"
+  },
+  "form": {
+    "titleCreate": "New category",
+    "titleEdit": "Edit category",
+    "name": "Name",
+    "namePlaceholder": "e.g. Safeguarding",
+    "icon": "Icon",
+    "colour": "Colour",
+    "displayOrder": "Display order",
+    "displayOrderHint": "Lower numbers appear first.",
+    "active": "Active",
+    "activeHint": "Inactive categories are hidden from new bulletins but kept on existing ones.",
+    "save": "Save",
+    "create": "Create",
+    "createdToast": "Category created",
+    "updatedToast": "Category updated",
+    "errorCreate": "Couldn't create category",
+    "errorUpdate": "Couldn't update category"
+  }
+}

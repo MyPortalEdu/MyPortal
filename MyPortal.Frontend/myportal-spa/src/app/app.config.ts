@@ -5,7 +5,7 @@ import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {providePrimeNG} from 'primeng/config';
-import {MessageService} from 'primeng/api';
+import {ConfirmationService, MessageService} from 'primeng/api';
 import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angular/common/http';
 import {provideTransloco} from '@jsverse/transloco';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
@@ -75,6 +75,10 @@ export const appConfig: ApplicationConfig = {
     // MessageService provided the <p-toast> in the tree — root-scoped is what
     // we want, because <p-toast> lives in the root App component.
     MessageService,
+    // Same root-scoping rationale as MessageService: <p-confirmDialog> lives
+    // in the root template, so callers anywhere in the tree can invoke our
+    // ConfirmationDialog wrapper (shared/services/confirmation.service.ts).
+    ConfirmationService,
     // Transloco. `en` is the only locale today; the config is structured so
     // adding `cy` (or anything else) is a one-line change to availableLangs
     // plus dropping the new <lang>.json files into public/i18n/. Feature
@@ -87,6 +91,11 @@ export const appConfig: ApplicationConfig = {
         fallbackLang: 'en',
         reRenderOnLangChange: true,
         prodMode: !isDevMode(),
+        // Keep scope names verbatim. Without this Transloco auto-camelCases
+        // every scope name, so a hyphenated scope like "bulletin-settings"
+        // gets stored as "bulletinSettings" and lookups via the hyphenated
+        // prefix silently miss.
+        scopes: { keepCasing: true },
       },
       loader: TranslocoHttpLoader,
     }),

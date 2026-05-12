@@ -181,12 +181,20 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
         {
-            // BulletinAudiences and BulletinAcknowledgements cascade on the FK, so a
-            // single Bulletins delete reaps the lot. Directory is owned by the bulletin
-            // and is deleted alongside.
+            // Order matters: the bulletin holds an FK to its directory
+            // (FK_Bulletins_DirectoryId_Directories), so deleting the directory
+            // first throws "DELETE statement conflicted with the REFERENCE
+            // constraint" as soon as the directory actually has content (e.g.
+            // an attachment makes the path hit the live FK). Drop the bulletin
+            // first to release that reference, then hard-delete the directory.
+            //
+            // BulletinAudiences and BulletinAcknowledgements cascade on the FK,
+            // so a single Bulletins delete reaps the lot. The directory is
+            // owned by the bulletin and is cleaned up alongside, including any
+            // attachments inside it (DirectoryService.DeleteAsync recurses).
             await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken, transaction: uow.Transaction);
 
-            await DirectoryService.DeleteAsync(bulletin.DirectoryId, cancellationToken, uow);
+            await DirectoryService.DeleteAsync(bulletin.DirectoryId, cancellationToken, uow, false);
         }, cancellationToken);
 
         Logger.LogInformation("Bulletin deleted: {bulletinId}", bulletinId);

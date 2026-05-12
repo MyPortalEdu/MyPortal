@@ -28,4 +28,11 @@ public class BulletinSummaryResponse
     /// bulletin does not require acknowledgement.
     /// </summary>
     public bool? HasAcknowledged { get; set; }
+
+    /// <summary>
+    /// Number of (non-deleted) documents attached to the bulletin. Used by
+    /// the feed to render a paperclip badge without an extra round-trip.
+    /// Counts the root directory only — bulletins don't expose sub-folders.
+    /// </summary>
+    public int AttachmentCount { get; set; }
 }

@@ -8,7 +8,7 @@
     "pinned": "Pinned",
     "ackRequired": "Acknowledge",
     "acknowledged": "Acknowledged",
-    "seeAll": "See all bulletins →",
+    "attachments": "{{ count }} attachment(s)",
     "new": "New"
   },
   "detail": {
@@ -19,7 +19,6 @@
     "acknowledged": "Acknowledged",
     "edit": "Edit",
     "delete": "Delete",
-    "openFullPage": "Open full page",
     "loading": "Loading…",
     "deleteConfirm": "Delete bulletin \"{{ title }}\"? This can't be undone.",
     "errorAcknowledge": "Couldn't acknowledge bulletin"
@@ -64,5 +63,25 @@
   "toasts": {
     "deleted": "Bulletin deleted",
     "errorDelete": "Couldn't delete bulletin"
+  },
+  "attachments": {
+    "title": "Attachments",
+    "dropHint": "Drop files or",
+    "browse": "browse",
+    "sizeHint": "Up to {{ limit }} per file.",
+    "pendingHint": "Files will be uploaded after the bulletin is published.",
+    "empty": "No attachments.",
+    "uploading": "Uploading…",
+    "pendingTag": "pending",
+    "remove": "Remove",
+    "delete": "Delete",
+    "download": "Download",
+    "deleteConfirm": "Delete \"{{ name }}\"?",
+    "uploadedToast": "Attachment uploaded",
+    "deletedToast": "Attachment deleted",
+    "errorTooLarge": "\"{{ name }}\" is larger than the {{ limit }} upload limit.",
+    "errorUpload": "Couldn't upload {{ name }}",
+    "errorDelete": "Couldn't delete attachment",
+    "errorLoad": "Couldn't load attachments"
   }
 }

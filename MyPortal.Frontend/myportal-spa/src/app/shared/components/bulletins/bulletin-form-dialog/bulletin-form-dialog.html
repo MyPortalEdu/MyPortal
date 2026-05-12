@@ -96,14 +96,16 @@
       </textarea>
     </div>
 
-    <!-- Attachments. Placeholder UI: file upload is a follow-up; the dropzone
-         is here so the layout matches the spec but it's a no-op for now. -->
+    <!-- Attachments. In create mode the widget stages files in memory and the
+         publish() handler flushes them via uploadStaged() after the bulletin
+         exists. In edit mode it talks to the API directly. -->
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.attachmentsLabel') }}</label>
-      <div class="flex items-center justify-center gap-2 p-3 border border-dashed border-surface rounded-lg bg-surface-50 text-xs text-muted-color">
-        <i class="pi pi-paperclip"></i>
-        <span>{{ t('form.attachmentsDrop') }} <a class="underline">{{ t('form.attachmentsBrowse') }}</a></span>
-      </div>
+      <mp-bulletin-attachments
+        [mode]="isEdit() ? 'edit' : 'stage'"
+        [bulletinId]="isEdit() ? existing?.id ?? null : null"
+        [directoryId]="isEdit() ? existing?.directoryId ?? null : null">
+      </mp-bulletin-attachments>
     </div>
   </div>
 

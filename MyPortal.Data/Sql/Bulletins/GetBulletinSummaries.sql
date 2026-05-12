@@ -26,7 +26,14 @@ SELECT
                   SELECT 1 FROM dbo.BulletinAcknowledgements
                   WHERE BulletinId = B.Id AND UserId = @currentUserId
               ) THEN 1 ELSE 0 END AS BIT)
-         ELSE NULL END AS HasAcknowledged
+         ELSE NULL END AS HasAcknowledged,
+    -- Attachments live directly in the bulletin's root directory (the UI
+    -- doesn't expose subdirectories), so a flat COUNT against DirectoryId is
+    -- correct in practice and avoids a recursive CTE in the feed hot path.
+    (SELECT COUNT(*)
+       FROM dbo.Documents D
+      WHERE D.DirectoryId = B.DirectoryId
+        AND D.IsDeleted = 0) AS AttachmentCount
 FROM dbo.Bulletins         B
 JOIN dbo.BulletinCategories BC  ON BC.Id = B.CategoryId
 JOIN dbo.Users              CBU ON CBU.Id = B.CreatedById

@@ -43,6 +43,13 @@
       <!-- Body. Plain text for now; renderer is a follow-up. -->
       <div class="whitespace-pre-wrap text-sm leading-relaxed">{{ b.detail }}</div>
 
+      <!-- Attachments (read-only download list). -->
+      <mp-bulletin-attachments
+        mode="view"
+        [bulletinId]="b.id"
+        [directoryId]="b.directoryId">
+      </mp-bulletin-attachments>
+
       <!-- Audience summary -->
       <div class="pt-3 border-t border-surface">
         <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-color mb-1">{{ t('detail.sentTo') }}</div>
@@ -91,11 +98,6 @@
               (click)="requestDelete()">
           </p-button>
         }
-        <a class="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1.5 ml-2"
-           [routerLink]="['/bulletins', b.id]">
-          {{ t('detail.openFullPage') }}
-          <i class="pi pi-external-link text-[0.6rem]"></i>
-        </a>
       </div>
     </div>
   } @else if (loading()) {

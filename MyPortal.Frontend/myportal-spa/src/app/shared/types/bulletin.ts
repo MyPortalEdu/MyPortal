@@ -52,6 +52,7 @@ export interface BulletinSummaryResponse {
   categoryColourCode: string;
   requiresAcknowledgement: boolean;
   hasAcknowledged?: boolean | null;
+  attachmentCount: number;
 }
 
 export interface BulletinDetailsResponse {
@@ -78,6 +79,7 @@ export interface BulletinDetailsResponse {
   audiences: BulletinAudienceResponse[];
   hasAcknowledged?: boolean | null;
   acknowledgedCount?: number | null;
+  attachmentCount: number;
 }
 
 export interface BulletinUpsertRequest {
@@ -110,11 +112,12 @@ export interface BulletinSettingsUpdateRequest {
   allowedAudienceGroupIds: string[];
 }
 
+// Matches QueryKit's PageResult<T> on the API side. Only Items + TotalItems
+// are part of the wire contract — page/pageSize echo back to the caller via
+// the request, not the response.
 export interface PageResult<T> {
   items: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
+  totalItems: number;
 }
 
 export interface IdResponse {

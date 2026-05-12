@@ -72,8 +72,13 @@
               <span class="text-muted-color shrink-0">{{ timeAgo(b.createdAt) }}</span>
               <span class="text-muted-color">·</span>
               <span class="text-muted-color truncate">{{ b.createdByName }}</span>
-              @if (b.requiresAcknowledgement || b.pinnedAt) {
+              @if (b.requiresAcknowledgement || b.pinnedAt || b.attachmentCount > 0) {
                 <div class="ml-auto flex items-center gap-2 shrink-0">
+                  @if (b.attachmentCount > 0) {
+                    <span class="inline-flex items-center gap-1 text-muted-color" [title]="t('feed.attachments', { count: b.attachmentCount })">
+                      <i class="pi pi-paperclip"></i>{{ b.attachmentCount }}
+                    </span>
+                  }
                   @if (b.requiresAcknowledgement) {
                     @if (b.hasAcknowledged) {
                       <span class="inline-flex items-center gap-1 font-medium text-[var(--p-green-600)]">
@@ -100,10 +105,7 @@
   </div>
 
   <!-- Footer -->
-  <div class="flex items-center justify-between mt-1">
-    <a routerLink="/bulletins" class="text-sm text-primary font-medium hover:underline">
-      {{ t('feed.seeAll') }}
-    </a>
+  <div class="flex items-center justify-end mt-1">
     <p-button [label]="t('feed.new')" icon="pi pi-plus" size="small" (click)="openNew()"></p-button>
   </div>
 

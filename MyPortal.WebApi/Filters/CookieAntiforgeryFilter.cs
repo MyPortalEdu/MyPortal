@@ -38,6 +38,18 @@ public sealed class CookieAntiforgeryFilter : IAsyncAuthorizationFilter
             return;
         }
 
+        // Bearer-authenticated requests are immune to CSRF by construction —
+        // an attacker page can't read or mint the token to forge a cross-site
+        // request. Skip antiforgery for them even if an Identity cookie is
+        // *also* present (e.g. Scalar, where the user signed in via the OAuth
+        // consent screen and still has the cookie hanging around when calling
+        // an API endpoint with the freshly-minted bearer token).
+        var authHeader = context.HttpContext.Request.Headers.Authorization.ToString();
+        if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
         var hasAuthCookie = context.HttpContext.Request.Cookies.Keys
             .Any(c => c.StartsWith(".AspNetCore.", StringComparison.Ordinal));
 

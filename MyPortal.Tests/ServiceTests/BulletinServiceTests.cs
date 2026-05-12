@@ -457,14 +457,14 @@ public class BulletinServiceTests
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
-        _directoryService.Setup(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()))
+        _directoryService.Setup(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>(), It.IsAny<bool>()))
             .Returns(Task.CompletedTask);
 
         await _service.DeleteAsync(bulletinId, CancellationToken.None);
 
         _bulletinRepository.Verify(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()),
             Times.Once);
-        _directoryService.Verify(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()),
+        _directoryService.Verify(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>(), It.IsAny<bool>()),
             Times.Once);
     }
 }

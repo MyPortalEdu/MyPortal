@@ -1,11 +1,23 @@
 using System.Data;
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Pastoral;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Services.Interfaces.Pastoral;
 
 public interface IStudentGroupService
 {
+    // Cross-subtype paged summary used by the bulletin audience picker (and
+    // any other "pick a student group" UI). Returns Code/Name/Active plus a
+    // Kind discriminator derived from the subtype tables. Read access is
+    // granted alongside the existing pastoral-structure View permission.
+    Task<PageResult<StudentGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
+        FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+        CancellationToken cancellationToken = default);
+
     // Inserts a StudentGroup row, its supervisors, and (if one is flagged main)
     // backfills MainSupervisorId. Validates the AY is not locked. Returns the
     // new StudentGroup.Id.

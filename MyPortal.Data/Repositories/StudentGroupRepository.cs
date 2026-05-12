@@ -1,10 +1,16 @@
 ﻿using System.Data;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models;
+using MyPortal.Contracts.Models.Pastoral;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
+using MyPortal.Data.Utilities;
 using QueryKit.Extensions;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
@@ -29,6 +35,16 @@ public class StudentGroupRepository : EntityRepository<StudentGroup>, IStudentGr
             cancellationToken: cancellationToken);
 
         return result.ToList();
+    }
+
+    public async Task<PageResult<StudentGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
+        FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+        CancellationToken cancellationToken = default)
+    {
+        var sql = SqlResourceLoader.Load("Pastoral.GetStudentGroupSummaries.sql");
+
+        return await GetListPagedAsync<StudentGroupSummaryResponse>(sql, new { academicYearId },
+            filter, sort, paging, false, cancellationToken);
     }
 
     public async Task DeleteByAcademicYearAsync(Guid academicYearId, CancellationToken cancellationToken,
