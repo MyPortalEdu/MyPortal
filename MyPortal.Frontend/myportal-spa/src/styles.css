@@ -50,6 +50,15 @@ body {
   font-weight: 600;
 }
 
+/* Dialogs we render edge-to-edge — our own header/body/footer rows handle
+   their own padding and want to extend to the dialog's rounded corners.
+   Without this, PrimeNG's `.p-dialog-content` padding leaves a gutter around
+   any bg-emphasis footer (or any other full-bleed treatment). Add the
+   `mp-flush-dialog` styleClass to a p-dialog to opt in. */
+.mp-flush-dialog .p-dialog-content {
+  padding: 0;
+}
+
 /* ─── Shared component utilities ──────────────────────────────────────────
    These are the few CSS patterns that repeat across the app and earn a named
    class. Everything else should be Tailwind + tailwindcss-primeui utilities

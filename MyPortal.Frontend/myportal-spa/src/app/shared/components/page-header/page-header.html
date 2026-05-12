@@ -1,11 +1,11 @@
-<header class="flex items-center justify-between gap-3 bg-[var(--p-card-background)]
+<header class="flex items-center justify-between gap-3 bg-[var(--p-content-background)]
                    rounded-xl shadow-sm px-4 py-3 mb-3">
   <div class="flex items-center gap-2 min-w-0">
     @if (icon) {
-      <i [class]="icon + ' text-primary opacity-80 mr-2'"></i>
+      <i [class]="icon + ' text-primary mr-2 text-lg'"></i>
     }
     <div>
-      <span class="text-base font-semibold leading-tight truncate">{{ title }}</span>
+      <span class="text-lg font-semibold leading-tight truncate">{{ title }}</span>
       @if (subtitle) {
         <span class="text-sm opacity-70 ml-2">{{ subtitle }}</span>
       }

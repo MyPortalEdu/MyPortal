@@ -7,15 +7,15 @@
   [dismissableMask]="false"
   [closeOnEscape]="true"
   [style]="{ width: 'min(44rem, 94vw)' }"
-  styleClass="bulletin-form-dialog"
+  styleClass="bulletin-form-dialog mp-flush-dialog"
   (onHide)="onHide()"
   [showHeader]="false">
 
   <!-- Header -->
-  <div class="flex items-center justify-between p-3 border-b border-surface">
+  <div class="flex items-center justify-between p-4 border-b border-surface">
     <div class="flex items-center gap-2">
       <i class="pi pi-bell text-primary"></i>
-      <h3 class="text-sm font-semibold m-0">{{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}</h3>
+      <h3 class="text-base font-semibold m-0">{{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}</h3>
     </div>
     <button type="button" class="mp-icon-button" (click)="onCancel()" [attr.aria-label]="t('detail.close')">
       <i class="pi pi-times"></i>
@@ -109,20 +109,38 @@
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="flex items-center justify-between gap-3 p-3 border-t border-surface">
+  <!-- Footer. On mobile the checkbox label + Cancel + Publish get cramped
+       in one row, so we stack: checkbox row on top, then a button row
+       beneath with each button taking half the width for big tap targets.
+       sm: and up returns to the desktop "checkbox left, buttons right" layout.
+       bg-emphasis + rounded-b-xl anchors the actions strip as a distinct
+       "modal footer" zone, matched on every dialog footer in the app. -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-t border-surface bg-emphasis rounded-b-xl">
     <label class="flex items-center gap-2 text-sm">
       <p-checkbox
         [binary]="true"
         [ngModel]="requiresAck()"
         (ngModelChange)="requiresAck.set($event)">
       </p-checkbox>
-      {{ t('form.requireAck') }}
+      <span>{{ t('form.requireAck') }}</span>
     </label>
 
-    <div class="flex items-center gap-2">
-      <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
+    <div class="flex items-center gap-2 sm:justify-end">
+      <!-- `class` on the host gives p-button its share of the flex row;
+           `styleClass` (which lands on the inner <button>) makes it fill
+           that share. Both revert to auto sizing on sm+ so desktop keeps
+           the natural right-aligned button widths. -->
       <p-button
+        class="flex-1 sm:flex-initial"
+        styleClass="w-full sm:w-auto"
+        [label]="'common.cancel' | transloco"
+        severity="secondary"
+        [text]="true"
+        (click)="onCancel()">
+      </p-button>
+      <p-button
+        class="flex-1 sm:flex-initial"
+        styleClass="w-full sm:w-auto"
         [label]="isEdit() ? t('form.saveChanges') : t('form.publish')"
         [icon]="isEdit() ? 'pi pi-check' : 'pi pi-send'"
         [disabled]="!isValid()"

@@ -7,15 +7,15 @@
   [dismissableMask]="true"
   [closeOnEscape]="true"
   [style]="{ width: 'min(44rem, 92vw)' }"
-  styleClass="bulletin-detail-dialog"
+  styleClass="bulletin-detail-dialog mp-flush-dialog"
   (onHide)="onHide()"
   [showHeader]="false">
 
   @if (bulletin(); as b) {
     <!-- Top bar: category badge + close -->
-    <div class="flex items-center justify-between p-3 border-b border-surface">
+    <div class="flex items-center justify-between p-4 border-b border-surface">
       <span
-        class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
         [style.color]="b.categoryColourCode"
         [style.backgroundColor]="b.categoryColourCode + '1A'">
         <i [class]="b.categoryIcon"></i>
@@ -64,8 +64,9 @@
       </div>
     </div>
 
-    <!-- Footer -->
-    <div class="flex items-center justify-between gap-3 p-3 border-t border-surface">
+    <!-- Footer. bg-emphasis + rounded-b-xl matches the rest of the app's
+         modal footers for a consistent "actions zone" treatment. -->
+    <div class="flex items-center justify-between gap-3 p-4 border-t border-surface bg-emphasis rounded-b-xl">
       @if (b.requiresAcknowledgement && !b.hasAcknowledged) {
         <p-button
           [label]="t('detail.acknowledge')"

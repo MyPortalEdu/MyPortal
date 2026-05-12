@@ -6,7 +6,7 @@
 
 <div class="flex flex-col gap-4">
   <!-- Categories section -->
-  <section class="bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+  <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-0.5">
         <h2 class="text-base font-semibold m-0">{{ t('categories.title') }}</h2>
@@ -28,7 +28,7 @@
     } @else {
       <ul class="list-none m-0 p-0 flex flex-col gap-2">
         @for (c of categories(); track c.id) {
-          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-card-background)]">
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-content-background)]">
             <div
               class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
               [style.backgroundColor]="c.colourCode + '1A'">
@@ -74,7 +74,7 @@
   </section>
 
   <!-- Audiences section -->
-  <section class="bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+  <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-0.5">
         <h2 class="text-base font-semibold m-0">{{ t('audiences.title') }}</h2>
@@ -99,7 +99,7 @@
     } @else {
       <ul class="list-none m-0 p-0 flex flex-col gap-2">
         @for (g of allowedGroups(); track g.studentGroupId) {
-          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-card-background)]">
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-content-background)]">
             <div class="flex-1 min-w-0 flex flex-col gap-0.5">
               <span class="font-medium truncate">{{ g.name }}</span>
               <span class="text-xs text-muted-color font-mono">{{ g.code }}</span>

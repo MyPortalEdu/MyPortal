@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { Card } from 'primeng/card';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { BulletinsFeed } from '../../../shared/components/bulletins/bulletins-feed/bulletins-feed';
@@ -7,7 +6,6 @@ import { BulletinsFeed } from '../../../shared/components/bulletins/bulletins-fe
 @Component({
   selector: 'mp-home',
   imports: [
-    Card,
     PageHeader,
     BulletinsFeed,
     TranslocoDirective,

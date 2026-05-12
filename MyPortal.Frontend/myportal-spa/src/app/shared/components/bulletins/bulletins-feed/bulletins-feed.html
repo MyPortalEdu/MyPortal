@@ -1,6 +1,8 @@
 <ng-container *transloco="let t; prefix: 'bulletins'">
-<section class="flex flex-col bg-[var(--p-card-background)] rounded-xl shadow-sm p-4 gap-3">
-  <!-- Header -->
+<section class="flex flex-col bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 gap-3">
+  <!-- Header. New button lives here (right-aligned) rather than in a footer
+       strip — always visible, no awkward divider when the list is empty,
+       and matches the common "card title + primary action" pattern. -->
   <div class="flex items-center gap-3">
     <i class="pi pi-bell text-primary text-xl"></i>
     <h3 class="text-base font-semibold m-0">{{ t('feed.title') }}</h3>
@@ -9,6 +11,7 @@
         {{ t('feed.newCount', { count: newCount() }) }}
       </span>
     }
+    <p-button class="ml-auto" [label]="t('feed.new')" icon="pi pi-plus" size="small" (click)="openNew()"></p-button>
   </div>
 
   <!-- Category filter chips. "All" uses primary tint when active; per-category
@@ -49,7 +52,7 @@
       @for (b of filteredBulletins(); track b.id) {
         <button
           type="button"
-          class="flex gap-3 px-3.5 py-3 rounded-lg border border-surface border-l-4 bg-[var(--p-card-background)] text-left cursor-pointer transition-colors hover:bg-emphasis hover:shadow-sm"
+          class="flex gap-3 px-3.5 py-3 rounded-lg border border-surface border-l-4 bg-[var(--p-content-background)] text-left cursor-pointer transition-colors hover:bg-emphasis hover:shadow-sm"
           [style.borderLeftColor]="b.categoryColourCode"
           (click)="openDetail(b.id)">
           <div
@@ -102,11 +105,6 @@
         </button>
       }
     }
-  </div>
-
-  <!-- Footer -->
-  <div class="flex items-center justify-end mt-1">
-    <p-button [label]="t('feed.new')" icon="pi pi-plus" size="small" (click)="openNew()"></p-button>
   </div>
 
   <!-- Dialogs -->
