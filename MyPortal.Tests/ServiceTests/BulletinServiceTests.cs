@@ -15,6 +15,9 @@ using MyPortal.Services.Interfaces.Documents;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.School.Bulletins;
 using QueryKit.Repositories.Exceptions;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 using IAuthorizationService = MyPortal.Auth.Interfaces.IAuthorizationService;
 using Task = System.Threading.Tasks.Task;
 
@@ -438,6 +441,89 @@ public class BulletinServiceTests
 
         _ackRepository.Verify(r => r.AcknowledgeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
+    }
+
+    // ─── GetBulletinSummariesAsync ───────────────────────────────────────────
+
+    [Test]
+    public async Task GetBulletinSummariesAsync_BuildsScopeFromAuth_AndForwardsFilterSortPagingToRepo()
+    {
+        var filter = new FilterOptions { Groups = Array.Empty<FilterGroup>() };
+        var sort = new SortOptions { Criteria = Array.Empty<SortCriterion>() };
+        var paging = PageOptions.Create(2, 25);
+        var page = new PageResult<BulletinSummaryResponse>
+        {
+            Items = new List<BulletinSummaryResponse>(),
+            TotalItems = 0
+        };
+
+        BulletinVisibilityScope? capturedScope = null;
+        _bulletinRepository.Setup(r => r.GetSummariesAsync(
+                It.IsAny<BulletinVisibilityScope>(), filter, sort, paging, It.IsAny<CancellationToken>()))
+            .Callback((BulletinVisibilityScope s, FilterOptions? _, SortOptions? _, PageOptions? _, CancellationToken _) =>
+                capturedScope = s)
+            .ReturnsAsync(page);
+
+        var result = await _service.GetBulletinSummariesAsync(filter, sort, paging, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(page));
+        // Default test scope is staff editor with canView+canEdit, no pin; verify the
+        // scope handed to the repo matches what the auth service reported.
+        Assert.That(capturedScope, Is.Not.Null);
+        Assert.That(capturedScope!.IsStaff, Is.True);
+        Assert.That(capturedScope.CurrentUserId, Is.EqualTo(CurrentUserId));
+        Assert.That(capturedScope.CanView, Is.True);
+        Assert.That(capturedScope.CanEdit, Is.True);
+        Assert.That(capturedScope.CanPin, Is.False);
+    }
+
+    // ─── CanViewDirectoryAsync ───────────────────────────────────────────────
+
+    [Test]
+    public async Task CanViewDirectoryAsync_ReturnsFalse_WhenBulletinNotVisibleToUser()
+    {
+        // Regression guard for the SP-backed audience gate: attachment authorisation must
+        // ask the repo whether the bulletin is visible to the current scope. If this short
+        // circuit goes away, a non-targeted reader could pull a bulletin's attachments by
+        // knowing the IDs. Strict mocks on _directoryService ensure the structural lookup
+        // is NOT consulted when the audience check fails.
+        var bulletinId = Guid.NewGuid();
+        var directoryId = Guid.NewGuid();
+
+        _bulletinRepository.Setup(r => r.IsVisibleToUserAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _service.CanViewDirectoryAsync(bulletinId, directoryId, CancellationToken.None);
+
+        Assert.That(result, Is.False);
+        _directoryService.Verify(d => d.TryGetDirectoryByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Test]
+    public async Task CanViewDirectoryAsync_ReturnsTrue_WhenVisibleAndStructurallyAllowed()
+    {
+        var bulletinId = Guid.NewGuid();
+        var directoryId = Guid.NewGuid();
+        var bulletin = MakeBulletin(bulletinId, directoryId);
+
+        _bulletinRepository.Setup(r => r.IsVisibleToUserAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // CanStructurallyViewDirectoryAsync calls TryGetDirectoryByIdAsync, GetByIdAsync,
+        // IsDirectoryInSubtreeAsync. Stub them to return a non-private directory in-subtree.
+        _directoryService.Setup(d => d.TryGetDirectoryByIdAsync(directoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DirectoryDetailsResponse { Id = directoryId, Name = "d", IsPrivate = false });
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(bulletin);
+        _directoryService.Setup(d => d.IsDirectoryInSubtreeAsync(directoryId, directoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.CanViewDirectoryAsync(bulletinId, directoryId, CancellationToken.None);
+
+        Assert.That(result, Is.True);
     }
 
     // ─── DeleteAsync ─────────────────────────────────────────────────────────
