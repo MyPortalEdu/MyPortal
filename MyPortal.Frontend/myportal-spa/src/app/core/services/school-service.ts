@@ -1,12 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, shareReplay } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class SchoolService {
+  private readonly http = inject(HttpClient);
   private localName$?: Observable<string | null>;
-
-  constructor(private http: HttpClient) {}
 
   // Reads as text so it works whether ASP.NET responds with JSON (`"Name"`) or
   // plain text (`Name`). Returns null for an empty or missing name so callers do

@@ -62,7 +62,8 @@
   },
   "toasts": {
     "deleted": "Bulletin deleted",
-    "errorDelete": "Couldn't delete bulletin"
+    "errorDelete": "Couldn't delete bulletin",
+    "errorLoad": "Couldn't load bulletins"
   },
   "attachments": {
     "title": "Attachments",

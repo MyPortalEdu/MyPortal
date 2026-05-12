@@ -6,7 +6,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Button } from 'primeng/button';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
@@ -28,7 +27,6 @@ import { StudentGroupSummaryResponse } from '../../../../shared/types/student-gr
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     Button,
     PageHeader,
     StudentGroupPicker,

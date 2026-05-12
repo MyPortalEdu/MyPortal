@@ -1,16 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
   computed,
+  effect,
   inject,
+  input,
+  output,
   signal,
+  untracked,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
@@ -81,23 +79,22 @@ export const CATEGORY_COLOURS: readonly string[] = [
 
 @Component({
   selector: 'mp-bulletin-category-form-dialog',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, Button, Checkbox, Dialog, InputText, InputNumber, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, Button, Checkbox, Dialog, InputText, InputNumber, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('bulletin-settings')],
   templateUrl: './bulletin-category-form-dialog.html',
 })
-export class BulletinCategoryFormDialog implements OnChanges {
+export class BulletinCategoryFormDialog {
   private readonly data = inject(BulletinsDataService);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
 
-  @Input({ required: true }) visible = false;
+  readonly visible = input.required<boolean>();
   /** Pre-fills fields for edit mode; null = create. */
-  @Input() existing: BulletinCategoryResponse | null = null;
+  readonly existing = input<BulletinCategoryResponse | null>(null);
 
-  @Output() readonly closed = new EventEmitter<void>();
-  @Output() readonly saved = new EventEmitter<void>();
+  readonly closed = output<void>();
+  readonly saved = output<void>();
 
   readonly icons = CATEGORY_ICONS;
   readonly colours = CATEGORY_COLOURS;
@@ -109,18 +106,16 @@ export class BulletinCategoryFormDialog implements OnChanges {
   readonly active = signal(true);
   readonly submitting = signal(false);
 
-  private readonly _existing = signal<BulletinCategoryResponse | null>(null);
-  readonly isEdit = computed(() => this._existing() !== null);
+  readonly isEdit = computed(() => this.existing() !== null);
 
   readonly isValid = computed(() => this.name().trim().length > 0);
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['existing']) {
-      this._existing.set(this.existing);
-    }
-    if (changes['visible'] && this.visible) {
-      this.reset();
-    }
+  constructor() {
+    effect(() => {
+      if (this.visible()) {
+        untracked(() => this.reset());
+      }
+    });
   }
 
   onCancel(): void {
@@ -135,7 +130,7 @@ export class BulletinCategoryFormDialog implements OnChanges {
     if (!this.isValid() || this.submitting()) return;
     this.submitting.set(true);
 
-    const existing = this._existing();
+    const existing = this.existing();
     const payload: BulletinCategoryUpsertRequest = {
       name: this.name().trim(),
       icon: this.icon(),
@@ -164,7 +159,7 @@ export class BulletinCategoryFormDialog implements OnChanges {
   }
 
   private reset(): void {
-    const existing = this._existing();
+    const existing = this.existing();
     if (existing) {
       this.name.set(existing.name);
       this.icon.set(existing.icon || CATEGORY_ICONS[0]);

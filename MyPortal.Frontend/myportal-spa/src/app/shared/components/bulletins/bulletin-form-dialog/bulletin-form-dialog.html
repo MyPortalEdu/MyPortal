@@ -1,6 +1,6 @@
 <ng-container *transloco="let t; prefix: 'bulletins'">
 <p-dialog
-  [visible]="visible"
+  [visible]="visible()"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -74,6 +74,7 @@
             type="button"
             class="mp-chip"
             [class.mp-chip-active]="isSelected(a.key)"
+            [attr.aria-pressed]="isSelected(a.key)"
             (click)="toggleAudience(a.key)">
             @if (isSelected(a.key)) {
               <i class="pi pi-check"></i>
@@ -103,8 +104,8 @@
       <label class="text-xs font-medium text-muted-color">{{ t('form.attachmentsLabel') }}</label>
       <mp-bulletin-attachments
         [mode]="isEdit() ? 'edit' : 'stage'"
-        [bulletinId]="isEdit() ? existing?.id ?? null : null"
-        [directoryId]="isEdit() ? existing?.directoryId ?? null : null">
+        [bulletinId]="isEdit() ? existing()?.id ?? null : null"
+        [directoryId]="isEdit() ? existing()?.directoryId ?? null : null">
       </mp-bulletin-attachments>
     </div>
   </div>

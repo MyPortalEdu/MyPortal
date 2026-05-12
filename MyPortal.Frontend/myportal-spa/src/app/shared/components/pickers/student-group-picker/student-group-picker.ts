@@ -1,14 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  ViewChild,
-  inject,
-  signal,
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { Popover } from 'primeng/popover';
@@ -39,36 +29,35 @@ interface KindOption {
  */
 @Component({
   selector: 'mp-student-group-picker',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, Button, Popover, Select, TableModule, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, Button, Popover, Select, TableModule, TranslocoDirective, TranslocoPipe],
   templateUrl: './student-group-picker.html',
 })
 export class StudentGroupPicker {
   private readonly data = inject(StudentGroupsDataService);
   private readonly transloco = inject(TranslocoService);
 
-  @Input({ required: true }) academicYearId!: string;
-  @Input() allowMultiple = false;
+  readonly academicYearId = input.required<string>();
+  readonly allowMultiple = input(false);
   /** Optional override for the trigger button label. Defaults to "Add student group…". */
-  @Input() buttonLabel?: string;
+  readonly buttonLabel = input<string | undefined>(undefined);
   /**
    * Group ids the caller has already picked. The picker doesn't *filter* on
    * these (filtering client-side breaks pagination and totalRecords) — it
    * just dims the row and disables selection. Dedup of the final picked set
    * is the caller's responsibility.
    */
-  @Input() excludeIds: readonly string[] = [];
+  readonly excludeIds = input<readonly string[]>([]);
 
-  @Output() readonly picked = new EventEmitter<StudentGroupSummaryResponse[]>();
+  readonly picked = output<StudentGroupSummaryResponse[]>();
 
-  @ViewChild('op') private op?: Popover;
+  private readonly op = viewChild<Popover>('op');
 
   protected readonly rows = signal<StudentGroupSummaryResponse[]>([]);
   protected readonly totalRecords = signal(0);
   protected readonly loading = signal(false);
   // Multi-select state. PrimeNG's p-table mutates this array reference, so we
-  // hold a plain array in a signal and reassign on confirm/cancel.
+  // hold a plain array bound via [(selection)] and reassign on confirm/cancel.
   protected selection: StudentGroupSummaryResponse[] = [];
 
   // Cached per-render: building these in the template would re-translate every
@@ -78,17 +67,17 @@ export class StudentGroupPicker {
 
   open(event: Event): void {
     this.refreshKindOptions();
-    this.op?.toggle(event);
+    this.op()?.toggle(event);
   }
 
   close(): void {
-    this.op?.hide();
+    this.op()?.hide();
   }
 
   load(event: TableLazyLoadEvent): void {
     this.loading.set(true);
     const params = toQueryKitParams(event);
-    this.data.list(this.academicYearId, params).subscribe({
+    this.data.list(this.academicYearId(), params).subscribe({
       next: page => {
         this.rows.set(page.items ?? []);
         this.totalRecords.set(page.totalItems ?? 0);
@@ -99,19 +88,19 @@ export class StudentGroupPicker {
   }
 
   isAlreadyPicked(row: StudentGroupSummaryResponse): boolean {
-    return this.excludeIds.includes(row.id);
+    return this.excludeIds().includes(row.id);
   }
 
   // Single-select path. PrimeNG fires (onRowSelect) when selectionMode="single".
   onRowSelect(row: StudentGroupSummaryResponse): void {
-    if (this.allowMultiple) return;
+    if (this.allowMultiple()) return;
     if (this.isAlreadyPicked(row)) return;
     this.picked.emit([row]);
     this.close();
   }
 
   confirm(): void {
-    if (!this.allowMultiple || this.selection.length === 0) return;
+    if (!this.allowMultiple() || this.selection.length === 0) return;
     const picked = [...this.selection];
     this.selection = [];
     this.picked.emit(picked);

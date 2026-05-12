@@ -2,15 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  Input,
-  OnChanges,
-  SimpleChanges,
-  ViewChild,
   computed,
+  effect,
   inject,
+  input,
   signal,
+  untracked,
+  viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinAttachmentsDataService } from '../../../services/bulletin-attachments-data.service';
@@ -40,26 +39,25 @@ export type BulletinAttachmentsMode = 'view' | 'edit' | 'stage';
  */
 @Component({
   selector: 'mp-bulletin-attachments',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslocoDirective, TranslocoPipe],
+  imports: [TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-attachments.html',
   host: { class: 'block' },
 })
-export class BulletinAttachments implements OnChanges {
+export class BulletinAttachments {
   private readonly data = inject(BulletinAttachmentsDataService);
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
 
-  @Input({ required: true }) mode!: BulletinAttachmentsMode;
+  readonly mode = input.required<BulletinAttachmentsMode>();
   /** Required for view/edit. Null for stage (no bulletin exists yet). */
-  @Input() bulletinId: string | null = null;
+  readonly bulletinId = input<string | null>(null);
   /** Required for view/edit. The bulletin's root directory id. */
-  @Input() directoryId: string | null = null;
+  readonly directoryId = input<string | null>(null);
 
-  @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
+  private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   readonly documents = signal<DocumentDetailsResponse[]>([]);
   readonly staged = signal<File[]>([]);
@@ -70,19 +68,27 @@ export class BulletinAttachments implements OnChanges {
   // Exposed for the dropzone hint; the size check itself lives in handleFiles.
   readonly sizeLabel = MAX_ATTACHMENT_LABEL;
 
-  readonly isEditable = computed(() => this.mode === 'edit' || this.mode === 'stage');
-  readonly isStage = computed(() => this.mode === 'stage');
+  readonly isEditable = computed(() => this.mode() === 'edit' || this.mode() === 'stage');
+  readonly isStage = computed(() => this.mode() === 'stage');
   readonly hasAnything = computed(() => this.documents().length > 0 || this.staged().length > 0);
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['bulletinId'] || changes['directoryId'] || changes['mode']) &&
-        this.mode !== 'stage' && this.bulletinId && this.directoryId) {
-      this.refresh();
-    }
-    if (changes['mode'] && this.mode === 'stage') {
-      // Switched to stage mode (e.g. dialog reset). Clear server-side state.
-      this.documents.set([]);
-    }
+  constructor() {
+    effect(() => {
+      const mode = this.mode();
+      const bulletinId = this.bulletinId();
+      const directoryId = this.directoryId();
+      untracked(() => {
+        if (mode === 'stage') {
+          // Stage mode means no server-side bulletin exists yet — clear any
+          // previously-loaded documents so we don't render leftovers.
+          this.documents.set([]);
+          return;
+        }
+        if (bulletinId && directoryId) {
+          this.refresh(bulletinId, directoryId);
+        }
+      });
+    });
   }
 
   // ─── Drop / browse handlers ────────────────────────────────────────────
@@ -108,7 +114,7 @@ export class BulletinAttachments implements OnChanges {
 
   onBrowseClick(): void {
     if (!this.isEditable()) return;
-    this.fileInput?.nativeElement.click();
+    this.fileInput()?.nativeElement.click();
   }
 
   onFileInputChange(event: Event): void {
@@ -159,13 +165,14 @@ export class BulletinAttachments implements OnChanges {
   }
 
   async deleteDocument(doc: DocumentDetailsResponse): Promise<void> {
-    if (!this.bulletinId) return;
+    const bulletinId = this.bulletinId();
+    if (!bulletinId) return;
     const ok = await this.confirm.danger({
       message: this.transloco.translate('bulletins.attachments.deleteConfirm',
         { name: doc.fileName }),
     });
     if (!ok) return;
-    this.data.delete(this.bulletinId, doc.id).subscribe({
+    this.data.delete(bulletinId, doc.id).subscribe({
       next: () => {
         this.documents.update(d => d.filter(x => x.id !== doc.id));
         this.notify.success(this.transloco.translate('bulletins.attachments.deletedToast'));
@@ -176,13 +183,14 @@ export class BulletinAttachments implements OnChanges {
   }
 
   downloadUrl(doc: DocumentDetailsResponse): string {
-    return this.bulletinId ? this.data.downloadUrl(this.bulletinId, doc.id) : '#';
+    const bulletinId = this.bulletinId();
+    return bulletinId ? this.data.downloadUrl(bulletinId, doc.id) : '#';
   }
 
   // Pretty file size — 1.2 KB / 3.4 MB. Locale-agnostic; the unit suffixes
   // are short enough that translation isn't worth the i18n weight.
   formatSize(bytes?: number | null): string {
-    if (!bytes && bytes !== 0) return '';
+    if (bytes == null) return '';
     const units = ['B', 'KB', 'MB', 'GB'];
     let value = bytes;
     let unit = 0;
@@ -226,31 +234,31 @@ export class BulletinAttachments implements OnChanges {
     }
     if (accepted.length === 0) return;
 
-    if (this.mode === 'stage') {
+    if (this.mode() === 'stage') {
       this.staged.update(s => [...s, ...accepted]);
       return;
     }
-    if (this.mode === 'edit' && this.bulletinId && this.directoryId) {
-      this.uploadingFiles(this.bulletinId, this.directoryId, accepted);
+    const bulletinId = this.bulletinId();
+    const directoryId = this.directoryId();
+    if (this.mode() === 'edit' && bulletinId && directoryId) {
+      void this.uploadSequentially(bulletinId, directoryId, accepted);
     }
   }
 
-  private uploadingFiles(bulletinId: string, directoryId: string, files: File[]): void {
+  // Sequential to keep failure handling simple (no parallel toast spam) and
+  // to avoid hammering the upload endpoint with N concurrent 30MB requests.
+  private async uploadSequentially(bulletinId: string, directoryId: string, files: File[]): Promise<void> {
     this.uploading.set(true);
-    let remaining = files.length;
     for (const file of files) {
-      this.data.upload(bulletinId, directoryId, file).subscribe({
-        next: doc => {
-          this.documents.update(d => [...d, doc]);
-          if (--remaining === 0) this.uploading.set(false);
-        },
-        error: err => {
-          if (--remaining === 0) this.uploading.set(false);
-          this.notify.apiError(err,
-            this.transloco.translate('bulletins.attachments.errorUpload', { name: file.name }));
-        },
-      });
+      try {
+        const doc = await this.uploadOne(bulletinId, directoryId, file);
+        this.documents.update(d => [...d, doc]);
+      } catch (err) {
+        this.notify.apiError(err,
+          this.transloco.translate('bulletins.attachments.errorUpload', { name: file.name }));
+      }
     }
+    this.uploading.set(false);
   }
 
   private async uploadOne(bulletinId: string, directoryId: string, file: File): Promise<DocumentDetailsResponse> {
@@ -262,10 +270,9 @@ export class BulletinAttachments implements OnChanges {
     });
   }
 
-  private refresh(): void {
-    if (!this.bulletinId || !this.directoryId) return;
+  private refresh(bulletinId: string, directoryId: string): void {
     this.loading.set(true);
-    this.data.listContents(this.bulletinId, this.directoryId).subscribe({
+    this.data.listContents(bulletinId, directoryId).subscribe({
       next: contents => {
         this.documents.set(contents.documents ?? []);
         this.loading.set(false);

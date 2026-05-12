@@ -3,7 +3,7 @@
 
 <!-- MOBILE: Drawer with sidebar -->
 <p-drawer
-  [visible]="!isDesktop && sidebarOpen"
+  [visible]="!isDesktop() && sidebarOpen()"
   (onHide)="closeSidebar()"
   position="left"
   [modal]="true"
@@ -42,10 +42,10 @@
          border-r border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]
          text-[var(--p-text-color)]
          transition-[width,background-color,border-color,color] duration-200 ease-out"
-    [class.w-72]="!sidebarCollapsed"
-    [class.w-16]="sidebarCollapsed"
+    [class.w-72]="!sidebarCollapsed()"
+    [class.w-16]="sidebarCollapsed()"
   >
-    <mp-sidebar [collapsed]="sidebarCollapsed" (expandRequested)="expandSidebar()"></mp-sidebar>
+    <mp-sidebar [collapsed]="sidebarCollapsed()" (expandRequested)="expandSidebar()"></mp-sidebar>
   </aside>
 
 

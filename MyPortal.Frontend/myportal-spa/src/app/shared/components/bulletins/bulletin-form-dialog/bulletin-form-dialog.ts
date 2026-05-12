@@ -1,17 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges,
-  ViewChild,
   computed,
+  effect,
   inject,
+  input,
+  output,
   signal,
+  untracked,
+  viewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
@@ -24,6 +22,7 @@ import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoSc
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
+import { Permissions } from '../../../../core/constants/permissions';
 import { BulletinAttachments } from '../bulletin-attachments/bulletin-attachments';
 import {
   BulletinAllowedGroupResponse,
@@ -45,33 +44,32 @@ interface AudienceChoice {
 
 @Component({
   selector: 'mp-bulletin-form-dialog',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox, TranslocoDirective, TranslocoPipe, BulletinAttachments],
+  imports: [FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox, TranslocoDirective, TranslocoPipe, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-form-dialog.html',
 })
-export class BulletinFormDialog implements OnChanges {
+export class BulletinFormDialog {
   private readonly data = inject(BulletinsDataService);
   private readonly meService = inject(MeService);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
 
-  @Input({ required: true }) visible = false;
+  readonly visible = input.required<boolean>();
 
   /**
    * When set, the dialog opens in edit mode: fields pre-fill from this bulletin,
    * the submit calls update() instead of create(), and ExpectedVersion is sent
    * so optimistic concurrency catches racing edits. Leave null for create mode.
    */
-  @Input() existing: BulletinDetailsResponse | null = null;
+  readonly existing = input<BulletinDetailsResponse | null>(null);
 
-  @Output() readonly closed = new EventEmitter<void>();
-  @Output() readonly saved = new EventEmitter<void>();
+  readonly closed = output<void>();
+  readonly saved = output<void>();
 
   // Used to flush staged attachments after a create succeeds, or to read its
   // existing-attachments state in edit mode (it manages that itself).
-  @ViewChild(BulletinAttachments) attachments?: BulletinAttachments;
+  readonly attachments = viewChild(BulletinAttachments);
 
   readonly title = signal('');
   readonly detail = signal('');
@@ -81,8 +79,6 @@ export class BulletinFormDialog implements OnChanges {
   readonly selectedAudienceKeys = signal<Set<string>>(new Set());
   readonly submitting = signal(false);
   readonly canPin = signal(false);
-  // Reflected from @Input so computed()s can react. ngOnChanges keeps it in sync.
-  private readonly _existing = signal<BulletinDetailsResponse | null>(null);
   // Categories live inside the dialog now rather than as an @Input. With OnPush
   // and the parent's signal-fed binding, the Select could latch onto an empty
   // array on first render and the "No results found" message stayed visible.
@@ -92,7 +88,7 @@ export class BulletinFormDialog implements OnChanges {
   readonly categories = signal<BulletinCategoryResponse[]>([]);
   readonly allowedGroups = signal<BulletinAllowedGroupResponse[]>([]);
 
-  readonly isEdit = computed(() => this._existing() !== null);
+  readonly isEdit = computed(() => this.existing() !== null);
 
   readonly audienceChoices = computed<AudienceChoice[]>(() => {
     // Fixed audiences come first so they read like a sentence: "all staff / all
@@ -117,7 +113,7 @@ export class BulletinFormDialog implements OnChanges {
         studentGroupId: g.studentGroupId,
       });
     }
-    const existing = this._existing();
+    const existing = this.existing();
     if (existing) {
       for (const a of existing.audiences) {
         if (a.audienceKind === BulletinAudienceKind.StudentGroup
@@ -144,14 +140,18 @@ export class BulletinFormDialog implements OnChanges {
     this.selectedAudienceKeys().size > 0,
   );
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['existing']) {
-      this._existing.set(this.existing);
-    }
-    if (changes['visible'] && this.visible) {
-      this.reset();
-      this.loadDependencies();
-    }
+  constructor() {
+    // Watch the open transition. Reads of `existing()` happen inside `untracked`
+    // so an edit-mode parent that updates `existing` while the dialog is open
+    // doesn't re-trigger the reset (matches the old ngOnChanges semantics).
+    effect(() => {
+      if (this.visible()) {
+        untracked(() => {
+          this.reset();
+          this.loadDependencies();
+        });
+      }
+    });
   }
 
   isSelected(key: string): boolean {
@@ -195,7 +195,7 @@ export class BulletinFormDialog implements OnChanges {
         studentGroupId: c.studentGroupId ?? null,
       }));
 
-    const existing = this._existing();
+    const existing = this.existing();
     const payload: BulletinUpsertRequest = {
       title: this.title().trim(),
       detail: this.detail().trim(),
@@ -237,10 +237,11 @@ export class BulletinFormDialog implements OnChanges {
     // published either way; failed attachment uploads don't roll it back.
     this.data.create(payload).subscribe({
       next: ({ id }) => {
-        if (this.attachments?.hasStaged()) {
+        const attachments = this.attachments();
+        if (attachments?.hasStaged()) {
           this.data.getById(id).subscribe({
             next: details => {
-              this.attachments!.uploadStaged(id, details.directoryId).finally(() => finishOk());
+              attachments.uploadStaged(id, details.directoryId).finally(() => finishOk());
             },
             error: () => finishOk(),
           });
@@ -253,7 +254,7 @@ export class BulletinFormDialog implements OnChanges {
   }
 
   private reset(): void {
-    const existing = this._existing();
+    const existing = this.existing();
     if (existing) {
       // Edit mode: hydrate every field from the bulletin we're editing.
       this.title.set(existing.title);
@@ -279,7 +280,7 @@ export class BulletinFormDialog implements OnChanges {
   private loadDependencies(): void {
     // Check pin permission once per open. Cheap — MeService caches.
     this.meService.me().subscribe(me => {
-      this.canPin.set(!!me.permissions?.includes('School.PinSchoolBulletins'));
+      this.canPin.set(!!me.permissions?.includes(Permissions.School.PinSchoolBulletins));
     });
 
     // Categories: the data service shareReplays this, so the feed's earlier call

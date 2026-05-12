@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -26,6 +26,7 @@ function makeCategory(overrides: Partial<BulletinCategoryResponse> = {}): Bullet
 }
 
 describe('BulletinCategoryFormDialog', () => {
+  let fixture: ComponentFixture<BulletinCategoryFormDialog>;
   let component: BulletinCategoryFormDialog;
   let data: jasmine.SpyObj<BulletinsDataService>;
   let notify: jasmine.SpyObj<NotificationService>;
@@ -54,18 +55,17 @@ describe('BulletinCategoryFormDialog', () => {
       ],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(BulletinCategoryFormDialog);
+    fixture = TestBed.createComponent(BulletinCategoryFormDialog);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('visible', false);
+    fixture.componentRef.setInput('existing', null);
     fixture.detectChanges();
   });
 
   function open(existing: BulletinCategoryResponse | null = null) {
-    component.existing = existing;
-    component.visible = true;
-    component.ngOnChanges({
-      existing: { currentValue: existing, previousValue: null, firstChange: true, isFirstChange: () => true },
-      visible:  { currentValue: true,     previousValue: false, firstChange: true, isFirstChange: () => true },
-    });
+    fixture.componentRef.setInput('existing', existing);
+    fixture.componentRef.setInput('visible', true);
+    fixture.detectChanges();
   }
 
   // ─── reset / open lifecycle ─────────────────────────────────────────────

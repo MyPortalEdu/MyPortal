@@ -1,4 +1,4 @@
-import {Component, NgZone, OnDestroy, OnInit} from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
@@ -8,26 +8,23 @@ import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
   selector: 'mp-app-shell',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, ButtonDirective, TranslocoDirective],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })
 export class AppShell implements OnInit, OnDestroy {
-  isDesktop = false;
-  sidebarOpen = false;
-  sidebarCollapsed = false;
+  readonly isDesktop = signal(false);
+  readonly sidebarOpen = signal(false);
+  readonly sidebarCollapsed = signal(false);
 
   private mq = window.matchMedia('(min-width: 1024px)');
-  private mqHandler = (e: MediaQueryListEvent) => {
-    this.zone.run(() => this.setDesktop(e.matches));
-  };
-
-  constructor(private zone: NgZone) {}
+  private mqHandler = (e: MediaQueryListEvent) => this.setDesktop(e.matches);
 
   ngOnInit() {
     this.setDesktop(this.mq.matches);
     this.mq.addEventListener('change', this.mqHandler);
-    this.sidebarCollapsed = localStorage.getItem('mp:sidebar') === 'collapsed';
+    this.sidebarCollapsed.set(localStorage.getItem('mp:sidebar') === 'collapsed');
   }
 
   ngOnDestroy() {
@@ -35,26 +32,29 @@ export class AppShell implements OnInit, OnDestroy {
   }
 
   setDesktop(flag: boolean) {
-    this.isDesktop = flag;
-    this.sidebarOpen = flag; // open by default on desktop, closed on mobile
+    this.isDesktop.set(flag);
+    this.sidebarOpen.set(flag); // open by default on desktop, closed on mobile
   }
 
   // On desktop the burger collapses/expands the rail; on mobile it opens the drawer.
   toggleSidebar() {
-    if (this.isDesktop) {
-      this.sidebarCollapsed = !this.sidebarCollapsed;
-      localStorage.setItem('mp:sidebar', this.sidebarCollapsed ? 'collapsed' : 'expanded');
+    if (this.isDesktop()) {
+      const next = !this.sidebarCollapsed();
+      this.sidebarCollapsed.set(next);
+      localStorage.setItem('mp:sidebar', next ? 'collapsed' : 'expanded');
     } else {
-      this.sidebarOpen = !this.sidebarOpen;
+      this.sidebarOpen.update(v => !v);
     }
   }
 
   expandSidebar() {
-    if (this.isDesktop && this.sidebarCollapsed) {
-      this.sidebarCollapsed = false;
+    if (this.isDesktop() && this.sidebarCollapsed()) {
+      this.sidebarCollapsed.set(false);
       localStorage.setItem('mp:sidebar', 'expanded');
     }
   }
 
-  closeSidebar() { if (!this.isDesktop) this.sidebarOpen = false; }
+  closeSidebar() {
+    if (!this.isDesktop()) this.sidebarOpen.set(false);
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   ActivatedRouteSnapshot,
@@ -11,8 +11,8 @@ import {
   UrlTree
 } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import {UserType} from '../enums/user-type';
-import {MeService} from '../services/me-service';
+import { UserType } from '../enums/user-type';
+import { MeService } from '../services/me-service';
 
 type AuthData = {
   permissionsAll?: readonly string[];
@@ -22,7 +22,8 @@ type AuthData = {
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate, CanMatch {
-  constructor(private me: MeService, private router: Router) {}
+  private readonly me = inject(MeService);
+  private readonly router = inject(Router);
 
   // ---- CanActivate (components)
   async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
@@ -76,10 +77,13 @@ export class AuthGuard implements CanActivate, CanMatch {
     }
   }
 
-  // Reject anything that isn't a same-origin path (must start with a single '/').
+  // Reject anything that isn't a same-origin path (must start with a single '/'),
+  // and refuse to bounce back into the server-rendered /account/* pages, which
+  // would loop after login.
   private static sanitizeReturnUrl(value: string): string {
     if (!value.startsWith('/')) return '/';
     if (value.startsWith('//') || value.startsWith('/\\')) return '/';
+    if (value === '/account' || value.startsWith('/account/')) return '/';
     return value;
   }
 }

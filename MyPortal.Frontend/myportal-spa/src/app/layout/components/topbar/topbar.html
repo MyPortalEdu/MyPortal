@@ -94,14 +94,6 @@
                 <span class="flex-1">{{ t('userMenu.accountSettings') }}</span>
               </a>
             </li>
-            <!--<li>
-              <button type="button" class="menu-row" (click)="onSwitchAcademicYear()">
-                <i class="pi pi-calendar"></i>
-                <span class="flex-1 text-left">{{ t('userMenu.switchAcademicYear') }}</span>
-                <span class="text-sm opacity-70">{{ currentAcademicYear }}</span>
-                <i class="pi pi-chevron-right text-xs opacity-60"></i>
-              </button>
-            </li>-->
             <li class="px-4 py-2 flex items-center gap-3 text-sm">
               <i class="pi pi-palette opacity-75"></i>
               <span class="flex-1">{{ t('userMenu.theme') }}</span>
@@ -109,7 +101,7 @@
                 <button
                   type="button"
                   class="theme-btn"
-                  [class.active]="theme === 'light'"
+                  [class.active]="theme() === 'light'"
                   (click)="setTheme('light')"
                   [attr.aria-label]="t('userMenu.themeLight')"
                 >
@@ -118,7 +110,7 @@
                 <button
                   type="button"
                   class="theme-btn"
-                  [class.active]="theme === 'dark'"
+                  [class.active]="theme() === 'dark'"
                   (click)="setTheme('dark')"
                   [attr.aria-label]="t('userMenu.themeDark')"
                 >
@@ -127,7 +119,7 @@
                 <button
                   type="button"
                   class="theme-btn"
-                  [class.active]="theme === 'system'"
+                  [class.active]="theme() === 'system'"
                   (click)="setTheme('system')"
                   [attr.aria-label]="t('userMenu.themeSystem')"
                 >

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, output, signal } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { MeService } from '../../../core/services/me-service';
@@ -21,28 +21,22 @@ type Theme = 'light' | 'dark' | 'system';
 
 @Component({
   selector: 'mp-topbar',
-  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover, TranslocoDirective],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
 })
 export class Topbar implements OnInit {
-  @Output() menuToggle = new EventEmitter<void>();
-
+  private readonly me = inject(MeService);
+  private readonly schools = inject(SchoolService);
+  private readonly academicYears = inject(AcademicYearService);
   private readonly transloco = inject(TranslocoService);
+
+  readonly menuToggle = output<void>();
 
   me$!: Observable<Me>;
   siteLabel$!: Observable<SiteLabel>;
-  theme: Theme = 'system';
-
-  // TODO: wire to the current-academic-year service once a switcher flow exists.
-  currentAcademicYear = '2025/26';
-
-  constructor(
-    private me: MeService,
-    private schools: SchoolService,
-    private academicYears: AcademicYearService,
-  ) {}
+  readonly theme = signal<Theme>('system');
 
   ngOnInit(): void {
     this.me$ = this.me.me();
@@ -56,27 +50,27 @@ export class Topbar implements OnInit {
       map(([school, year]) => ({ school, year: year?.name ?? null })),
     );
 
-    this.theme = (localStorage.getItem('mp:theme') as Theme | null) ?? 'system';
+    this.theme.set((localStorage.getItem('mp:theme') as Theme | null) ?? 'system');
     this.applyTheme();
 
     // Re-evaluate the resolved theme when the OS preference changes — only matters
     // when the user has picked 'system'. Modern browsers fire `change` on the media
     // query when the OS toggles between light/dark.
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (this.theme === 'system') this.applyTheme();
+      if (this.theme() === 'system') this.applyTheme();
     });
   }
 
   setTheme(next: Theme): void {
-    this.theme = next;
+    this.theme.set(next);
     localStorage.setItem('mp:theme', next);
     this.applyTheme();
   }
 
   private applyTheme(): void {
     const dark =
-      this.theme === 'dark' ||
-      (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      this.theme() === 'dark' ||
+      (this.theme() === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     document.documentElement.classList.toggle('mp-dark', dark);
   }
 
@@ -99,13 +93,8 @@ export class Topbar implements OnInit {
     return key ? this.transloco.translate(`topbar.userType.${key}`) : '';
   }
 
-  onSwitchAcademicYear(): void {
-    // TODO: open the academic year picker (sub-menu or modal). For now, no-op so
-    // the row renders as a placeholder matching the design.
-  }
-
   logout(): void {
-    this.me.clearCache?.();
+    this.me.clearCache();
     location.href = '/account/logout';
   }
 }

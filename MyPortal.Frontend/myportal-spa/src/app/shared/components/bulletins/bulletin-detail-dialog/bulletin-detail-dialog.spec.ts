@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -59,11 +59,17 @@ function makeMe(overrides: Partial<Me> = {}): Me {
 }
 
 describe('BulletinDetailDialog', () => {
+  let fixture: ComponentFixture<BulletinDetailDialog>;
   let component: BulletinDetailDialog;
   let data: jasmine.SpyObj<BulletinsDataService>;
   let notify: jasmine.SpyObj<NotificationService>;
   let confirm: jasmine.SpyObj<ConfirmationDialog>;
   let me$: jasmine.SpyObj<MeService>;
+
+  function setBulletinId(value: string | null) {
+    fixture.componentRef.setInput('bulletinId', value);
+    fixture.detectChanges();
+  }
 
   beforeEach(async () => {
     data = jasmine.createSpyObj<BulletinsDataService>('BulletinsDataService', ['getById', 'acknowledge']);
@@ -94,7 +100,7 @@ describe('BulletinDetailDialog', () => {
       ],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(BulletinDetailDialog);
+    fixture = TestBed.createComponent(BulletinDetailDialog);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -102,41 +108,41 @@ describe('BulletinDetailDialog', () => {
   // ─── input binding / visibility ──────────────────────────────────────────
 
   it('setting bulletinId triggers a fetch and opens the dialog', () => {
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     expect(data.getById).toHaveBeenCalledWith('b1');
     expect(component.visible()).toBeTrue();
     expect(component.bulletin()?.id).toBe('b1');
   });
 
   it('setting bulletinId to null clears the bulletin and closes the dialog', () => {
-    component.bulletinId = 'b1';
-    component.bulletinId = null;
+    setBulletinId('b1');
+    setBulletinId(null);
     expect(component.bulletin()).toBeNull();
     expect(component.visible()).toBeFalse();
   });
 
   it('clears the loading flag on fetch error', () => {
     data.getById.and.returnValue(throwError(() => new Error('boom')));
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     expect(component.loading()).toBeFalse();
   });
 
   // ─── initials ─────────────────────────────────────────────────────────────
 
   it('initials uses the first two name parts', () => {
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     expect(component.initials()).toBe('AL'); // "Ada Lovelace"
   });
 
   it('initials handles single-word names', () => {
     data.getById.and.returnValue(of(makeDetail({ createdByName: 'Cher' })));
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     expect(component.initials()).toBe('C');
   });
 
   it('initials handles empty name', () => {
     data.getById.and.returnValue(of(makeDetail({ createdByName: '' })));
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     expect(component.initials()).toBe('');
   });
 
@@ -150,7 +156,7 @@ describe('BulletinDetailDialog', () => {
     ];
     data.getById.and.returnValue(of(makeDetail({ audiences })));
 
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
 
     expect(component.audienceSummary()).toBe('bulletins.audience.allStaff, bulletins.audience.allPupils, Year 7A');
   });
@@ -160,70 +166,50 @@ describe('BulletinDetailDialog', () => {
       audiences: [{ id: 'a1', audienceKind: BulletinAudienceKind.StudentGroup, studentGroupId: 'g1', studentGroupName: null }],
     })));
 
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
 
     expect(component.audienceSummary()).toBe('bulletins.audience.group');
   });
 
   // ─── canEdit ─────────────────────────────────────────────────────────────
+  //
+  // The `me` signal is private — tests poke it directly via cast rather than
+  // re-stubbing MeService and re-creating the fixture for each variation.
+
+  type MePoke = { me: { set: (v: Me) => void } };
 
   it('canEdit is false for non-staff', () => {
-    me$.me.and.returnValue(of(makeMe({ userType: UserType.Student, permissions: ['School.PinSchoolBulletins'] })));
-    TestBed.resetTestingModule();
-    // Recreate with the new me$. (Easier than juggling Subject inside the test.)
-    return (async () => {
-      await TestBed.configureTestingModule({
-        imports: [BulletinDetailDialog],
-        providers: [
-          { provide: BulletinsDataService, useValue: data },
-          { provide: NotificationService, useValue: notify },
-          { provide: ConfirmationDialog, useValue: confirm },
-          { provide: MeService, useValue: me$ },
-          { provide: TranslocoService, useValue: { translate: (k: string) => k, getActiveLang: () => 'en' } as Partial<TranslocoService> as TranslocoService },
-        ],
-      });
-      TestBed.overrideComponent(BulletinDetailDialog, { set: { template: '' } }).compileComponents();
-      const fixture = TestBed.createComponent(BulletinDetailDialog);
-      const local = fixture.componentInstance;
-      fixture.detectChanges();
-      local.bulletinId = 'b1';
-      expect(local.canEdit()).toBeFalse();
-    })();
+    setBulletinId('b1');
+    (component as unknown as MePoke).me.set(
+      makeMe({ userType: UserType.Student, permissions: ['School.PinSchoolBulletins'] }),
+    );
+    expect(component.canEdit()).toBeFalse();
   });
 
   it('canEdit is true for staff pinners regardless of authorship', () => {
-    me$.me.and.returnValue(of(makeMe({ id: 'me', permissions: ['School.PinSchoolBulletins'] })));
     data.getById.and.returnValue(of(makeDetail({ createdById: 'someone-else' })));
-
-    // Re-run ngOnInit with the new me() result by re-setting bulletinId.
-    component.bulletinId = 'b1';
-
-    // The me() Observable was already subscribed in ngOnInit before this test re-stubbed it;
-    // explicitly call the public surface by writing the signal — same effect for the computed.
-    (component as unknown as { me: { set: (v: Me) => void } }).me.set(
+    setBulletinId('b1');
+    (component as unknown as MePoke).me.set(
       makeMe({ id: 'me', permissions: ['School.PinSchoolBulletins'] }),
     );
-
     expect(component.canEdit()).toBeTrue();
   });
 
   it('canEdit is true for staff editors who authored the bulletin', () => {
     data.getById.and.returnValue(of(makeDetail({ createdById: 'me' })));
-    component.bulletinId = 'b1';
-    (component as unknown as { me: { set: (v: Me) => void } }).me.set(
+    setBulletinId('b1');
+    (component as unknown as MePoke).me.set(
       makeMe({ id: 'me', permissions: ['School.EditSchoolBulletins'] }),
     );
-
     expect(component.canEdit()).toBeTrue();
   });
 
   it('canEdit is false for staff editors viewing someone else\'s bulletin', () => {
     data.getById.and.returnValue(of(makeDetail({ createdById: 'someone-else' })));
-    component.bulletinId = 'b1';
-    (component as unknown as { me: { set: (v: Me) => void } }).me.set(
+    setBulletinId('b1');
+    (component as unknown as MePoke).me.set(
       makeMe({ id: 'me', permissions: ['School.EditSchoolBulletins'] }),
     );
-
     expect(component.canEdit()).toBeFalse();
   });
 
@@ -236,7 +222,7 @@ describe('BulletinDetailDialog', () => {
     const emitted = jasmine.createSpy('acknowledged');
     component.acknowledged.subscribe(emitted);
 
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     component.acknowledge();
 
     expect(data.acknowledge).toHaveBeenCalledWith('b1');
@@ -246,7 +232,7 @@ describe('BulletinDetailDialog', () => {
   });
 
   it('acknowledge() guards against re-entrant clicks while in flight', () => {
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     component.acknowledging.set(true);
 
     component.acknowledge();
@@ -255,7 +241,7 @@ describe('BulletinDetailDialog', () => {
   });
 
   it('acknowledge() toasts on error and clears the in-flight flag', () => {
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     data.acknowledge.and.returnValue(throwError(() => new Error('boom')));
 
     component.acknowledge();
@@ -272,7 +258,7 @@ describe('BulletinDetailDialog', () => {
     const emitted = jasmine.createSpy('editRequested');
     component.editRequested.subscribe(emitted);
 
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
     component.requestEdit();
 
     expect(emitted).toHaveBeenCalledWith(detail);
@@ -282,7 +268,7 @@ describe('BulletinDetailDialog', () => {
     confirm.danger.and.resolveTo(true);
     const emitted = jasmine.createSpy('deleteRequested');
     component.deleteRequested.subscribe(emitted);
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
 
     await component.requestDelete();
 
@@ -293,7 +279,7 @@ describe('BulletinDetailDialog', () => {
     confirm.danger.and.resolveTo(false);
     const emitted = jasmine.createSpy('deleteRequested');
     component.deleteRequested.subscribe(emitted);
-    component.bulletinId = 'b1';
+    setBulletinId('b1');
 
     await component.requestDelete();
 

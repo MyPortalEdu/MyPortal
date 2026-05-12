@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -60,6 +60,7 @@ function makeMe(overrides: Partial<Me> = {}): Me {
 }
 
 describe('BulletinFormDialog', () => {
+  let fixture: ComponentFixture<BulletinFormDialog>;
   let component: BulletinFormDialog;
   let data: jasmine.SpyObj<BulletinsDataService>;
   let notify: jasmine.SpyObj<NotificationService>;
@@ -103,21 +104,20 @@ describe('BulletinFormDialog', () => {
       ],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(BulletinFormDialog);
+    fixture = TestBed.createComponent(BulletinFormDialog);
     component = fixture.componentInstance;
+    // Required input; setting it before the first CD avoids a "Required input
+    // not provided" error. We start hidden so the open() helper drives the
+    // effect that re-runs reset()/loadDependencies().
+    fixture.componentRef.setInput('visible', false);
+    fixture.componentRef.setInput('existing', null);
     fixture.detectChanges();
   });
 
   function open(existing: BulletinDetailsResponse | null = null) {
-    component.existing = existing;
-    component.visible = true;
-    // ngOnChanges isn't auto-invoked for direct property writes outside the
-    // change-detection cycle; trigger it explicitly to mirror Angular's input
-    // binding behaviour.
-    component.ngOnChanges({
-      existing: { currentValue: existing, previousValue: null, firstChange: true, isFirstChange: () => true },
-      visible:  { currentValue: true,     previousValue: false, firstChange: true, isFirstChange: () => true },
-    });
+    fixture.componentRef.setInput('existing', existing);
+    fixture.componentRef.setInput('visible', true);
+    fixture.detectChanges();
   }
 
   // ─── open lifecycle ──────────────────────────────────────────────────────
@@ -297,9 +297,12 @@ describe('BulletinFormDialog', () => {
     component.title.set('T'); component.detail.set('D');
 
     const uploadStaged = jasmine.createSpy('uploadStaged').and.resolveTo(undefined);
-    // Inject a fake ViewChild — the test template is empty, so there's no real instance.
-    (component as unknown as { attachments: { hasStaged: () => boolean; uploadStaged: typeof uploadStaged } })
-      .attachments = { hasStaged: () => true, uploadStaged };
+    // The ViewChild is now a signal query; replace it with a function that
+    // returns a fake instance, since the test template is empty and no real
+    // child component exists. Class fields are writable at runtime despite the
+    // TS `readonly` modifier.
+    const fake = { hasStaged: () => true, uploadStaged };
+    (component as unknown as { attachments: () => unknown }).attachments = () => fake;
 
     component.publish();
 
@@ -316,8 +319,8 @@ describe('BulletinFormDialog', () => {
     component.title.set('T'); component.detail.set('D');
     data.getById.and.returnValue(throwError(() => new Error('boom')));
 
-    (component as unknown as { attachments: { hasStaged: () => boolean; uploadStaged: () => Promise<void> } })
-      .attachments = { hasStaged: () => true, uploadStaged: () => Promise.resolve() };
+    const fake = { hasStaged: () => true, uploadStaged: () => Promise.resolve() };
+    (component as unknown as { attachments: () => unknown }).attachments = () => fake;
 
     component.publish();
 

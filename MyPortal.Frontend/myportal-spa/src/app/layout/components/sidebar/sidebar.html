@@ -1,23 +1,23 @@
 <nav class="h-full flex flex-col" [attr.aria-label]="'sidebar.mainNav' | transloco">
   <div class="flex-1 overflow-auto py-3 px-2">
     <ul class="list-none m-0 p-0 flex flex-col gap-0.5">
-      @for (item of items; track item.label) {
+      @for (item of items(); track item.label) {
         @if (item.items?.length) {
           <!-- Expandable group -->
           <li>
             <button
               type="button"
               class="nav-row"
-              [class.nav-row--rail]="collapsed"
-              [class.active]="collapsed && hasActiveChild(item)"
+              [class.nav-row--rail]="collapsed()"
+              [class.active]="collapsed() && hasActiveChild(item)"
               (click)="toggle(item)"
-              [attr.aria-expanded]="!collapsed && isExpanded(item)"
+              [attr.aria-expanded]="!collapsed() && isExpanded(item)"
               [pTooltip]="(item.label || '') | transloco"
               tooltipPosition="right"
-              [tooltipDisabled]="!collapsed"
+              [tooltipDisabled]="!collapsed()"
             >
               @if (item.icon) { <i [class]="item.icon"></i> }
-              @if (!collapsed) {
+              @if (!collapsed()) {
                 <span class="flex-1 text-left">{{ item.label | transloco }}</span>
                 <i
                   class="pi pi-chevron-right nav-chevron"
@@ -26,7 +26,7 @@
               }
             </button>
 
-            @if (!collapsed && isExpanded(item)) {
+            @if (!collapsed() && isExpanded(item)) {
               <ul class="list-none m-0 p-0 flex flex-col gap-0.5 mt-0.5">
                 @for (child of item.items!; track child.label) {
                   <li>
@@ -51,13 +51,13 @@
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: isExactMatch(item) }"
               class="nav-row"
-              [class.nav-row--rail]="collapsed"
+              [class.nav-row--rail]="collapsed()"
               [pTooltip]="(item.label || '') | transloco"
               tooltipPosition="right"
-              [tooltipDisabled]="!collapsed"
+              [tooltipDisabled]="!collapsed()"
             >
               @if (item.icon) { <i [class]="item.icon"></i> }
-              @if (!collapsed) {
+              @if (!collapsed()) {
                 <span class="flex-1">{{ item.label | transloco }}</span>
               }
             </a>

@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -50,6 +50,7 @@ function fileInputEvent(files: File[]): Event {
 }
 
 describe('BulletinAttachments', () => {
+  let fixture: ComponentFixture<BulletinAttachments>;
   let component: BulletinAttachments;
   let data: jasmine.SpyObj<BulletinAttachmentsDataService>;
   let notify: jasmine.SpyObj<NotificationService>;
@@ -90,20 +91,17 @@ describe('BulletinAttachments', () => {
       ],
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(BulletinAttachments);
+    fixture = TestBed.createComponent(BulletinAttachments);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    // `mode` is required; we set it lazily via setMode() per test so the
+    // configure-then-render path matches the production usage of [mode]=...
   });
 
   function setMode(mode: 'view' | 'edit' | 'stage', bulletinId: string | null = null, directoryId: string | null = null) {
-    component.mode = mode;
-    component.bulletinId = bulletinId;
-    component.directoryId = directoryId;
-    component.ngOnChanges({
-      mode:        { currentValue: mode,        previousValue: null, firstChange: true, isFirstChange: () => true },
-      bulletinId:  { currentValue: bulletinId,  previousValue: null, firstChange: true, isFirstChange: () => true },
-      directoryId: { currentValue: directoryId, previousValue: null, firstChange: true, isFirstChange: () => true },
-    });
+    fixture.componentRef.setInput('mode', mode);
+    fixture.componentRef.setInput('bulletinId', bulletinId);
+    fixture.componentRef.setInput('directoryId', directoryId);
+    fixture.detectChanges();
   }
 
   // ─── stage mode ─────────────────────────────────────────────────────────
@@ -156,7 +154,7 @@ describe('BulletinAttachments', () => {
 
   // ─── edit mode ──────────────────────────────────────────────────────────
 
-  it('edit mode loads existing documents on init and appends successful uploads', () => {
+  it('edit mode loads existing documents on init and appends successful uploads', async () => {
     data.listContents.and.returnValue(of({
       directory: { id: 'd1', name: 'root', parentId: null },
       directories: [],
@@ -168,6 +166,9 @@ describe('BulletinAttachments', () => {
     expect(component.documents().map(d => d.id)).toEqual(['existing']);
 
     component.onFileInputChange(fileInputEvent([makeFile('new.pdf', 10)]));
+    // The edit-mode upload path is now sequential async — yield until it resolves.
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(data.upload).toHaveBeenCalledWith('b1', 'd1', jasmine.any(File));
     expect(component.documents().map(d => d.fileName)).toEqual(['old.pdf', 'new.pdf']);
@@ -183,12 +184,14 @@ describe('BulletinAttachments', () => {
     expect(data.upload).not.toHaveBeenCalled();
   });
 
-  it('edit mode uploads only the accepted files when a mix is dropped', () => {
+  it('edit mode uploads only the accepted files when a mix is dropped', async () => {
     setMode('edit', 'b1', 'd1');
     component.onFileInputChange(fileInputEvent([
       makeFile('big.bin', MAX_ATTACHMENT_BYTES + 1),
       makeFile('ok.pdf', 10),
     ]));
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(notify.warn).toHaveBeenCalled();
     expect(data.upload).toHaveBeenCalledTimes(1);
@@ -225,10 +228,8 @@ describe('BulletinAttachments', () => {
     setMode('edit', 'b1', 'd1');
     component.documents.set([makeDoc()]);
 
-    component.mode = 'stage';
-    component.ngOnChanges({
-      mode: { currentValue: 'stage', previousValue: 'edit', firstChange: false, isFirstChange: () => false },
-    });
+    fixture.componentRef.setInput('mode', 'stage');
+    fixture.detectChanges();
 
     expect(component.documents()).toEqual([]);
   });

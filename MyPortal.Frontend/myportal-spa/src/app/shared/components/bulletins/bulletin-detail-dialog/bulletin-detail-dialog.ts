@@ -1,15 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
-  Input,
   OnInit,
-  Output,
   computed,
+  effect,
   inject,
+  input,
+  output,
   signal,
+  untracked,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -18,6 +18,7 @@ import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { ConfirmationDialog } from '../../../services/confirmation.service';
 import { NotificationService } from '../../../services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
+import { Permissions } from '../../../../core/constants/permissions';
 import { BulletinAttachments } from '../bulletin-attachments/bulletin-attachments';
 import { UserType } from '../../../../core/enums/user-type';
 import { Me } from '../../../../core/interfaces/me';
@@ -29,9 +30,8 @@ import {
 
 @Component({
   selector: 'mp-bulletin-detail-dialog',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, Dialog, Button, TranslocoDirective, BulletinAttachments],
+  imports: [Dialog, Button, TranslocoDirective, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-detail-dialog.html',
 })
@@ -43,31 +43,21 @@ export class BulletinDetailDialog implements OnInit {
   private readonly transloco = inject(TranslocoService);
 
   /** When set to a non-null id the dialog opens and fetches the bulletin. */
-  @Input()
-  set bulletinId(value: string | null) {
-    this._bulletinId.set(value);
-    if (value) {
-      this.fetch(value);
-    } else {
-      this.bulletin.set(null);
-    }
-  }
-  get bulletinId(): string | null { return this._bulletinId(); }
+  readonly bulletinId = input<string | null>(null);
 
-  @Output() readonly closed = new EventEmitter<void>();
-  @Output() readonly acknowledged = new EventEmitter<void>();
+  readonly closed = output<void>();
+  readonly acknowledged = output<void>();
   /** Emitted with the full bulletin so the parent can hand it to the form dialog without re-fetching. */
-  @Output() readonly editRequested = new EventEmitter<BulletinDetailsResponse>();
+  readonly editRequested = output<BulletinDetailsResponse>();
   /** Emitted after the user confirms a delete. Parent owns the API call + feed refresh. */
-  @Output() readonly deleteRequested = new EventEmitter<string>();
+  readonly deleteRequested = output<string>();
 
-  private readonly _bulletinId = signal<string | null>(null);
   readonly bulletin = signal<BulletinDetailsResponse | null>(null);
   readonly loading = signal(false);
   readonly acknowledging = signal(false);
   private readonly me = signal<Me | null>(null);
 
-  readonly visible = computed(() => this._bulletinId() !== null);
+  readonly visible = computed(() => this.bulletinId() !== null);
 
   readonly initials = computed(() => {
     const name = this.bulletin()?.createdByName ?? '';
@@ -95,9 +85,21 @@ export class BulletinDetailDialog implements OnInit {
     const me = this.me();
     if (!b || !me || me.userType !== UserType.Staff) return false;
     const perms = me.permissions ?? [];
-    if (perms.includes('School.PinSchoolBulletins')) return true;
-    return perms.includes('School.EditSchoolBulletins') && b.createdById === me.id;
+    if (perms.includes(Permissions.School.PinSchoolBulletins)) return true;
+    return perms.includes(Permissions.School.EditSchoolBulletins) && b.createdById === me.id;
   });
+
+  constructor() {
+    // React to the parent's bulletinId binding. Reads of fetch state / bulletin
+    // writes are wrapped in untracked so they don't form an effect loop.
+    effect(() => {
+      const id = this.bulletinId();
+      untracked(() => {
+        if (id) this.fetch(id);
+        else this.bulletin.set(null);
+      });
+    });
+  }
 
   ngOnInit(): void {
     this.meService.me().subscribe(me => this.me.set(me));

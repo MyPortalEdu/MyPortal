@@ -10,7 +10,7 @@ export const routes: Routes = [
   },
   {
     path: 'portal', canActivate: [AuthGuard],
-    loadComponent: () => import('./core/components/portal-redirect/portal-redirect').then(m => m.PortalRedirectComponent)
+    loadComponent: () => import('./core/components/portal-redirect/portal-redirect').then(m => m.PortalRedirect)
   },
   {
     path: 'staff',

@@ -1,15 +1,12 @@
-import { Injectable } from '@angular/core';
-import {Observable, shareReplay} from 'rxjs';
-import {HttpClient} from '@angular/common/http';
-import {Me} from '../interfaces/me';
+import { Injectable, inject } from '@angular/core';
+import { Observable, shareReplay } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Me } from '../interfaces/me';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class MeService {
+  private readonly http = inject(HttpClient);
   private me$?: Observable<Me>;
-
-  constructor(private http: HttpClient) { }
 
   me(): Observable<Me> {
     if (!this.me$) {

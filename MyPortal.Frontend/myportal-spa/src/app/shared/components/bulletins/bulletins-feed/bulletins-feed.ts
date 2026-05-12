@@ -6,7 +6,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Button } from 'primeng/button';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { forkJoin } from 'rxjs';
@@ -25,7 +24,7 @@ import { BulletinFormDialog } from '../bulletin-form-dialog/bulletin-form-dialog
   selector: 'mp-bulletins-feed',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, Button, BulletinDetailDialog, BulletinFormDialog, TranslocoDirective],
+  imports: [Button, BulletinDetailDialog, BulletinFormDialog, TranslocoDirective],
   // The bulletins scope lazy-loads public/i18n/bulletins/<lang>.json the first
   // time this component (or any other consumer) renders.
   providers: [provideTranslocoScope('bulletins')],
@@ -94,7 +93,10 @@ export class BulletinsFeed implements OnInit {
         this.categories.set(categories ?? []);
         this.loading.set(false);
       },
-      error: () => this.loading.set(false),
+      error: err => {
+        this.loading.set(false);
+        this.notify.apiError(err, this.transloco.translate('bulletins.toasts.errorLoad'));
+      },
     });
   }
 
