@@ -15,6 +15,15 @@ public interface IBulletinRepository : IEntityRepository<Bulletin>
     Task<BulletinDetailsResponse?> GetDetailsByIdAsync(Guid bulletinId, BulletinVisibilityScope scope,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    /// SP-backed visibility check used by attachment authorisation paths that bypass the
+    /// summaries/details SPs. Mirrors the predicate in <c>usp_bulletin_get_details_by_id</c>:
+    /// staff pinners see everything; staff creators see their own (even expired); otherwise
+    /// the caller must be in the audience AND the bulletin must not be expired.
+    /// </summary>
+    Task<bool> IsVisibleToUserAsync(Guid bulletinId, BulletinVisibilityScope scope,
+        CancellationToken cancellationToken);
+
     Task<PageResult<BulletinSummaryResponse>> GetSummariesAsync(BulletinVisibilityScope scope,
         FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null,

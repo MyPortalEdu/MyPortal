@@ -54,7 +54,7 @@ public class BulletinCategoryService : IBulletinCategoryService
 
     public async Task<Guid> CreateAsync(BulletinCategoryUpsertRequest model, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
+        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
         var entity = new BulletinCategory
         {
@@ -76,7 +76,7 @@ public class BulletinCategoryService : IBulletinCategoryService
     public async Task UpdateAsync(Guid categoryId, BulletinCategoryUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
+        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
         var entity = await _repository.GetByIdAsync(categoryId, cancellationToken)
                      ?? throw new NotFoundException("Bulletin category not found.");
@@ -95,7 +95,7 @@ public class BulletinCategoryService : IBulletinCategoryService
 
     public async Task DeleteAsync(Guid categoryId, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
+        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
         await _repository.DeleteAsync(categoryId, cancellationToken);
 

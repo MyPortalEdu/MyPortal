@@ -164,6 +164,14 @@ export class BulletinDetailDialog implements OnInit {
     });
   }
 
+  // Mirrors the feed's helper: append the alpha suffix only when the value is
+  // a 6-digit hex (#RRGGBB). Backend validation allows 8-digit (#RRGGBBAA), and
+  // unconditionally concatenating would produce an invalid colour string.
+  tint(hex: string, alphaHex = '1A'): string {
+    if (!hex) return '';
+    return hex.length === 7 ? `${hex}${alphaHex}` : hex;
+  }
+
   private formatAudience(a: BulletinAudienceResponse): string {
     const t = (key: string) => this.transloco.translate(`bulletins.audience.${key}`);
     switch (a.audienceKind) {

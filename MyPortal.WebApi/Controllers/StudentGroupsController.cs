@@ -18,7 +18,7 @@ namespace MyPortal.WebApi.Controllers;
 /// this controller exists so pickers (bulletin audiences, future schedulers,
 /// etc.) can browse the lot through one paged endpoint with a Kind column.
 /// </summary>
-public sealed class StudentGroupsController : BaseApiController<StudentGroupsController>
+public sealed class StudentGroupsController : BaseApiController
 {
     private readonly IStudentGroupService _service;
 

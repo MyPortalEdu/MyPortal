@@ -19,11 +19,11 @@ namespace MyPortal.WebApi.Controllers;
 /// by every concrete subclass (e.g. <see cref="BulletinsController"/>) and act
 /// against the entity identified by <c>entityId</c> in the route.
 /// </summary>
-public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : BaseApiController<TSelf> where TDirectoryEntity : IDirectoryEntity
+public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiController where TDirectoryEntity : IDirectoryEntity
 {
     private readonly IDirectoryEntityService<TDirectoryEntity> _directoryEntityService;
 
-    protected BaseDirectoryEntityController(ProblemDetailsFactory problemFactory, ILogger<TSelf> logger,
+    protected BaseDirectoryEntityController(ProblemDetailsFactory problemFactory, ILogger<BaseDirectoryEntityController<TDirectoryEntity>> logger,
         IDirectoryEntityService<TDirectoryEntity> directoryEntityService) : base(problemFactory, logger)
     {
         _directoryEntityService = directoryEntityService;

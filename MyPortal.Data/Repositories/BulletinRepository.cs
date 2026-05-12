@@ -66,6 +66,29 @@ public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepositor
         return header;
     }
 
+    public async Task<bool> IsVisibleToUserAsync(Guid bulletinId, BulletinVisibilityScope scope,
+        CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+
+        var p = new
+        {
+            bulletinId,
+            currentUserId = scope.CurrentUserId,
+            isStaff = scope.IsStaff,
+            isPupil = scope.IsPupil,
+            isParent = scope.IsParent,
+            canView = scope.CanView,
+            canEdit = scope.CanEdit,
+            canPin = scope.CanPin
+        };
+
+        var command = new CommandDefinition("[dbo].[usp_bulletin_is_visible]", p,
+            commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+        return await conn.ExecuteScalarAsync<bool>(command);
+    }
+
     public async Task<PageResult<BulletinSummaryResponse>> GetSummariesAsync(BulletinVisibilityScope scope,
         FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null,
@@ -81,37 +104,57 @@ public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepositor
     public async Task ReplaceAudiencesAsync(Guid bulletinId, IList<BulletinAudience> audiences,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        var (conn, owns) = AcquireConnection(transaction);
+        if (transaction is not null)
+        {
+            await ReplaceAudiencesCoreAsync(transaction.Connection!, transaction, bulletinId, audiences,
+                cancellationToken);
+            return;
+        }
+
+        // No caller-supplied transaction: open a local one so DELETE + INSERT are atomic.
+        // Without this, a failure (or cancellation) after the DELETE would leave the
+        // bulletin with no audience rows.
+        using var conn = _factory.Create();
+        conn.Open();
+        using var localTx = conn.BeginTransaction();
         try
         {
-            const string deleteSql = "DELETE FROM dbo.BulletinAudiences WHERE BulletinId = @bulletinId;";
-            await conn.ExecuteAsync(new CommandDefinition(deleteSql, new { bulletinId },
-                transaction: transaction, cancellationToken: cancellationToken));
+            await ReplaceAudiencesCoreAsync(conn, localTx, bulletinId, audiences, cancellationToken);
+            localTx.Commit();
+        }
+        catch
+        {
+            localTx.Rollback();
+            throw;
+        }
+    }
 
-            if (audiences.Count == 0)
-            {
-                return;
-            }
+    private static async Task ReplaceAudiencesCoreAsync(IDbConnection conn, IDbTransaction tx,
+        Guid bulletinId, IList<BulletinAudience> audiences, CancellationToken cancellationToken)
+    {
+        const string deleteSql = "DELETE FROM dbo.BulletinAudiences WHERE BulletinId = @bulletinId;";
+        await conn.ExecuteAsync(new CommandDefinition(deleteSql, new { bulletinId },
+            transaction: tx, cancellationToken: cancellationToken));
 
-            const string insertSql = @"
+        if (audiences.Count == 0)
+        {
+            return;
+        }
+
+        const string insertSql = @"
 INSERT INTO dbo.BulletinAudiences (Id, BulletinId, AudienceKind, StudentGroupId)
 VALUES (@Id, @BulletinId, @AudienceKind, @StudentGroupId);";
 
-            var rows = audiences.Select(a => new
-            {
-                Id = a.Id == Guid.Empty ? Guid.NewGuid() : a.Id,
-                BulletinId = bulletinId,
-                AudienceKind = (byte)a.AudienceKind,
-                a.StudentGroupId
-            });
-
-            await conn.ExecuteAsync(new CommandDefinition(insertSql, rows,
-                transaction: transaction, cancellationToken: cancellationToken));
-        }
-        finally
+        var rows = audiences.Select(a => new
         {
-            if (owns) conn.Dispose();
-        }
+            Id = a.Id == Guid.Empty ? Guid.NewGuid() : a.Id,
+            BulletinId = bulletinId,
+            AudienceKind = (byte)a.AudienceKind,
+            a.StudentGroupId
+        });
+
+        await conn.ExecuteAsync(new CommandDefinition(insertSql, rows,
+            transaction: tx, cancellationToken: cancellationToken));
     }
 
     private sealed class AckRollup

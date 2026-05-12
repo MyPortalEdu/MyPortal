@@ -78,6 +78,8 @@
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_tree_by_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_bulletin_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_bulletin_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_bulletin_is_visible.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_bulletin_is_visible.sql" />
     <None Remove="Sql\Updates\20251101000500_add_bulletin_permissions.sql" />
     <EmbeddedResource Include="Sql\Updates\20251101000500_add_bulletin_permissions.sql" />
     <None Remove="Sql\Updates\20251101000600_add_academic_year_entities.sql" />

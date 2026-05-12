@@ -16,7 +16,7 @@ namespace MyPortal.WebApi.Controllers;
 /// user-managed — defaults are seeded but can be renamed, recoloured, deactivated,
 /// or replaced.
 /// </summary>
-public sealed class BulletinCategoriesController : BaseApiController<BulletinCategoriesController>
+public sealed class BulletinCategoriesController : BaseApiController
 {
     private readonly IBulletinCategoryService _service;
 

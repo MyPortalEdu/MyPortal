@@ -112,22 +112,29 @@ function buildSort(event: TableLazyLoadEvent): SortOptions | null {
   if (event.multiSortMeta?.length) {
     for (const m of event.multiSortMeta as SortMeta[]) {
       if (!m.field) continue;
-      criteria.push({
-        columnName: m.field,
-        direction: m.order >= 0 ? 'Ascending' : 'Descending',
-      });
+      // PrimeNG emits order ∈ {1, -1, 0}; 0 means the column has been cleared.
+      // Skip 0 — emitting Ascending would send an unintended sort.
+      const direction = toDirection(m.order);
+      if (!direction) continue;
+      criteria.push({ columnName: m.field, direction });
     }
   } else if (event.sortField) {
     const field = Array.isArray(event.sortField) ? event.sortField[0] : event.sortField;
     if (field) {
-      criteria.push({
-        columnName: field,
-        direction: (event.sortOrder ?? 1) >= 0 ? 'Ascending' : 'Descending',
-      });
+      const direction = toDirection(event.sortOrder);
+      if (direction) {
+        criteria.push({ columnName: field, direction });
+      }
     }
   }
 
   return criteria.length ? { criteria } : null;
+}
+
+function toDirection(order: number | null | undefined): SortDirection | null {
+  if (order === 1) return 'Ascending';
+  if (order === -1) return 'Descending';
+  return null;
 }
 
 function buildFilter(event: TableLazyLoadEvent): FilterOptions | null {

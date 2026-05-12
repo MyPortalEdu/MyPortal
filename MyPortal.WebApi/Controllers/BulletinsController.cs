@@ -23,7 +23,7 @@ namespace MyPortal.WebApi.Controllers;
 /// endpoints (directories/documents) from
 /// <see cref="BaseDirectoryEntityController{TSelf, TDirectoryEntity}"/>.
 /// </summary>
-public sealed class BulletinsController : BaseDirectoryEntityController<BulletinsController, Bulletin>
+public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin>
 {
     private readonly IBulletinService _bulletinService;
 

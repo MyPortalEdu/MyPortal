@@ -36,31 +36,49 @@ ORDER BY SG.Description;";
     public async Task ReplaceAllowedAudienceGroupsAsync(IList<Guid> studentGroupIds,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        var conn = transaction?.Connection ?? _factory.Create();
-        var owns = transaction is null;
+        if (transaction is not null)
+        {
+            await ReplaceCoreAsync(transaction.Connection!, transaction, studentGroupIds, cancellationToken);
+            return;
+        }
+
+        // No caller-supplied transaction: open a local one so DELETE + INSERT are atomic.
+        // Without this, a failure (or cancellation) after the DELETE would leave the
+        // allowlist empty.
+        using var conn = _factory.Create();
+        conn.Open();
+        using var localTx = conn.BeginTransaction();
         try
         {
-            await conn.ExecuteAsync(new CommandDefinition(
-                "DELETE FROM dbo.BulletinAudienceAllowedGroups;",
-                transaction: transaction, cancellationToken: cancellationToken));
+            await ReplaceCoreAsync(conn, localTx, studentGroupIds, cancellationToken);
+            localTx.Commit();
+        }
+        catch
+        {
+            localTx.Rollback();
+            throw;
+        }
+    }
 
-            if (studentGroupIds.Count == 0)
-            {
-                return;
-            }
+    private static async Task ReplaceCoreAsync(IDbConnection conn, IDbTransaction tx,
+        IList<Guid> studentGroupIds, CancellationToken cancellationToken)
+    {
+        await conn.ExecuteAsync(new CommandDefinition(
+            "DELETE FROM dbo.BulletinAudienceAllowedGroups;",
+            transaction: tx, cancellationToken: cancellationToken));
 
-            const string insertSql = @"
+        if (studentGroupIds.Count == 0)
+        {
+            return;
+        }
+
+        const string insertSql = @"
 INSERT INTO dbo.BulletinAudienceAllowedGroups (StudentGroupId)
 VALUES (@StudentGroupId);";
 
-            var rows = studentGroupIds.Select(id => new { StudentGroupId = id });
+        var rows = studentGroupIds.Select(id => new { StudentGroupId = id });
 
-            await conn.ExecuteAsync(new CommandDefinition(insertSql, rows,
-                transaction: transaction, cancellationToken: cancellationToken));
-        }
-        finally
-        {
-            if (owns) conn.Dispose();
-        }
+        await conn.ExecuteAsync(new CommandDefinition(insertSql, rows,
+            transaction: tx, cancellationToken: cancellationToken));
     }
 }

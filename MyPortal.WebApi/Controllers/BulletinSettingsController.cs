@@ -13,10 +13,10 @@ namespace MyPortal.WebApi.Controllers;
 /// <summary>
 /// Manage school-wide bulletin settings, currently the allowlist of student
 /// groups that may be picked as a bulletin audience. Read access is granted
-/// alongside View permission; mutating requires the pin (admin) permission.
+/// alongside View permission; mutating requires the bulletin settings permission.
 /// </summary>
 [Route("api/bulletins/settings")]
-public sealed class BulletinSettingsController : BaseApiController<BulletinSettingsController>
+public sealed class BulletinSettingsController : BaseApiController
 {
     private readonly IBulletinSettingsService _service;
 

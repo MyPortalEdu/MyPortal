@@ -258,9 +258,12 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     {
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
-        var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
-
-        if (!_accessPolicy.CanView(bulletin, scope))
+        // BulletinAccessPolicy.CanView intentionally defers audience-membership filtering
+        // to the SP layer (the summaries/details query resolves pupil/parent → group in
+        // one round-trip). Attachment endpoints don't go through that SP, so we hit the
+        // dedicated visibility SP here — otherwise a non-targeted reader who knows the
+        // ids could pull a bulletin's attachments.
+        if (!await _bulletinRepository.IsVisibleToUserAsync(entityId, scope, cancellationToken))
         {
             return false;
         }

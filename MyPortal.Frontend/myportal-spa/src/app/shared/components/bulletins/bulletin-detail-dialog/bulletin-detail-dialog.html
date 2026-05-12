@@ -17,7 +17,7 @@
       <span
         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
         [style.color]="b.categoryColourCode"
-        [style.backgroundColor]="b.categoryColourCode + '1A'">
+        [style.backgroundColor]="tint(b.categoryColourCode)">
         <i [class]="b.categoryIcon"></i>
         {{ b.categoryName }}
       </span>

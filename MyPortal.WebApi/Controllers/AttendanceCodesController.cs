@@ -14,7 +14,7 @@ namespace MyPortal.WebApi.Controllers;
 /// dropdowns. Code authoring/restriction is managed via attendance settings, not
 /// this controller.
 /// </summary>
-public sealed class AttendanceCodesController : BaseApiController<AttendanceCodesController>
+public sealed class AttendanceCodesController : BaseApiController
 {
     private readonly IAttendanceCodeService _attendanceCodeService;
 

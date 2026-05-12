@@ -23,7 +23,7 @@ public class BulletinSettingsService : IBulletinSettingsService
 
     public async Task<BulletinSettingsResponse> GetAsync(CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, cancellationToken);
+        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
         var groups = await _repository.GetAllowedAudienceGroupsAsync(cancellationToken);
         return new BulletinSettingsResponse { AllowedAudienceGroups = groups };
@@ -34,7 +34,7 @@ public class BulletinSettingsService : IBulletinSettingsService
         // Pin permission gates settings — pinners are the admins, and bulletin settings
         // are an admin-tier concern. If/when a dedicated ManageBulletinSettings perm
         // exists, swap it in here.
-        await _authorizationService.RequirePermissionAsync(Permissions.School.PinSchoolBulletins, cancellationToken);
+        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
         await _repository.ReplaceAllowedAudienceGroupsAsync(model.AllowedAudienceGroupIds, cancellationToken);
 

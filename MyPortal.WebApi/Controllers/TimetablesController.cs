@@ -16,7 +16,7 @@ namespace MyPortal.WebApi.Controllers;
 /// session data. A timetable lives inside an academic year; runs are async solver
 /// jobs queued onto a background worker.
 /// </summary>
-public sealed class TimetablesController : BaseApiController<TimetablesController>
+public sealed class TimetablesController : BaseApiController
 {
     private readonly ITimetableService _service;
     private readonly ITimetableSolveService _solveService;
