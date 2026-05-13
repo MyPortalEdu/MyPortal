@@ -3,9 +3,12 @@ import { SortOptions, toQueryKitParams } from './primeng-querykit';
 
 // The encoder is base64url(JSON(SortOptions)). Round-trip back through the same
 // transform so tests assert on the decoded shape rather than the opaque string.
+// encodeBase64Url strips trailing `=` padding (the API decoder tolerates that),
+// so re-pad to the next multiple of 4 before atob, which otherwise throws.
 function decodeSort(encoded: string | undefined): SortOptions | null {
   if (!encoded) return null;
-  const padded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
