@@ -17,6 +17,7 @@ import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { Checkbox } from 'primeng/checkbox';
+import { DatePicker } from 'primeng/datepicker';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
@@ -45,7 +46,7 @@ interface AudienceChoice {
 @Component({
   selector: 'mp-bulletin-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox, TranslocoDirective, TranslocoPipe, BulletinAttachments],
+  imports: [FormsModule, Dialog, Button, InputText, Textarea, Select, Checkbox, DatePicker, TranslocoDirective, TranslocoPipe, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-form-dialog.html',
 })
@@ -76,9 +77,14 @@ export class BulletinFormDialog {
   readonly categoryId = signal<string | null>(null);
   readonly isPinned = signal(false);
   readonly requiresAck = signal(false);
+  readonly expiresAt = signal<Date | null>(null);
   readonly selectedAudienceKeys = signal<Set<string>>(new Set());
   readonly submitting = signal(false);
   readonly canPin = signal(false);
+  // Server validator rejects past dates — mirror that on the picker so users
+  // can't pick an instant we'd reject anyway. Refreshed each open() so the
+  // floor tracks real time across long-lived sessions.
+  readonly minExpiryDate = signal<Date>(new Date());
   // Categories live inside the dialog now rather than as an @Input. With OnPush
   // and the parent's signal-fed binding, the Select could latch onto an empty
   // array on first render and the "No results found" message stayed visible.
@@ -203,9 +209,7 @@ export class BulletinFormDialog {
       isPinned: this.isPinned(),
       requiresAcknowledgement: this.requiresAck(),
       audiences,
-      // We don't expose expiry in the form yet, so on edit we preserve the
-      // current value rather than clobbering it to null.
-      expiresAt: existing?.expiresAt ?? null,
+      expiresAt: this.expiresAt()?.toISOString() ?? null,
       // ExpectedVersion is irrelevant on create (server ignores it on POST)
       // but required on update for the optimistic-concurrency guard.
       expectedVersion: existing?.version ?? 0,
@@ -254,6 +258,7 @@ export class BulletinFormDialog {
   }
 
   private reset(): void {
+    this.minExpiryDate.set(new Date());
     const existing = this.existing();
     if (existing) {
       // Edit mode: hydrate every field from the bulletin we're editing.
@@ -262,6 +267,7 @@ export class BulletinFormDialog {
       this.categoryId.set(existing.categoryId);
       this.isPinned.set(existing.pinnedAt !== null);
       this.requiresAck.set(existing.requiresAcknowledgement);
+      this.expiresAt.set(existing.expiresAt ? new Date(existing.expiresAt) : null);
       this.selectedAudienceKeys.set(audienceKeysFor(existing.audiences));
       return;
     }
@@ -270,6 +276,7 @@ export class BulletinFormDialog {
     this.detail.set('');
     this.isPinned.set(false);
     this.requiresAck.set(false);
+    this.expiresAt.set(null);
     // Default audience: All staff. Matches the mockup's pre-selected chip.
     this.selectedAudienceKeys.set(new Set(['all-staff']));
     // categoryId default is set after the categories call resolves (see loadDependencies);

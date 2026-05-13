@@ -85,6 +85,25 @@
       </div>
     </div>
 
+    <!-- Expiry. Optional: when set, the bulletin disappears from feeds after
+         this instant (creator still sees it). Server validator rejects past
+         instants, so the picker's minDate matches. -->
+    <div class="flex flex-col gap-1 max-w-[18rem]">
+      <label class="text-xs font-medium text-muted-color">{{ t('form.expiresLabel') }}</label>
+      <p-datepicker
+        [ngModel]="expiresAt()"
+        (ngModelChange)="expiresAt.set($event)"
+        [showTime]="true"
+        hourFormat="24"
+        [showButtonBar]="true"
+        [minDate]="minExpiryDate()"
+        [placeholder]="t('form.expiresPlaceholder')"
+        appendTo="body"
+        [style]="{ width: '100%' }">
+      </p-datepicker>
+      <span class="text-xs text-muted-color leading-snug">{{ t('form.expiresHint') }}</span>
+    </div>
+
     <!-- Body -->
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.bodyLabel') }}</label>

@@ -302,4 +302,20 @@ describe('BulletinDetailDialog', () => {
     component.onHide();
     expect(emitted).toHaveBeenCalled();
   });
+
+  it('isExpired reflects the bulletin expiresAt vs. now', () => {
+    expect(component.isExpired()).toBeFalse();
+
+    data.getById.and.returnValue(of(makeDetail({
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    })));
+    setBulletinId('future');
+    expect(component.isExpired()).toBeFalse();
+
+    data.getById.and.returnValue(of(makeDetail({
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+    })));
+    setBulletinId('past');
+    expect(component.isExpired()).toBeTrue();
+  });
 });

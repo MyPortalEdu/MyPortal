@@ -27,6 +27,7 @@ using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Filters;
 using MyPortal.WebApi.Infrastructure.Extensions;
+using MyPortal.WebApi.Infrastructure.Json;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
@@ -281,6 +282,13 @@ builder.Services.AddControllers(o =>
     o.ModelBinderProviders.Insert(0, new Base64JsonBinderProvider<SortOptions>());
 
     o.Filters.Add<CookieAntiforgeryFilter>();
+}).AddJsonOptions(o =>
+{
+    // Convention: every DateTime crossing the API is UTC. Without these,
+    // Dapper hands back Kind=Unspecified values that serialize without a TZ
+    // marker, and the SPA reads them as local — see UtcDateTimeConverter.
+    o.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+    o.JsonSerializerOptions.Converters.Add(new UtcNullableDateTimeConverter());
 });
 
 builder.Services.AddRazorPages();

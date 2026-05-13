@@ -248,4 +248,12 @@ describe('BulletinsFeed', () => {
     expect(component.tint('#6366F1FF')).toBe('#6366F1FF');
     expect(component.tint('')).toBe('');
   });
+
+  it('isExpired() is true only when expiresAt has passed', () => {
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const future = new Date(Date.now() + 60_000).toISOString();
+    expect(component.isExpired(makeSummary({ expiresAt: null }))).toBeFalse();
+    expect(component.isExpired(makeSummary({ expiresAt: future }))).toBeFalse();
+    expect(component.isExpired(makeSummary({ expiresAt: past }))).toBeTrue();
+  });
 });

@@ -75,26 +75,34 @@
               <span class="text-muted-color shrink-0">{{ timeAgo(b.createdAt) }}</span>
               <span class="text-muted-color">·</span>
               <span class="text-muted-color truncate">{{ b.createdByName }}</span>
-              @if (b.requiresAcknowledgement || b.pinnedAt || b.attachmentCount > 0) {
+              @if (isExpired(b) || b.requiresAcknowledgement || b.pinnedAt || b.attachmentCount > 0) {
                 <div class="ml-auto flex items-center gap-2 shrink-0">
                   @if (b.attachmentCount > 0) {
                     <span class="inline-flex items-center gap-1 text-muted-color" [title]="t('feed.attachments', { count: b.attachmentCount })">
                       <i class="fa-solid fa-paperclip"></i>{{ b.attachmentCount }}
                     </span>
                   }
-                  @if (b.requiresAcknowledgement) {
-                    @if (b.hasAcknowledged) {
-                      <span class="inline-flex items-center gap-1 font-medium text-[var(--p-green-600)]">
-                        <i class="fa-solid fa-circle-check"></i>{{ t('feed.acknowledged') }}
-                      </span>
-                    } @else {
-                      <span class="inline-flex items-center gap-1 font-medium text-[var(--p-amber-600)]">
-                        <i class="fa-solid fa-circle-exclamation"></i>{{ t('feed.ackRequired') }}
-                      </span>
+                  @if (isExpired(b)) {
+                    <!-- Expired takes precedence: hides ack state and the pin marker since
+                         the bulletin is no longer visible to its audience. -->
+                    <span class="inline-flex items-center gap-1 font-medium text-muted-color">
+                      <i class="fa-regular fa-clock"></i>{{ t('feed.expired') }}
+                    </span>
+                  } @else {
+                    @if (b.requiresAcknowledgement) {
+                      @if (b.hasAcknowledged) {
+                        <span class="inline-flex items-center gap-1 font-medium text-[var(--p-green-600)]">
+                          <i class="fa-solid fa-circle-check"></i>{{ t('feed.acknowledged') }}
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center gap-1 font-medium text-[var(--p-amber-600)]">
+                          <i class="fa-solid fa-circle-exclamation"></i>{{ t('feed.ackRequired') }}
+                        </span>
+                      }
                     }
-                  }
-                  @if (b.pinnedAt) {
-                    <i class="fa-solid fa-bookmark text-primary" [title]="t('feed.pinned')"></i>
+                    @if (b.pinnedAt) {
+                      <i class="fa-solid fa-bookmark text-primary" [title]="t('feed.pinned')"></i>
+                    }
                   }
                 </div>
               }

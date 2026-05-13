@@ -183,4 +183,11 @@ export class BulletinsFeed implements OnInit {
     if (!hex) return '';
     return hex.length === 7 ? `${hex}${alphaHex}` : hex;
   }
+
+  // True when the bulletin's expiresAt is in the past. Only ever seen by users
+  // who can still view post-expiry bulletins (staff creators); for everyone
+  // else the server filters expired rows out of the feed entirely.
+  isExpired(b: BulletinSummaryResponse): boolean {
+    return !!b.expiresAt && new Date(b.expiresAt).getTime() < Date.now();
+  }
 }

@@ -59,6 +59,15 @@ export class BulletinDetailDialog implements OnInit {
 
   readonly visible = computed(() => this.bulletinId() !== null);
 
+  // Mirrors the feed's helper: only staff creators ever see this dialog with an
+  // expired bulletin (audience visibility is gated server-side). Expired hides
+  // the Acknowledge action — there's no point acking a bulletin that's no
+  // longer in the audience's feed.
+  readonly isExpired = computed(() => {
+    const exp = this.bulletin()?.expiresAt;
+    return !!exp && new Date(exp).getTime() < Date.now();
+  });
+
   readonly initials = computed(() => {
     const name = this.bulletin()?.createdByName ?? '';
     return name

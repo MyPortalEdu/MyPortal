@@ -257,8 +257,27 @@ describe('BulletinFormDialog', () => {
     const [id, payload] = data.update.calls.mostRecent().args;
     expect(id).toBe(existing.id);
     expect(payload.expectedVersion).toBe(9);
-    expect(payload.expiresAt).toBe('2026-12-31T00:00:00Z');
+    // Compare instants rather than literal strings: the form parses the ISO to
+    // a Date and serializes back via toISOString(), which normalizes to .000Z.
+    expect(new Date(payload.expiresAt!).getTime())
+      .toBe(new Date('2026-12-31T00:00:00Z').getTime());
     expect(data.create).not.toHaveBeenCalled();
+  });
+
+  it('publish() sends the user-picked expiresAt in create mode', () => {
+    open();
+    component.title.set('With expiry');
+    component.detail.set('Body');
+    component.categoryId.set(categories[0].id);
+    component.selectedAudienceKeys.set(new Set(['all-staff']));
+    const pick = new Date('2027-06-15T12:00:00Z');
+    component.expiresAt.set(pick);
+
+    component.publish();
+
+    expect(data.create).toHaveBeenCalled();
+    const [payload] = data.create.calls.mostRecent().args;
+    expect(new Date(payload.expiresAt!).getTime()).toBe(pick.getTime());
   });
 
   it('publish() guards against being invoked when invalid', () => {

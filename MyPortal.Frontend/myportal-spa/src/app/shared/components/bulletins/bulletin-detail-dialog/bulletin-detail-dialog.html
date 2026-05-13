@@ -67,7 +67,13 @@
     <!-- Footer. bg-emphasis + rounded-b-xl matches the rest of the app's
          modal footers for a consistent "actions zone" treatment. -->
     <div class="flex items-center justify-between gap-3 p-4 border-t border-surface bg-emphasis rounded-b-xl">
-      @if (b.requiresAcknowledgement && !b.hasAcknowledged) {
+      @if (isExpired()) {
+        <!-- Expired wins: no Acknowledge button (pointless) and no
+             "Acknowledged" badge (irrelevant once the bulletin's gone). -->
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-color">
+          <i class="fa-regular fa-clock"></i> {{ t('detail.expired') }}
+        </span>
+      } @else if (b.requiresAcknowledgement && !b.hasAcknowledged) {
         <p-button
           [label]="t('detail.acknowledge')"
           icon="fa-solid fa-check"
