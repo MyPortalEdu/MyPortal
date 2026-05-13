@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.Extensions.Logging;
 using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Data.UnitOfWork;
@@ -9,11 +10,13 @@ internal sealed class UnitOfWork : IUnitOfWork
     private IDbTransaction? _transaction;
     private bool _completed;
     private readonly List<Func<CancellationToken, Task>> _postCommit = new();
+    private readonly ILogger<UnitOfWork> _logger;
 
-    public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
+    public UnitOfWork(IDbConnection connection, IDbTransaction transaction, ILogger<UnitOfWork> logger)
     {
         _connection = connection;
         _transaction = transaction;
+        _logger = logger;
     }
 
     public IDbConnection Connection =>
@@ -43,17 +46,18 @@ internal sealed class UnitOfWork : IUnitOfWork
         _completed = true;
 
         // Post-commit actions run after the DB transaction is durable. A failure here
-        // can't undo the commit, so each action is responsible for its own logging /
-        // error handling — we just don't want one failure to swallow the rest.
+        // can't undo the commit, so we log at warning and keep going — one failing
+        // action mustn't swallow the rest. Callers can still do richer logging from
+        // inside their own action if they need entity-specific context.
         foreach (var action in _postCommit)
         {
             try
             {
                 await action(cancellationToken);
             }
-            catch
+            catch (Exception ex)
             {
-                // Caller logs inside its own action; nothing useful to do at this layer.
+                _logger.LogWarning(ex, "Post-commit action failed; the transaction is still committed.");
             }
         }
     }

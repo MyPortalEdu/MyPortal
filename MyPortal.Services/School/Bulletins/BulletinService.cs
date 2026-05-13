@@ -347,7 +347,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     {
         var bulletin = await _bulletinRepository.GetByIdAsync(bulletinId, ct);
 
-        if (bulletin == null || !_accessPolicy.CanView(bulletin, scope))
+        if (bulletin == null || !await _accessPolicy.CanViewAsync(bulletin, scope, ct))
         {
             throw new NotFoundException("Bulletin not found.");
         }

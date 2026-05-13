@@ -1,37 +1,43 @@
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.VisibilityScopes;
 using MyPortal.Services.Interfaces.Security;
+using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.School.Bulletins;
 
 /// <summary>
-/// Application-layer view/edit gate for bulletins. Audience-membership filtering for
-/// non-staff readers is enforced by the bulletin SP / summaries SQL (which can resolve
-/// pupil/parent → student group via the relationships tables in a single query). This
-/// policy only enforces the role-level rules that don't need a DB lookup — so it stays
-/// callable from the service without an extra round-trip.
+/// Application-layer view/edit gate for bulletins. The audience-membership branch
+/// delegates to <see cref="IBulletinRepository.IsVisibleToUserAsync"/> so the policy
+/// stays honest at any call site — including paths that don't go through the
+/// summaries/details SPs. In-memory short-circuits handle the cases the SP would
+/// resolve the same way (staff pinners, staff creators) without a DB round-trip.
 /// </summary>
 public class BulletinAccessPolicy : IAccessPolicy<Bulletin, BulletinVisibilityScope>
 {
-    public bool CanView(Bulletin bulletin, BulletinVisibilityScope scope)
+    private readonly IBulletinRepository _bulletinRepository;
+
+    public BulletinAccessPolicy(IBulletinRepository bulletinRepository)
+    {
+        _bulletinRepository = bulletinRepository;
+    }
+
+    public Task<bool> CanViewAsync(Bulletin bulletin, BulletinVisibilityScope scope,
+        CancellationToken cancellationToken)
     {
         // Staff with the admin (pin) permission can always see every bulletin.
         if (scope.IsStaff && scope.CanPin)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         // Staff who created the bulletin always see their own, regardless of expiry.
         if (scope.IsStaff && scope.CanEdit && bulletin.CreatedById == scope.CurrentUserId)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        // For everyone else, audience membership is the gate. The application layer
-        // can't resolve audience here without another query, so we authorise in
-        // principle (the SP-side filter is the real check). Returning false would
-        // produce false negatives for legitimately-targeted readers.
-        return true;
+        return _bulletinRepository.IsVisibleToUserAsync(bulletin.Id, scope, cancellationToken);
     }
 
     public bool CanEdit(Bulletin bulletin, BulletinVisibilityScope scope)

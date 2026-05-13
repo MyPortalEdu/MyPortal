@@ -63,6 +63,10 @@ ORDER BY SG.Description;";
     private static async Task ReplaceCoreAsync(IDbConnection conn, IDbTransaction tx,
         IList<Guid> studentGroupIds, CancellationToken cancellationToken)
     {
+        // Single-tenant assumption: the allowlist is school-wide, so an unscoped DELETE
+        // is correct. If multi-tenancy is added, this table needs a SchoolId column and
+        // the DELETE must be scoped — otherwise saving one school's allowlist will wipe
+        // every other school's.
         await conn.ExecuteAsync(new CommandDefinition(
             "DELETE FROM dbo.BulletinAudienceAllowedGroups;",
             transaction: tx, cancellationToken: cancellationToken));

@@ -263,7 +263,7 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
@@ -295,7 +295,7 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
 
         var model = MakeUpsertRequest(isPinned: true);
@@ -317,7 +317,7 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
 
         Assert.That(async () => await _service.UpdateAsync(bulletinId, MakeUpsertRequest(), CancellationToken.None),
@@ -337,7 +337,7 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ThrowsAsync(new ConcurrencyException("version mismatch"));
@@ -360,7 +360,7 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
 
@@ -381,7 +381,7 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
 
@@ -539,7 +539,7 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);

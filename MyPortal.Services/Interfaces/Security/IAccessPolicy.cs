@@ -1,8 +1,8 @@
-﻿namespace MyPortal.Services.Interfaces.Security
+namespace MyPortal.Services.Interfaces.Security
 {
     public interface IAccessPolicy<in TEntity, in TScope>
     {
-        bool CanView(TEntity entity, TScope scope);
+        Task<bool> CanViewAsync(TEntity entity, TScope scope, CancellationToken cancellationToken);
         bool CanEdit(TEntity entity, TScope scope);
     }
 }
