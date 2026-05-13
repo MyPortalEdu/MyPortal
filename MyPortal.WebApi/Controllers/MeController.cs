@@ -15,7 +15,7 @@ namespace MyPortal.WebApi.Controllers
     /// resource being acted on, not here.
     /// </summary>
     [Route("api/me")]
-    public sealed class MeController : BaseApiController<MeController>
+    public sealed class MeController : BaseApiController
     {
         private readonly IUserService _userService;
         private readonly ICurrentUser _user;

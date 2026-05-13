@@ -18,7 +18,7 @@ namespace MyPortal.WebApi.Controllers;
 /// own profile and password are handled via <see cref="MeController"/>; this
 /// controller is for admins managing other users.
 /// </summary>
-public class UsersController : BaseApiController<UsersController>
+public class UsersController : BaseApiController
 {
     private readonly IUserService _userService;
 

@@ -1,4 +1,4 @@
-﻿using MyPortal.Auth.Constants;
+using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 
@@ -9,9 +9,11 @@ public record BulletinVisibilityScope(
     UserType CurrentUserType,
     bool CanView,
     bool CanEdit,
-    bool CanApprove)
+    bool CanPin)
 {
-    public bool IsStaff =>  CurrentUserType == UserType.Staff;
+    public bool IsStaff  => CurrentUserType == UserType.Staff;
+    public bool IsPupil  => CurrentUserType == UserType.Student;
+    public bool IsParent => CurrentUserType == UserType.Parent;
 
     public static async Task<BulletinVisibilityScope> FromAsync(IAuthorizationService authorizationService,
         CancellationToken cancellationToken)
@@ -20,19 +22,28 @@ public record BulletinVisibilityScope(
             await authorizationService.HasPermissionAsync(Permissions.School.ViewSchoolBulletins, cancellationToken);
         var canEdit =
             await authorizationService.HasPermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
-        var canApprove =
-            await authorizationService.HasPermissionAsync(Permissions.School.ApproveSchoolBulletins, cancellationToken);
-        
-        return new BulletinVisibilityScope(authorizationService.GetCurrentUserId(), authorizationService.GetCurrentUserType(), canView, canEdit, canApprove);
+        var canPin =
+            await authorizationService.HasPermissionAsync(Permissions.School.PinSchoolBulletins, cancellationToken);
+
+        return new BulletinVisibilityScope(
+            authorizationService.GetCurrentUserId(),
+            authorizationService.GetCurrentUserType(),
+            canView, canEdit, canPin);
     }
 
-    public object ToSqlParams(DateTime nowUtc) => new
+    /// <summary>
+    /// Flat parameter object passed to bulletin SPs / SQL templates. Audience-based
+    /// filtering needs to know who the caller is and what role they're in; permission
+    /// flags decide whether staff bypass the audience filter.
+    /// </summary>
+    public object ToSqlParams() => new
     {
         currentUserId = CurrentUserId,
-        isStaff = IsStaff,
-        canView = CanView,
-        canEdit = CanEdit,
-        canApprove = CanApprove,
-        nowUtc
+        isStaff       = IsStaff,
+        isPupil       = IsPupil,
+        isParent      = IsParent,
+        canView       = CanView,
+        canEdit       = CanEdit,
+        canPin        = CanPin
     };
 }

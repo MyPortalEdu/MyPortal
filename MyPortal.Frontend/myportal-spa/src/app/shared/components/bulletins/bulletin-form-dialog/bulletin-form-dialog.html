@@ -1,0 +1,173 @@
+<ng-container *transloco="let t; prefix: 'bulletins'">
+<p-dialog
+  [visible]="visible()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="false"
+  [closeOnEscape]="true"
+  [style]="{ width: 'min(44rem, 94vw)' }"
+  styleClass="bulletin-form-dialog mp-flush-dialog"
+  (onHide)="onHide()"
+  [showHeader]="false">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between p-4 border-b border-surface">
+    <div class="flex items-center gap-2">
+      <i class="fa-regular fa-bell text-primary"></i>
+      <h3 class="text-base font-semibold m-0">{{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}</h3>
+    </div>
+    <button type="button" class="mp-icon-button" (click)="onCancel()" [attr.aria-label]="t('detail.close')">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="p-4 flex flex-col gap-3">
+    <!-- Title -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">{{ t('form.titleLabel') }}</label>
+      <input
+        pInputText
+        [placeholder]="t('form.titlePlaceholder')"
+        [ngModel]="title()"
+        (ngModelChange)="title.set($event)" />
+    </div>
+
+    <!-- Category + Pin -->
+    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-color">{{ t('form.category') }}</label>
+        <p-select
+          [options]="categories()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="t('form.categoryPlaceholder')"
+          appendTo="body"
+          [ngModel]="categoryId()"
+          (ngModelChange)="categoryId.set($event)"
+          [style]="{ width: '100%' }">
+        </p-select>
+      </div>
+
+      @if (canPin()) {
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-muted-color">{{ t('form.pinLabel') }}</label>
+          <label class="flex items-start gap-2 text-sm">
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="isPinned()"
+              (ngModelChange)="isPinned.set($event)">
+            </p-checkbox>
+            <span class="text-muted-color text-xs leading-snug">{{ t('form.pinHint') }}</span>
+          </label>
+        </div>
+      }
+    </div>
+
+    <!-- Audience. Active state is fixed primary tint (unlike the feed's
+         category chips which use per-category colours). -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">{{ t('form.audienceLabel') }}</label>
+      <div class="flex flex-wrap gap-2">
+        @for (a of audienceChoices(); track a.key) {
+          <button
+            type="button"
+            class="mp-chip"
+            [class.mp-chip-active]="isSelected(a.key)"
+            [attr.aria-pressed]="isSelected(a.key)"
+            (click)="toggleAudience(a.key)">
+            @if (isSelected(a.key)) {
+              <i class="fa-solid fa-check"></i>
+            }
+            {{ audienceLabel(a) }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Expiry. Optional: when set, the bulletin disappears from feeds after
+         this instant (creator still sees it). Server validator rejects past
+         instants, so the picker's minDate matches. -->
+    <div class="flex flex-col gap-1 max-w-[18rem]">
+      <label class="text-xs font-medium text-muted-color">{{ t('form.expiresLabel') }}</label>
+      <p-datepicker
+        [ngModel]="expiresAt()"
+        (ngModelChange)="expiresAt.set($event)"
+        [showTime]="true"
+        hourFormat="24"
+        [showButtonBar]="true"
+        [minDate]="minExpiryDate()"
+        [placeholder]="t('form.expiresPlaceholder')"
+        appendTo="body"
+        [style]="{ width: '100%' }">
+      </p-datepicker>
+      <span class="text-xs text-muted-color leading-snug">{{ t('form.expiresHint') }}</span>
+    </div>
+
+    <!-- Body -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">{{ t('form.bodyLabel') }}</label>
+      <textarea
+        pInputTextarea
+        rows="5"
+        [placeholder]="t('form.bodyPlaceholder')"
+        [ngModel]="detail()"
+        (ngModelChange)="detail.set($event)">
+      </textarea>
+    </div>
+
+    <!-- Attachments. In create mode the widget stages files in memory and the
+         publish() handler flushes them via uploadStaged() after the bulletin
+         exists. In edit mode it talks to the API directly. -->
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-color">{{ t('form.attachmentsLabel') }}</label>
+      <mp-bulletin-attachments
+        [mode]="isEdit() ? 'edit' : 'stage'"
+        [bulletinId]="isEdit() ? existing()?.id ?? null : null"
+        [directoryId]="isEdit() ? existing()?.directoryId ?? null : null">
+      </mp-bulletin-attachments>
+    </div>
+  </div>
+
+  <!-- Footer. On mobile the checkbox label + Cancel + Publish get cramped
+       in one row, so we stack: checkbox row on top, then a button row
+       beneath with each button taking half the width for big tap targets.
+       sm: and up returns to the desktop "checkbox left, buttons right" layout.
+       bg-emphasis + rounded-b-xl anchors the actions strip as a distinct
+       "modal footer" zone, matched on every dialog footer in the app. -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+    <label class="flex items-center gap-2 text-sm">
+      <p-checkbox
+        [binary]="true"
+        [ngModel]="requiresAck()"
+        (ngModelChange)="requiresAck.set($event)">
+      </p-checkbox>
+      <span>{{ t('form.requireAck') }}</span>
+    </label>
+
+    <div class="flex items-center gap-2 sm:justify-end">
+      <!-- `class` on the host gives p-button its share of the flex row;
+           `styleClass` (which lands on the inner <button>) makes it fill
+           that share. Both revert to auto sizing on sm+ so desktop keeps
+           the natural right-aligned button widths. -->
+      <p-button
+        class="flex-1 sm:flex-initial"
+        styleClass="w-full sm:w-auto"
+        [label]="'common.cancel' | transloco"
+        severity="secondary"
+        [text]="true"
+        (click)="onCancel()">
+      </p-button>
+      <p-button
+        class="flex-1 sm:flex-initial"
+        styleClass="w-full sm:w-auto"
+        [label]="isEdit() ? t('form.saveChanges') : t('form.publish')"
+        [icon]="isEdit() ? 'fa-solid fa-check' : 'fa-solid fa-paper-plane'"
+        [disabled]="!isValid()"
+        [loading]="submitting()"
+        (click)="publish()">
+      </p-button>
+    </div>
+  </div>
+</p-dialog>
+</ng-container>

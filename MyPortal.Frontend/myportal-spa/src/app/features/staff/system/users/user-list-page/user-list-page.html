@@ -1,7 +1,8 @@
+<ng-container *transloco="let t">
 <mp-page-header
-  title="Users"
-  icon="pi pi-user"
-  [actions]="headerActions"
+  [title]="t('pages.users.title')"
+  icon="fa-solid fa-users"
+  [actions]="headerActions()"
 ></mp-page-header>
 
 <div class="flex flex-col md:flex-row gap-4">
@@ -11,3 +12,4 @@
     </p-table>
   </p-card>
 </div>
+</ng-container>

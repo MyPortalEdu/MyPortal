@@ -1,0 +1,134 @@
+<ng-container *transloco="let t; prefix: 'bulletins'">
+<section class="flex flex-col bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 gap-3">
+  <!-- Header. New button lives here (right-aligned) rather than in a footer
+       strip — always visible, no awkward divider when the list is empty,
+       and matches the common "card title + primary action" pattern. -->
+  <div class="flex items-center gap-3">
+    <i class="fa-regular fa-bell text-primary text-xl"></i>
+    <h3 class="text-base font-semibold m-0">{{ t('feed.title') }}</h3>
+    @if (newCount() > 0) {
+      <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+        {{ t('feed.newCount', { count: newCount() }) }}
+      </span>
+    }
+    <p-button class="ml-auto" [label]="t('feed.new')" icon="fa-solid fa-plus" size="small" (click)="openNew()"></p-button>
+  </div>
+
+  <!-- Category filter chips. "All" uses primary tint when active; per-category
+       chips use their own colourCode via inline styles so each category gets
+       its own active treatment. -->
+  <div class="flex flex-wrap gap-2">
+    <button
+      type="button"
+      class="mp-chip"
+      [class.mp-chip-active]="selectedCategoryId() === null"
+      (click)="selectCategory(null)">
+      {{ t('feed.filterAll') }}
+    </button>
+    @for (cat of categories(); track cat.id) {
+      <button
+        type="button"
+        class="mp-chip"
+        [style.color]="selectedCategoryId() === cat.id ? cat.colourCode : null"
+        [style.borderColor]="selectedCategoryId() === cat.id ? tint(cat.colourCode, '59') : null"
+        [style.backgroundColor]="selectedCategoryId() === cat.id ? tint(cat.colourCode, '1A') : null"
+        (click)="selectCategory(cat.id)">
+        <i [class]="cat.icon" [style.color]="cat.colourCode"></i>
+        {{ cat.name }}
+      </button>
+    }
+  </div>
+
+  <!-- Items. Capped to ~5 tiles before scroll so the widget doesn't grow
+       indefinitely on busy weeks — the card header/filters/footer stay in
+       place; only the list scrolls. pr-1 keeps the scrollbar from sitting
+       on top of each tile's right edge. -->
+  <div class="flex flex-col gap-2 max-h-[26rem] overflow-y-auto pr-1">
+    @if (loading()) {
+      <div class="text-sm text-muted-color px-1 py-2">{{ t('feed.loading') }}</div>
+    } @else if (filteredBulletins().length === 0) {
+      <div class="text-sm text-muted-color px-1 py-6 text-center">{{ t('feed.empty') }}</div>
+    } @else {
+      @for (b of filteredBulletins(); track b.id) {
+        <button
+          type="button"
+          class="flex gap-3 px-3.5 py-3 rounded-lg border border-surface border-l-4 bg-[var(--p-content-background)] text-left cursor-pointer transition-colors hover:bg-emphasis hover:shadow-sm"
+          [style.borderLeftColor]="b.categoryColourCode"
+          (click)="openDetail(b.id)">
+          <div
+            class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-base"
+            [style.backgroundColor]="tint(b.categoryColourCode)">
+            <i [class]="b.categoryIcon" [style.color]="b.categoryColourCode"></i>
+          </div>
+          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+            <!-- Meta row: category · time · author, with status badges (ack +
+                 pin) right-aligned. Author folded in here so each tile is one
+                 line shorter — saves vertical mass when the widget shows many
+                 bulletins. The right-side wrapper only renders when there's a
+                 badge to show, so the parent flex's gap doesn't leave a blank
+                 trailing slot. -->
+            <div class="flex items-center gap-2 text-xs min-w-0">
+              <span class="font-semibold uppercase tracking-wide shrink-0" [style.color]="b.categoryColourCode">
+                {{ b.categoryName }}
+              </span>
+              <span class="text-muted-color">·</span>
+              <span class="text-muted-color shrink-0">{{ timeAgo(b.createdAt) }}</span>
+              <span class="text-muted-color">·</span>
+              <span class="text-muted-color truncate">{{ b.createdByName }}</span>
+              @if (isExpired(b) || b.requiresAcknowledgement || b.pinnedAt || b.attachmentCount > 0) {
+                <div class="ml-auto flex items-center gap-2 shrink-0">
+                  @if (b.attachmentCount > 0) {
+                    <span class="inline-flex items-center gap-1 text-muted-color" [title]="t('feed.attachments', { count: b.attachmentCount })">
+                      <i class="fa-solid fa-paperclip"></i>{{ b.attachmentCount }}
+                    </span>
+                  }
+                  @if (isExpired(b)) {
+                    <!-- Expired takes precedence: hides ack state and the pin marker since
+                         the bulletin is no longer visible to its audience. -->
+                    <span class="inline-flex items-center gap-1 font-medium text-muted-color">
+                      <i class="fa-regular fa-clock"></i>{{ t('feed.expired') }}
+                    </span>
+                  } @else {
+                    @if (b.requiresAcknowledgement) {
+                      @if (b.hasAcknowledged) {
+                        <span class="inline-flex items-center gap-1 font-medium text-[var(--p-green-600)]">
+                          <i class="fa-solid fa-circle-check"></i>{{ t('feed.acknowledged') }}
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center gap-1 font-medium text-[var(--p-amber-600)]">
+                          <i class="fa-solid fa-circle-exclamation"></i>{{ t('feed.ackRequired') }}
+                        </span>
+                      }
+                    }
+                    @if (b.pinnedAt) {
+                      <i class="fa-solid fa-bookmark text-primary" [title]="t('feed.pinned')"></i>
+                    }
+                  }
+                </div>
+              }
+            </div>
+            <div class="text-color font-semibold leading-snug truncate">{{ b.title }}</div>
+            <div class="text-color text-sm opacity-80 line-clamp-2">{{ b.detail }}</div>
+          </div>
+        </button>
+      }
+    }
+  </div>
+
+  <!-- Dialogs -->
+  <mp-bulletin-detail-dialog
+    [bulletinId]="detailId()"
+    (closed)="closeDetail()"
+    (acknowledged)="onAcknowledged()"
+    (editRequested)="onEditRequested($event)"
+    (deleteRequested)="onDeleteRequested($event)">
+  </mp-bulletin-detail-dialog>
+
+  <mp-bulletin-form-dialog
+    [visible]="formOpen()"
+    [existing]="editingBulletin()"
+    (closed)="closeForm()"
+    (saved)="onSaved()">
+  </mp-bulletin-form-dialog>
+</section>
+</ng-container>

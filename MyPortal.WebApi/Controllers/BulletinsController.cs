@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
@@ -17,12 +17,13 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>
-/// Manage school bulletins — short news items broadcast to staff/students/parents.
-/// Bulletins go through a draft → approve flow before they appear in feeds.
-/// Inherits attachment endpoints (directories/documents) from
-/// <see cref="BaseDirectoryEntityController{TSelf, TDirectoryEntity}"/>.
+/// Manage school bulletins — short news items broadcast to staff, pupils, parents,
+/// or specific student groups via the audience model. Pinning is admin-only;
+/// authorship gives edit/delete on your own bulletins. Inherits attachment
+/// endpoints (directories/documents) from
+/// <see cref="BaseDirectoryEntityController{TDirectoryEntity}"/>.
 /// </summary>
-public sealed class BulletinsController : BaseDirectoryEntityController<BulletinsController, Bulletin>
+public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin>
 {
     private readonly IBulletinService _bulletinService;
 
@@ -32,6 +33,12 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     {
         _bulletinService = bulletinService;
     }
+
+    // Bulletins are broadcast messages with no retention requirement; the
+    // bulletin itself hard-deletes on DELETE /bulletins/{id}, so its
+    // attachments should hard-delete to match. Without this override the
+    // inherited attachment endpoint would soft-delete and leave orphan rows.
+    protected override bool HardDeleteDocuments => true;
 
     /// <summary>Get the full details of a bulletin by id.</summary>
     /// <param name="bulletinId">The id of the bulletin.</param>
@@ -47,7 +54,9 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
 
     /// <summary>Page through bulletin summaries.</summary>
     /// <remarks>
-    /// Supports server-side filtering, sorting, and paging. Page size is clamped
+    /// The set is audience-filtered server-side: pupils see AllPupils + their student
+    /// groups, parents see AllParents + their wards' groups, staff see AllStaff
+    /// (or everything when they hold the pin permission). Page size is clamped
     /// server-side (default 25, max 100).
     /// </remarks>
     /// <param name="page">1-based page number.</param>
@@ -68,10 +77,11 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
         return Ok(result);
     }
 
-    /// <summary>Create a new bulletin in draft state.</summary>
+    /// <summary>Create a new bulletin.</summary>
     /// <remarks>
-    /// Bulletins are created unapproved. Use <c>PUT /{id}/approve</c> with the
-    /// approval permission to publish.
+    /// Posting a pinned bulletin additionally requires the
+    /// <c>School.PinSchoolBulletins</c> permission. Audience is required
+    /// (the validator rejects an empty list).
     /// </remarks>
     [HttpPost]
     [ValidateModel]
@@ -87,8 +97,8 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
 
     /// <summary>Update a bulletin's content/metadata.</summary>
     /// <remarks>
-    /// Editing an approved bulletin reverts it to unapproved — re-approval is
-    /// required before it shows up in feeds again.
+    /// Toggling the pin state additionally requires <c>School.PinSchoolBulletins</c>.
+    /// Uses optimistic concurrency on <c>ExpectedVersion</c>.
     /// </remarks>
     /// <param name="bulletinId">The id of the bulletin to update.</param>
     /// <param name="model">The updated content.</param>
@@ -105,24 +115,39 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
         return NoContent();
     }
 
-    /// <summary>Approve or unapprove a bulletin for publication.</summary>
+    /// <summary>Pin or unpin a bulletin.</summary>
     /// <remarks>
-    /// Requires the dedicated <c>School.ApproveSchoolBulletins</c> permission so
-    /// authoring rights don't automatically grant approval. Uses optimistic
-    /// concurrency on <c>ExpectedVersion</c> to prevent racing approvals.
+    /// Pinned bulletins sort to the top of feeds. Pinning is an admin-only
+    /// gesture independent of authorship. Uses optimistic concurrency on
+    /// <c>ExpectedVersion</c>.
     /// </remarks>
     /// <param name="bulletinId">The id of the bulletin.</param>
-    /// <param name="model">Approval flag and the version the caller last saw.</param>
-    [HttpPut("{bulletinId:guid}/approve")]
+    /// <param name="model">Pin flag and the version the caller last saw.</param>
+    [HttpPut("{bulletinId:guid}/pin")]
     [ValidateModel]
     [UserType(UserType.Staff)]
-    [Permission(PermissionMode.RequireAll, Permissions.School.ApproveSchoolBulletins)]
+    [Permission(PermissionMode.RequireAll, Permissions.School.PinSchoolBulletins)]
     [ProducesResponseType(204)]
-    public async Task<IActionResult> ApproveBulletinAsync([FromRoute] Guid bulletinId,
-        [FromBody] BulletinApprovalRequest model)
+    public async Task<IActionResult> PinBulletinAsync([FromRoute] Guid bulletinId,
+        [FromBody] BulletinPinRequest model)
     {
-        await _bulletinService.UpdateBulletinApprovalAsync(bulletinId, model.IsApproved, model.ExpectedVersion,
-            CancellationToken);
+        await _bulletinService.UpdatePinAsync(bulletinId, model.IsPinned, model.ExpectedVersion, CancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>Record the current user's acknowledgement of a bulletin.</summary>
+    /// <remarks>
+    /// Idempotent: re-acknowledging is a no-op. 404 if the bulletin is not
+    /// visible to the caller. 400 if the bulletin does not require ack.
+    /// </remarks>
+    /// <param name="bulletinId">The id of the bulletin to acknowledge.</param>
+    [HttpPost("{bulletinId:guid}/acknowledge")]
+    [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins)]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> AcknowledgeBulletinAsync([FromRoute] Guid bulletinId)
+    {
+        await _bulletinService.AcknowledgeAsync(bulletinId, CancellationToken);
 
         return NoContent();
     }

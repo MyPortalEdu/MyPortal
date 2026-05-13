@@ -1,45 +1,41 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, output } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { MeService } from '../../../core/services/me-service';
 import { SchoolService } from '../../../core/services/school-service';
 import { AcademicYearService } from '../../../core/services/academic-year-service';
+import { ThemeService } from '../../../core/services/theme-service';
 import { AsyncPipe } from '@angular/common';
 import { ButtonDirective, ButtonIcon } from 'primeng/button';
 import { RouterLink } from '@angular/router';
 import { Popover } from 'primeng/popover';
-import { UserType } from '../../../core/enums/user-type';
-import { Me } from '../../../core/interfaces/me';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { UserType } from '../../../core/types/user-type';
+import { Me } from '../../../core/types/me';
 
 interface SiteLabel {
   school: string | null;
   year: string | null;
 }
 
-type Theme = 'light' | 'dark' | 'system';
-
 @Component({
   selector: 'mp-topbar',
-  standalone: true,
-  imports: [Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover, TranslocoDirective],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
 })
 export class Topbar implements OnInit {
-  @Output() menuToggle = new EventEmitter<void>();
+  private readonly me = inject(MeService);
+  private readonly schools = inject(SchoolService);
+  private readonly academicYears = inject(AcademicYearService);
+  private readonly transloco = inject(TranslocoService);
+  protected readonly themeService = inject(ThemeService);
+
+  readonly menuToggle = output<void>();
 
   me$!: Observable<Me>;
   siteLabel$!: Observable<SiteLabel>;
-  theme: Theme = 'system';
-
-  // TODO: wire to the current-academic-year service once a switcher flow exists.
-  currentAcademicYear = '2025/26';
-
-  constructor(
-    private me: MeService,
-    private schools: SchoolService,
-    private academicYears: AcademicYearService,
-  ) {}
 
   ngOnInit(): void {
     this.me$ = this.me.me();
@@ -52,29 +48,6 @@ export class Topbar implements OnInit {
     ]).pipe(
       map(([school, year]) => ({ school, year: year?.name ?? null })),
     );
-
-    this.theme = (localStorage.getItem('mp:theme') as Theme | null) ?? 'system';
-    this.applyTheme();
-
-    // Re-evaluate the resolved theme when the OS preference changes — only matters
-    // when the user has picked 'system'. Modern browsers fire `change` on the media
-    // query when the OS toggles between light/dark.
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (this.theme === 'system') this.applyTheme();
-    });
-  }
-
-  setTheme(next: Theme): void {
-    this.theme = next;
-    localStorage.setItem('mp:theme', next);
-    this.applyTheme();
-  }
-
-  private applyTheme(): void {
-    const dark =
-      this.theme === 'dark' ||
-      (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.classList.toggle('mp-dark', dark);
   }
 
   initials(displayName: string | undefined): string {
@@ -85,25 +58,19 @@ export class Topbar implements OnInit {
   }
 
   userTypeLabel(t: UserType | undefined): string {
-    switch (t) {
-      case UserType.Staff:
-        return 'Staff';
-      case UserType.Student:
-        return 'Student';
-      case UserType.Parent:
-        return 'Parent';
-      default:
-        return '';
-    }
-  }
-
-  onSwitchAcademicYear(): void {
-    // TODO: open the academic year picker (sub-menu or modal). For now, no-op so
-    // the row renders as a placeholder matching the design.
+    const key = (() => {
+      switch (t) {
+        case UserType.Staff:   return 'staff';
+        case UserType.Student: return 'student';
+        case UserType.Parent:  return 'parent';
+        default:               return null;
+      }
+    })();
+    return key ? this.transloco.translate(`topbar.userType.${key}`) : '';
   }
 
   logout(): void {
-    this.me.clearCache?.();
+    this.me.clearCache();
     location.href = '/account/logout';
   }
 }

@@ -17,7 +17,7 @@ namespace MyPortal.WebApi.Controllers;
 /// Manage application roles and the permissions assigned to them. Role membership
 /// for an individual user is managed via the user endpoints, not here.
 /// </summary>
-public sealed class RolesController : BaseApiController<RolesController>
+public sealed class RolesController : BaseApiController
 {
     private readonly IRoleService _roleService;
 

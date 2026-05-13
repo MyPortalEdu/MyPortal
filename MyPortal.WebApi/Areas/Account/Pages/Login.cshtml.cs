@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MyPortal.Auth.Models;
+using MyPortal.WebApi.Infrastructure.Extensions;
 
 namespace MyPortal.WebApi.Areas.Account.Pages;
 
@@ -46,6 +47,20 @@ public class LoginModel : PageModel
         var result = await _signIn.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: true);
         if (!result.Succeeded)
         { ModelState.AddModelError(string.Empty, "Invalid credentials."); ReturnUrl = returnUrl; return Page(); }
+
+        // Refresh the antiforgery cookie BEFORE the redirect leaves this server.
+        // In dev, ng serve doesn't proxy SPA routes (e.g. /staff) back to the API,
+        // so the global middleware that normally re-mints on shell loads never
+        // fires on the post-login navigation — the SPA would keep the anonymous-
+        // bound XSRF-TOKEN from earlier and the first POST would 403 with
+        // "antiforgery token was meant for a different claims-based user".
+        //
+        // PasswordSignInAsync only updates the response auth cookie, not the
+        // current request's HttpContext.User, so we promote the principal here
+        // first; otherwise IAntiforgery would still bind the new token to the
+        // anonymous identity.
+        HttpContext.User = await _signIn.CreateUserPrincipalAsync(user);
+        HttpContext.RefreshXsrfCookie();
 
         return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
     }

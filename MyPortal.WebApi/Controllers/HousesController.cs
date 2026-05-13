@@ -19,7 +19,7 @@ namespace MyPortal.WebApi.Controllers;
 /// students belong to for events, points, and competitions. Houses run alongside
 /// year groups in the pastoral structure.
 /// </summary>
-public sealed class HousesController : BaseApiController<HousesController>
+public sealed class HousesController : BaseApiController
 {
     private readonly IHouseService _houseService;
 

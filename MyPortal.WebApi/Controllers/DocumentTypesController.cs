@@ -10,7 +10,7 @@ namespace MyPortal.WebApi.Controllers;
 /// Read-only access to the document type catalogue. Used by attachment UI to
 /// populate the type dropdown when uploading a file.
 /// </summary>
-public sealed class DocumentTypesController : BaseApiController<DocumentTypesController>
+public sealed class DocumentTypesController : BaseApiController
 {
     private readonly IDocumentService _documentService;
 

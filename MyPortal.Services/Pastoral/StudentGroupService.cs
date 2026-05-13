@@ -1,13 +1,18 @@
 using System.Data;
 using Microsoft.Extensions.Logging;
+using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Pastoral;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces.Pastoral;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
@@ -30,6 +35,20 @@ public class StudentGroupService : BaseService, IStudentGroupService
         _studentGroupRepository = studentGroupRepository;
         _studentGroupSupervisorRepository = studentGroupSupervisorRepository;
         _academicYearRepository = academicYearRepository;
+    }
+
+    public async Task<PageResult<StudentGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
+        FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Read access matches the rest of the pastoral structure rather than carving
+        // out a new permission — anyone who can already see houses/year groups/reg
+        // groups can browse the unified listing too.
+        await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure,
+            cancellationToken);
+
+        return await _studentGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging,
+            cancellationToken);
     }
 
     public async Task<Guid> CreateAsync(Guid academicYearId, StudentGroupUpsertCore core,

@@ -1,7 +1,14 @@
 @import "@fontsource-variable/inter";
 @import "primeicons/primeicons.css";
 
-@layer tailwind-base, primeng, tailwind-utilities;
+/* Layer order matters for the shared `.mp-*` classes below. Putting `mp-components`
+   BEFORE `tailwind-utilities` means any Tailwind utility (e.g. `bg-primary/10`,
+   `border-primary/40`, `text-primary`) stacked on top of `.mp-chip` overrides the
+   chip's defaults, regardless of source order within the file. Without this split
+   the chip's `border: 1px solid …` shorthand and `background: transparent` would
+   beat single-property utilities in the same layer and active states wouldn't
+   show their tint. */
+@layer tailwind-base, primeng, mp-components, tailwind-utilities;
 
 @layer tailwind-base {
   @tailwind base;
@@ -24,10 +31,106 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Global PrimeNG density. Aura's default form-field fontSize is 1rem and the
+   preset's typings only expose fontSize overrides on the sm/lg variants — so
+   to make the *default* size feel like "small" we drop the base .p-component
+   font-size here. Buttons, inputs, selects, checkboxes all inherit from this.
+   Pair with the formField paddingX/Y override in app.config.ts.
+   Components with their own typography (dialog header, card title) keep
+   their explicit sizes via higher-specificity rules. */
+.p-component {
+  font-size: 0.875rem;
+}
+
 /* PrimeNG card title size override — Aura's default sits around 1.25rem which is
    too prominent for our compact card density. Centralised here so individual
    components don't need per-card overrides. */
 .p-card-title {
   font-size: 1rem;
   font-weight: 600;
+}
+
+/* Dialogs we render edge-to-edge — our own header/body/footer rows handle
+   their own padding and want to extend to the dialog's rounded corners.
+   Without this, PrimeNG's `.p-dialog-content` padding leaves a gutter around
+   any bg-emphasis footer (or any other full-bleed treatment). Add the
+   `mp-flush-dialog` styleClass to a p-dialog to opt in. */
+.mp-flush-dialog .p-dialog-content {
+  padding: 0;
+}
+
+/* ─── Shared component utilities ──────────────────────────────────────────
+   These are the few CSS patterns that repeat across the app and earn a named
+   class. Everything else should be Tailwind + tailwindcss-primeui utilities
+   inline in the template (border-surface, text-muted-color, bg-emphasis,
+   bg-primary/10, …). Add to this list only when you've got a pattern living
+   in two or more components — until then, keep it inline.
+
+   These live in the `mp-components` cascade layer, ordered BEFORE
+   `tailwind-utilities`, so Tailwind utilities stacked on top (for active /
+   variant states) win cleanly. Properties are written longhand so single-
+   property utilities can override them surgically without needing the layer
+   bump to do all the heavy lifting. */
+@layer mp-components {
+  /* Pill-style toggle. Defaults to the muted/unselected state; the active
+     state is supplied per-instance — Tailwind classes (`text-primary
+     border-primary/40 bg-primary/10`) for fixed primary tinting, or inline
+     styles for dynamic per-row colouring. */
+  .mp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--p-content-border-color);
+    background-color: transparent;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--p-text-muted-color);
+    cursor: pointer;
+    transition: background-color 120ms, color 120ms, border-color 120ms;
+  }
+  .mp-chip:hover {
+    background-color: var(--p-content-hover-background);
+    color: var(--p-text-color);
+  }
+
+  /* Active state for `.mp-chip` when the tint is the app primary — used by the
+     form's audience picker and the feed's "All" filter. Per-category chips in
+     the feed handle their active state via inline styles (dynamic hex per
+     category) and bypass this class. Kept in our CSS rather than as a Tailwind
+     `border-primary/40 bg-primary/10` utility stack on the element because
+     `tailwindcss-primeui`'s opacity modifiers don't reliably flow through
+     `[ngClass]` object bindings during template scanning. */
+  .mp-chip-active {
+    color: var(--p-primary-color);
+    border-color: color-mix(in srgb, var(--p-primary-color) 40%, transparent);
+    background-color: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+  }
+  .mp-chip-active:hover {
+    /* Override the muted-hover from `.mp-chip:hover` so hovering an active
+       chip doesn't wash out the primary tint. */
+    color: var(--p-primary-color);
+    background-color: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+  }
+
+  /* Round icon-only button — primarily for dialog close (X) buttons. */
+  .mp-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--p-text-muted-color);
+  }
+  .mp-icon-button:hover {
+    background-color: var(--p-content-hover-background);
+    color: var(--p-text-color);
+  }
 }

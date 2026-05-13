@@ -6,8 +6,14 @@ export const Permissions = {
     ViewUsers:           'System.ViewUsers',
     EditUsers:           'System.EditUsers',
     ViewGroups:          'System.ViewGroups',
-    EditGroups:          'System.EditGroups'
-  }
+    EditGroups:          'System.EditGroups',
+    BulletinSettings:    'System.BulletinSettings'
+  },
+  School: {
+    CreateSchoolBulletins: 'School.CreateSchoolBulletins',
+    EditSchoolBulletins:   'School.EditSchoolBulletins',
+    PinSchoolBulletins:    'School.PinSchoolBulletins',
+  },
 } as const;
 
 // Flatten to a union of all permission string literals across every category.

@@ -11,6 +11,7 @@ BEGIN
 
 SELECT
     D.[Id],
+    D.[DirectoryId],
     D.[TypeId],
     DT.[Description] AS TypeDescription,
     D.[CreatedById],

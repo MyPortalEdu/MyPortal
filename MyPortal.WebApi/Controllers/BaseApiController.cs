@@ -16,13 +16,13 @@ namespace MyPortal.WebApi.Controllers;
 [ApiController]
 [Authorize(Policy = ScopePolicy.PolicyName)]
 [Route("api/[controller]")]
-public abstract class BaseApiController<TSelf> : ControllerBase
+public abstract class BaseApiController : ControllerBase
 {
     private readonly ProblemDetailsFactory _problemFactory;
-    
-    protected readonly ILogger<TSelf> Logger;
 
-    public BaseApiController(ProblemDetailsFactory problemFactory, ILogger<TSelf> logger)
+    protected readonly ILogger Logger;
+
+    public BaseApiController(ProblemDetailsFactory problemFactory, ILogger<BaseApiController> logger)
     {
         _problemFactory = problemFactory;
         Logger = logger;

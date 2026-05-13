@@ -135,7 +135,7 @@ public static class Permissions
         // public const string EditSchoolDocuments     = "School.EditSchoolDocuments";
         public const string ViewSchoolBulletins     = "School.ViewSchoolBulletins";
         public const string EditSchoolBulletins     = "School.EditSchoolBulletins";
-        public const string ApproveSchoolBulletins  = "School.ApproveSchoolBulletins";
+        public const string PinSchoolBulletins      = "School.PinSchoolBulletins";
     }
 
     public static class Student
@@ -190,6 +190,7 @@ public static class Permissions
         public const string EditUsers  = "System.EditUsers";
         public const string ViewRoles = "System.ViewRoles";
         public const string EditRoles = "System.EditRoles";
+        public const string BulletinSettings = "System.BulletinSettings";
         // public const string Settings   = "System.Settings";
         // public const string AttendanceSettings = "System.AttendanceSettings";
         // public const string BehaviourSettings  = "System.BehaviourSettings";

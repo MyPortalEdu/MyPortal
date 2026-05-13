@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.Extensions.Logging;
 using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Data.UnitOfWork;
@@ -6,10 +7,12 @@ namespace MyPortal.Data.UnitOfWork;
 public sealed class UnitOfWorkFactory : IUnitOfWorkFactory
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly ILogger<UnitOfWork> _logger;
 
-    public UnitOfWorkFactory(IDbConnectionFactory connectionFactory)
+    public UnitOfWorkFactory(IDbConnectionFactory connectionFactory, ILoggerFactory loggerFactory)
     {
         _connectionFactory = connectionFactory;
+        _logger = loggerFactory.CreateLogger<UnitOfWork>();
     }
 
     public Task<IUnitOfWork> BeginAsync(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted,
@@ -22,7 +25,7 @@ public sealed class UnitOfWorkFactory : IUnitOfWorkFactory
         {
             connection.Open();
             var transaction = connection.BeginTransaction(isolationLevel);
-            return Task.FromResult<IUnitOfWork>(new UnitOfWork(connection, transaction));
+            return Task.FromResult<IUnitOfWork>(new UnitOfWork(connection, transaction, _logger));
         }
         catch
         {

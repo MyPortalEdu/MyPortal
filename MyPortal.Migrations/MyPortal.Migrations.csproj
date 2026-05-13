@@ -78,6 +78,8 @@
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_tree_by_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_bulletin_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_bulletin_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_bulletin_is_visible.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_bulletin_is_visible.sql" />
     <None Remove="Sql\Updates\20251101000500_add_bulletin_permissions.sql" />
     <EmbeddedResource Include="Sql\Updates\20251101000500_add_bulletin_permissions.sql" />
     <None Remove="Sql\Updates\20251101000600_add_academic_year_entities.sql" />
@@ -182,6 +184,10 @@
     <EmbeddedResource Include="Sql\Updates\20260506000000_add_view_pastoral_structure_permission.sql" />
     <None Remove="Sql\Updates\20260510000000_update_attendance_codes_2024.sql" />
     <EmbeddedResource Include="Sql\Updates\20260510000000_update_attendance_codes_2024.sql" />
+    <None Remove="Sql\Updates\20260511000000_redesign_bulletins.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260511000000_redesign_bulletins.sql" />
+    <None Remove="Sql\Updates\20260512000000_add_bulletin_settings_permission.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260512000000_add_bulletin_settings_permission.sql" />
   </ItemGroup>
 
   <ItemGroup>

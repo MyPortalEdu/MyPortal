@@ -2,21 +2,24 @@ using System.Data;
 using Microsoft.Extensions.Logging;
 using Moq;
 using MyPortal.Auth.Constants;
-using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Core.Entities;
-using MyPortal.Services.Interfaces;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.VisibilityScopes;
+using MyPortal.Services.Interfaces;
+using MyPortal.Services.Interfaces.Documents;
 using MyPortal.Services.Interfaces.Security;
 using MyPortal.Services.School.Bulletins;
 using QueryKit.Repositories.Exceptions;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
+using IAuthorizationService = MyPortal.Auth.Interfaces.IAuthorizationService;
 using Task = System.Threading.Tasks.Task;
-using MyPortal.Data.Interfaces;
-using MyPortal.Services.Interfaces.Documents;
 
 namespace MyPortal.Tests.ServiceTests;
 
@@ -25,18 +28,19 @@ public class BulletinServiceTests
 {
     private static readonly Guid CurrentUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-    private Mock<IAuthorizationService> _authorizationService;
-    private Mock<ILogger<BulletinService>> _logger;
-    private Mock<IDirectoryService> _directoryService;
-    private Mock<IDocumentService> _documentService;
-    private Mock<IValidationService> _validationService;
-    private Mock<IBulletinRepository> _bulletinRepository;
-    private Mock<IAccessPolicy<Bulletin, BulletinVisibilityScope>> _accessPolicy;
-    private Mock<IUnitOfWorkFactory> _unitOfWorkFactory;
-    private Mock<IUnitOfWork> _unitOfWork;
-    private Mock<IDbTransaction> _transaction;
+    private Mock<IAuthorizationService> _authorizationService = null!;
+    private Mock<ILogger<BulletinService>> _logger = null!;
+    private Mock<IDirectoryService> _directoryService = null!;
+    private Mock<IDocumentService> _documentService = null!;
+    private Mock<IValidationService> _validationService = null!;
+    private Mock<IBulletinRepository> _bulletinRepository = null!;
+    private Mock<IBulletinAcknowledgementRepository> _ackRepository = null!;
+    private Mock<IAccessPolicy<Bulletin, BulletinVisibilityScope>> _accessPolicy = null!;
+    private Mock<IUnitOfWorkFactory> _unitOfWorkFactory = null!;
+    private Mock<IUnitOfWork> _unitOfWork = null!;
+    private Mock<IDbTransaction> _transaction = null!;
 
-    private BulletinService _service;
+    private BulletinService _service = null!;
 
     [SetUp]
     public void Setup()
@@ -47,6 +51,7 @@ public class BulletinServiceTests
         _documentService = new Mock<IDocumentService>(MockBehavior.Strict);
         _validationService = new Mock<IValidationService>(MockBehavior.Strict);
         _bulletinRepository = new Mock<IBulletinRepository>(MockBehavior.Strict);
+        _ackRepository = new Mock<IBulletinAcknowledgementRepository>(MockBehavior.Strict);
         _accessPolicy = new Mock<IAccessPolicy<Bulletin, BulletinVisibilityScope>>(MockBehavior.Strict);
         _unitOfWorkFactory = new Mock<IUnitOfWorkFactory>(MockBehavior.Strict);
         _unitOfWork = new Mock<IUnitOfWork>(MockBehavior.Loose);
@@ -58,8 +63,8 @@ public class BulletinServiceTests
         _unitOfWorkFactory.Setup(f => f.BeginAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(_unitOfWork.Object);
 
-        // Default scope: staff editor with edit permission. Tests can re-stub these.
-        SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: true, canApprove: false);
+        // Default scope: staff editor with edit permission, no pin. Tests can re-stub these.
+        SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: true, canPin: false);
 
         _service = new BulletinService(
             _authorizationService.Object,
@@ -68,12 +73,13 @@ public class BulletinServiceTests
             _documentService.Object,
             _validationService.Object,
             _bulletinRepository.Object,
+            _ackRepository.Object,
             _accessPolicy.Object,
             _unitOfWorkFactory.Object
         );
     }
 
-    private void SetupScope(UserType userType, Guid? userId, bool canView, bool canEdit, bool canApprove)
+    private void SetupScope(UserType userType, Guid? userId, bool canView, bool canEdit, bool canPin)
     {
         _authorizationService.Setup(a => a.GetCurrentUserId()).Returns(userId);
         _authorizationService.Setup(a => a.GetCurrentUserType()).Returns(userType);
@@ -84,8 +90,8 @@ public class BulletinServiceTests
                 a.HasPermissionAsync(Permissions.School.EditSchoolBulletins, It.IsAny<CancellationToken>()))
             .ReturnsAsync(canEdit);
         _authorizationService.Setup(a =>
-                a.HasPermissionAsync(Permissions.School.ApproveSchoolBulletins, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(canApprove);
+                a.HasPermissionAsync(Permissions.School.PinSchoolBulletins, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(canPin);
     }
 
     private void RequirePermission(string permission, bool succeeds = true)
@@ -99,15 +105,15 @@ public class BulletinServiceTests
     }
 
     private static Bulletin MakeBulletin(Guid? id = null, Guid? directoryId = null, long version = 1,
-        bool isApproved = true, Guid? createdById = null) =>
+        DateTime? pinnedAt = null, Guid? createdById = null) =>
         new()
         {
             Id = id ?? Guid.NewGuid(),
             DirectoryId = directoryId ?? Guid.NewGuid(),
+            CategoryId = Guid.NewGuid(),
             Title = "Test",
             Detail = "Test detail",
-            IsPrivate = false,
-            IsApproved = isApproved,
+            PinnedAt = pinnedAt,
             CreatedById = createdById ?? CurrentUserId,
             CreatedByIpAddress = "::1",
             LastModifiedById = createdById ?? CurrentUserId,
@@ -115,18 +121,30 @@ public class BulletinServiceTests
             Version = version
         };
 
+    private static BulletinUpsertRequest MakeUpsertRequest(string title = "Hello", string detail = "World",
+        bool isPinned = false, bool requiresAck = false, long expectedVersion = 1) =>
+        new()
+        {
+            Title = title,
+            Detail = detail,
+            CategoryId = Guid.NewGuid(),
+            IsPinned = isPinned,
+            RequiresAcknowledgement = requiresAck,
+            ExpectedVersion = expectedVersion,
+            Audiences = new List<BulletinAudienceRequest>
+            {
+                new() { AudienceKind = BulletinAudienceKind.AllStaff }
+            }
+        };
+
     // ─── GetDetailsByIdAsync ─────────────────────────────────────────────────
 
     [Test]
-    public async Task GetDetailsByIdAsync_ReturnsDetails_WhenAccessPolicyAllowsView()
+    public async Task GetDetailsByIdAsync_ReturnsDetails_WhenSpReturnsRow()
     {
         var bulletinId = Guid.NewGuid();
-        var bulletin = MakeBulletin(bulletinId);
         var dto = new BulletinDetailsResponse { Id = bulletinId, Title = "Test" };
 
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
-            .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.GetDetailsByIdAsync(bulletinId,
                 It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(dto);
@@ -137,40 +155,23 @@ public class BulletinServiceTests
     }
 
     [Test]
-    public void GetDetailsByIdAsync_Throws_NotFound_WhenAccessPolicyDeniesView()
+    public void GetDetailsByIdAsync_Throws_NotFound_WhenSpReturnsNull()
     {
+        // The SP returns no header for both genuinely-missing ids AND audience-mismatch
+        // hits; both surface as NotFound (avoids leaking existence to non-audience users).
         var bulletinId = Guid.NewGuid();
-        var bulletin = MakeBulletin(bulletinId);
-
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
-            .ReturnsAsync(bulletin);
-        // Defense in depth: even if the SP would have returned a row, the policy denies.
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
-
-        Assert.That(async () => await _service.GetDetailsByIdAsync(bulletinId, CancellationToken.None),
-            Throws.TypeOf<NotFoundException>());
-
-        // Critical: the detail SP must NOT be called when the policy denies view, otherwise
-        // we leak whatever the SP-side filter happened to allow through.
-        _bulletinRepository.Verify(r => r.GetDetailsByIdAsync(It.IsAny<Guid>(),
-            It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Test]
-    public void GetDetailsByIdAsync_Throws_NotFound_WhenBulletinMissing()
-    {
-        var bulletinId = Guid.NewGuid();
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
-            .ReturnsAsync((Bulletin?)null);
+        _bulletinRepository.Setup(r => r.GetDetailsByIdAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BulletinDetailsResponse?)null);
 
         Assert.That(async () => await _service.GetDetailsByIdAsync(bulletinId, CancellationToken.None),
             Throws.TypeOf<NotFoundException>());
     }
 
-    // ─── CreateAsync ─────────────────────────────────────────────────
+    // ─── CreateAsync ─────────────────────────────────────────────────────────
 
     [Test]
-    public async Task CreateAsync_RequiresEdit_ThenCreatesDirectoryAndBulletin()
+    public async Task CreateAsync_RequiresEdit_CreatesDirectoryBulletinAndAudiences()
     {
         RequirePermission(Permissions.School.EditSchoolBulletins);
 
@@ -178,34 +179,64 @@ public class BulletinServiceTests
         _directoryService.Setup(d => d.CreateAsync(It.IsAny<DirectoryUpsertRequest>(),
                 It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()))
             .ReturnsAsync(new DirectoryDetailsResponse { Id = directoryId, Name = "bulletin-x" });
-        _bulletinRepository.Setup(r => r.InsertAsync(It.IsAny<Bulletin>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+        _bulletinRepository.Setup(r => r.InsertAsync(It.IsAny<Bulletin>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync((Bulletin b, CancellationToken _, IDbTransaction? _) => b);
+        _bulletinRepository.Setup(r => r.ReplaceAudiencesAsync(It.IsAny<Guid>(), It.IsAny<IList<BulletinAudience>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .Returns(Task.CompletedTask);
 
-        var model = new BulletinUpsertRequest
-        {
-            Title = "Hello",
-            Detail = "World",
-            IsPrivate = true,
-            ExpiresAt = DateTime.UtcNow.AddDays(7)
-        };
-
-        var resultId = await _service.CreateAsync(model, CancellationToken.None);
+        var resultId = await _service.CreateAsync(MakeUpsertRequest(), CancellationToken.None);
 
         Assert.That(resultId, Is.Not.EqualTo(Guid.Empty));
-        _authorizationService.Verify(a =>
-            a.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, It.IsAny<CancellationToken>()),
-            Times.Once);
-        _directoryService.Verify(d => d.CreateAsync(
-            It.Is<DirectoryUpsertRequest>(r => r.IsPrivate == model.IsPrivate),
-            It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()), Times.Once);
         _bulletinRepository.Verify(r => r.InsertAsync(
-            It.Is<Bulletin>(b =>
-                b.Id == resultId &&
-                b.DirectoryId == directoryId &&
-                b.Title == "Hello" &&
-                b.Detail == "World" &&
-                b.IsPrivate),
+            It.Is<Bulletin>(b => b.Id == resultId && b.DirectoryId == directoryId && b.PinnedAt == null),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
+        _bulletinRepository.Verify(r => r.ReplaceAudiencesAsync(resultId,
+            It.Is<IList<BulletinAudience>>(list => list.Count == 1),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
+    }
+
+    [Test]
+    public async Task CreateAsync_WithIsPinned_AlsoRequiresPinPermission_AndSetsPinnedAt()
+    {
+        RequirePermission(Permissions.School.EditSchoolBulletins);
+        RequirePermission(Permissions.School.PinSchoolBulletins);
+
+        var directoryId = Guid.NewGuid();
+        _directoryService.Setup(d => d.CreateAsync(It.IsAny<DirectoryUpsertRequest>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()))
+            .ReturnsAsync(new DirectoryDetailsResponse { Id = directoryId, Name = "bulletin-x" });
+        _bulletinRepository.Setup(r => r.InsertAsync(It.IsAny<Bulletin>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((Bulletin b, CancellationToken _, IDbTransaction? _) => b);
+        _bulletinRepository.Setup(r => r.ReplaceAudiencesAsync(It.IsAny<Guid>(), It.IsAny<IList<BulletinAudience>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .Returns(Task.CompletedTask);
+
+        await _service.CreateAsync(MakeUpsertRequest(isPinned: true), CancellationToken.None);
+
+        _authorizationService.Verify(a =>
+            a.RequirePermissionAsync(Permissions.School.PinSchoolBulletins, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _bulletinRepository.Verify(r => r.InsertAsync(
+            It.Is<Bulletin>(b => b.PinnedAt != null),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
+    }
+
+    [Test]
+    public void CreateAsync_RejectsEmptyAudiences()
+    {
+        RequirePermission(Permissions.School.EditSchoolBulletins);
+
+        var model = MakeUpsertRequest();
+        model.Audiences.Clear();
+
+        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
+            Throws.TypeOf<InvalidOperationException>());
+
+        _directoryService.Verify(d => d.CreateAsync(It.IsAny<DirectoryUpsertRequest>(),
+            It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()), Times.Never);
     }
 
     [Test]
@@ -213,21 +244,17 @@ public class BulletinServiceTests
     {
         RequirePermission(Permissions.School.EditSchoolBulletins, succeeds: false);
 
-        var model = new BulletinUpsertRequest { Title = "X", Detail = "Y" };
-
-        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
+        Assert.That(async () => await _service.CreateAsync(MakeUpsertRequest(), CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
 
-        _directoryService.Verify(d => d.CreateAsync(It.IsAny<DirectoryUpsertRequest>(),
-            It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()), Times.Never);
         _bulletinRepository.Verify(r => r.InsertAsync(It.IsAny<Bulletin>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
-    // ─── UpdateAsync ─────────────────────────────────────────────────
+    // ─── UpdateAsync ─────────────────────────────────────────────────────────
 
     [Test]
-    public async Task UpdateAsync_AppliesFields_AndHandsExpectedVersionToRepoForOptimisticConcurrency()
+    public async Task UpdateAsync_AppliesFields_AndPersistsAudiences_AndHandsExpectedVersionToRepo()
     {
         RequirePermission(Permissions.School.EditSchoolBulletins);
 
@@ -236,76 +263,48 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
+        _bulletinRepository.Setup(r => r.ReplaceAudiencesAsync(bulletinId, It.IsAny<IList<BulletinAudience>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .Returns(Task.CompletedTask);
 
-        var model = new BulletinUpsertRequest
-        {
-            Title = "Updated",
-            Detail = "Updated detail",
-            IsPrivate = true,
-            ExpiresAt = DateTime.UtcNow.AddDays(14),
-            ExpectedVersion = 5
-        };
+        var model = MakeUpsertRequest(title: "Updated", detail: "Updated detail", expectedVersion: 5);
 
         await _service.UpdateAsync(bulletinId, model, CancellationToken.None);
 
-        Assert.That(bulletin.Title, Is.EqualTo("Updated"));
-        Assert.That(bulletin.Detail, Is.EqualTo("Updated detail"));
-        Assert.That(bulletin.IsPrivate, Is.True);
-        // Version is set to the client's expected value so QueryKit's UpdateWithVersionAsync
-        // turns it into a WHERE Version=@expected guard.
+        Assert.That(bulletin.Title,   Is.EqualTo("Updated"));
+        Assert.That(bulletin.Detail,  Is.EqualTo("Updated detail"));
         Assert.That(bulletin.Version, Is.EqualTo(5));
+        _bulletinRepository.Verify(r => r.ReplaceAudiencesAsync(bulletinId, It.IsAny<IList<BulletinAudience>>(),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
     }
 
     [Test]
-    public async Task UpdateAsync_NonApprover_FlipsIsApprovedFalse()
+    public async Task UpdateAsync_ChangingPinState_AlsoRequiresPinPermission()
     {
-        // Default scope from SetUp has canApprove = false.
+        // Default scope has canPin=false; the editor is trying to pin a previously-unpinned
+        // bulletin without the pin permission, which must fail-fast on RequirePermissionAsync.
         RequirePermission(Permissions.School.EditSchoolBulletins);
+        RequirePermission(Permissions.School.PinSchoolBulletins, succeeds: false);
 
         var bulletinId = Guid.NewGuid();
-        var bulletin = MakeBulletin(bulletinId, isApproved: true);
+        var bulletin = MakeBulletin(bulletinId, pinnedAt: null);
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
-            .ReturnsAsync(bulletin);
 
-        await _service.UpdateAsync(bulletinId, new BulletinUpsertRequest
-        {
-            Title = "T", Detail = "D", ExpectedVersion = 1
-        }, CancellationToken.None);
+        var model = MakeUpsertRequest(isPinned: true);
 
-        Assert.That(bulletin.IsApproved, Is.False, "Non-approver edits must require re-approval.");
-    }
+        Assert.That(async () => await _service.UpdateAsync(bulletinId, model, CancellationToken.None),
+            Throws.TypeOf<ForbiddenException>());
 
-    [Test]
-    public async Task UpdateAsync_Approver_PreservesIsApproved()
-    {
-        SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: true, canApprove: true);
-        RequirePermission(Permissions.School.EditSchoolBulletins);
-
-        var bulletinId = Guid.NewGuid();
-        var bulletin = MakeBulletin(bulletinId, isApproved: true);
-
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
-            .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
-            .ReturnsAsync(bulletin);
-
-        await _service.UpdateAsync(bulletinId, new BulletinUpsertRequest
-        {
-            Title = "T", Detail = "D", ExpectedVersion = 1
-        }, CancellationToken.None);
-
-        Assert.That(bulletin.IsApproved, Is.True);
+        _bulletinRepository.Verify(r => r.UpdateAsync(It.IsAny<Bulletin>(),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
     [Test]
@@ -318,12 +317,10 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
 
-        Assert.That(async () => await _service.UpdateAsync(bulletinId,
-                new BulletinUpsertRequest { Title = "X", Detail = "Y", ExpectedVersion = 1 },
-                CancellationToken.None),
+        Assert.That(async () => await _service.UpdateAsync(bulletinId, MakeUpsertRequest(), CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
 
         _bulletinRepository.Verify(r => r.UpdateAsync(It.IsAny<Bulletin>(),
@@ -340,65 +337,196 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ThrowsAsync(new ConcurrencyException("version mismatch"));
 
-        var staleClient = new BulletinUpsertRequest { Title = "X", Detail = "Y", ExpectedVersion = 4 };
-
-        Assert.That(async () => await _service.UpdateAsync(bulletinId, staleClient, CancellationToken.None),
+        Assert.That(async () => await _service.UpdateAsync(bulletinId,
+                MakeUpsertRequest(expectedVersion: 4), CancellationToken.None),
             Throws.TypeOf<ConcurrencyException>());
     }
 
-    // ─── UpdateBulletinApprovalAsync ─────────────────────────────────────────
+    // ─── UpdatePinAsync ──────────────────────────────────────────────────────
 
     [Test]
-    public async Task UpdateBulletinApprovalAsync_SetsIsApproved_AndHandsExpectedVersionToRepo()
+    public async Task UpdatePinAsync_SetsPinnedAt_AndHandsExpectedVersionToRepo()
     {
-        SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: false, canApprove: true);
-        RequirePermission(Permissions.School.ApproveSchoolBulletins);
+        SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: false, canPin: true);
+        RequirePermission(Permissions.School.PinSchoolBulletins);
 
         var bulletinId = Guid.NewGuid();
-        var bulletin = MakeBulletin(bulletinId, version: 7, isApproved: false);
+        var bulletin = MakeBulletin(bulletinId, version: 7, pinnedAt: null);
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
 
-        await _service.UpdateBulletinApprovalAsync(bulletinId, isApproved: true, expectedVersion: 7,
-            CancellationToken.None);
+        await _service.UpdatePinAsync(bulletinId, isPinned: true, expectedVersion: 7, CancellationToken.None);
 
-        Assert.That(bulletin.IsApproved, Is.True);
-        Assert.That(bulletin.Version, Is.EqualTo(7));
+        Assert.That(bulletin.PinnedAt, Is.Not.Null);
+        Assert.That(bulletin.Version,  Is.EqualTo(7));
     }
 
     [Test]
-    public void UpdateBulletinApprovalAsync_Throws_Forbidden_WhenAccessPolicyDeniesEdit()
+    public async Task UpdatePinAsync_Unpin_ClearsPinnedAt()
     {
-        SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: false, canApprove: true);
-        RequirePermission(Permissions.School.ApproveSchoolBulletins);
+        SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: false, canPin: true);
+        RequirePermission(Permissions.School.PinSchoolBulletins);
 
         var bulletinId = Guid.NewGuid();
-        var bulletin = MakeBulletin(bulletinId);
+        var bulletin = MakeBulletin(bulletinId, version: 3, pinnedAt: DateTime.UtcNow);
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _bulletinRepository.Setup(r => r.UpdateAsync(bulletin, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(bulletin);
 
-        Assert.That(async () => await _service.UpdateBulletinApprovalAsync(bulletinId, true, 1,
-                CancellationToken.None),
-            Throws.TypeOf<ForbiddenException>());
+        await _service.UpdatePinAsync(bulletinId, isPinned: false, expectedVersion: 3, CancellationToken.None);
 
-        _bulletinRepository.Verify(r => r.UpdateAsync(It.IsAny<Bulletin>(),
+        Assert.That(bulletin.PinnedAt, Is.Null);
+    }
+
+    // ─── AcknowledgeAsync ────────────────────────────────────────────────────
+
+    [Test]
+    public async Task AcknowledgeAsync_RecordsAck_WhenBulletinRequiresIt_AndIsVisible()
+    {
+        var bulletinId = Guid.NewGuid();
+        var details = new BulletinDetailsResponse { Id = bulletinId, Title = "T", RequiresAcknowledgement = true };
+
+        _bulletinRepository.Setup(r => r.GetDetailsByIdAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(details);
+        _ackRepository.Setup(r => r.AcknowledgeAsync(bulletinId, CurrentUserId,
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(true);
+
+        await _service.AcknowledgeAsync(bulletinId, CancellationToken.None);
+
+        _ackRepository.Verify(r => r.AcknowledgeAsync(bulletinId, CurrentUserId,
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
+    }
+
+    [Test]
+    public void AcknowledgeAsync_Throws_NotFound_WhenBulletinNotVisible()
+    {
+        var bulletinId = Guid.NewGuid();
+        _bulletinRepository.Setup(r => r.GetDetailsByIdAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BulletinDetailsResponse?)null);
+
+        Assert.That(async () => await _service.AcknowledgeAsync(bulletinId, CancellationToken.None),
+            Throws.TypeOf<NotFoundException>());
+
+        _ackRepository.Verify(r => r.AcknowledgeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
-    // ─── DeleteAsync ─────────────────────────────────────────────────
+    [Test]
+    public void AcknowledgeAsync_Throws_WhenBulletinDoesNotRequireAck()
+    {
+        var bulletinId = Guid.NewGuid();
+        var details = new BulletinDetailsResponse { Id = bulletinId, Title = "T", RequiresAcknowledgement = false };
+
+        _bulletinRepository.Setup(r => r.GetDetailsByIdAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(details);
+
+        Assert.That(async () => await _service.AcknowledgeAsync(bulletinId, CancellationToken.None),
+            Throws.TypeOf<InvalidOperationException>());
+
+        _ackRepository.Verify(r => r.AcknowledgeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
+    }
+
+    // ─── GetBulletinSummariesAsync ───────────────────────────────────────────
+
+    [Test]
+    public async Task GetBulletinSummariesAsync_BuildsScopeFromAuth_AndForwardsFilterSortPagingToRepo()
+    {
+        var filter = new FilterOptions { Groups = Array.Empty<FilterGroup>() };
+        var sort = new SortOptions { Criteria = Array.Empty<SortCriterion>() };
+        var paging = PageOptions.Create(2, 25);
+        var page = new PageResult<BulletinSummaryResponse>
+        {
+            Items = new List<BulletinSummaryResponse>(),
+            TotalItems = 0
+        };
+
+        BulletinVisibilityScope? capturedScope = null;
+        _bulletinRepository.Setup(r => r.GetSummariesAsync(
+                It.IsAny<BulletinVisibilityScope>(), filter, sort, paging, It.IsAny<CancellationToken>()))
+            .Callback((BulletinVisibilityScope s, FilterOptions? _, SortOptions? _, PageOptions? _, CancellationToken _) =>
+                capturedScope = s)
+            .ReturnsAsync(page);
+
+        var result = await _service.GetBulletinSummariesAsync(filter, sort, paging, CancellationToken.None);
+
+        Assert.That(result, Is.SameAs(page));
+        // Default test scope is staff editor with canView+canEdit, no pin; verify the
+        // scope handed to the repo matches what the auth service reported.
+        Assert.That(capturedScope, Is.Not.Null);
+        Assert.That(capturedScope!.IsStaff, Is.True);
+        Assert.That(capturedScope.CurrentUserId, Is.EqualTo(CurrentUserId));
+        Assert.That(capturedScope.CanView, Is.True);
+        Assert.That(capturedScope.CanEdit, Is.True);
+        Assert.That(capturedScope.CanPin, Is.False);
+    }
+
+    // ─── CanViewDirectoryAsync ───────────────────────────────────────────────
+
+    [Test]
+    public async Task CanViewDirectoryAsync_ReturnsFalse_WhenBulletinNotVisibleToUser()
+    {
+        // Regression guard for the SP-backed audience gate: attachment authorisation must
+        // ask the repo whether the bulletin is visible to the current scope. If this short
+        // circuit goes away, a non-targeted reader could pull a bulletin's attachments by
+        // knowing the IDs. Strict mocks on _directoryService ensure the structural lookup
+        // is NOT consulted when the audience check fails.
+        var bulletinId = Guid.NewGuid();
+        var directoryId = Guid.NewGuid();
+
+        _bulletinRepository.Setup(r => r.IsVisibleToUserAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _service.CanViewDirectoryAsync(bulletinId, directoryId, CancellationToken.None);
+
+        Assert.That(result, Is.False);
+        _directoryService.Verify(d => d.TryGetDirectoryByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Test]
+    public async Task CanViewDirectoryAsync_ReturnsTrue_WhenVisibleAndStructurallyAllowed()
+    {
+        var bulletinId = Guid.NewGuid();
+        var directoryId = Guid.NewGuid();
+        var bulletin = MakeBulletin(bulletinId, directoryId);
+
+        _bulletinRepository.Setup(r => r.IsVisibleToUserAsync(bulletinId,
+                It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // CanStructurallyViewDirectoryAsync calls TryGetDirectoryByIdAsync, GetByIdAsync,
+        // IsDirectoryInSubtreeAsync. Stub them to return a non-private directory in-subtree.
+        _directoryService.Setup(d => d.TryGetDirectoryByIdAsync(directoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DirectoryDetailsResponse { Id = directoryId, Name = "d", IsPrivate = false });
+        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(bulletin);
+        _directoryService.Setup(d => d.IsDirectoryInSubtreeAsync(directoryId, directoryId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.CanViewDirectoryAsync(bulletinId, directoryId, CancellationToken.None);
+
+        Assert.That(result, Is.True);
+    }
+
+    // ─── DeleteAsync ─────────────────────────────────────────────────────────
 
     [Test]
     public async Task DeleteAsync_DeletesBulletinAndItsDirectory()
@@ -411,40 +539,18 @@ public class BulletinServiceTests
 
         _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
+        _accessPolicy.Setup(p => p.CanViewAsync(bulletin, It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
         _bulletinRepository.Setup(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
-        _directoryService.Setup(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()))
+        _directoryService.Setup(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>(), It.IsAny<bool>()))
             .Returns(Task.CompletedTask);
 
         await _service.DeleteAsync(bulletinId, CancellationToken.None);
 
         _bulletinRepository.Verify(r => r.DeleteAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()),
             Times.Once);
-        _directoryService.Verify(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()),
+        _directoryService.Verify(d => d.DeleteAsync(directoryId, It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>(), It.IsAny<bool>()),
             Times.Once);
-    }
-
-    [Test]
-    public void DeleteAsync_Throws_Forbidden_WhenAccessPolicyDeniesEdit()
-    {
-        RequirePermission(Permissions.School.EditSchoolBulletins);
-
-        var bulletinId = Guid.NewGuid();
-        var bulletin = MakeBulletin(bulletinId);
-
-        _bulletinRepository.Setup(r => r.GetByIdAsync(bulletinId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
-            .ReturnsAsync(bulletin);
-        _accessPolicy.Setup(p => p.CanView(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(true);
-        _accessPolicy.Setup(p => p.CanEdit(bulletin, It.IsAny<BulletinVisibilityScope>())).Returns(false);
-
-        Assert.That(async () => await _service.DeleteAsync(bulletinId, CancellationToken.None),
-            Throws.TypeOf<ForbiddenException>());
-
-        _bulletinRepository.Verify(r => r.DeleteAsync(It.IsAny<Guid>(),
-            It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Never);
-        _directoryService.Verify(d => d.DeleteAsync(It.IsAny<Guid>(),
-            It.IsAny<CancellationToken>(), It.IsAny<IUnitOfWork?>()), Times.Never);
     }
 }

@@ -26,6 +26,8 @@ using MyPortal.FileStorage.Extensions;
 using MyPortal.Services.Extensions;
 using MyPortal.WebApi;
 using MyPortal.WebApi.Filters;
+using MyPortal.WebApi.Infrastructure.Extensions;
+using MyPortal.WebApi.Infrastructure.Json;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
 using MyPortal.WebApi.Services;
@@ -280,6 +282,13 @@ builder.Services.AddControllers(o =>
     o.ModelBinderProviders.Insert(0, new Base64JsonBinderProvider<SortOptions>());
 
     o.Filters.Add<CookieAntiforgeryFilter>();
+}).AddJsonOptions(o =>
+{
+    // Convention: every DateTime crossing the API is UTC. Without these,
+    // Dapper hands back Kind=Unspecified values that serialize without a TZ
+    // marker, and the SPA reads them as local — see UtcDateTimeConverter.
+    o.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+    o.JsonSerializerOptions.Converters.Add(new UtcNullableDateTimeConverter());
 });
 
 builder.Services.AddRazorPages();
@@ -387,25 +396,20 @@ app.UseAuthorization();
 
 app.Use(async (ctx, next) =>
 {
-    // Issue the XSRF-TOKEN cookie on any browser navigation that returns the SPA shell —
-    // not just `/`. Deep links (handled by MapFallbackToFile) need it too. We gate on the
-    // Accept header so API/XHR/asset requests don't unnecessarily mint a token.
+    // Mint the XSRF-TOKEN cookie on SPA-shell navigations when it's missing — this
+    // covers fresh / deep-link loads. Identity transitions (login/logout) re-mint
+    // explicitly so the token is rebound to the new principal; see Login.cshtml.cs.
+    // Skipping when the cookie is already present keeps Set-Cookie off every
+    // index.html response so CDN/proxy/browser caching isn't defeated.
+    // Gated on Accept: text/html so asset requests don't pay the cost.
     if (HttpMethods.IsGet(ctx.Request.Method) &&
-        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN") &&
         !ctx.Request.Path.StartsWithSegments("/api") &&
         !ctx.Request.Path.StartsWithSegments("/connect") &&
+        !ctx.Request.Cookies.ContainsKey("XSRF-TOKEN") &&
         ctx.Request.Headers["Accept"].ToString()
             .Contains("text/html", StringComparison.OrdinalIgnoreCase))
     {
-        var anti = ctx.RequestServices.GetRequiredService<IAntiforgery>();
-        var tokens = anti.GetAndStoreTokens(ctx);
-        ctx.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
-        {
-            HttpOnly = false,
-            Secure = true,
-            SameSite = SameSiteMode.Lax,
-            Path = "/"
-        });
+        ctx.RefreshXsrfCookie();
     }
     await next();
 });

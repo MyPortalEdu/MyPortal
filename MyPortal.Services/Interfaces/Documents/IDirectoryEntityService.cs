@@ -45,8 +45,10 @@ public interface IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntit
     /// <param name="entityId">The unique identifier of the entity that owns the directory to be deleted.</param>
     /// <param name="directoryId">The unique identifier of the directory to delete.</param>
     /// <param name="cancellationToken">A token that can be used to cancel the asynchronous delete operation.</param>
+    /// <param name="softDelete">If <see langword="true"/>, performs a soft delete by marking the directory as deleted without removing it from
+    /// storage; otherwise, permanently deletes the directory.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
-    Task DeleteDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken cancellationToken);
+    Task DeleteDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken cancellationToken, bool softDelete = true);
 
     /// <summary>
     /// Asynchronously retrieves the details of a directory identified by the specified directory ID within the given
