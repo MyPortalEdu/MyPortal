@@ -1,7 +1,7 @@
 <ng-container *transloco="let t">
   <p-button
     [label]="buttonLabel() ?? t('common.studentGroupPicker.add')"
-    icon="pi pi-plus"
+    icon="fa-solid fa-plus"
     severity="secondary"
     (click)="open($event)">
   </p-button>
@@ -16,7 +16,7 @@
            Cancel button in its footer. -->
       <div class="flex items-center justify-end">
         <button type="button" class="mp-icon-button" (click)="cancel()" [attr.aria-label]="'common.close' | transloco">
-          <i class="pi pi-times"></i>
+          <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
       <p-table

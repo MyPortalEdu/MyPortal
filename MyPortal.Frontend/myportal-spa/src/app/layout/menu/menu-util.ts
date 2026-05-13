@@ -12,9 +12,13 @@ export function buildMenu(
   // exact-match so it doesn't also highlight when a deeper portal route is active
   // (e.g. /staff/system/users would otherwise prefix-match /staff).
   // Label is a Transloco key — see public/i18n/<lang>.json `pages.home.title`.
+  //
+  // Icon stored as the FA glyph name only ("fa-house"); the sidebar prefixes
+  // `fa-regular` or `fa-solid` based on the row's active state to give the menu
+  // a "you are here" weight cue.
   menu.push({
     label: 'pages.home.title',
-    icon: 'pi pi-home',
+    icon: 'fa-house',
     routerLink: homeLink,
     state: { exact: true }
   });

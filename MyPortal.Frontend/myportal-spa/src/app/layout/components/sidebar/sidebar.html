@@ -16,11 +16,13 @@
               tooltipPosition="right"
               [tooltipDisabled]="!collapsed()"
             >
-              @if (item.icon) { <i [class]="item.icon"></i> }
+              @if (item.icon) {
+                <i [class]="((collapsed() && hasActiveChild(item)) ? 'fa-solid ' : 'fa-regular ') + item.icon"></i>
+              }
               @if (!collapsed()) {
                 <span class="flex-1 text-left">{{ item.label | transloco }}</span>
                 <i
-                  class="pi pi-chevron-right nav-chevron"
+                  class="fa-solid fa-chevron-right nav-chevron"
                   [class.expanded]="isExpanded(item)"
                 ></i>
               }
@@ -49,6 +51,7 @@
             <a
               [routerLink]="item.routerLink"
               routerLinkActive="active"
+              #rla="routerLinkActive"
               [routerLinkActiveOptions]="{ exact: isExactMatch(item) }"
               class="nav-row"
               [class.nav-row--rail]="collapsed()"
@@ -56,7 +59,9 @@
               tooltipPosition="right"
               [tooltipDisabled]="!collapsed()"
             >
-              @if (item.icon) { <i [class]="item.icon"></i> }
+              @if (item.icon) {
+                <i [class]="(rla.isActive ? 'fa-solid ' : 'fa-regular ') + item.icon"></i>
+              }
               @if (!collapsed()) {
                 <span class="flex-1">{{ item.label | transloco }}</span>
               }

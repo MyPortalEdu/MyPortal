@@ -280,15 +280,15 @@ describe('BulletinAttachments', () => {
   });
 
   it('iconFor maps known MIME prefixes and falls back to a generic file icon', () => {
-    expect(component.iconFor('image/png')).toBe('pi pi-image');
-    expect(component.iconFor('video/mp4')).toBe('pi pi-video');
-    expect(component.iconFor('audio/mp3')).toBe('pi pi-volume-up');
-    expect(component.iconFor('application/pdf')).toBe('pi pi-file-pdf');
-    expect(component.iconFor('application/msword')).toBe('pi pi-file-word');
+    expect(component.iconFor('image/png')).toBe('fa-solid fa-file-image');
+    expect(component.iconFor('video/mp4')).toBe('fa-solid fa-file-video');
+    expect(component.iconFor('audio/mp3')).toBe('fa-solid fa-file-audio');
+    expect(component.iconFor('application/pdf')).toBe('fa-solid fa-file-pdf');
+    expect(component.iconFor('application/msword')).toBe('fa-solid fa-file-word');
     expect(component.iconFor('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))
-      .toBe('pi pi-file-excel');
-    expect(component.iconFor('application/zip')).toBe('pi pi-folder');
-    expect(component.iconFor('text/plain')).toBe('pi pi-file');
-    expect(component.iconFor('')).toBe('pi pi-file');
+      .toBe('fa-solid fa-file-excel');
+    expect(component.iconFor('application/zip')).toBe('fa-solid fa-file-zipper');
+    expect(component.iconFor('text/plain')).toBe('fa-solid fa-file');
+    expect(component.iconFor('')).toBe('fa-solid fa-file');
   });
 });

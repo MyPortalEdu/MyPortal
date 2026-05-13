@@ -17,7 +17,7 @@
       {{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}
     </h3>
     <button type="button" class="mp-icon-button" (click)="onCancel()" [attr.aria-label]="'common.close' | transloco">
-      <i class="pi pi-times"></i>
+      <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
 
@@ -69,7 +69,7 @@
             [attr.aria-label]="c"
             [attr.aria-pressed]="colour() === c">
             @if (colour() === c) {
-              <i class="pi pi-check text-white text-[0.6875rem]"></i>
+              <i class="fa-solid fa-check text-white text-[0.6875rem]"></i>
             }
           </button>
         }
@@ -111,7 +111,7 @@
     <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
     <p-button
       [label]="isEdit() ? t('form.save') : t('form.create')"
-      icon="pi pi-check"
+      icon="fa-solid fa-check"
       [disabled]="!isValid()"
       [loading]="submitting()"
       (click)="save()">

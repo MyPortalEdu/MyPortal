@@ -23,7 +23,7 @@ export class UserListPage implements OnInit {
 
   ngOnInit(): void {
     this.headerActions.set([
-      { icon: 'pi pi-plus', label: this.transloco.translate('common.new'), severity: 'primary' }
+      { icon: 'fa-solid fa-plus', label: this.transloco.translate('common.new'), severity: 'primary' }
     ]);
   }
 }

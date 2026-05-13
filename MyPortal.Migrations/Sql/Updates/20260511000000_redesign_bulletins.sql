@@ -40,11 +40,11 @@ IF @sysUser IS NULL
 
 MERGE INTO dbo.BulletinCategories AS T
 USING (VALUES
-    (N'Notice',       N'pi pi-megaphone',     N'#6366F1', 10),
-    (N'Safeguarding', N'pi pi-heart',         N'#EF4444', 20),
-    (N'Event',        N'pi pi-calendar',      N'#10B981', 30),
-    (N'Reminder',     N'pi pi-bell',          N'#F59E0B', 40),
-    (N'Celebration',  N'pi pi-star',          N'#EC4899', 50)
+    (N'Notice',       N'fa-regular fa-megaphone',     N'#6366F1', 10),
+    (N'Safeguarding', N'fa-regular fa-shield-halved', N'#EF4444', 20),
+    (N'Event',        N'fa-regular fa-calendar',      N'#10B981', 30),
+    (N'Reminder',     N'fa-regular fa-bell',          N'#F59E0B', 40),
+    (N'Celebration',  N'fa-regular fa-star',          N'#EC4899', 50)
 ) AS S ([Name], Icon, ColourCode, DisplayOrder)
 ON T.[Name] = S.[Name]
 WHEN NOT MATCHED BY TARGET THEN

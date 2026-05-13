@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using OpenIddict.Validation.AspNetCore;
 
 namespace MyPortal.WebApi.Filters;
 
@@ -44,8 +45,15 @@ public sealed class CookieAntiforgeryFilter : IAsyncAuthorizationFilter
         // *also* present (e.g. Scalar, where the user signed in via the OAuth
         // consent screen and still has the cookie hanging around when calling
         // an API endpoint with the freshly-minted bearer token).
-        var authHeader = context.HttpContext.Request.Headers.Authorization.ToString();
-        if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        //
+        // Check the authenticated identity rather than the raw Authorization
+        // header — a dummy or expired bearer header otherwise lets a
+        // cookie-authenticated request skip antiforgery without ever proving
+        // the bearer token was valid.
+        var bearerAuthenticated = context.HttpContext.User.Identities.Any(i =>
+            i.IsAuthenticated &&
+            i.AuthenticationType == OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
+        if (bearerAuthenticated)
         {
             return;
         }

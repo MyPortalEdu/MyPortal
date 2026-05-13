@@ -24,40 +24,73 @@ import {
   BulletinCategoryUpsertRequest,
 } from '../../../../../shared/types/bulletin';
 
-// Curated icon grid — short list of PrimeIcons that read well as category
-// markers. Free-text icon entry would be flexible but invites visual chaos
-// in the feed; admins pick from a known good set.
+// Curated icon grid — Font Awesome Pro glyphs that read well as category
+// markers in a school-bulletin context. Stored as `fa-regular fa-…` so the
+// pills render in regular weight, matching the chip's quieter visual role.
+// Free-text icon entry would invite visual chaos in the feed; admins pick
+// from a known good set.
 export const CATEGORY_ICONS: readonly string[] = [
-  'pi pi-megaphone',
-  'pi pi-bell',
-  'pi pi-shield',
-  'pi pi-heart',
-  'pi pi-calendar',
-  'pi pi-star',
-  'pi pi-info-circle',
-  'pi pi-exclamation-triangle',
-  'pi pi-book',
-  'pi pi-bookmark',
-  'pi pi-flag',
-  'pi pi-graduation-cap',
-  'pi pi-trophy',
-  'pi pi-gift',
-  'pi pi-globe',
-  'pi pi-home',
-  'pi pi-users',
-  'pi pi-user',
-  'pi pi-id-card',
-  'pi pi-clipboard',
-  'pi pi-clock',
-  'pi pi-comment',
-  'pi pi-envelope',
-  'pi pi-file',
-  'pi pi-folder',
-  'pi pi-cog',
-  'pi pi-bolt',
-  'pi pi-lightbulb',
-  'pi pi-tag',
-  'pi pi-thumbs-up',
+  // Announcement / notice
+  'fa-regular fa-megaphone',
+  'fa-regular fa-bullhorn',
+  'fa-regular fa-bell',
+  'fa-regular fa-circle-info',
+  'fa-regular fa-triangle-exclamation',
+  'fa-regular fa-flag',
+  // Safety / pastoral
+  'fa-regular fa-shield-halved',
+  'fa-regular fa-heart',
+  'fa-regular fa-hand',
+  'fa-regular fa-handshake',
+  // Calendar / time
+  'fa-regular fa-calendar',
+  'fa-regular fa-calendar-day',
+  'fa-regular fa-calendar-check',
+  'fa-regular fa-clock',
+  // Celebration
+  'fa-regular fa-star',
+  'fa-regular fa-trophy',
+  'fa-regular fa-gift',
+  'fa-regular fa-cake-candles',
+  'fa-regular fa-thumbs-up',
+  // Academic
+  'fa-regular fa-graduation-cap',
+  'fa-regular fa-book',
+  'fa-regular fa-book-open',
+  'fa-regular fa-pen-to-square',
+  'fa-regular fa-microscope',
+  'fa-regular fa-flask',
+  'fa-regular fa-calculator',
+  // Arts / activities
+  'fa-regular fa-palette',
+  'fa-regular fa-music',
+  'fa-regular fa-camera',
+  // Sport
+  'fa-regular fa-futbol',
+  'fa-regular fa-person-running',
+  // School operations
+  'fa-regular fa-bus',
+  'fa-regular fa-utensils',
+  'fa-regular fa-briefcase',
+  'fa-regular fa-globe',
+  'fa-regular fa-house',
+  // People
+  'fa-regular fa-users',
+  'fa-regular fa-user',
+  'fa-regular fa-id-card',
+  // Docs / comms
+  'fa-regular fa-clipboard',
+  'fa-regular fa-file-lines',
+  'fa-regular fa-folder',
+  'fa-regular fa-envelope',
+  'fa-regular fa-comment',
+  'fa-regular fa-paperclip',
+  // Generic
+  'fa-regular fa-bookmark',
+  'fa-regular fa-tag',
+  'fa-regular fa-lightbulb',
+  'fa-regular fa-bolt',
+  'fa-regular fa-gear',
 ] as const;
 
 // Curated swatches — primary indigo plus a spread of brand-safe accents. Hex

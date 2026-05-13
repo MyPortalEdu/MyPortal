@@ -22,7 +22,7 @@
         {{ b.categoryName }}
       </span>
       <button type="button" class="mp-icon-button" (click)="onHide()" [attr.aria-label]="t('detail.close')">
-        <i class="pi pi-times"></i>
+        <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
 
@@ -54,7 +54,7 @@
       <div class="pt-3 border-t border-surface">
         <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-color mb-1">{{ t('detail.sentTo') }}</div>
         <div class="flex items-center gap-2 text-xs">
-          <i class="pi pi-users text-muted-color"></i>
+          <i class="fa-regular fa-users text-muted-color"></i>
           <span>{{ audienceSummary() }}</span>
           @if (b.acknowledgedCount !== null && b.acknowledgedCount !== undefined) {
             <span class="text-muted-color">·</span>
@@ -70,13 +70,13 @@
       @if (b.requiresAcknowledgement && !b.hasAcknowledged) {
         <p-button
           [label]="t('detail.acknowledge')"
-          icon="pi pi-check"
+          icon="fa-solid fa-check"
           [loading]="acknowledging()"
           (click)="acknowledge()">
         </p-button>
       } @else if (b.requiresAcknowledgement && b.hasAcknowledged) {
         <span class="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--p-green-600)]">
-          <i class="pi pi-check-circle"></i> {{ t('detail.acknowledged') }}
+          <i class="fa-solid fa-circle-check"></i> {{ t('detail.acknowledged') }}
         </span>
       } @else {
         <span></span>
@@ -86,14 +86,14 @@
         @if (canEdit()) {
           <p-button
             [label]="t('detail.edit')"
-            icon="pi pi-pencil"
+            icon="fa-solid fa-pen-to-square"
             severity="secondary"
             [text]="true"
               (click)="requestEdit()">
           </p-button>
           <p-button
             [label]="t('detail.delete')"
-            icon="pi pi-trash"
+            icon="fa-solid fa-trash-can"
             severity="danger"
             [text]="true"
               (click)="requestDelete()">

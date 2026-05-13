@@ -1,7 +1,7 @@
 <ng-container *transloco="let t; prefix: 'bulletin-settings'">
 <mp-page-header
   [title]="t('title')"
-  icon="pi pi-bell"
+  icon="fa-solid fa-bell"
 ></mp-page-header>
 
 <div class="flex flex-col gap-4">
@@ -14,7 +14,7 @@
       </div>
       <p-button
         [label]="t('categories.add')"
-        icon="pi pi-plus"
+        icon="fa-solid fa-plus"
         (click)="openNewCategory()">
       </p-button>
     </div>
@@ -53,14 +53,14 @@
             <div class="flex items-center gap-1 shrink-0">
               <p-button
                 [label]="t('categories.edit')"
-                icon="pi pi-pencil"
+                icon="fa-solid fa-pen-to-square"
                 severity="secondary"
                 [text]="true"
                 (click)="openEditCategory(c)">
               </p-button>
               <p-button
                 [label]="t('categories.delete')"
-                icon="pi pi-trash"
+                icon="fa-solid fa-trash-can"
                 severity="danger"
                 [text]="true"
                 [disabled]="c.isSystem"
@@ -106,7 +106,7 @@
             </div>
             <p-button
               [label]="t('audiences.remove')"
-              icon="pi pi-times"
+              icon="fa-solid fa-xmark"
               severity="danger"
               [text]="true"
               (click)="removeGroup(g)">

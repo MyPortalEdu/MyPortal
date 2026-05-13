@@ -201,17 +201,17 @@ export class BulletinAttachments {
     return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
   }
 
-  // Map MIME type to a PrimeIcon. Falls back to a generic file icon.
+  // Map MIME type to a Font Awesome icon. Falls back to a generic file icon.
   iconFor(contentType: string): string {
-    if (!contentType) return 'pi pi-file';
-    if (contentType.startsWith('image/'))      return 'pi pi-image';
-    if (contentType.startsWith('video/'))      return 'pi pi-video';
-    if (contentType.startsWith('audio/'))      return 'pi pi-volume-up';
-    if (contentType === 'application/pdf')     return 'pi pi-file-pdf';
-    if (contentType.includes('word'))          return 'pi pi-file-word';
-    if (contentType.includes('excel') || contentType.includes('spreadsheet')) return 'pi pi-file-excel';
-    if (contentType.includes('zip') || contentType.includes('compressed'))    return 'pi pi-folder';
-    return 'pi pi-file';
+    if (!contentType) return 'fa-solid fa-file';
+    if (contentType.startsWith('image/'))      return 'fa-solid fa-file-image';
+    if (contentType.startsWith('video/'))      return 'fa-solid fa-file-video';
+    if (contentType.startsWith('audio/'))      return 'fa-solid fa-file-audio';
+    if (contentType === 'application/pdf')     return 'fa-solid fa-file-pdf';
+    if (contentType.includes('word'))          return 'fa-solid fa-file-word';
+    if (contentType.includes('excel') || contentType.includes('spreadsheet')) return 'fa-solid fa-file-excel';
+    if (contentType.includes('zip') || contentType.includes('compressed'))    return 'fa-solid fa-file-zipper';
+    return 'fa-solid fa-file';
   }
 
   // ─── Internals ────────────────────────────────────────────────────────

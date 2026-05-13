@@ -19,7 +19,7 @@ export class StaffMenuContributor implements AppMenuContributor {
     const cats: MenuCategory[] = [
       {
         label: 'nav.system',
-        icon: 'pi pi-cog',
+        icon: 'fa-gear',
         children: [
           {
             label: 'nav.users',

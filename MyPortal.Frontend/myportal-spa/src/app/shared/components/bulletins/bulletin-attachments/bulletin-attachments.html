@@ -5,7 +5,7 @@
   @if (isEditable()) {
     <div
       class="flex items-center justify-center gap-2 p-3 mb-3 border border-dashed rounded-lg text-xs cursor-pointer transition-colors"
-      [class.bg-surface-50]="!dragOver()"
+      [class.bg-emphasis]="!dragOver()"
       [class.border-surface]="!dragOver()"
       [class.text-muted-color]="!dragOver()"
       [class.bg-primary]="dragOver()"
@@ -16,7 +16,7 @@
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave($event)"
       (drop)="onDrop($event)">
-      <i class="pi pi-paperclip"></i>
+      <i class="fa-solid fa-paperclip"></i>
       <span>{{ t('dropHint') }} <a class="underline">{{ t('browse') }}</a></span>
     </div>
     <input #fileInput type="file" multiple class="hidden" (change)="onFileInputChange($event)" />
@@ -50,14 +50,14 @@
               class="mp-icon-button shrink-0"
               [attr.aria-label]="t('delete')"
               (click)="deleteDocument(doc)">
-              <i class="pi pi-trash"></i>
+              <i class="fa-solid fa-trash-can"></i>
             </button>
           }
         </li>
       }
       @for (file of staged(); track $index) {
         <li class="flex items-center gap-2 px-2 py-1.5 rounded-md border border-dashed border-surface text-sm">
-          <i class="pi pi-paperclip text-muted-color shrink-0"></i>
+          <i class="fa-solid fa-paperclip text-muted-color shrink-0"></i>
           <span class="flex-1 min-w-0 truncate">{{ file.name }}</span>
           <span class="text-[0.6875rem] uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium shrink-0">
             {{ t('pendingTag') }}
@@ -68,7 +68,7 @@
             class="mp-icon-button shrink-0"
             [attr.aria-label]="t('remove')"
             (click)="removeStaged($index)">
-            <i class="pi pi-times"></i>
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </li>
       }
@@ -79,7 +79,7 @@
 
   @if (loading() || uploading()) {
     <div class="text-xs text-muted-color flex items-center gap-1.5">
-      <i class="pi pi-spin pi-spinner"></i>
+      <i class="fa-solid fa-spinner fa-spin"></i>
       <span>{{ uploading() ? t('uploading') : ('common.loading' | transloco) }}</span>
     </div>
   }

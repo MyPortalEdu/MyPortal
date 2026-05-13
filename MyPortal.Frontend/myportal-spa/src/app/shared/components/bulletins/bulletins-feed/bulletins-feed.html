@@ -4,14 +4,14 @@
        strip — always visible, no awkward divider when the list is empty,
        and matches the common "card title + primary action" pattern. -->
   <div class="flex items-center gap-3">
-    <i class="pi pi-bell text-primary text-xl"></i>
+    <i class="fa-regular fa-bell text-primary text-xl"></i>
     <h3 class="text-base font-semibold m-0">{{ t('feed.title') }}</h3>
     @if (newCount() > 0) {
       <span class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
         {{ t('feed.newCount', { count: newCount() }) }}
       </span>
     }
-    <p-button class="ml-auto" [label]="t('feed.new')" icon="pi pi-plus" size="small" (click)="openNew()"></p-button>
+    <p-button class="ml-auto" [label]="t('feed.new')" icon="fa-solid fa-plus" size="small" (click)="openNew()"></p-button>
   </div>
 
   <!-- Category filter chips. "All" uses primary tint when active; per-category
@@ -79,22 +79,22 @@
                 <div class="ml-auto flex items-center gap-2 shrink-0">
                   @if (b.attachmentCount > 0) {
                     <span class="inline-flex items-center gap-1 text-muted-color" [title]="t('feed.attachments', { count: b.attachmentCount })">
-                      <i class="pi pi-paperclip"></i>{{ b.attachmentCount }}
+                      <i class="fa-solid fa-paperclip"></i>{{ b.attachmentCount }}
                     </span>
                   }
                   @if (b.requiresAcknowledgement) {
                     @if (b.hasAcknowledged) {
                       <span class="inline-flex items-center gap-1 font-medium text-[var(--p-green-600)]">
-                        <i class="pi pi-check-circle"></i>{{ t('feed.acknowledged') }}
+                        <i class="fa-solid fa-circle-check"></i>{{ t('feed.acknowledged') }}
                       </span>
                     } @else {
                       <span class="inline-flex items-center gap-1 font-medium text-[var(--p-amber-600)]">
-                        <i class="pi pi-exclamation-circle"></i>{{ t('feed.ackRequired') }}
+                        <i class="fa-solid fa-circle-exclamation"></i>{{ t('feed.ackRequired') }}
                       </span>
                     }
                   }
                   @if (b.pinnedAt) {
-                    <i class="pi pi-bookmark-fill text-primary" [title]="t('feed.pinned')"></i>
+                    <i class="fa-solid fa-bookmark text-primary" [title]="t('feed.pinned')"></i>
                   }
                 </div>
               }

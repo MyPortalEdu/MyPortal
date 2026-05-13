@@ -7,7 +7,7 @@ export interface ConfirmOptions {
   message: string;
   /** Header text. Defaults to a generic "Confirm" from the root scope. */
   header?: string;
-  /** PrimeIcon class for the icon next to the message. */
+  /** Icon class for the icon next to the message (e.g. `fa-solid fa-...`). */
   icon?: string;
   /** Accept-button label. Defaults to "Confirm". */
   acceptLabel?: string;
@@ -40,7 +40,7 @@ export class ConfirmationDialog {
       this.primeng.confirm({
         message: opts.message,
         header: opts.header ?? this.transloco.translate('common.confirmHeader'),
-        icon: opts.icon ?? 'pi pi-exclamation-circle',
+        icon: opts.icon ?? 'fa-solid fa-circle-exclamation',
         acceptLabel: opts.acceptLabel ?? this.transloco.translate('common.confirm'),
         rejectLabel: opts.rejectLabel ?? this.transloco.translate('common.cancel'),
         // p-button severity flows through via styleClass — `p-button-danger`
@@ -61,7 +61,7 @@ export class ConfirmationDialog {
   danger(opts: Omit<ConfirmOptions, 'acceptSeverity' | 'icon'> & { icon?: string }): Promise<boolean> {
     return this.confirm({
       ...opts,
-      icon: opts.icon ?? 'pi pi-exclamation-triangle',
+      icon: opts.icon ?? 'fa-solid fa-triangle-exclamation',
       acceptLabel: opts.acceptLabel ?? this.transloco.translate('common.delete'),
       acceptSeverity: 'danger',
     });
