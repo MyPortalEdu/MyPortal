@@ -229,20 +229,47 @@ public class DocumentService : BaseService, IDocumentService
 
         Logger.LogInformation("Document deleted: {documentId}, soft delete: {softDelete}", documentId, softDelete);
 
-        if (!softDelete)
+        if (softDelete)
         {
-            try
+            return;
+        }
+
+        // When the caller owns the UoW, the DB delete is still pending commit — defer the
+        // blob purge until the txn actually commits, otherwise a later rollback would leave
+        // the DB row restored but the blob already gone (relevant for tree deletes via
+        // DirectoryService where many docs share one transaction).
+        if (uow is not null)
+        {
+            var storageKey = document.StorageKey;
+            var fileName = document.FileName;
+            uow.OnCommitted(async ct =>
             {
-                await _storageProvider.DeleteFileAsync(document.StorageKey, cancellationToken);
-                Logger.LogInformation("File {fileName} deleted, storage key: {storageKey}", document.FileName,
-                    document.StorageKey);
-            }
-            catch (Exception cleanupEx)
-            {
-                Logger.LogWarning(cleanupEx,
-                    "Document row deleted but failed to delete blob at storage key {storageKey}. Manual cleanup may be required.",
-                    document.StorageKey);
-            }
+                try
+                {
+                    await _storageProvider.DeleteFileAsync(storageKey, ct);
+                    Logger.LogInformation("File {fileName} deleted, storage key: {storageKey}", fileName, storageKey);
+                }
+                catch (Exception cleanupEx)
+                {
+                    Logger.LogWarning(cleanupEx,
+                        "Document row deleted but failed to delete blob at storage key {storageKey}. Manual cleanup may be required.",
+                        storageKey);
+                }
+            });
+            return;
+        }
+
+        try
+        {
+            await _storageProvider.DeleteFileAsync(document.StorageKey, cancellationToken);
+            Logger.LogInformation("File {fileName} deleted, storage key: {storageKey}", document.FileName,
+                document.StorageKey);
+        }
+        catch (Exception cleanupEx)
+        {
+            Logger.LogWarning(cleanupEx,
+                "Document row deleted but failed to delete blob at storage key {storageKey}. Manual cleanup may be required.",
+                document.StorageKey);
         }
     }
 

@@ -8,6 +8,7 @@ internal sealed class UnitOfWork : IUnitOfWork
     private IDbConnection? _connection;
     private IDbTransaction? _transaction;
     private bool _completed;
+    private readonly List<Func<CancellationToken, Task>> _postCommit = new();
 
     public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
     {
@@ -21,7 +22,17 @@ internal sealed class UnitOfWork : IUnitOfWork
     public IDbTransaction Transaction =>
         _transaction ?? throw new ObjectDisposedException(nameof(UnitOfWork));
 
-    public Task CommitAsync(CancellationToken cancellationToken = default)
+    public void OnCommitted(Func<CancellationToken, Task> action)
+    {
+        if (_completed)
+        {
+            throw new InvalidOperationException(
+                "Cannot register a post-commit action after the unit of work has completed.");
+        }
+        _postCommit.Add(action);
+    }
+
+    public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
         if (_completed)
         {
@@ -30,7 +41,21 @@ internal sealed class UnitOfWork : IUnitOfWork
 
         Transaction.Commit();
         _completed = true;
-        return Task.CompletedTask;
+
+        // Post-commit actions run after the DB transaction is durable. A failure here
+        // can't undo the commit, so each action is responsible for its own logging /
+        // error handling — we just don't want one failure to swallow the rest.
+        foreach (var action in _postCommit)
+        {
+            try
+            {
+                await action(cancellationToken);
+            }
+            catch
+            {
+                // Caller logs inside its own action; nothing useful to do at this layer.
+            }
+        }
     }
 
     public Task RollbackAsync(CancellationToken cancellationToken = default)
