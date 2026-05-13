@@ -3,12 +3,14 @@ using Microsoft.Extensions.DependencyInjection;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.VisibilityScopes;
+using MyPortal.Services.Agencies;
 using MyPortal.Services.Attendance;
 using MyPortal.Services.Curriculum;
 using MyPortal.Services.Curriculum.Timetable;
 using MyPortal.Services.Documents;
 using MyPortal.Services.Pastoral;
 using MyPortal.Services.Interfaces;
+using MyPortal.Services.Interfaces.Agencies;
 using MyPortal.Services.Interfaces.Attendance;
 using MyPortal.Services.Interfaces.Curriculum;
 using MyPortal.Services.Interfaces.Documents;
@@ -51,6 +53,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPermissionService, PermissionService>();
 
         services.AddScoped<IAcademicYearService, AcademicYearService>();
+        services.AddScoped<IAgencyService, AgencyService>();
         services.AddScoped<IAttendanceCodeService, AttendanceCodeService>();
         services.AddScoped<IAttendanceMarkService, AttendanceMarkService>();
         services.AddScoped<IBulletinService, BulletinService>();

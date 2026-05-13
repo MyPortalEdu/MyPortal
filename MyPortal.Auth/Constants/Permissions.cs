@@ -15,8 +15,8 @@ public static class Permissions
 
     public static class Agencies
     {
-        // public const string ViewAgencies = "Agencies.ViewAgencies";
-        // public const string EditAgencies = "Agencies.EditAgencies";
+        public const string ViewAgencies = "Agencies.ViewAgencies";
+        public const string EditAgencies = "Agencies.EditAgencies";
     }
 
     public static class Assessment

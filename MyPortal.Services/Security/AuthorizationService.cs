@@ -33,7 +33,7 @@ public class AuthorizationService : IAuthorizationService
         return _perms.HasPermissionAsync(permission, cancellationToken);
     }
 
-    public async Task RequirePermissionAsync(string permission, CancellationToken ct = default)
+    public async Task RequirePermissionAsync(string permission, CancellationToken ct)
     {
         if (_user.UserId is null) throw new AuthenticationException("Not authenticated.");
         if (!await _perms.HasPermissionAsync(permission, ct))
