@@ -18,19 +18,29 @@ namespace MyPortal.Data.Repositories
         {
         }
 
-        public async Task<DirectoryDetailsResponse?> GetDetailsByIdAsync(Guid directoryId, CancellationToken cancellationToken)
+        public async Task<DirectoryDetailsResponse?> GetDetailsByIdAsync(Guid directoryId, CancellationToken cancellationToken, IDbTransaction? transaction = null)
         {
-            using var conn = _factory.Create();
+            // When a transaction is passed in, we MUST use its own connection — a SqlTransaction
+            // is bound to the connection it was opened on and can't be reused on a fresh one
+            // (throws "transaction is not associated with the connection"). AcquireConnection
+            // shares the caller's connection in that case and only mints a new one otherwise.
+            var (conn, owns) = AcquireConnection(transaction);
+            try
+            {
+                var sql = @"[dbo].[usp_directory_get_details_by_id]";
 
-            var sql = @"[dbo].[usp_directory_get_details_by_id]";
+                var param = new
+                    { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
 
-            var param = new
-                { directoryId, isStaff = AuthorizationService.GetCurrentUserType() == UserType.Staff };
+                var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, param,
+                    cancellationToken: cancellationToken, transaction: transaction);
 
-            var result = await conn.ExecuteStoredProcedureAsync<DirectoryDetailsResponse>(sql, param,
-                cancellationToken: cancellationToken);
-
-            return result.FirstOrDefault();
+                return result.FirstOrDefault();
+            }
+            finally
+            {
+                if (owns) conn.Dispose();
+            }
         }
 
         public async Task<IReadOnlyList<DirectoryDetailsResponse>> GetDirectoriesByParentIdAsync(Guid directoryId, CancellationToken cancellationToken)

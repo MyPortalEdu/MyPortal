@@ -1,4 +1,4 @@
-import {UserType} from '../enums/user-type';
+import {UserType} from './user-type';
 
 export interface Me {
   id: string;

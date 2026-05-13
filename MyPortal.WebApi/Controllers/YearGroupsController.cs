@@ -19,7 +19,7 @@ namespace MyPortal.WebApi.Controllers;
 /// structure (e.g. "Year 7", "Year 11"). Reg groups belong to year groups; year
 /// groups belong to academic years.
 /// </summary>
-public sealed class YearGroupsController : BaseApiController<YearGroupsController>
+public sealed class YearGroupsController : BaseApiController
 {
     private readonly IYearGroupService _yearGroupService;
 

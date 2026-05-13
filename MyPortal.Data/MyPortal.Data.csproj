@@ -24,6 +24,8 @@
     <EmbeddedResource Include="Sql\Pastoral\GetYearGroupSummaries.sql" />
     <None Remove="Sql\Pastoral\GetRegGroupSummaries.sql" />
     <EmbeddedResource Include="Sql\Pastoral\GetRegGroupSummaries.sql" />
+    <None Remove="Sql\Pastoral\GetStudentGroupSummaries.sql" />
+    <EmbeddedResource Include="Sql\Pastoral\GetStudentGroupSummaries.sql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +37,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
     <PackageReference Include="Rowan.QueryKit.Repositories" Version="0.9.17" />
   </ItemGroup>
 

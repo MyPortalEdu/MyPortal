@@ -54,6 +54,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAttendanceCodeService, AttendanceCodeService>();
         services.AddScoped<IAttendanceMarkService, AttendanceMarkService>();
         services.AddScoped<IBulletinService, BulletinService>();
+        services.AddScoped<IBulletinCategoryService, BulletinCategoryService>();
+        services.AddScoped<IBulletinSettingsService, BulletinSettingsService>();
         services.AddScoped<IDirectoryService, DirectoryService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IHouseService, HouseService>();

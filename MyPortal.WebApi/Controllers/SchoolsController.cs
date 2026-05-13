@@ -8,7 +8,7 @@ namespace MyPortal.WebApi.Controllers;
 /// Endpoints for school-level metadata. Single-tenant deployments have one local
 /// school; the "local" endpoints return that.
 /// </summary>
-public class SchoolsController : BaseApiController<SchoolsController>
+public class SchoolsController : BaseApiController
 {
     private readonly ISchoolService _schoolService;
 

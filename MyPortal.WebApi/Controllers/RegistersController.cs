@@ -15,7 +15,7 @@ namespace MyPortal.WebApi.Controllers;
 /// specific period+week, then submit marks for it. For the wider "edit any cell"
 /// admin grid, see <see cref="AttendanceMarksController"/>.
 /// </summary>
-public sealed class RegistersController : BaseApiController<RegistersController>
+public sealed class RegistersController : BaseApiController
 {
     private readonly IRegisterService _registerService;
 

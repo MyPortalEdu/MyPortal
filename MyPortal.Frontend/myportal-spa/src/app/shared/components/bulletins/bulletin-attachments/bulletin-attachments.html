@@ -1,0 +1,86 @@
+<ng-container *transloco="let t; prefix: 'bulletins.attachments'">
+  <!-- Dropzone (edit + stage only). Click anywhere on the zone to open the
+       browse dialog; drag-over toggles a highlighted state. Hidden in view
+       mode — the read-only file list below stands alone. -->
+  @if (isEditable()) {
+    <div
+      class="flex items-center justify-center gap-2 p-3 mb-3 border border-dashed rounded-lg text-xs cursor-pointer transition-colors"
+      [class.bg-emphasis]="!dragOver()"
+      [class.border-surface]="!dragOver()"
+      [class.text-muted-color]="!dragOver()"
+      [class.bg-primary]="dragOver()"
+      [class.bg-opacity-10]="dragOver()"
+      [class.border-primary]="dragOver()"
+      [class.text-primary]="dragOver()"
+      (click)="onBrowseClick()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)">
+      <i class="fa-solid fa-paperclip"></i>
+      <span>{{ t('dropHint') }} <a class="underline">{{ t('browse') }}</a></span>
+    </div>
+    <input #fileInput type="file" multiple class="hidden" (change)="onFileInputChange($event)" />
+    <p class="text-xs text-muted-color leading-snug m-0">
+      {{ t('sizeHint', { limit: sizeLabel }) }}
+      @if (isStage()) {
+        {{ t('pendingHint') }}
+      }
+    </p>
+  }
+
+  <!-- File list. Combines uploaded documents and staged-but-not-yet-uploaded
+       files. Staged ones get a "pending" badge + a "Remove" action; uploaded
+       ones get download + delete. -->
+  @if (hasAnything()) {
+    <ul class="list-none m-0 p-0 flex flex-col gap-1">
+      @for (doc of documents(); track doc.id) {
+        <li class="flex items-center gap-2 px-2 py-1.5 rounded-md border border-surface text-sm">
+          <i [class]="iconFor(doc.contentType) + ' text-muted-color shrink-0'"></i>
+          <a
+            [href]="downloadUrl(doc)"
+            target="_blank"
+            rel="noopener"
+            class="flex-1 min-w-0 truncate text-primary hover:underline">
+            {{ doc.fileName }}
+          </a>
+          <span class="text-xs text-muted-color shrink-0">{{ formatSize(doc.sizeBytes) }}</span>
+          @if (isEditable()) {
+            <button
+              type="button"
+              class="mp-icon-button shrink-0"
+              [attr.aria-label]="t('delete')"
+              (click)="deleteDocument(doc)">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          }
+        </li>
+      }
+      @for (file of staged(); track $index) {
+        <li class="flex items-center gap-2 px-2 py-1.5 rounded-md border border-dashed border-surface text-sm">
+          <i class="fa-solid fa-paperclip text-muted-color shrink-0"></i>
+          <span class="flex-1 min-w-0 truncate">{{ file.name }}</span>
+          <span class="text-[0.6875rem] uppercase tracking-wide px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium shrink-0">
+            {{ t('pendingTag') }}
+          </span>
+          <span class="text-xs text-muted-color shrink-0">{{ formatSize(file.size) }}</span>
+          <button
+            type="button"
+            class="mp-icon-button shrink-0"
+            [attr.aria-label]="t('remove')"
+            (click)="removeStaged($index)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else if (!isEditable()) {
+    <div class="text-xs text-muted-color">{{ t('empty') }}</div>
+  }
+
+  @if (loading() || uploading()) {
+    <div class="text-xs text-muted-color flex items-center gap-1.5">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <span>{{ uploading() ? t('uploading') : ('common.loading' | transloco) }}</span>
+    </div>
+  }
+</ng-container>

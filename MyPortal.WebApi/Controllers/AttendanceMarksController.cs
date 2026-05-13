@@ -15,7 +15,7 @@ namespace MyPortal.WebApi.Controllers;
 /// the reception/admin "edit any cell" view. For single-period registers see
 /// <see cref="RegistersController"/>.
 /// </summary>
-public sealed class AttendanceMarksController : BaseApiController<AttendanceMarksController>
+public sealed class AttendanceMarksController : BaseApiController
 {
     private readonly IAttendanceMarkService _attendanceMarkService;
 

@@ -3,7 +3,7 @@
 
 <!-- MOBILE: Drawer with sidebar -->
 <p-drawer
-  [visible]="!isDesktop && sidebarOpen"
+  [visible]="!isDesktop() && sidebarOpen()"
   (onHide)="closeSidebar()"
   position="left"
   [modal]="true"
@@ -11,6 +11,7 @@
 >
 <!-- Headless content -->
 <ng-template #headless>
+  <ng-container *transloco="let t">
   <div class="flex h-full flex-col
                 bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-900)]
                 text-[var(--p-text-color)]">
@@ -18,8 +19,8 @@
     <!-- your custom header -->
     <div class="flex items-center justify-between px-4 py-3
                   border-b border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]">
-      <span class="font-semibold text-lg">MyPortal</span>
-      <button pButton class="p-button-text p-button-sm" icon="pi pi-times" (click)="closeSidebar()"></button>
+      <span class="font-semibold text-lg">{{ t('topbar.appName') }}</span>
+      <button pButton class="p-button-text p-button-sm" icon="fa-solid fa-xmark" (click)="closeSidebar()" [attr.aria-label]="t('common.close')"></button>
     </div>
 
     <!-- scrollable nav -->
@@ -27,6 +28,7 @@
       <mp-sidebar></mp-sidebar>
     </div>
   </div>
+  </ng-container>
 </ng-template>
 </p-drawer>
 
@@ -40,10 +42,10 @@
          border-r border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]
          text-[var(--p-text-color)]
          transition-[width,background-color,border-color,color] duration-200 ease-out"
-    [class.w-72]="!sidebarCollapsed"
-    [class.w-16]="sidebarCollapsed"
+    [class.w-72]="!sidebarCollapsed()"
+    [class.w-16]="sidebarCollapsed()"
   >
-    <mp-sidebar [collapsed]="sidebarCollapsed" (expandRequested)="expandSidebar()"></mp-sidebar>
+    <mp-sidebar [collapsed]="sidebarCollapsed()" (expandRequested)="expandSidebar()"></mp-sidebar>
   </aside>
 
 

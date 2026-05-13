@@ -13,7 +13,7 @@ namespace MyPortal.WebApi.Controllers
     /// Read-only catalogue of permissions defined by the application. Used by the
     /// role-editor UI to render the permission tree when granting/revoking on a role.
     /// </summary>
-    public sealed class PermissionsController : BaseApiController<PermissionsController>
+    public sealed class PermissionsController : BaseApiController
     {
         private readonly IPermissionService _permissionService;
 

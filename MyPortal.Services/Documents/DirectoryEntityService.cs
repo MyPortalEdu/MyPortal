@@ -169,7 +169,8 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
         return await DirectoryService.UpdateAsync(directoryId, model, cancellationToken);
     }
 
-    public async Task DeleteDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken cancellationToken)
+    public async Task DeleteDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken cancellationToken,
+        bool softDelete = true)
     {
         if (await CanEditDirectoryAsync(entityId, directoryId, cancellationToken))
         {
@@ -180,7 +181,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
                 throw new ForbiddenException("You cannot delete the root directory of this entity.");
             }
 
-            await DirectoryService.DeleteAsync(directoryId, cancellationToken);
+            await DirectoryService.DeleteAsync(directoryId, cancellationToken, null, softDelete);
         }
         else
         {

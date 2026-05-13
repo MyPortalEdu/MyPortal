@@ -1,115 +1,87 @@
 using Moq;
 using MyPortal.Common.Enums;
 using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
 using MyPortal.Data.VisibilityScopes;
-using MyPortal.Services.Interfaces.Providers;
 using MyPortal.Services.School.Bulletins;
+using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Tests.ServiceTests;
 
 [TestFixture]
 public class BulletinAccessPolicyTests
 {
-    private static readonly DateTime NowUtc = new(2026, 4, 29, 12, 0, 0, DateTimeKind.Utc);
-    private static readonly Guid AuthorId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    private static readonly Guid AuthorId    = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid OtherUserId = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
+    private Mock<IBulletinRepository> _bulletinRepository = null!;
     private BulletinAccessPolicy _policy = null!;
 
     [SetUp]
     public void Setup()
     {
-        var clock = new Mock<IDateTimeProvider>();
-        clock.SetupGet(c => c.UtcNow).Returns(NowUtc);
-        _policy = new BulletinAccessPolicy(clock.Object);
+        _bulletinRepository = new Mock<IBulletinRepository>(MockBehavior.Strict);
+        _policy = new BulletinAccessPolicy(_bulletinRepository.Object);
     }
 
-    // ─── CanView ─────────────────────────────────────────────────────────────
+    // ─── CanViewAsync ────────────────────────────────────────────────────────
+    // Staff pinners and staff creators short-circuit in-memory. Everyone else
+    // (including non-creator staff with view-only permission) hits the audience
+    // SP via IBulletinRepository.IsVisibleToUserAsync.
 
-    [TestCase(UserType.Student, false, false, false)]
-    [TestCase(UserType.Student, true, true, true)]
-    [TestCase(UserType.Parent, false, false, false)]
-    [TestCase(UserType.Parent, true, true, true)]
-    public void CanView_PrivateBulletin_HiddenFromNonStaff_RegardlessOfPermissions(
-        UserType userType, bool canView, bool canEdit, bool canApprove)
+    [Test]
+    public async Task CanViewAsync_StaffPinner_ReturnsTrue_WithoutDbCall()
     {
-        var bulletin = MakeBulletin(isPrivate: true, isApproved: true, expiresInDays: 7, createdById: AuthorId);
-        var scope = MakeScope(userType, OtherUserId, canView, canEdit, canApprove);
-        Assert.That(_policy.CanView(bulletin, scope), Is.False);
-    }
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: false, canPin: true);
 
-    [TestCase(false, false, null)]
-    [TestCase(false, false, -1)]
-    [TestCase(false, true, null)]
-    [TestCase(true, false, -1)]
-    [TestCase(true, true, 7)]
-    public void CanView_StaffApprover_SeesEverything(bool isPrivate, bool isApproved, int? expiresInDays)
-    {
-        var bulletin = MakeBulletin(isPrivate, isApproved, expiresInDays, AuthorId);
-        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: false, canApprove: true);
-        Assert.That(_policy.CanView(bulletin, scope), Is.True);
-    }
-
-    [TestCase(true, 7, true)]
-    [TestCase(true, null, true)]
-    [TestCase(false, 7, false)]
-    [TestCase(true, -1, false)]
-    public void CanView_NonStaffViewer_RequiresApprovedAndNotExpired(
-        bool isApproved, int? expiresInDays, bool expected)
-    {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved, expiresInDays, AuthorId);
-        var scope = MakeScope(UserType.Student, OtherUserId, canView: true, canEdit: false, canApprove: false);
-        Assert.That(_policy.CanView(bulletin, scope), Is.EqualTo(expected));
-    }
-
-    [TestCase(false, false, -1, true)]
-    [TestCase(false, false, null, true)]
-    [TestCase(true, false, null, false)]
-    public void CanView_NonStaffApprover_BypassesApprovalAndExpiry_ButNotPrivacy(
-        bool isPrivate, bool isApproved, int? expiresInDays, bool expected)
-    {
-        var bulletin = MakeBulletin(isPrivate, isApproved, expiresInDays, AuthorId);
-        var scope = MakeScope(UserType.Student, OtherUserId, canView: false, canEdit: false, canApprove: true);
-        Assert.That(_policy.CanView(bulletin, scope), Is.EqualTo(expected));
+        Assert.That(await _policy.CanViewAsync(bulletin, scope, CancellationToken.None), Is.True);
+        _bulletinRepository.Verify(r => r.IsVisibleToUserAsync(
+            It.IsAny<Guid>(), It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
-    public void CanView_StaffWithNoPermissions_HiddenEvenForApprovedBulletin()
+    public async Task CanViewAsync_StaffCreator_ReturnsTrue_WithoutDbCall()
     {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved: true, expiresInDays: 7, createdById: AuthorId);
-        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: false, canApprove: false);
-        Assert.That(_policy.CanView(bulletin, scope), Is.False);
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(UserType.Staff, AuthorId, canView: false, canEdit: true, canPin: false);
+
+        Assert.That(await _policy.CanViewAsync(bulletin, scope, CancellationToken.None), Is.True);
+        _bulletinRepository.Verify(r => r.IsVisibleToUserAsync(
+            It.IsAny<Guid>(), It.IsAny<BulletinVisibilityScope>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    [TestCase(false, false)]
-    [TestCase(false, true)]
-    public void CanView_StaffEditor_SeesOwnBulletinInAnyState(bool isApproved, bool isPrivate)
+    [TestCase(UserType.Student, true)]
+    [TestCase(UserType.Student, false)]
+    [TestCase(UserType.Parent, true)]
+    [TestCase(UserType.Parent, false)]
+    public async Task CanViewAsync_NonStaff_DelegatesToAudienceSp(UserType userType, bool spResult)
     {
-        var bulletin = MakeBulletin(isPrivate, isApproved, expiresInDays: -10, createdById: AuthorId);
-        var scope = MakeScope(UserType.Staff, AuthorId, canView: false, canEdit: true, canApprove: false);
-        Assert.That(_policy.CanView(bulletin, scope), Is.True);
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(userType, OtherUserId, canView: false, canEdit: false, canPin: false);
+
+        _bulletinRepository.Setup(r => r.IsVisibleToUserAsync(bulletin.Id, scope, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(spResult);
+
+        Assert.That(await _policy.CanViewAsync(bulletin, scope, CancellationToken.None), Is.EqualTo(spResult));
+        _bulletinRepository.Verify(r => r.IsVisibleToUserAsync(
+            bulletin.Id, scope, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [TestCase(true, 7, true)]
-    [TestCase(false, 7, false)]
-    [TestCase(true, -1, false)]
-    public void CanView_StaffEditor_OnOthersBulletin_RequiresApprovedAndNotExpired(
-        bool isApproved, int expiresInDays, bool expected)
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task CanViewAsync_StaffNonCreatorNonPinner_DelegatesToAudienceSp(bool spResult)
     {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved, expiresInDays, AuthorId);
-        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: true, canApprove: false);
-        Assert.That(_policy.CanView(bulletin, scope), Is.EqualTo(expected));
-    }
+        // Non-pinner, non-creator staff have no in-memory short-circuit — the SP is the
+        // gate. (For non-creator staff with no pin permission, the SP allows them via
+        // the AudienceKind = Staff branch when the bulletin targets staff.)
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(UserType.Staff, OtherUserId, canView: true, canEdit: false, canPin: false);
 
-    [TestCase(true, 7, true)]
-    [TestCase(false, 7, false)]
-    [TestCase(true, -1, false)]
-    public void CanView_StaffViewer_RequiresApprovedAndNotExpired(
-        bool isApproved, int expiresInDays, bool expected)
-    {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved, expiresInDays, AuthorId);
-        var scope = MakeScope(UserType.Staff, OtherUserId, canView: true, canEdit: false, canApprove: false);
-        Assert.That(_policy.CanView(bulletin, scope), Is.EqualTo(expected));
+        _bulletinRepository.Setup(r => r.IsVisibleToUserAsync(bulletin.Id, scope, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(spResult);
+
+        Assert.That(await _policy.CanViewAsync(bulletin, scope, CancellationToken.None), Is.EqualTo(spResult));
     }
 
     // ─── CanEdit ─────────────────────────────────────────────────────────────
@@ -118,61 +90,59 @@ public class BulletinAccessPolicyTests
     [TestCase(UserType.Parent)]
     public void CanEdit_NonStaff_AlwaysDenied_EvenWithAllPermissions(UserType userType)
     {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved: true, expiresInDays: 7, createdById: AuthorId);
-        var scope = MakeScope(userType, AuthorId, canView: true, canEdit: true, canApprove: true);
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(userType, AuthorId, canView: true, canEdit: true, canPin: true);
         Assert.That(_policy.CanEdit(bulletin, scope), Is.False);
     }
 
     [Test]
-    public void CanEdit_StaffApprover_CanEditAnyBulletin()
+    public void CanEdit_StaffPinner_CanEditAnyBulletin()
     {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved: false, expiresInDays: -10, createdById: AuthorId);
-        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: false, canApprove: true);
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: false, canPin: true);
         Assert.That(_policy.CanEdit(bulletin, scope), Is.True);
     }
 
     [Test]
     public void CanEdit_StaffEditor_CanEditOwnBulletin()
     {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved: false, expiresInDays: null, createdById: AuthorId);
-        var scope = MakeScope(UserType.Staff, AuthorId, canView: false, canEdit: true, canApprove: false);
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(UserType.Staff, AuthorId, canView: false, canEdit: true, canPin: false);
         Assert.That(_policy.CanEdit(bulletin, scope), Is.True);
     }
 
     [Test]
     public void CanEdit_StaffEditor_CannotEditOthersBulletin()
     {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved: true, expiresInDays: 7, createdById: AuthorId);
-        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: true, canApprove: false);
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(UserType.Staff, OtherUserId, canView: false, canEdit: true, canPin: false);
         Assert.That(_policy.CanEdit(bulletin, scope), Is.False);
     }
 
     [Test]
     public void CanEdit_StaffViewer_CannotEdit()
     {
-        var bulletin = MakeBulletin(isPrivate: false, isApproved: true, expiresInDays: 7, createdById: AuthorId);
-        var scope = MakeScope(UserType.Staff, AuthorId, canView: true, canEdit: false, canApprove: false);
+        var bulletin = MakeBulletin(createdById: AuthorId);
+        var scope = MakeScope(UserType.Staff, AuthorId, canView: true, canEdit: false, canPin: false);
         Assert.That(_policy.CanEdit(bulletin, scope), Is.False);
     }
 
     // ─── helpers ─────────────────────────────────────────────────────────────
 
-    private static Bulletin MakeBulletin(bool isPrivate, bool isApproved, int? expiresInDays, Guid createdById) =>
+    private static Bulletin MakeBulletin(Guid createdById) =>
         new()
         {
             Id = Guid.NewGuid(),
             DirectoryId = Guid.NewGuid(),
+            CategoryId = Guid.NewGuid(),
             Title = "Test",
             Detail = "Test",
-            IsPrivate = isPrivate,
-            IsApproved = isApproved,
-            ExpiresAt = expiresInDays.HasValue ? NowUtc.AddDays(expiresInDays.Value) : null,
             CreatedById = createdById,
             CreatedByIpAddress = "::1",
             LastModifiedById = createdById,
             LastModifiedByIpAddress = "::1"
         };
 
-    private static BulletinVisibilityScope MakeScope(UserType userType, Guid? userId, bool canView, bool canEdit, bool canApprove) =>
-        new(userId, userType, canView, canEdit, canApprove);
+    private static BulletinVisibilityScope MakeScope(UserType userType, Guid? userId, bool canView, bool canEdit, bool canPin) =>
+        new(userId, userType, canView, canEdit, canPin);
 }

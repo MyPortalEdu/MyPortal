@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.Extensions.Logging;
 using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Data.UnitOfWork;
@@ -8,11 +9,14 @@ internal sealed class UnitOfWork : IUnitOfWork
     private IDbConnection? _connection;
     private IDbTransaction? _transaction;
     private bool _completed;
+    private readonly List<Func<CancellationToken, Task>> _postCommit = new();
+    private readonly ILogger<UnitOfWork> _logger;
 
-    public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
+    public UnitOfWork(IDbConnection connection, IDbTransaction transaction, ILogger<UnitOfWork> logger)
     {
         _connection = connection;
         _transaction = transaction;
+        _logger = logger;
     }
 
     public IDbConnection Connection =>
@@ -21,7 +25,17 @@ internal sealed class UnitOfWork : IUnitOfWork
     public IDbTransaction Transaction =>
         _transaction ?? throw new ObjectDisposedException(nameof(UnitOfWork));
 
-    public Task CommitAsync(CancellationToken cancellationToken = default)
+    public void OnCommitted(Func<CancellationToken, Task> action)
+    {
+        if (_completed)
+        {
+            throw new InvalidOperationException(
+                "Cannot register a post-commit action after the unit of work has completed.");
+        }
+        _postCommit.Add(action);
+    }
+
+    public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
         if (_completed)
         {
@@ -30,7 +44,22 @@ internal sealed class UnitOfWork : IUnitOfWork
 
         Transaction.Commit();
         _completed = true;
-        return Task.CompletedTask;
+
+        // Post-commit actions run after the DB transaction is durable. A failure here
+        // can't undo the commit, so we log at warning and keep going — one failing
+        // action mustn't swallow the rest. Callers can still do richer logging from
+        // inside their own action if they need entity-specific context.
+        foreach (var action in _postCommit)
+        {
+            try
+            {
+                await action(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Post-commit action failed; the transaction is still committed.");
+            }
+        }
     }
 
     public Task RollbackAsync(CancellationToken cancellationToken = default)

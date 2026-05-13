@@ -9,20 +9,25 @@ namespace MyPortal.Core.Entities
     {
         public Guid DirectoryId { get; set; }
 
+        public Guid CategoryId { get; set; }
+
         public DateTime? ExpiresAt { get; set; }
 
-        [Required, StringLength(50)] 
+        // Set when pinned, cleared when unpinned. Sortable so "newest pinned first"
+        // is a single ORDER BY in feeds.
+        public DateTime? PinnedAt { get; set; }
+
+        [Required, StringLength(50)]
         public string Title { get; set; } = null!;
 
-        [Required] 
+        [Required]
         public string Detail { get; set; } = null!;
 
-        public bool IsPrivate { get; set; }
+        public bool RequiresAcknowledgement { get; set; }
 
-        public bool IsApproved { get; set; }
-        
         public Directory? Directory { get; set; }
-        
+        public BulletinCategory? Category { get; set; }
+
         // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;

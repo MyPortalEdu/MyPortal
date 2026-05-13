@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { UserType } from './core/enums/user-type';
+import { UserType } from './core/types/user-type';
 import {AuthGuard} from './core/guards/auth-guard';
 
 export const routes: Routes = [
@@ -10,7 +10,7 @@ export const routes: Routes = [
   },
   {
     path: 'portal', canActivate: [AuthGuard],
-    loadComponent: () => import('./core/components/portal-redirect/portal-redirect').then(m => m.PortalRedirectComponent)
+    loadComponent: () => import('./core/components/portal-redirect/portal-redirect').then(m => m.PortalRedirect)
   },
   {
     path: 'staff',

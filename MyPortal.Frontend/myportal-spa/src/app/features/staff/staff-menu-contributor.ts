@@ -1,10 +1,14 @@
 import {MenuItem} from 'primeng/api';
 import {AppMenuContributor, MenuCategory} from '../../layout/menu/menu-types';
-import {Me} from '../../core/interfaces/me';
-import {UserType} from '../../core/enums/user-type';
+import {Me} from '../../core/types/me';
+import {UserType} from '../../core/types/user-type';
 import {Permissions} from '../../core/constants/permissions';
 import {buildMenu} from '../../layout/menu/menu-util';
 
+// Menu contributors return Transloco keys rather than literal text so the
+// sidebar can re-render labels on language change without each contributor
+// having to depend on the i18n service. The keys live in the root locale file
+// (public/i18n/<lang>.json) under `nav.*`.
 export class StaffMenuContributor implements AppMenuContributor {
   supports(user: Me): boolean {
     return user.userType === UserType.Staff;
@@ -14,13 +18,18 @@ export class StaffMenuContributor implements AppMenuContributor {
     const has = (p: string) => user.permissions?.includes(p) ?? false;
     const cats: MenuCategory[] = [
       {
-        label: 'System',
-        icon: 'pi pi-cog',
+        label: 'nav.system',
+        icon: 'fa-gear',
         children: [
           {
-            label: 'Users',
+            label: 'nav.users',
             routerLink: ['/staff/system/users'],
             permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers]
+          },
+          {
+            label: 'nav.bulletinSettings',
+            routerLink: ['/staff/system/bulletin-settings'],
+            permissionsAny: [Permissions.SystemAdmin.BulletinSettings]
           }
         ]
       }

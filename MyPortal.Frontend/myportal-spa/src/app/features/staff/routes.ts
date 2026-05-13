@@ -3,6 +3,7 @@ import { AppShell } from '../../layout/components/app-shell/app-shell.component'
 import { AuthGuard } from '../../core/guards/auth-guard';
 import { Home } from './home/home';
 import { UserListPage } from './system/users/user-list-page/user-list-page';
+import { BulletinSettingsPage } from './system/bulletin-settings/bulletin-settings-page';
 import { Permissions } from '../../core/constants/permissions';
 export const STAFF_ROUTES: Routes = [
   {
@@ -23,6 +24,15 @@ export const STAFF_ROUTES: Routes = [
         data: {
           permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers],
           breadcrumb: 'Users'
+        }
+      },
+      {
+        path: 'system/bulletin-settings',
+        component: BulletinSettingsPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.SystemAdmin.BulletinSettings],
+          breadcrumb: 'Bulletin settings'
         }
       }
     ]

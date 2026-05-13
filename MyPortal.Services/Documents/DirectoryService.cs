@@ -15,15 +15,15 @@ namespace MyPortal.Services.Documents;
 public class DirectoryService : BaseService, IDirectoryService
 {
     private readonly IDirectoryRepository _directoryRepository;
-    private readonly IDocumentRepository _documentRepository;
+    private readonly IDocumentService _documentService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
     public DirectoryService(IAuthorizationService authorizationService, ILogger<DirectoryService> logger,
-        IDirectoryRepository directoryRepository, IDocumentRepository documentRepository,
+        IDirectoryRepository directoryRepository, IDocumentService documentService,
         IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
     {
         _directoryRepository = directoryRepository;
-        _documentRepository = documentRepository;
+        _documentService = documentService;
         _unitOfWorkFactory = unitOfWorkFactory;
     }
 
@@ -45,7 +45,7 @@ public class DirectoryService : BaseService, IDirectoryService
 
         await _directoryRepository.InsertAsync(directory, cancellationToken, uow?.Transaction);
 
-        return await GetDirectoryByIdAsync(id, cancellationToken);
+        return await GetDirectoryByIdAsync(id, cancellationToken, uow);
     }
 
     public async Task<DirectoryDetailsResponse> UpdateAsync(Guid directoryId, DirectoryUpsertRequest model,
@@ -70,36 +70,11 @@ public class DirectoryService : BaseService, IDirectoryService
         return await GetDirectoryByIdAsync(directoryId, cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid directoryId, CancellationToken cancellationToken,
-        IUnitOfWork? uow = null)
-    {
-        RequireStaff("delete");
-
-        var directory = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
-
-        if (directory == null)
-        {
-            throw new NotFoundException("Directory not found.");
-        }
-
-        // Wrap the recursive walk + the root delete in one transaction so a failure halfway
-        // through (cancellation, repo error) rolls back instead of leaving a half-deleted tree.
-        // Note: this path always soft-deletes documents (via the repo default). If hard-delete
-        // with blob cleanup is ever needed here, route through IDocumentService.DeleteAsync
-        // and trigger storage cleanup after this transaction commits.
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async activeUow =>
-        {
-            await DeleteDirectoryContentsAsync(directoryId, cancellationToken, activeUow);
-
-            await _directoryRepository.DeleteAsync(directoryId, cancellationToken,
-                transaction: activeUow.Transaction);
-        }, cancellationToken);
-    }
-
     public async Task<DirectoryDetailsResponse> GetDirectoryByIdAsync(Guid directoryId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        var result = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
+        var result = await _directoryRepository.GetDetailsByIdAsync(directoryId,
+            cancellationToken, uow?.Transaction);
 
         if (result == null)
         {
@@ -123,7 +98,7 @@ public class DirectoryService : BaseService, IDirectoryService
         var directory = await GetDirectoryByIdAsync(directoryId, cancellationToken);
 
         var directories = await _directoryRepository.GetDirectoriesByParentIdAsync(directoryId, cancellationToken);
-        var documents = await _documentRepository.GetDocumentsByDirectoryId(directoryId, cancellationToken);
+        var documents = await _documentService.GetDocumentsByDirectoryId(directoryId, cancellationToken);
 
         var response = new DirectoryContentsResponse(directory, directories, documents);
 
@@ -146,7 +121,7 @@ public class DirectoryService : BaseService, IDirectoryService
 
         var directories = await _directoryRepository.GetDirectoryTreeAsync(directoryId, cancellationToken);
 
-        var documents = await _documentRepository.GetDocumentsInSubtreeAsync(directoryId, cancellationToken,
+        var documents = await _documentService.GetDocumentsInSubtreeAsync(directoryId, cancellationToken,
             includeDeletedDocs);
 
         return new DirectoryContentsResponse(directory, directories, documents);
@@ -157,9 +132,32 @@ public class DirectoryService : BaseService, IDirectoryService
     {
         return await _directoryRepository.IsInSubtreeAsync(rootDirectoryId, candidateDirectoryId, cancellationToken);
     }
+    
+    public async Task DeleteAsync(Guid directoryId, CancellationToken cancellationToken,
+        IUnitOfWork? uow = null, bool softDelete = true)
+    {
+        RequireStaff("delete");
+
+        var directory = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
+
+        if (directory == null)
+        {
+            throw new NotFoundException("Directory not found.");
+        }
+
+        // Wrap the recursive walk + the root delete in one transaction so a failure halfway
+        // through (cancellation, repo error) rolls back instead of leaving a half-deleted tree.
+        await _unitOfWorkFactory.RunInTransactionAsync(uow, async activeUow =>
+        {
+            await DeleteDirectoryContentsAsync(directoryId, cancellationToken, activeUow, softDelete);
+
+            await _directoryRepository.DeleteAsync(directoryId, cancellationToken,
+                softDelete, activeUow.Transaction);
+        }, cancellationToken);
+    }
 
     private async Task DeleteDirectoryContentsAsync(Guid directoryId, CancellationToken cancellationToken,
-        IUnitOfWork uow)
+        IUnitOfWork uow, bool softDelete = true)
     {
         var contents = await GetDirectoryContentsAsync(directoryId, cancellationToken);
 
@@ -167,18 +165,17 @@ public class DirectoryService : BaseService, IDirectoryService
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await DeleteDirectoryContentsAsync(subdirectory.Id, cancellationToken, uow);
+            await DeleteDirectoryContentsAsync(subdirectory.Id, cancellationToken, uow, softDelete);
 
-            await _directoryRepository.DeleteAsync(subdirectory.Id, cancellationToken,
-                transaction: uow.Transaction);
+            await _directoryRepository.DeleteAsync(subdirectory.Id, cancellationToken, softDelete, uow.Transaction);
         }
 
         foreach (var document in contents.Documents)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await _documentRepository.DeleteAsync(document.Id, cancellationToken,
-                transaction: uow.Transaction);
+            await _documentService.DeleteAsync(document.Id, cancellationToken,
+                softDelete, uow);
         }
     }
 

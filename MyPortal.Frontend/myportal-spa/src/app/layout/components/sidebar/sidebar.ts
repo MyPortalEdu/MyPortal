@@ -1,47 +1,59 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input, output, signal } from '@angular/core';
 import { MenuItem } from 'primeng/api';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Tooltip } from 'primeng/tooltip';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { MenuService } from '../../services/menu-service';
 
 @Component({
   selector: 'mp-sidebar',
-  imports: [RouterLink, RouterLinkActive, Tooltip],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink, RouterLinkActive, Tooltip, TranslocoPipe],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
 export class SidebarComponent implements OnInit {
-  @Input() collapsed = false;
-  @Output() expandRequested = new EventEmitter<void>();
+  private readonly menu = inject(MenuService);
+  private readonly router = inject(Router);
 
-  items: MenuItem[] = [];
-  expanded = new Set<string>();
+  readonly collapsed = input(false);
+  readonly expandRequested = output<void>();
 
-  constructor(private menu: MenuService, private router: Router) {}
+  readonly items = signal<MenuItem[]>([]);
+  readonly expanded = signal<ReadonlySet<string>>(new Set());
 
   async ngOnInit(): Promise<void> {
-    this.items = await this.menu.getMenu();
-    this.autoExpandActiveGroup();
+    try {
+      const items = await this.menu.getMenu();
+      this.items.set(items);
+      this.autoExpandActiveGroup();
+    } catch (err) {
+      // Menu fetch ultimately depends on /api/me; a transient failure shouldn't
+      // crash the shell — just log and render an empty nav.
+      console.error('Sidebar: failed to build menu', err);
+      this.items.set([]);
+    }
   }
 
   // In rail mode the group button has no room for sub-items, so clicking it asks
   // the shell to expand the sidebar and pre-opens the group the user clicked.
   toggle(item: MenuItem): void {
-    if (this.collapsed) {
+    const key = item.label!;
+    if (this.collapsed()) {
       this.expandRequested.emit();
-      this.expanded.add(item.label!);
+      this.expanded.update(s => new Set(s).add(key));
       return;
     }
-    const key = item.label!;
-    if (this.expanded.has(key)) {
-      this.expanded.delete(key);
-    } else {
-      this.expanded.add(key);
-    }
+    this.expanded.update(s => {
+      const next = new Set(s);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   }
 
   isExpanded(item: MenuItem): boolean {
-    return this.expanded.has(item.label!);
+    return this.expanded().has(item.label!);
   }
 
   // Items can opt into exact-match via `state.exact` (set by buildMenu for the Home
@@ -66,13 +78,15 @@ export class SidebarComponent implements OnInit {
   // sub-item is visible without the user having to click to expand.
   private autoExpandActiveGroup(): void {
     const url = this.router.url;
-    for (const item of this.items) {
+    const next = new Set<string>();
+    for (const item of this.items()) {
       if (!item.items?.length) continue;
       const hasActiveChild = item.items.some(child => {
         const link = Array.isArray(child.routerLink) ? child.routerLink.join('/') : child.routerLink;
         return typeof link === 'string' && link.length > 1 && url.startsWith(link);
       });
-      if (hasActiveChild) this.expanded.add(item.label!);
+      if (hasActiveChild) next.add(item.label!);
     }
+    if (next.size > 0) this.expanded.set(next);
   }
 }

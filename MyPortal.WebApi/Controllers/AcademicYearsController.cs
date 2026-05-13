@@ -16,7 +16,7 @@ namespace MyPortal.WebApi.Controllers;
 /// attendance periods, school holidays, and timetable cycle. Most curriculum and
 /// attendance data hangs off an academic year.
 /// </summary>
-public sealed class AcademicYearsController : BaseApiController<AcademicYearsController>
+public sealed class AcademicYearsController : BaseApiController
 {
     private readonly IAcademicYearService _academicYearService;
 

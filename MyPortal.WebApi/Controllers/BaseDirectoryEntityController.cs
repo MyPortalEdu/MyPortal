@@ -19,15 +19,26 @@ namespace MyPortal.WebApi.Controllers;
 /// by every concrete subclass (e.g. <see cref="BulletinsController"/>) and act
 /// against the entity identified by <c>entityId</c> in the route.
 /// </summary>
-public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : BaseApiController<TSelf> where TDirectoryEntity : IDirectoryEntity
+public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiController where TDirectoryEntity : IDirectoryEntity
 {
     private readonly IDirectoryEntityService<TDirectoryEntity> _directoryEntityService;
 
-    protected BaseDirectoryEntityController(ProblemDetailsFactory problemFactory, ILogger<TSelf> logger,
+    protected BaseDirectoryEntityController(ProblemDetailsFactory problemFactory, ILogger<BaseDirectoryEntityController<TDirectoryEntity>> logger,
         IDirectoryEntityService<TDirectoryEntity> directoryEntityService) : base(problemFactory, logger)
     {
         _directoryEntityService = directoryEntityService;
     }
+
+    /// <summary>
+    /// Whether DELETE on attachments under this entity should hard-delete
+    /// (true) or soft-delete (false, the default). Subclasses whose
+    /// attachments have no retention requirement and would otherwise pile
+    /// up as soft-deleted rows (bulletins, future news/announcements)
+    /// override this. Subclasses owning person-scoped documents (student,
+    /// staff, contact) should leave it as the default so deletions remain
+    /// recoverable / auditable.
+    /// </summary>
+    protected virtual bool HardDeleteDocuments => false;
 
     /// <summary>Get a single directory by id.</summary>
     /// <param name="entityId">The owning entity (bulletin, etc.).</param>
@@ -107,7 +118,7 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
-        await _directoryEntityService.DeleteDirectoryAsync(entityId, directoryId, CancellationToken);
+        await _directoryEntityService.DeleteDirectoryAsync(entityId, directoryId, CancellationToken, softDelete: !HardDeleteDocuments);
 
         return NoContent();
     }
@@ -167,6 +178,11 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     /// <param name="form">The file plus metadata fields.</param>
     [HttpPost("{entityId:guid}/attachments/documents")]
     [ValidateModel]
+    // No explicit size attributes: we sit on Kestrel's default
+    // MaxRequestBodySize (30,000,000 bytes) as the server-side ceiling, and
+    // the SPA enforces the same cap up-front (MAX_ATTACHMENT_BYTES in
+    // shared/types/document.ts) so oversize files toast immediately instead
+    // of resetting the connection.
     [ProducesResponseType(typeof(DocumentDetailsResponse), 200)]
     public async Task<IActionResult> CreateDocumentAsync([FromRoute] Guid entityId,
         [FromForm] DocumentUpsertForm form)
@@ -245,7 +261,8 @@ public abstract class BaseDirectoryEntityController<TSelf, TDirectoryEntity> : B
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
-        await _directoryEntityService.DeleteDocumentAsync(entityId, documentId, CancellationToken);
+        await _directoryEntityService.DeleteDocumentAsync(entityId, documentId, CancellationToken,
+            softDelete: !HardDeleteDocuments);
 
         return NoContent();
     }

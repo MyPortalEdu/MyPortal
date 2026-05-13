@@ -1,5 +1,5 @@
 import { MenuItem } from 'primeng/api';
-import {Me} from '../../core/interfaces/me';
+import {Me} from '../../core/types/me';
 
 export interface LinkItem {
   label: string;
