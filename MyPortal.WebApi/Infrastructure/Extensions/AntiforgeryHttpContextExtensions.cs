@@ -25,7 +25,7 @@ public static class AntiforgeryHttpContextExtensions
         ctx.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
         {
             HttpOnly = false,            // Angular needs to read this to populate X-XSRF-TOKEN
-            Secure = true,                // localhost is exempt from the HTTPS requirement in modern browsers
+            Secure = true,                // Safe in prod: UseHttpsRedirection() ensures HTTPS responses
             SameSite = SameSiteMode.Lax,
             Path = "/"
         });

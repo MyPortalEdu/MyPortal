@@ -35,7 +35,7 @@ public class BulletinSettingsServiceTests
     // ─── GetAsync ───────────────────────────────────────────────────────────
 
     [Test]
-    public async Task GetAsync_RequiresBulletinSettingsPermission_AndReturnsAllowedGroups()
+    public async Task GetAsync_RequiresViewBulletinsPermission_AndReturnsAllowedGroups()
     {
         var groups = new List<BulletinAllowedGroupResponse>
         {
@@ -44,7 +44,7 @@ public class BulletinSettingsServiceTests
         };
 
         _authorizationService.Setup(a =>
-                a.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, It.IsAny<CancellationToken>()))
+                a.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _repository.Setup(r => r.GetAllowedAudienceGroupsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(groups);
@@ -53,7 +53,7 @@ public class BulletinSettingsServiceTests
 
         Assert.That(result.AllowedAudienceGroups, Is.SameAs(groups));
         _authorizationService.Verify(a =>
-            a.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, It.IsAny<CancellationToken>()),
+            a.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -61,7 +61,7 @@ public class BulletinSettingsServiceTests
     public void GetAsync_PropagatesPermissionDenial()
     {
         _authorizationService.Setup(a =>
-                a.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, It.IsAny<CancellationToken>()))
+                a.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ForbiddenException("missing permission"));
 
         Assert.That(async () => await _service.GetAsync(CancellationToken.None),

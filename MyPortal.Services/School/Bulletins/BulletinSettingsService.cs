@@ -23,7 +23,9 @@ public class BulletinSettingsService : IBulletinSettingsService
 
     public async Task<BulletinSettingsResponse> GetAsync(CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
+        // Authors need to read the allowlist to build the audience picker, so read
+        // access tracks ViewSchoolBulletins. Mutation stays admin-only on UpdateAsync.
+        await _authorizationService.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, cancellationToken);
 
         var groups = await _repository.GetAllowedAudienceGroupsAsync(cancellationToken);
         return new BulletinSettingsResponse { AllowedAudienceGroups = groups };
@@ -31,9 +33,6 @@ public class BulletinSettingsService : IBulletinSettingsService
 
     public async Task UpdateAsync(BulletinSettingsUpdateRequest model, CancellationToken cancellationToken)
     {
-        // Pin permission gates settings — pinners are the admins, and bulletin settings
-        // are an admin-tier concern. If/when a dedicated ManageBulletinSettings perm
-        // exists, swap it in here.
         await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
         await _repository.ReplaceAllowedAudienceGroupsAsync(model.AllowedAudienceGroupIds, cancellationToken);

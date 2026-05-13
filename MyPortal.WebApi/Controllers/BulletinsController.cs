@@ -21,7 +21,7 @@ namespace MyPortal.WebApi.Controllers;
 /// or specific student groups via the audience model. Pinning is admin-only;
 /// authorship gives edit/delete on your own bulletins. Inherits attachment
 /// endpoints (directories/documents) from
-/// <see cref="BaseDirectoryEntityController{TSelf, TDirectoryEntity}"/>.
+/// <see cref="BaseDirectoryEntityController{TDirectoryEntity}"/>.
 /// </summary>
 public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin>
 {
