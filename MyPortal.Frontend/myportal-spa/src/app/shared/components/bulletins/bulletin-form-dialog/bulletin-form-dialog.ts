@@ -21,7 +21,7 @@ import { DatePicker } from 'primeng/datepicker';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
-import { NotificationService } from '../../../services/notification.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
 import { Permissions } from '../../../../core/constants/permissions';
 import { BulletinAttachments } from '../bulletin-attachments/bulletin-attachments';

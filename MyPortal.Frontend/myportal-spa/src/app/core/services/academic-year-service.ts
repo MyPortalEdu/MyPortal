@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay } from 'rxjs';
-import { AcademicYearSummary } from '../interfaces/academic-year-summary';
+import { AcademicYearSummary } from '../types/academic-year-summary';
 
 @Injectable({ providedIn: 'root' })
 export class AcademicYearService {

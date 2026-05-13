@@ -13,8 +13,8 @@ import {
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinAttachmentsDataService } from '../../../services/bulletin-attachments-data.service';
-import { ConfirmationDialog } from '../../../services/confirmation.service';
-import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import {
   DocumentDetailsResponse,
   MAX_ATTACHMENT_BYTES,

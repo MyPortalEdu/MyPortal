@@ -4,10 +4,10 @@ import { TranslocoService } from '@jsverse/transloco';
 
 import { BulletinFormDialog } from './bulletin-form-dialog';
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
-import { NotificationService } from '../../../services/notification.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
-import { UserType } from '../../../../core/enums/user-type';
-import { Me } from '../../../../core/interfaces/me';
+import { UserType } from '../../../../core/types/user-type';
+import { Me } from '../../../../core/types/me';
 import {
   BulletinAllowedGroupResponse,
   BulletinAudienceKind,

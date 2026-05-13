@@ -4,7 +4,7 @@ import { TranslocoService } from '@jsverse/transloco';
 
 import { BulletinsFeed } from './bulletins-feed';
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
-import { NotificationService } from '../../../services/notification.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import {
   BulletinDetailsResponse,
   BulletinSummaryResponse,

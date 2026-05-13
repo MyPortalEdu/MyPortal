@@ -1,7 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
+import { SchoolService } from './core/services/school-service';
 
 @Component({
   selector: 'mp-root',
@@ -10,5 +13,14 @@ import { Toast } from 'primeng/toast';
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('myportal-spa');
+  private readonly titleService = inject(Title);
+  private readonly schools = inject(SchoolService);
+
+  constructor() {
+    this.schools.getLocalName()
+      .pipe(takeUntilDestroyed())
+      .subscribe(name => {
+        this.titleService.setTitle(name ? `MyPortal - ${name}` : 'MyPortal');
+      });
+  }
 }

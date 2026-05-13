@@ -4,8 +4,8 @@ import { TranslocoService } from '@jsverse/transloco';
 
 import { BulletinSettingsPage } from './bulletin-settings-page';
 import { BulletinsDataService } from '../../../../shared/services/bulletins-data.service';
-import { ConfirmationDialog } from '../../../../shared/services/confirmation.service';
-import { NotificationService } from '../../../../shared/services/notification.service';
+import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { AcademicYearService } from '../../../../core/services/academic-year-service';
 import {
   BulletinAllowedGroupResponse,

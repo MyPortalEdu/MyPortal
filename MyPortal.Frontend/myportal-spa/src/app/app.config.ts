@@ -77,7 +77,7 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     // Same root-scoping rationale as MessageService: <p-confirmDialog> lives
     // in the root template, so callers anywhere in the tree can invoke our
-    // ConfirmationDialog wrapper (shared/services/confirmation.service.ts).
+    // ConfirmationDialog wrapper (core/services/confirmation.service.ts).
     ConfirmationService,
     // Transloco. `en` is the only locale today; the config is structured so
     // adding `cy` (or anything else) is a one-line change to availableLangs

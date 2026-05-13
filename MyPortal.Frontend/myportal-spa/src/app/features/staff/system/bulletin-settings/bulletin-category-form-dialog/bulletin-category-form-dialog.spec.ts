@@ -8,7 +8,7 @@ import {
   CATEGORY_ICONS,
 } from './bulletin-category-form-dialog';
 import { BulletinsDataService } from '../../../../../shared/services/bulletins-data.service';
-import { NotificationService } from '../../../../../shared/services/notification.service';
+import { NotificationService } from '../../../../../core/services/notification.service';
 import { BulletinCategoryResponse } from '../../../../../shared/types/bulletin';
 
 function makeCategory(overrides: Partial<BulletinCategoryResponse> = {}): BulletinCategoryResponse {

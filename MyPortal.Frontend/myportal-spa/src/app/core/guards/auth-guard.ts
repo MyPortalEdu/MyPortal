@@ -11,7 +11,7 @@ import {
   UrlTree
 } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { UserType } from '../enums/user-type';
+import { UserType } from '../types/user-type';
 import { MeService } from '../services/me-service';
 
 type AuthData = {

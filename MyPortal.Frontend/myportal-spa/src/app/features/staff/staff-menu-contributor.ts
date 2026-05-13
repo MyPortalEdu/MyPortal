@@ -1,7 +1,7 @@
 import {MenuItem} from 'primeng/api';
 import {AppMenuContributor, MenuCategory} from '../../layout/menu/menu-types';
-import {Me} from '../../core/interfaces/me';
-import {UserType} from '../../core/enums/user-type';
+import {Me} from '../../core/types/me';
+import {UserType} from '../../core/types/user-type';
 import {Permissions} from '../../core/constants/permissions';
 import {buildMenu} from '../../layout/menu/menu-util';
 

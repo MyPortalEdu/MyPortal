@@ -11,7 +11,7 @@ import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@js
 import { forkJoin } from 'rxjs';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
-import { NotificationService } from '../../../services/notification.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import {
   BulletinCategoryResponse,
   BulletinDetailsResponse,

@@ -94,8 +94,8 @@
                 <button
                   type="button"
                   class="theme-btn"
-                  [class.active]="theme() === 'light'"
-                  (click)="setTheme('light')"
+                  [class.active]="themeService.theme() === 'light'"
+                  (click)="themeService.setTheme('light')"
                   [attr.aria-label]="t('userMenu.themeLight')"
                 >
                   <i class="fa-solid fa-sun"></i>
@@ -103,8 +103,8 @@
                 <button
                   type="button"
                   class="theme-btn"
-                  [class.active]="theme() === 'dark'"
-                  (click)="setTheme('dark')"
+                  [class.active]="themeService.theme() === 'dark'"
+                  (click)="themeService.setTheme('dark')"
                   [attr.aria-label]="t('userMenu.themeDark')"
                 >
                   <i class="fa-solid fa-moon"></i>
@@ -112,8 +112,8 @@
                 <button
                   type="button"
                   class="theme-btn"
-                  [class.active]="theme() === 'system'"
-                  (click)="setTheme('system')"
+                  [class.active]="themeService.theme() === 'system'"
+                  (click)="themeService.setTheme('system')"
                   [attr.aria-label]="t('userMenu.themeSystem')"
                 >
                   <i class="fa-solid fa-desktop"></i>

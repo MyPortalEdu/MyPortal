@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/cor
 import { Router } from '@angular/router';
 import { MeService } from '../../services/me-service';
 import { firstValueFrom } from 'rxjs';
-import { UserType } from '../../enums/user-type';
+import { UserType } from '../../types/user-type';
 
 import { TranslocoPipe } from '@jsverse/transloco';
 

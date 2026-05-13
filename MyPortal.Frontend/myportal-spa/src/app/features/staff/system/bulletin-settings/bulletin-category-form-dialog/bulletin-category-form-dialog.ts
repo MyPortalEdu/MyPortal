@@ -18,7 +18,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../../../shared/services/bulletins-data.service';
-import { NotificationService } from '../../../../../shared/services/notification.service';
+import { NotificationService } from '../../../../../core/services/notification.service';
 import {
   BulletinCategoryResponse,
   BulletinCategoryUpsertRequest,

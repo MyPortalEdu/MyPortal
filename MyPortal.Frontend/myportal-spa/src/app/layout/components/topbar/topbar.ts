@@ -1,23 +1,22 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, output } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
 import { Observable, catchError, combineLatest, map, of } from 'rxjs';
 import { MeService } from '../../../core/services/me-service';
 import { SchoolService } from '../../../core/services/school-service';
 import { AcademicYearService } from '../../../core/services/academic-year-service';
+import { ThemeService } from '../../../core/services/theme-service';
 import { AsyncPipe } from '@angular/common';
 import { ButtonDirective, ButtonIcon } from 'primeng/button';
 import { RouterLink } from '@angular/router';
 import { Popover } from 'primeng/popover';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { UserType } from '../../../core/enums/user-type';
-import { Me } from '../../../core/interfaces/me';
+import { UserType } from '../../../core/types/user-type';
+import { Me } from '../../../core/types/me';
 
 interface SiteLabel {
   school: string | null;
   year: string | null;
 }
-
-type Theme = 'light' | 'dark' | 'system';
 
 @Component({
   selector: 'mp-topbar',
@@ -31,12 +30,12 @@ export class Topbar implements OnInit {
   private readonly schools = inject(SchoolService);
   private readonly academicYears = inject(AcademicYearService);
   private readonly transloco = inject(TranslocoService);
+  protected readonly themeService = inject(ThemeService);
 
   readonly menuToggle = output<void>();
 
   me$!: Observable<Me>;
   siteLabel$!: Observable<SiteLabel>;
-  readonly theme = signal<Theme>('system');
 
   ngOnInit(): void {
     this.me$ = this.me.me();
@@ -49,29 +48,6 @@ export class Topbar implements OnInit {
     ]).pipe(
       map(([school, year]) => ({ school, year: year?.name ?? null })),
     );
-
-    this.theme.set((localStorage.getItem('mp:theme') as Theme | null) ?? 'system');
-    this.applyTheme();
-
-    // Re-evaluate the resolved theme when the OS preference changes — only matters
-    // when the user has picked 'system'. Modern browsers fire `change` on the media
-    // query when the OS toggles between light/dark.
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (this.theme() === 'system') this.applyTheme();
-    });
-  }
-
-  setTheme(next: Theme): void {
-    this.theme.set(next);
-    localStorage.setItem('mp:theme', next);
-    this.applyTheme();
-  }
-
-  private applyTheme(): void {
-    const dark =
-      this.theme() === 'dark' ||
-      (this.theme() === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.classList.toggle('mp-dark', dark);
   }
 
   initials(displayName: string | undefined): string {

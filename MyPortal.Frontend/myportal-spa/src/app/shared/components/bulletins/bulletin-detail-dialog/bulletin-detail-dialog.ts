@@ -15,13 +15,13 @@ import { Button } from 'primeng/button';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
-import { ConfirmationDialog } from '../../../services/confirmation.service';
-import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
 import { Permissions } from '../../../../core/constants/permissions';
 import { BulletinAttachments } from '../bulletin-attachments/bulletin-attachments';
-import { UserType } from '../../../../core/enums/user-type';
-import { Me } from '../../../../core/interfaces/me';
+import { UserType } from '../../../../core/types/user-type';
+import { Me } from '../../../../core/types/me';
 import {
   BulletinAudienceKind,
   BulletinAudienceResponse,

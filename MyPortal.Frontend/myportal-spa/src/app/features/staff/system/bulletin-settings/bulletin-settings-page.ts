@@ -13,8 +13,8 @@ import { PageHeader } from '../../../../shared/components/page-header/page-heade
 import { StudentGroupPicker } from '../../../../shared/components/pickers/student-group-picker/student-group-picker';
 import { BulletinCategoryFormDialog } from './bulletin-category-form-dialog/bulletin-category-form-dialog';
 import { BulletinsDataService } from '../../../../shared/services/bulletins-data.service';
-import { ConfirmationDialog } from '../../../../shared/services/confirmation.service';
-import { NotificationService } from '../../../../shared/services/notification.service';
+import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { AcademicYearService } from '../../../../core/services/academic-year-service';
 import {
   BulletinAllowedGroupResponse,
