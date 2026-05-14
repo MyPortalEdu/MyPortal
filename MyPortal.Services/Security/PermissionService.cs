@@ -50,7 +50,7 @@ public class PermissionService : IPermissionService
 
         var roles = await _user.GetRolesAsync(ct);
         var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
-        return perms.All(x => permissions.Contains(x, StringComparer.OrdinalIgnoreCase));
+        return permissions.All(x => perms.Contains(x, StringComparer.OrdinalIgnoreCase));
     }
 
     private Task<bool> IsCurrentUserEnabledAsync(CancellationToken ct)
