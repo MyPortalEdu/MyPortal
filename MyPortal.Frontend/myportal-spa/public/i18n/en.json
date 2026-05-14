@@ -84,7 +84,12 @@
     "home": {
       "title": "Home",
       "timetable": "Timetable",
-      "timetablePlaceholder": "This is a placeholder for the timetable."
+      "timetablePlaceholder": "This is a placeholder for the timetable.",
+      "schoolSetup": {
+        "title": "Enter your school details",
+        "body": "Set up your school's name, identifiers, and head teacher to finish setup.",
+        "action": "Open school details"
+      }
     },
     "users": {
       "title": "Users"

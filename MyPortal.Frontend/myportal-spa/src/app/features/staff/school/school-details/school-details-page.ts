@@ -24,6 +24,7 @@ import { LocalAuthorityPicker } from '../../../../shared/components/pickers/loca
 import { StaffMemberPicker } from '../../../../shared/components/pickers/staff-member-picker/staff-member-picker';
 import { LookupsDataService } from '../../../../shared/services/lookups-data.service';
 import { SchoolsDataService } from '../../../../shared/services/schools-data.service';
+import { SchoolService } from '../../../../core/services/school-service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { MeService } from '../../../../core/services/me-service';
 import { LookupResponse } from '../../../../shared/types/lookup';
@@ -80,6 +81,7 @@ type FormSnapshot = {
 })
 export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly schools = inject(SchoolsDataService);
+  private readonly schoolNameCache = inject(SchoolService);
   private readonly lookups = inject(LookupsDataService);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
@@ -236,6 +238,9 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
 
     try {
       await firstValueFrom(this.schools.saveLocalDetails(payload));
+      // Bust the shared local-school-name cache so the topbar title and the
+      // home page's setup banner reflect the new state without a page reload.
+      this.schoolNameCache.clearCache();
       this.notify.success(this.transloco.translate('school-details.savedToast'));
       this.refresh();
     } catch (err) {
