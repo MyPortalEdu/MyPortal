@@ -7,7 +7,9 @@
   </mp-page-header>
 
   @if (loading()) {
-    <div class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</div>
+    <div class="flex items-center justify-center py-16" aria-busy="true">
+      <p-progressSpinner [ariaLabel]="'common.loading' | transloco" strokeWidth="3" styleClass="!w-12 !h-12"></p-progressSpinner>
+    </div>
   } @else {
     @if (!canEdit()) {
       <div class="mb-3 px-3 py-2 rounded-md bg-surface-100 text-sm text-muted-color">

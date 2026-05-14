@@ -108,7 +108,9 @@
       </div>
     </div>
   } @else if (loading()) {
-    <div class="p-4 text-sm text-muted-color">{{ t('detail.loading') }}</div>
+    <div class="flex items-center justify-center p-12" aria-busy="true">
+      <p-progressSpinner [ariaLabel]="t('detail.loading')" strokeWidth="3" styleClass="!w-10 !h-10"></p-progressSpinner>
+    </div>
   }
 </p-dialog>
 </ng-container>

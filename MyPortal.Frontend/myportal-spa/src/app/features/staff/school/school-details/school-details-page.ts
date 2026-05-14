@@ -12,6 +12,7 @@ import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
+import { ProgressSpinner } from 'primeng/progressspinner';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
@@ -67,6 +68,7 @@ type FormSnapshot = {
     InputText,
     InputNumber,
     Select,
+    ProgressSpinner,
     PageHeader,
     LocalAuthorityPicker,
     StaffMemberPicker,
