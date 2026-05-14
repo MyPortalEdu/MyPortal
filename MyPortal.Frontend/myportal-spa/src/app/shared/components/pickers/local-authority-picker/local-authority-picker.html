@@ -1,0 +1,74 @@
+<ng-container *transloco="let t">
+  <p-button
+    [label]="buttonLabel() ?? t('common.localAuthorityPicker.pick')"
+    icon="fa-solid fa-magnifying-glass"
+    severity="secondary"
+    (click)="open($event)">
+  </p-button>
+
+  <!-- See StudentGroupPicker for the dismissable=false reasoning: lets the
+       column-filter menus (which render in body-attached overlays) coexist
+       with the popover without each click closing the picker. -->
+  <p-popover #op [style]="{ width: 'min(40rem, 92vw)' }" [dismissable]="false">
+    <div class="flex flex-col gap-3 p-2">
+      <div class="flex items-center justify-end">
+        <button type="button" class="mp-icon-button" (click)="close()" [attr.aria-label]="'common.close' | transloco">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p-table
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="25"
+        [totalRecords]="totalRecords()"
+        [loading]="loading()"
+        [value]="rows()"
+        (onLazyLoad)="load($event)"
+        [filterDelay]="300"
+        dataKey="id"
+        selectionMode="single"
+        (onRowSelect)="onRowSelect($any($event).data)"
+        [scrollable]="true"
+        scrollHeight="20rem">
+
+        <ng-template pTemplate="caption">
+          <span class="text-sm font-semibold">{{ t('common.localAuthorityPicker.title') }}</span>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="leaCode" style="width: 8rem">
+              {{ t('common.localAuthorityPicker.leaCode') }}
+              <p-sortIcon field="leaCode"></p-sortIcon>
+              <span (click)="$event.stopPropagation()">
+                <p-columnFilter type="numeric" field="leaCode" display="menu"></p-columnFilter>
+              </span>
+            </th>
+            <th pSortableColumn="name">
+              {{ t('common.localAuthorityPicker.name') }}
+              <p-sortIcon field="name"></p-sortIcon>
+              <span (click)="$event.stopPropagation()">
+                <p-columnFilter type="text" field="name" display="menu"></p-columnFilter>
+              </span>
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-row>
+          <tr [pSelectableRow]="row">
+            <td class="font-mono text-xs">{{ row.leaCode }}</td>
+            <td>{{ row.name }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="2" class="text-center text-sm text-muted-color py-4">
+              {{ t('common.localAuthorityPicker.empty') }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-popover>
+</ng-container>

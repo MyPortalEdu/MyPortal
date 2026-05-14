@@ -5,7 +5,7 @@
   [draggable]="false"
   [resizable]="false"
   [dismissableMask]="false"
-  [closeOnEscape]="true"
+  [closeOnEscape]="!isDirty()"
   [style]="{ width: 'min(44rem, 94vw)' }"
   styleClass="bulletin-form-dialog mp-flush-dialog"
   (onHide)="onHide()"
@@ -30,7 +30,12 @@
         pInputText
         [placeholder]="t('form.titlePlaceholder')"
         [ngModel]="title()"
-        (ngModelChange)="title.set($event)" />
+        (ngModelChange)="title.set($event)"
+        (blur)="markTouched('title')"
+        required
+        name="title"
+        #titleRef="ngModel"
+        [invalid]="wasTouched('title') && titleRef.invalid" />
     </div>
 
     <!-- Category + Pin -->
@@ -45,7 +50,12 @@
           appendTo="body"
           [ngModel]="categoryId()"
           (ngModelChange)="categoryId.set($event)"
-          [style]="{ width: '100%' }">
+          (onBlur)="markTouched('categoryId')"
+          [style]="{ width: '100%' }"
+          required
+          name="categoryId"
+          #categoryRef="ngModel"
+          [invalid]="wasTouched('categoryId') && categoryRef.invalid">
         </p-select>
       </div>
 
@@ -112,7 +122,12 @@
         rows="5"
         [placeholder]="t('form.bodyPlaceholder')"
         [ngModel]="detail()"
-        (ngModelChange)="detail.set($event)">
+        (ngModelChange)="detail.set($event)"
+        (blur)="markTouched('detail')"
+        required
+        name="detail"
+        #detailRef="ngModel"
+        [invalid]="wasTouched('detail') && detailRef.invalid">
       </textarea>
     </div>
 
@@ -163,7 +178,7 @@
         styleClass="w-full sm:w-auto"
         [label]="isEdit() ? t('form.saveChanges') : t('form.publish')"
         [icon]="isEdit() ? 'fa-solid fa-check' : 'fa-solid fa-paper-plane'"
-        [disabled]="!isValid()"
+        [disabled]="!isValid() || !isDirty()"
         [loading]="submitting()"
         (click)="publish()">
       </p-button>

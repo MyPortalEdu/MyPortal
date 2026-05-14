@@ -3,6 +3,7 @@
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
+    "discard": "Discard",
     "edit": "Edit",
     "close": "Close",
     "confirm": "Confirm",
@@ -10,8 +11,10 @@
     "loading": "Loading…",
     "redirecting": "Redirecting…",
     "new": "New",
+    "discardChanges": "Discard changes?",
+    "discardConfirm": "You have unsaved changes. Discard them?",
     "studentGroupPicker": {
-      "title": "Pick a student group",
+      "title": "Pick a Student Group",
       "add": "Add student group…",
       "code": "Code",
       "name": "Name",
@@ -28,6 +31,21 @@
         "CurriculumGroup": "Curriculum group",
         "Other": "Other"
       }
+    },
+    "localAuthorityPicker": {
+      "title": "Pick a Local Authority",
+      "pick": "Pick local authority…",
+      "leaCode": "LEA code",
+      "name": "Name",
+      "empty": "No local authorities found."
+    },
+    "staffMemberPicker": {
+      "title": "Pick a Staff Member",
+      "pick": "Pick staff member…",
+      "code": "Code",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "empty": "No staff members found."
     }
   },
   "topbar": {
@@ -58,7 +76,9 @@
   "nav": {
     "system": "System",
     "users": "Users",
-    "bulletinSettings": "Bulletin settings"
+    "bulletinSettings": "Bulletin Settings",
+    "school": "School",
+    "schoolDetails": "School Details"
   },
   "pages": {
     "home": {

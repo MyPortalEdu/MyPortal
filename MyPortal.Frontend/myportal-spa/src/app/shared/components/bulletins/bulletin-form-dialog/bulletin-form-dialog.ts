@@ -22,6 +22,7 @@ import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoSc
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { MeService } from '../../../../core/services/me-service';
 import { Permissions } from '../../../../core/constants/permissions';
 import { BulletinAttachments } from '../bulletin-attachments/bulletin-attachments';
@@ -43,6 +44,20 @@ interface AudienceChoice {
   studentGroupId?: string;
 }
 
+type FormSnapshot = {
+  title: string;
+  detail: string;
+  categoryId: string | null;
+  isPinned: boolean;
+  requiresAck: boolean;
+  // ISO string rather than Date so JSON.stringify is deterministic across
+  // re-renders without relying on Date instance identity.
+  expiresAt: string | null;
+  // Sets aren't JSON-stringifiable (serialise as {}); flatten to a sorted
+  // array so the snapshot compare is stable regardless of insertion order.
+  audienceKeys: string[];
+};
+
 @Component({
   selector: 'mp-bulletin-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,6 +70,7 @@ export class BulletinFormDialog {
   private readonly meService = inject(MeService);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
+  private readonly confirmDialog = inject(ConfirmationDialog);
 
   readonly visible = input.required<boolean>();
 
@@ -93,6 +109,23 @@ export class BulletinFormDialog {
   // round-trip when the feed has already loaded them.
   readonly categories = signal<BulletinCategoryResponse[]>([]);
   readonly allowedGroups = signal<BulletinAllowedGroupResponse[]>([]);
+
+  // Manually track which fields the user has blurred. We can't rely on
+  // ngModel's touched state for invalid styling because some PrimeNG inputs
+  // (e.g. p-select) call onModelChange inside writeValue, which Angular
+  // interprets as a user change and flips ng-dirty on mount — making the
+  // field look invalid before the user has touched it. Reset on each dialog
+  // open via reset().
+  readonly touchedFields = signal<ReadonlySet<string>>(new Set());
+
+  markTouched(field: string): void {
+    if (this.touchedFields().has(field)) return;
+    this.touchedFields.update(s => new Set(s).add(field));
+  }
+
+  wasTouched(field: string): boolean {
+    return this.touchedFields().has(field);
+  }
 
   readonly isEdit = computed(() => this.existing() !== null);
 
@@ -146,6 +179,24 @@ export class BulletinFormDialog {
     this.selectedAudienceKeys().size > 0,
   );
 
+  private readonly snapshot = signal<FormSnapshot | null>(null);
+
+  private readonly currentForm = computed<FormSnapshot>(() => ({
+    title: this.title(),
+    detail: this.detail(),
+    categoryId: this.categoryId(),
+    isPinned: this.isPinned(),
+    requiresAck: this.requiresAck(),
+    expiresAt: this.expiresAt()?.toISOString() ?? null,
+    audienceKeys: [...this.selectedAudienceKeys()].sort(),
+  }));
+
+  readonly isDirty = computed(() => {
+    const s = this.snapshot();
+    if (!s) return false;
+    return JSON.stringify(s) !== JSON.stringify(this.currentForm());
+  });
+
   constructor() {
     // Watch the open transition. Reads of `existing()` happen inside `untracked`
     // so an edit-mode parent that updates `existing` while the dialog is open
@@ -180,13 +231,29 @@ export class BulletinFormDialog {
     return choice.fallbackLabel ?? this.transloco.translate(`bulletins.audience.${choice.labelKey}`);
   }
 
-  onCancel(): void {
-    this.closed.emit();
+  async onCancel(): Promise<void> {
+    await this.requestClose();
   }
 
   onHide(): void {
-    // p-dialog emits onHide on backdrop / esc / X. Bubble up so the parent's
-    // `visible` input goes false.
+    // PrimeNG fires onHide both when the user triggers a close (Escape) and
+    // when the parent flips `visible` to false in response to our own
+    // `closed`/`saved` events. We can't re-prompt here without re-asking the
+    // user who just clicked Discard — and Escape is gated by closeOnEscape so
+    // it only fires on a clean form anyway. Just keep the parent in sync.
+    this.closed.emit();
+  }
+
+  private async requestClose(): Promise<void> {
+    if (this.isDirty()) {
+      const ok = await this.confirmDialog.confirm({
+        header: this.transloco.translate('common.discardChanges'),
+        message: this.transloco.translate('common.discardConfirm'),
+        acceptLabel: this.transloco.translate('common.discard'),
+        acceptSeverity: 'danger',
+      });
+      if (!ok) return;
+    }
     this.closed.emit();
   }
 
@@ -219,6 +286,9 @@ export class BulletinFormDialog {
     const t = (key: string) => this.transloco.translate(`bulletins.form.${key}`);
     const finishOk = () => {
       this.submitting.set(false);
+      // Re-baseline before emitting saved so the parent-driven close doesn't
+      // see isDirty=true and prompt the user.
+      this.snapshot.set(this.currentForm());
       this.notify.success(t(isEdit ? 'updatedToast' : 'publishedToast'));
       this.saved.emit();
     };
@@ -269,19 +339,23 @@ export class BulletinFormDialog {
       this.requiresAck.set(existing.requiresAcknowledgement);
       this.expiresAt.set(existing.expiresAt ? new Date(existing.expiresAt) : null);
       this.selectedAudienceKeys.set(audienceKeysFor(existing.audiences));
-      return;
+    } else {
+      // Create mode.
+      this.title.set('');
+      this.detail.set('');
+      this.isPinned.set(false);
+      this.requiresAck.set(false);
+      this.expiresAt.set(null);
+      // Default audience: All staff. Matches the mockup's pre-selected chip.
+      this.selectedAudienceKeys.set(new Set(['all-staff']));
+      // categoryId default is set after the categories call resolves (see
+      // loadDependencies); setting it here from a possibly-empty cache would
+      // leave the Select blank. loadDependencies re-baselines the snapshot
+      // once the default lands.
+      this.categoryId.set(null);
     }
-    // Create mode.
-    this.title.set('');
-    this.detail.set('');
-    this.isPinned.set(false);
-    this.requiresAck.set(false);
-    this.expiresAt.set(null);
-    // Default audience: All staff. Matches the mockup's pre-selected chip.
-    this.selectedAudienceKeys.set(new Set(['all-staff']));
-    // categoryId default is set after the categories call resolves (see loadDependencies);
-    // setting it here from a possibly-empty cache would leave the Select blank.
-    this.categoryId.set(null);
+    this.touchedFields.set(new Set());
+    this.snapshot.set(this.currentForm());
   }
 
   private loadDependencies(): void {
@@ -299,6 +373,10 @@ export class BulletinFormDialog {
         this.categories.set(cats ?? []);
         if (cats?.length && this.categoryId() === null) {
           this.categoryId.set(cats[0].id);
+          // Re-baseline now that the async default has landed; otherwise the
+          // snapshot taken in reset() would see categoryId=null and the form
+          // would read as dirty before the user touched anything.
+          this.snapshot.set(this.currentForm());
         }
       },
       error: () => this.categories.set([]),

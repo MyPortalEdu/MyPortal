@@ -41,11 +41,13 @@ public class SchoolsController : BaseApiController
     [HttpGet("local/details")]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.ViewAgencies)]
+    [ProducesResponseType(typeof(SchoolDetailsResponse), 200)]
+    [ProducesResponseType(204)]
     public async Task<IActionResult> GetLocalSchool()
     {
         var school = await _schoolService.GetLocalSchoolDetailsAsync(CancellationToken);
-        
-        return school != null ? Ok(school.Name) : NoContent();
+
+        return school != null ? Ok(school) : NoContent();
     }
 
     [HttpPost("local/details")]

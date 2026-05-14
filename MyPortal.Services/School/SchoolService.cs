@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Constants;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models.Agencies;
 using MyPortal.Contracts.Models.School;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
@@ -67,7 +69,7 @@ public class SchoolService : BaseService, ISchoolService
         {
             var school = await GetEntityByIdAsync(id, cancellationToken);
 
-            await _agencyService.UpdateAsync(school.AgencyId, model, cancellationToken, ownedUow);
+            await _agencyService.UpdateAsync(school.AgencyId, BuildAgencyRequest(model), cancellationToken, ownedUow);
 
             school.EstablishmentNumber = model.EstablishmentNumber;
             school.Urn = model.Urn;
@@ -128,7 +130,7 @@ public class SchoolService : BaseService, ISchoolService
     {
         return await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
-            var agencyId = await _agencyService.CreateAsync(model, cancellationToken, ownedUow);
+            var agencyId = await _agencyService.CreateAsync(BuildAgencyRequest(model), cancellationToken, ownedUow);
 
             var schoolId = SqlConvention.SequentialGuid();
 
@@ -153,6 +155,17 @@ public class SchoolService : BaseService, ISchoolService
             return schoolId;
         }, cancellationToken);
     }
+
+    // Schools are always backed by an agency of type "Educational Provider" — the
+    // SPA doesn't pick a type, so the server fixes it here rather than trusting
+    // an inbound AgencyTypeId.
+    private static AgencyUpsertRequest BuildAgencyRequest(SchoolUpsertRequest model) => new()
+    {
+        AgencyTypeId = AgencyTypes.EducationalProvider,
+        Name = model.Name,
+        Website = model.Website,
+        ExpectedVersion = model.ExpectedVersion
+    };
 
     private async Task<Core.Entities.School> GetEntityByIdAsync(Guid id, CancellationToken cancellationToken)
     {

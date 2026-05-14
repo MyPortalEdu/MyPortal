@@ -9,6 +9,7 @@ import {
 } from './bulletin-category-form-dialog';
 import { BulletinsDataService } from '../../../../../shared/services/bulletins-data.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
 import { BulletinCategoryResponse } from '../../../../../shared/types/bulletin';
 
 function makeCategory(overrides: Partial<BulletinCategoryResponse> = {}): BulletinCategoryResponse {
@@ -30,6 +31,7 @@ describe('BulletinCategoryFormDialog', () => {
   let component: BulletinCategoryFormDialog;
   let data: jasmine.SpyObj<BulletinsDataService>;
   let notify: jasmine.SpyObj<NotificationService>;
+  let confirmDialog: jasmine.SpyObj<ConfirmationDialog>;
 
   beforeEach(async () => {
     data = jasmine.createSpyObj<BulletinsDataService>('BulletinsDataService',
@@ -38,6 +40,10 @@ describe('BulletinCategoryFormDialog', () => {
 
     data.createCategory.and.returnValue(of({ id: 'new-id' }));
     data.updateCategory.and.returnValue(of(void 0));
+
+    confirmDialog = jasmine.createSpyObj<ConfirmationDialog>('ConfirmationDialog', ['confirm', 'danger']);
+    confirmDialog.confirm.and.resolveTo(true);
+    confirmDialog.danger.and.resolveTo(true);
 
     const translocoStub = {
       translate: (key: string) => key,
@@ -51,6 +57,7 @@ describe('BulletinCategoryFormDialog', () => {
       providers: [
         { provide: BulletinsDataService, useValue: data },
         { provide: NotificationService, useValue: notify },
+        { provide: ConfirmationDialog, useValue: confirmDialog },
         { provide: TranslocoService, useValue: translocoStub },
       ],
     }).compileComponents();

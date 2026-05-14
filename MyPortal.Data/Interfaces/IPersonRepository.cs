@@ -12,5 +12,14 @@ namespace MyPortal.Data.Interfaces
         Task<PageResult<PersonSummaryResponse>> GetPeople(FilterOptions? filter = null, SortOptions? sort = null,
             PageOptions? paging = null, bool includeDeleted = false,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Paged staff-only summary for the staff/head-teacher picker. Backed by
+        /// an inner join on <c>StaffMembers</c> so people who only exist as
+        /// students/contacts are excluded.
+        /// </summary>
+        Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
+            SortOptions? sort = null, PageOptions? paging = null,
+            CancellationToken cancellationToken = default);
     }
 }

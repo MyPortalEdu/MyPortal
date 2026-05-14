@@ -9,7 +9,6 @@ public class SchoolDetailsResponse
     public string Name { get; set; } = "";
     public string? Website { get; set; }
     public Guid AgencyTypeId { get; set; }
-    public string AgencyType { get; set; } = "";
 
     // School bits
     public string Urn { get; set; } = "";
@@ -26,10 +25,8 @@ public class SchoolDetailsResponse
     public string Type { get; set; } = "";
 
     public Guid GovernanceTypeId { get; set; }
-    public string GovernanceType { get; set; } = "";
 
     public Guid IntakeTypeId { get; set; }
-    public string IntakeType { get; set; } = "";
 
     public Guid? HeadTeacherId { get; set; }
     public string? HeadTeacherFullName { get; set; }
