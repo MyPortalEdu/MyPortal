@@ -78,7 +78,9 @@
     "users": "Users",
     "bulletinSettings": "Bulletin Settings",
     "school": "School",
-    "schoolDetails": "School Details"
+    "schoolDetails": "School Details",
+    "curriculum": "Curriculum",
+    "academicYears": "Academic Years"
   },
   "pages": {
     "home": {

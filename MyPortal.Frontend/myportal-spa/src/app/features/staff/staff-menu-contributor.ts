@@ -29,6 +29,17 @@ export class StaffMenuContributor implements AppMenuContributor {
         ]
       },
       {
+        label: 'nav.curriculum',
+        icon: 'fa-graduation-cap',
+        children: [
+          {
+            label: 'nav.academicYears',
+            routerLink: ['/staff/curriculum/academic-years'],
+            permissionsAny: [Permissions.Curriculum.EditAcademicYears]
+          }
+        ]
+      },
+      {
         label: 'nav.system',
         icon: 'fa-gear',
         children: [

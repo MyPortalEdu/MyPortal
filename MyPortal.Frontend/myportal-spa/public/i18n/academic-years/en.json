@@ -1,0 +1,20 @@
+{
+  "title": "Academic Years",
+  "loadError": "Couldn't load academic years",
+  "deleteError": "Couldn't delete academic year",
+  "deleteConfirm": "Delete the academic year \"{{ name }}\"? This cannot be undone.",
+  "deletedToast": "Academic year deleted",
+  "edit": "Edit",
+  "delete": "Delete",
+  "open": "Open",
+  "locked": "Locked",
+  "empty": "No academic years yet. Use the New button to create one.",
+  "columns": {
+    "name": "Name",
+    "startDate": "Starts",
+    "endDate": "Ends",
+    "cycleLength": "Cycle length",
+    "weekLength": "Week length",
+    "status": "Status"
+  }
+}

@@ -1,0 +1,78 @@
+<ng-container *transloco="let t; prefix: 'academic-years'">
+<mp-page-header
+  [title]="t('title')"
+  icon="fa-solid fa-calendar-days"
+  [actions]="headerActions()"
+></mp-page-header>
+
+<p-card>
+  @if (loading()) {
+    <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
+      @for (_ of [0, 1, 2]; track $index) {
+        <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <p-skeleton width="30%" height="1rem"></p-skeleton>
+            <p-skeleton width="50%" height="0.75rem"></p-skeleton>
+          </div>
+        </li>
+      }
+    </ul>
+  } @else if (years().length === 0) {
+    <div class="text-sm text-muted-color py-8 text-center border border-dashed border-surface rounded-lg">
+      {{ t('empty') }}
+    </div>
+  } @else {
+    <p-table [value]="years()" dataKey="id" [scrollable]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ t('columns.name') }}</th>
+          <th style="width: 10rem">{{ t('columns.startDate') }}</th>
+          <th style="width: 10rem">{{ t('columns.endDate') }}</th>
+          <th style="width: 8rem" class="text-right">{{ t('columns.cycleLength') }}</th>
+          <th style="width: 9rem" class="text-right">{{ t('columns.weekLength') }}</th>
+          <th style="width: 6rem">{{ t('columns.status') }}</th>
+          <th style="width: 12rem"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-year>
+        <tr>
+          <td class="font-medium">{{ year.name }}</td>
+          <td>{{ year.startDate ? (year.startDate | date:'mediumDate') : '—' }}</td>
+          <td>{{ year.endDate ? (year.endDate | date:'mediumDate') : '—' }}</td>
+          <td class="text-right">{{ year.timetableCycleLength }}</td>
+          <td class="text-right">{{ year.schoolWeekLength }}</td>
+          <td>
+            @if (year.isLocked) {
+              <p-tag [value]="t('locked')" severity="warn" icon="fa-solid fa-lock"></p-tag>
+            } @else {
+              <p-tag [value]="t('open')" severity="success"></p-tag>
+            }
+          </td>
+          <td>
+            <div class="flex items-center justify-end gap-1">
+              <p-button
+                [label]="t('edit')"
+                icon="fa-solid fa-pen-to-square"
+                severity="secondary"
+                size="small"
+                [text]="true"
+                [disabled]="year.isLocked"
+                (click)="openEdit(year)">
+              </p-button>
+              <p-button
+                [label]="t('delete')"
+                icon="fa-solid fa-trash-can"
+                severity="danger"
+                size="small"
+                [text]="true"
+                [disabled]="year.isLocked"
+                (click)="deleteYear(year)">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</p-card>
+</ng-container>
