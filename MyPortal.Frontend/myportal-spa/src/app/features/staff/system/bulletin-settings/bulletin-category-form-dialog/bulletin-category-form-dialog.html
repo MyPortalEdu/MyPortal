@@ -5,7 +5,7 @@
   [draggable]="false"
   [resizable]="false"
   [dismissableMask]="false"
-  [closeOnEscape]="true"
+  [closeOnEscape]="!isDirty()"
   [style]="{ width: 'min(40rem, 94vw)' }"
   styleClass="mp-flush-dialog"
   (onHide)="onHide()"
@@ -29,7 +29,12 @@
         pInputText
         [placeholder]="t('form.namePlaceholder')"
         [ngModel]="name()"
-        (ngModelChange)="name.set($event)" />
+        (ngModelChange)="name.set($event)"
+        (blur)="markTouched('name')"
+        required
+        name="name"
+        #nameRef="ngModel"
+        [invalid]="wasTouched('name') && nameRef.invalid" />
     </div>
 
     <!-- Icon grid -->
@@ -112,7 +117,7 @@
     <p-button
       [label]="isEdit() ? t('form.save') : t('form.create')"
       icon="fa-solid fa-check"
-      [disabled]="!isValid()"
+      [disabled]="!isValid() || !isDirty()"
       [loading]="submitting()"
       (click)="save()">
     </p-button>

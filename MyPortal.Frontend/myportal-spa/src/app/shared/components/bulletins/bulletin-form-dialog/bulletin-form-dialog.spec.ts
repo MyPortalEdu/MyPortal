@@ -5,6 +5,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { BulletinFormDialog } from './bulletin-form-dialog';
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { MeService } from '../../../../core/services/me-service';
 import { UserType } from '../../../../core/types/user-type';
 import { Me } from '../../../../core/types/me';
@@ -65,6 +66,7 @@ describe('BulletinFormDialog', () => {
   let data: jasmine.SpyObj<BulletinsDataService>;
   let notify: jasmine.SpyObj<NotificationService>;
   let me$: jasmine.SpyObj<MeService>;
+  let confirmDialog: jasmine.SpyObj<ConfirmationDialog>;
 
   const categories: BulletinCategoryResponse[] = [
     { id: 'cat-1', name: 'Notices', icon: 'i', colourCode: '#000000', displayOrder: 1, active: true, isSystem: false, version: 1 },
@@ -87,6 +89,10 @@ describe('BulletinFormDialog', () => {
     data.getById.and.returnValue(of(makeDetail({ id: 'new-id', directoryId: 'new-dir' })));
     me$.me.and.returnValue(of(makeMe()));
 
+    confirmDialog = jasmine.createSpyObj<ConfirmationDialog>('ConfirmationDialog', ['confirm', 'danger']);
+    confirmDialog.confirm.and.resolveTo(true);
+    confirmDialog.danger.and.resolveTo(true);
+
     const translocoStub = {
       translate: (key: string) => key,
       getActiveLang: () => 'en',
@@ -100,6 +106,7 @@ describe('BulletinFormDialog', () => {
         { provide: BulletinsDataService, useValue: data },
         { provide: NotificationService, useValue: notify },
         { provide: MeService, useValue: me$ },
+        { provide: ConfirmationDialog, useValue: confirmDialog },
         { provide: TranslocoService, useValue: translocoStub },
       ],
     }).compileComponents();

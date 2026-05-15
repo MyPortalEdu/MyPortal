@@ -28,17 +28,29 @@ public class PermissionService : IPermissionService
 
     public async Task<bool> HasPermissionAsync(string permission, CancellationToken ct = default)
     {
-        if (_user.UserId is null) return false;
+        return await HasAllPermissionsAsync([permission], ct);
+    }
 
-        // Fail closed if the user has been disabled. Cookie sessions are revalidated by
-        // SecurityStampValidator within ValidationInterval, but bearer access tokens can
-        // outlive a disable until they expire — this catches that gap server-side.
-        // Backed by a 30s memory cache so we don't hit the DB on every permission check.
+    public async Task<bool> HasAnyPermissionsAsync(string[] permissions, CancellationToken ct = default)
+    {
+        if (_user.UserId is null) return false;
+        
         if (!await IsCurrentUserEnabledAsync(ct)) return false;
 
         var roles = await _user.GetRolesAsync(ct);
         var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
-        return perms.Contains(permission, StringComparer.OrdinalIgnoreCase);
+        return perms.Any(x => permissions.Contains(x, StringComparer.OrdinalIgnoreCase));
+    }
+
+    public async Task<bool> HasAllPermissionsAsync(string[] permissions, CancellationToken ct = default)
+    {
+        if (_user.UserId is null) return false;
+        
+        if (!await IsCurrentUserEnabledAsync(ct)) return false;
+
+        var roles = await _user.GetRolesAsync(ct);
+        var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
+        return permissions.All(x => perms.Contains(x, StringComparer.OrdinalIgnoreCase));
     }
 
     private Task<bool> IsCurrentUserEnabledAsync(CancellationToken ct)

@@ -1,5 +1,5 @@
 {
-  "title": "Bulletin settings",
+  "title": "Bulletin Settings",
   "subtitle": "Manage categories and the student-group audience allowlist",
   "categories": {
     "title": "Categories",
@@ -15,7 +15,7 @@
     "errorLoad": "Couldn't load categories"
   },
   "audiences": {
-    "title": "Audience allowlist",
+    "title": "Audience Allowlist",
     "description": "Student groups in this list can be picked as a bulletin audience. Only allowlisted groups appear in the audience chips when creating a bulletin.",
     "empty": "No groups allowlisted yet. Add one with the picker above.",
     "remove": "Remove",
@@ -25,8 +25,8 @@
     "errorLoad": "Couldn't load settings"
   },
   "form": {
-    "titleCreate": "New category",
-    "titleEdit": "Edit category",
+    "titleCreate": "New Category",
+    "titleEdit": "Edit Category",
     "name": "Name",
     "namePlaceholder": "e.g. Safeguarding",
     "icon": "Icon",

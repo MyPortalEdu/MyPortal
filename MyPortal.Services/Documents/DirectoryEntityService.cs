@@ -36,9 +36,20 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     //   2) Directory structural rules — "does the directory exist in this entity's subtree,
     //      and do the per-directory flags (IsPrivate / UploadPolicy) permit the action?"
     //      This is shared and exposed via the CanStructurally* helpers below.
-    public abstract Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct);
-    public abstract Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct);
-    public abstract Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct);
+    public virtual async Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
+    {
+        return await CanStructurallyViewDirectoryAsync(entityId, directoryId, ct);
+    }
+
+    public virtual async Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
+    {
+        return await CanStructurallyEditDirectoryAsync(entityId, directoryId, ct);
+    }
+    
+    public virtual async Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
+    {
+        return await CanStructurallyUploadToDirectoryAsync(entityId, directoryId, ct);
+    }
 
     /// <summary>Default structural view check. Call from <see cref="CanViewDirectoryAsync"/>
     /// after passing your entity-level access-policy gate.</summary>

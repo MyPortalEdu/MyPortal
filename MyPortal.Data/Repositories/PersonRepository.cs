@@ -29,5 +29,15 @@ namespace MyPortal.Data.Repositories
 
             return result;
         }
+
+        public async Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
+            SortOptions? sort = null, PageOptions? paging = null,
+            CancellationToken cancellationToken = default)
+        {
+            var sql = SqlResourceLoader.Load("People.GetStaffMemberSummaries.sql");
+
+            return await GetListPagedAsync<StaffMemberSummaryResponse>(sql, null, filter, sort, paging, false,
+                cancellationToken);
+        }
     }
 }

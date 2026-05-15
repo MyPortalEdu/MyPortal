@@ -1,0 +1,34 @@
+{
+  "title": "School Details",
+  "subtitle": "Identifiers, governance, and head teacher for the local school",
+  "readOnlyHint": "You don't have permission to edit these details.",
+  "loadError": "Couldn't load school details",
+  "saveError": "Couldn't save school details",
+  "savedToast": "School details saved",
+  "save": "Save",
+  "cancel": "Cancel",
+  "sections": {
+    "agency": "Organisation",
+    "school": "School Identifiers",
+    "classification": "Classification",
+    "leadership": "Leadership"
+  },
+  "fields": {
+    "name": "Name",
+    "namePlaceholder": "School name",
+    "website": "Website",
+    "websitePlaceholder": "https://…",
+    "urn": "URN",
+    "uprn": "UPRN",
+    "establishmentNumber": "Establishment number",
+    "localAuthority": "Local authority",
+    "schoolPhase": "Phase",
+    "schoolType": "Type",
+    "governanceType": "Governance",
+    "intakeType": "Intake",
+    "headTeacher": "Head teacher",
+    "noLocalAuthority": "Not set",
+    "noHeadTeacher": "Not set",
+    "clear": "Clear"
+  }
+}

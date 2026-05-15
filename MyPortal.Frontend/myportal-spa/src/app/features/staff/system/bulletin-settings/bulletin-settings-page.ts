@@ -7,7 +7,8 @@ import {
   signal,
 } from '@angular/core';
 import { Button } from 'primeng/button';
-import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
+import { Skeleton } from 'primeng/skeleton';
+import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { StudentGroupPicker } from '../../../../shared/components/pickers/student-group-picker/student-group-picker';
@@ -28,11 +29,11 @@ import { StudentGroupSummaryResponse } from '../../../../shared/types/student-gr
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Button,
+    Skeleton,
     PageHeader,
     StudentGroupPicker,
     BulletinCategoryFormDialog,
     TranslocoDirective,
-    TranslocoPipe,
   ],
   providers: [provideTranslocoScope('bulletin-settings')],
   templateUrl: './bulletin-settings-page.html',
