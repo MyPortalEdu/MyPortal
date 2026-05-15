@@ -117,5 +117,11 @@ public class AttendancePeriodUpsertRequestValidator : AbstractValidator<Attendan
 
         RuleFor(x => x.EndTime)
             .GreaterThan(x => x.StartTime).WithMessage("Period end time must be after the start time.");
+
+        // Mirrors the DB CHECK constraint — a period that is neither a lesson nor a
+        // registration session would materialise to nothing.
+        RuleFor(x => x)
+            .Must(x => x.IsLesson || x.IsAmReg || x.IsPmReg)
+            .WithMessage("A period must be a lesson, an AM reg, a PM reg, or some combination.");
     }
 }

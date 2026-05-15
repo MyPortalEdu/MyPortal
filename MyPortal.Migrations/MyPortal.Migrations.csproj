@@ -192,6 +192,8 @@
     <EmbeddedResource Include="Sql\Updates\20260512000000_add_bulletin_settings_permission.sql" />
     <None Remove="Sql\Updates\20260514000000_add_agency_permissions.sql" />
     <EmbeddedResource Include="Sql\Updates\20260514000000_add_agency_permissions.sql" />
+    <None Remove="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
   </ItemGroup>
 
   <ItemGroup>

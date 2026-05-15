@@ -262,7 +262,8 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 StartTime = p.StartTime,
                 EndTime = p.EndTime,
                 IsAmReg = p.IsAmReg,
-                IsPmReg = p.IsPmReg
+                IsPmReg = p.IsPmReg,
+                IsLesson = p.IsLesson
             });
         }
         else
@@ -281,7 +282,8 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 StartTime = periodModel.StartTime,
                 EndTime = periodModel.EndTime,
                 IsAmReg = periodModel.IsAmReg,
-                IsPmReg = periodModel.IsPmReg
+                IsPmReg = periodModel.IsPmReg,
+                IsLesson = periodModel.IsLesson
             };
 
             await _attendancePeriodRepository.InsertAsync(attendancePeriod, cancellationToken, transaction);

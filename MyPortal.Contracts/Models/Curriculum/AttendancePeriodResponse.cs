@@ -15,4 +15,6 @@ public class AttendancePeriodResponse
     public bool IsAmReg { get; set; }
 
     public bool IsPmReg { get; set; }
+
+    public bool IsLesson { get; set; }
 }
