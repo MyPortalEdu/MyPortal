@@ -31,12 +31,17 @@ END
 GO
 
 -- ─── 2. Seed default system categories ──────────────────────────────────────
--- Attribute to the system user; same pattern as 20251101001000_gradesets_audit_not_null.sql.
-DECLARE @sysUser UNIQUEIDENTIFIER;
-SELECT TOP 1 @sysUser = Id FROM dbo.Users WHERE IsSystem = 1 ORDER BY CreatedAt;
+-- Attribute to the sentinel system user (seeded by 20251101000050_seed_system_user.sql;
+-- mirrored in MyPortal.Common.Constants.SystemUsers.SentinelUserId). Direct Guid
+-- reference is deterministic — earlier versions of this script did
+-- "WHERE IsSystem = 1 ORDER BY CreatedAt" which silently picked the wrong row
+-- if AuthSeeder ran before the sentinel migration on a deployed environment.
+DECLARE @sysUser UNIQUEIDENTIFIER = N'00000000-0000-0000-0000-000000000001';
 
-IF @sysUser IS NULL
-    THROW 50000, N'Cannot seed BulletinCategories: no system user exists in dbo.Users.', 1;
+IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE Id = @sysUser)
+    THROW 50000,
+        N'Cannot seed BulletinCategories: sentinel system user (00000000-0000-0000-0000-000000000001) is missing. Migration 20251101000050_seed_system_user.sql should have created it.',
+        1;
 
 MERGE INTO dbo.BulletinCategories AS T
 USING (VALUES
