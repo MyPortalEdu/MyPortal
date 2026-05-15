@@ -1,4 +1,4 @@
-# <img src="https://i.imgur.com/dAVgTNy.png" alt="MyPortal" width="500"/>
+# <img src="https://i.imgur.com/iHiZfpX.png" alt="MyPortal" width="500"/>
 
 An open-source School Information Management System (MIS) for UK schools. ASP.NET Core Web API + Angular SPA + SQL Server, designed to be self-hostable, modular, and transparent.
 
