@@ -53,6 +53,9 @@ public static class AuthSeeder
             desc.RedirectUris.Add(new Uri("https://localhost:7201/scalar/v1"));
         }
 
+        // Native iOS app — uses ASWebAuthenticationSession to capture this callback URL.
+        desc.RedirectUris.Add(new Uri("myportal://oauth/callback"));
+
         var existingClient = await manager.FindByClientIdAsync("myportal-client");
         if (existingClient is null)
         {
