@@ -14,7 +14,9 @@
 
   <!-- Header -->
   <div class="flex items-center justify-between p-4 border-b border-surface">
-    <h3 class="text-base font-semibold m-0">{{ t('title') }}</h3>
+    <h3 class="text-base font-semibold m-0">
+      {{ isEditMode() ? t('editTitle') : t('title') }}
+    </h3>
     <button type="button" class="mp-icon-button" (click)="onCancel()"
             [attr.aria-label]="'common.close' | transloco"
             [disabled]="submitting()">
@@ -56,31 +58,42 @@
 
   <!-- Active step body. One component visible at a time keeps each step's
        state scoped to its own component instance — bookkeeping like "did the
-       user touch this field" doesn't leak across steps. -->
+       user touch this field" doesn't leak across steps. In edit mode the
+       wizard is briefly empty while the GET fires; show a spinner so the
+       user doesn't see an unprefilled form for the round-trip. -->
   <div class="min-h-[18rem]">
-    @switch (currentStepKey()) {
-      @case ('setup') {
-        <mp-academic-year-wizard-setup-step
-          [model]="model()"
-          (modelChange)="patchModel($event)">
-        </mp-academic-year-wizard-setup-step>
-      }
-      @case ('periods') {
-        <mp-academic-year-wizard-periods-step
-          [model]="model()"
-          (modelChange)="patchModel($event)">
-        </mp-academic-year-wizard-periods-step>
-      }
-      @case ('holidays') {
-        <mp-academic-year-wizard-holidays-step
-          [model]="model()"
-          (modelChange)="patchModel($event)">
-        </mp-academic-year-wizard-holidays-step>
-      }
-      @case ('review') {
-        <mp-academic-year-wizard-review-step
-          [model]="model()">
-        </mp-academic-year-wizard-review-step>
+    @if (loading()) {
+      <div class="flex flex-col items-center justify-center min-h-[18rem] gap-3">
+        <p-progress-spinner [style]="{ width: '2.5rem', height: '2.5rem' }"></p-progress-spinner>
+        <span class="text-sm text-muted-color">{{ t('loading') }}</span>
+      </div>
+    } @else {
+      @switch (currentStepKey()) {
+        @case ('setup') {
+          <mp-academic-year-wizard-setup-step
+            [model]="model()"
+            [editMode]="isEditMode()"
+            (modelChange)="patchModel($event)">
+          </mp-academic-year-wizard-setup-step>
+        }
+        @case ('periods') {
+          <mp-academic-year-wizard-periods-step
+            [model]="model()"
+            [editMode]="isEditMode()"
+            (modelChange)="patchModel($event)">
+          </mp-academic-year-wizard-periods-step>
+        }
+        @case ('holidays') {
+          <mp-academic-year-wizard-holidays-step
+            [model]="model()"
+            (modelChange)="patchModel($event)">
+          </mp-academic-year-wizard-holidays-step>
+        }
+        @case ('review') {
+          <mp-academic-year-wizard-review-step
+            [model]="model()">
+          </mp-academic-year-wizard-review-step>
+        }
       }
     }
   </div>
@@ -113,12 +126,12 @@
 
       @if (isLastStep()) {
         <p-button
-          [label]="t('create')"
+          [label]="isEditMode() ? t('save') : t('create')"
           icon="fa-solid fa-check"
           severity="primary"
-          [disabled]="!canAdvance() || submitting()"
+          [disabled]="!canAdvance() || submitting() || loading()"
           [loading]="submitting()"
-          (click)="create()">
+          (click)="save()">
         </p-button>
       } @else {
         <p-button
@@ -126,7 +139,7 @@
           icon="fa-solid fa-arrow-right"
           iconPos="right"
           severity="primary"
-          [disabled]="!canAdvance() || submitting()"
+          [disabled]="!canAdvance() || submitting() || loading()"
           (click)="next()">
         </p-button>
       }

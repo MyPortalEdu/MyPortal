@@ -119,7 +119,7 @@
       }
     </section>
 
-    @if (priorYears().length > 0) {
+    @if (priorYears().length > 0 && !editMode()) {
       <section class="flex flex-col gap-2">
         <h4 class="text-sm font-semibold m-0">{{ t('pastoralSection') }}</h4>
         <p class="text-xs text-muted-color m-0">{{ t('pastoralHint') }}</p>

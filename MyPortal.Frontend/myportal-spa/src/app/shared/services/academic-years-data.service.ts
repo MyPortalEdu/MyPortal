@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AcademicYearSummary } from '../../core/types/academic-year-summary';
 import { AcademicYearUpsertRequest } from '../types/academic-year';
+import { AcademicYearDetailsResponse } from '../types/academic-year-details';
 import { IdResponse } from '../types/bulletin';
 
 @Injectable({ providedIn: 'root' })
@@ -13,8 +14,16 @@ export class AcademicYearsDataService {
     return this.http.get<AcademicYearSummary[]>('/api/academicyears');
   }
 
+  getById(id: string): Observable<AcademicYearDetailsResponse> {
+    return this.http.get<AcademicYearDetailsResponse>(`/api/academicyears/${id}`);
+  }
+
   create(model: AcademicYearUpsertRequest): Observable<IdResponse> {
     return this.http.post<IdResponse>('/api/academicyears', this.toWire(model));
+  }
+
+  update(id: string, model: AcademicYearUpsertRequest): Observable<IdResponse> {
+    return this.http.put<IdResponse>(`/api/academicyears/${id}`, this.toWire(model));
   }
 
   delete(id: string): Observable<void> {

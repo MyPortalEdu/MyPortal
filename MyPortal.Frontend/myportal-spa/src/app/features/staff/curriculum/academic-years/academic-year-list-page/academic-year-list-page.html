@@ -49,14 +49,16 @@
             }
           </td>
           <td>
-            <div class="flex items-center justify-end gap-1">
+            <div class="flex items-center justify-end gap-1"
+                 [pTooltip]="!canMutate(year) ? mutateBlockReason(year) : ''"
+                 tooltipPosition="left">
               <p-button
                 [label]="t('edit')"
                 icon="fa-solid fa-pen-to-square"
                 severity="secondary"
                 size="small"
                 [text]="true"
-                [disabled]="year.isLocked"
+                [disabled]="!canMutate(year)"
                 (click)="openEdit(year)">
               </p-button>
               <p-button
@@ -65,7 +67,7 @@
                 severity="danger"
                 size="small"
                 [text]="true"
-                [disabled]="year.isLocked"
+                [disabled]="!canMutate(year)"
                 (click)="deleteYear(year)">
               </p-button>
             </div>
@@ -78,6 +80,7 @@
 
 <mp-academic-year-wizard-dialog
   [visible]="wizardOpen()"
+  [editYearId]="editYearId()"
   (closed)="closeWizard()"
   (saved)="onWizardSaved()">
 </mp-academic-year-wizard-dialog>

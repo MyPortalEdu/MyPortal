@@ -5,16 +5,18 @@
       <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
     </div>
 
-    <p-selectButton
-      [options]="modeOptions"
-      [ngModel]="mode()"
-      (ngModelChange)="setMode($event)"
-      optionLabel="label"
-      optionValue="value"
-      [allowEmpty]="false">
-    </p-selectButton>
+    @if (!editMode()) {
+      <p-selectButton
+        [options]="modeOptions"
+        [ngModel]="mode()"
+        (ngModelChange)="setMode($event)"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false">
+      </p-selectButton>
+    }
 
-    @if (mode() === 'copy') {
+    @if (!editMode() && mode() === 'copy') {
       <section class="flex flex-col gap-2">
         @if (priorYears().length === 0) {
           <div class="text-sm text-muted-color border border-dashed border-surface rounded-lg p-4 text-center">

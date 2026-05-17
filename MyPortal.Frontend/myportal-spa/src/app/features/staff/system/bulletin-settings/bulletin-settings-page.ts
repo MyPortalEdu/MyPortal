@@ -16,7 +16,7 @@ import { BulletinCategoryFormDialog } from './bulletin-category-form-dialog/bull
 import { BulletinsDataService } from '../../../../shared/services/bulletins-data.service';
 import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { AcademicYearService } from '../../../../core/services/academic-year-service';
+import { SelectedAcademicYearService } from '../../../../core/services/selected-academic-year-service';
 import {
   BulletinAllowedGroupResponse,
   BulletinCategoryResponse,
@@ -43,9 +43,12 @@ export class BulletinSettingsPage implements OnInit {
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
-  private readonly academicYears = inject(AcademicYearService);
+  private readonly selectedYear = inject(SelectedAcademicYearService);
 
-  readonly academicYearId = signal<string | null>(null);
+  // Mirrors the user's selected AY (defaults to calendar-current via the
+  // service's init flow). Switching years from the topbar refreshes the
+  // picker's results automatically because the input is a signal read.
+  readonly academicYearId = this.selectedYear.selectedId;
 
   readonly categories = signal<BulletinCategoryResponse[]>([]);
   readonly categoriesLoading = signal(false);
@@ -62,9 +65,8 @@ export class BulletinSettingsPage implements OnInit {
   ngOnInit(): void {
     this.refreshCategories();
     this.refreshSettings();
-    // Load current AY for the group picker. The picker is only enabled once
-    // we have an id — until then it's hidden (avoids passing an empty string).
-    this.academicYears.getCurrent().subscribe(ay => this.academicYearId.set(ay?.id ?? null));
+    // academicYearId is now driven directly by SelectedAcademicYearService —
+    // its init runs in AppShell and the signal reads through transparently.
   }
 
   // ─── Categories ────────────────────────────────────────────────────────

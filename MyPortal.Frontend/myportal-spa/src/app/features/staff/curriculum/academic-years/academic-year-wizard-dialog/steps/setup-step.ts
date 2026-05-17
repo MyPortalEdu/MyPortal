@@ -47,6 +47,9 @@ export class AcademicYearWizardSetupStep implements OnInit {
   private readonly data = inject(AcademicYearsDataService);
 
   readonly model = input.required<AcademicYearUpsertRequest>();
+  // Hides copy-from controls when true; the server rejects copy-from on
+  // update so we don't surface the option in edit mode at all.
+  readonly editMode = input<boolean>(false);
   readonly modelChange = output<Partial<AcademicYearUpsertRequest>>();
 
   readonly priorYears = signal<AcademicYearSummary[]>([]);

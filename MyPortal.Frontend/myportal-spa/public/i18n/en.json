@@ -57,6 +57,13 @@
       "staff": "Staff",
       "student": "Student",
       "parent": "Parent"
+    },
+    "yearSwitcher": {
+      "title": "Switch Academic Year",
+      "empty": "No academic years to switch to.",
+      "currentBadge": "Current",
+      "lockedBadge": "Locked",
+      "loadError": "Couldn't load academic years"
     }
   },
   "userMenu": {

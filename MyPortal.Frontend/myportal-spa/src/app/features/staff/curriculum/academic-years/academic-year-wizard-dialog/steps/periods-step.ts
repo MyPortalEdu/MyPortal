@@ -56,6 +56,10 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
   private readonly transloco = inject(TranslocoService);
 
   readonly model = input.required<AcademicYearUpsertRequest>();
+  // Hides the define/copy mode switch and forces 'define' when true. The
+  // server rejects copy-from on update so edit mode only ever submits inline
+  // periods.
+  readonly editMode = input<boolean>(false);
   readonly modelChange = output<Partial<AcademicYearUpsertRequest>>();
 
   readonly priorYears = signal<AcademicYearSummary[]>([]);
