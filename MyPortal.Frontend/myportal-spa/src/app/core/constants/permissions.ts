@@ -18,6 +18,10 @@ export const Permissions = {
     EditSchoolBulletins:   'School.EditSchoolBulletins',
     PinSchoolBulletins:    'School.PinSchoolBulletins',
   },
+  Curriculum: {
+    ViewAcademicYears: 'Curriculum.ViewAcademicYears',
+    EditAcademicYears: 'Curriculum.EditAcademicYears',
+  },
 } as const;
 
 // Flatten to a union of all permission string literals across every category.

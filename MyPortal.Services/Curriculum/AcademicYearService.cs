@@ -196,7 +196,10 @@ public class AcademicYearService : BaseService, IAcademicYearService
             // instead of expecting real codes. Single mid-week holidays (May Day etc.) leave
             // IsNonTimetable false and are resolved per-day at the attendance level. The
             // cycleOffset is computed for every week regardless so downstream cycle-aware
-            // code doesn't need a special case.
+            // code doesn't need a special case. Partial weeks at term boundaries (term
+            // starts/ends mid-week) need no gap-day holidays — vw_attendance_period_instances
+            // bounds period instances by [TermStartDate, TermEndDate] so out-of-term days
+            // in the first/last week never materialise.
             for (var monday = MondayOf(termModel.StartDate);
                  monday <= termModel.EndDate;
                  monday = monday.AddDays(7))
@@ -262,7 +265,8 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 StartTime = p.StartTime,
                 EndTime = p.EndTime,
                 IsAmReg = p.IsAmReg,
-                IsPmReg = p.IsPmReg
+                IsPmReg = p.IsPmReg,
+                IsLesson = p.IsLesson
             });
         }
         else
@@ -281,7 +285,8 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 StartTime = periodModel.StartTime,
                 EndTime = periodModel.EndTime,
                 IsAmReg = periodModel.IsAmReg,
-                IsPmReg = periodModel.IsPmReg
+                IsPmReg = periodModel.IsPmReg,
+                IsLesson = periodModel.IsLesson
             };
 
             await _attendancePeriodRepository.InsertAsync(attendancePeriod, cancellationToken, transaction);

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories;
 
@@ -6,8 +7,18 @@ namespace MyPortal.Data.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+    private static bool _dapperHandlersRegistered;
+
     public static void AddRepositories(this IServiceCollection services)
     {
+        // Dapper type handlers are process-global state; the guard keeps
+        // double-host setups (tests) idempotent.
+        if (!_dapperHandlersRegistered)
+        {
+            SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
+            _dapperHandlersRegistered = true;
+        }
+
         services.AddScoped<IAcademicYearRepository, AcademicYearRepository>();
         services.AddScoped<IAcademicTermRepository, AcademicTermRepository>();
         services.AddScoped<IAgencyRepository, AgencyRepository>();

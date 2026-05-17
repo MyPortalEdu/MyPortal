@@ -24,6 +24,7 @@ WITH Base AS
         AP.EndTime,
         AP.IsAmReg,
         AP.IsPmReg,
+        AP.IsLesson,
         AW.Beginning,
         AW.IsNonTimetable,
         AT.StartDate                         AS TermStartDate,
@@ -68,7 +69,8 @@ SELECT DISTINCT
     i.StartTime,
     i.EndTime,
     i.IsAmReg,
-    i.IsPmReg
+    i.IsPmReg,
+    i.IsLesson
 FROM Inst AS i
 WHERE
     i.ActualStartTime >= i.TermStartDate

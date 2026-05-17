@@ -46,8 +46,13 @@ public class DbUpdateService : IDbUpdateService
         await ApplyUpdates(cancellationToken);
         await CreateIndexes(cancellationToken);
         await CreateFunctions(cancellationToken);
-        await CreateStoredProcedures(cancellationToken);
+        // Views before SPs: SPs commonly query views, and a CREATE OR ALTER PROCEDURE
+        // binds the view's columns at compile time. If a migration adds a column that
+        // both the view and an SP need to reference, running the SP against the
+        // pre-migration view shape fails with "Invalid column name". The reverse
+        // (views referencing SPs) is not a thing in this codebase.
         await CreateViews(cancellationToken);
+        await CreateStoredProcedures(cancellationToken);
     }
 
     private string GetMasterConnectionString()

@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, output, signal } from '@angular/core';
 import { Avatar } from 'primeng/avatar';
-import { Observable, catchError, combineLatest, map, of } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MeService } from '../../../core/services/me-service';
 import { SchoolService } from '../../../core/services/school-service';
-import { AcademicYearService } from '../../../core/services/academic-year-service';
+import { SelectedAcademicYearService } from '../../../core/services/selected-academic-year-service';
 import { ThemeService } from '../../../core/services/theme-service';
 import { AsyncPipe } from '@angular/common';
 import { ButtonDirective, ButtonIcon } from 'primeng/button';
@@ -12,42 +13,52 @@ import { Popover } from 'primeng/popover';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserType } from '../../../core/types/user-type';
 import { Me } from '../../../core/types/me';
-
-interface SiteLabel {
-  school: string | null;
-  year: string | null;
-}
+import { AcademicYearSwitcherDialog } from './academic-year-switcher-dialog/academic-year-switcher-dialog';
 
 @Component({
   selector: 'mp-topbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover, TranslocoDirective],
+  imports: [
+    Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover,
+    TranslocoDirective, AcademicYearSwitcherDialog,
+  ],
   templateUrl: './topbar.html',
   styleUrl: './topbar.scss',
 })
 export class Topbar implements OnInit {
   private readonly me = inject(MeService);
   private readonly schools = inject(SchoolService);
-  private readonly academicYears = inject(AcademicYearService);
+  private readonly selectedYear = inject(SelectedAcademicYearService);
   private readonly transloco = inject(TranslocoService);
   protected readonly themeService = inject(ThemeService);
 
   readonly menuToggle = output<void>();
 
   me$!: Observable<Me>;
-  siteLabel$!: Observable<SiteLabel>;
+
+  readonly switcherOpen = signal(false);
+  readonly UserType = UserType;
+
+  // School name as a signal — toSignal must be called in injection context, so
+  // the bridge sits here as a field initializer rather than in ngOnInit.
+  // School can 403 for users without view permission; fall back to null so the
+  // label just hides that segment.
+  private readonly schoolName = toSignal(
+    this.schools.getLocalName().pipe(catchError(() => of<string | null>(null))),
+    { initialValue: null as string | null },
+  );
+
+  // The AY segment reflects the user's *selected* AY (defaults to calendar-
+  // current via SelectedAcademicYearService.init) rather than always showing
+  // the calendar-current year — once a staff user switches, the topbar
+  // reflects their choice.
+  readonly siteLabel = computed(() => ({
+    school: this.schoolName(),
+    year: this.selectedYear.selected()?.name ?? null,
+  }));
 
   ngOnInit(): void {
     this.me$ = this.me.me();
-
-    // Either request can 403 for users without view permissions (e.g. students for
-    // academic years); fall back to null so the label just hides that segment.
-    this.siteLabel$ = combineLatest([
-      this.schools.getLocalName().pipe(catchError(() => of<string | null>(null))),
-      this.academicYears.getCurrent().pipe(catchError(() => of(null))),
-    ]).pipe(
-      map(([school, year]) => ({ school, year: year?.name ?? null })),
-    );
   }
 
   initials(displayName: string | undefined): string {
@@ -69,8 +80,20 @@ export class Topbar implements OnInit {
     return key ? this.transloco.translate(`topbar.userType.${key}`) : '';
   }
 
+  openYearSwitcher(): void {
+    this.switcherOpen.set(true);
+  }
+
+  closeYearSwitcher(): void {
+    this.switcherOpen.set(false);
+  }
+
   logout(): void {
     this.me.clearCache();
+    // Wipe the persisted AY selection — next sign-in (even same user) seeds
+    // from calendar-current. Token refresh / silent re-auth doesn't pass
+    // through here, so a long-running session keeps the user's choice.
+    this.selectedYear.clear();
     location.href = '/account/logout';
   }
 }

@@ -18,7 +18,7 @@
       <span class="text-base md:text-lg font-semibold tracking-tight">{{ t('topbar.appName') }}</span>
     </a>
 
-    @if (siteLabel$ | async; as label) {
+    @if (siteLabel(); as label) {
       @if (label.school || label.year) {
         <div
           class="hidden md:flex items-center gap-1.5 text-sm
@@ -87,6 +87,15 @@
                 <span class="flex-1">{{ t('userMenu.accountSettings') }}</span>
               </a>
             </li>
+            @if (me.userType === UserType.Staff) {
+              <li>
+                <button type="button" class="menu-row"
+                        (click)="userMenu.hide(); openYearSwitcher()">
+                  <i class="fa-regular fa-calendar-days"></i>
+                  <span class="flex-1 text-left">{{ t('userMenu.switchAcademicYear') }}</span>
+                </button>
+              </li>
+            }
             <li class="px-4 py-2 flex items-center gap-3 text-sm">
               <i class="fa-regular fa-palette opacity-75"></i>
               <span class="flex-1">{{ t('userMenu.theme') }}</span>
@@ -143,4 +152,9 @@
     }
   </div>
 </div>
+
+<mp-academic-year-switcher-dialog
+  [visible]="switcherOpen()"
+  (closed)="closeYearSwitcher()">
+</mp-academic-year-switcher-dialog>
 </ng-container>

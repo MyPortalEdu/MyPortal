@@ -57,6 +57,13 @@
       "staff": "Staff",
       "student": "Student",
       "parent": "Parent"
+    },
+    "yearSwitcher": {
+      "title": "Switch Academic Year",
+      "empty": "No academic years to switch to.",
+      "currentBadge": "Current",
+      "lockedBadge": "Locked",
+      "loadError": "Couldn't load academic years"
     }
   },
   "userMenu": {
@@ -78,7 +85,9 @@
     "users": "Users",
     "bulletinSettings": "Bulletin Settings",
     "school": "School",
-    "schoolDetails": "School Details"
+    "schoolDetails": "School Details",
+    "curriculum": "Curriculum",
+    "academicYears": "Academic Years"
   },
   "pages": {
     "home": {
@@ -89,6 +98,11 @@
         "title": "Enter your school details",
         "body": "Set up your school's name, identifiers, and head teacher to finish setup.",
         "action": "Open school details"
+      },
+      "academicYearSetup": {
+        "title": "Set up your first academic year",
+        "body": "Define your timetable cycle, terms, attendance periods, and holidays so the rest of the system has a calendar to hang off.",
+        "action": "Open academic years"
       }
     },
     "users": {

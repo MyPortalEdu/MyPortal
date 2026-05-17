@@ -138,11 +138,30 @@ public class DirectoryService : BaseService, IDirectoryService
     {
         RequireStaff("delete");
 
-        var directory = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken);
+        var directory = await _directoryRepository.GetDetailsByIdAsync(directoryId, cancellationToken,
+            uow?.Transaction);
 
         if (directory == null)
         {
             throw new NotFoundException("Directory not found.");
+        }
+
+        // Reject the delete when this directory is the root of an IDirectoryEntity
+        // (Bulletin, Agency, Class, Document, HomeworkItem, LessonPlan, Person).
+        // The FK constraint on each owner table is the hard backstop for a literal
+        // DELETE row, but soft-delete leaves the row in place and wouldn't trip the
+        // FK — this check covers that case and produces a friendlier message.
+        // Reads the in-flight transaction so owner-service cleanups (which delete
+        // the owner row first, then ask us to wipe the directory) see the cleared
+        // reference and proceed.
+        var owner = await _directoryRepository.GetReferencingOwnerAsync(directoryId, cancellationToken,
+            uow?.Transaction);
+
+        if (owner != null)
+        {
+            throw new EntityInUseException(
+                $"This directory belongs to a {owner.OwnerType} and cannot be deleted directly. " +
+                $"Delete the {owner.OwnerType} instead.");
         }
 
         // Wrap the recursive walk + the root delete in one transaction so a failure halfway

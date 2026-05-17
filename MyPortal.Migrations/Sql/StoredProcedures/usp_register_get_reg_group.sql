@@ -15,8 +15,10 @@ BEGIN
     DECLARE @studentGroupId UNIQUEIDENTIFIER;
     DECLARE @targetDate     DATE;
 
-    -- Reg-group registers are AM/PM only — guard at the data layer too so we don't accept
-    -- arbitrary lesson periods through the reg-group endpoint.
+    -- Reg-group registers are AM/PM only and never apply to a lesson-flagged period
+    -- (those go through the lesson register taken by the subject teacher). Guard at
+    -- the data layer so we don't accept arbitrary or lesson periods through the
+    -- reg-group endpoint.
     SELECT
         @actualStart    = API.ActualStartTime,
         @actualEnd      = API.ActualEndTime,
@@ -25,6 +27,7 @@ BEGIN
     JOIN dbo.vw_attendance_period_instances  AS API ON API.PeriodId = @attendancePeriodId
                                                    AND API.AttendanceWeekId = @attendanceWeekId
                                                    AND (API.IsAmReg = 1 OR API.IsPmReg = 1)
+                                                   AND API.IsLesson = 0
     WHERE RG.Id = @regGroupId;
 
     IF @actualStart IS NULL

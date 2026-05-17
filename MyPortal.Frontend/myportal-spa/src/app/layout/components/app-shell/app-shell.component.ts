@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
 import { Drawer } from 'primeng/drawer';
 import { ButtonDirective } from 'primeng/button';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { SelectedAcademicYearService } from '../../../core/services/selected-academic-year-service';
 
 @Component({
   selector: 'mp-app-shell',
@@ -14,6 +15,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
   styleUrl: './app-shell.component.scss'
 })
 export class AppShell implements OnInit, OnDestroy {
+  private readonly selectedYear = inject(SelectedAcademicYearService);
+
   readonly isDesktop = signal(false);
   readonly sidebarOpen = signal(false);
   readonly sidebarCollapsed = signal(false);
@@ -25,6 +28,9 @@ export class AppShell implements OnInit, OnDestroy {
     this.setDesktop(this.mq.matches);
     this.mq.addEventListener('change', this.mqHandler);
     this.sidebarCollapsed.set(localStorage.getItem('mp:sidebar') === 'collapsed');
+    // The shell mounts once inside the authenticated portal area (auth-guard
+    // upstream), so this is the right place to seed the user's selected AY.
+    this.selectedYear.init();
   }
 
   ngOnDestroy() {
