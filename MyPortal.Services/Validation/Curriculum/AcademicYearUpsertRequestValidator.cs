@@ -47,7 +47,7 @@ public class AcademicYearUpsertRequestValidator : AbstractValidator<AcademicYear
 
         RuleFor(x => x)
             .Must(x => !(x.CopyPeriodsFromAcademicYearId.HasValue && x.AttendancePeriods.Length > 0))
-            .WithMessage("Either CopyPeriodsFromAcademicYearId or AttendancePeriods must be specified.");
+            .WithMessage("Cannot specify both CopyPeriodsFromAcademicYearId and AttendancePeriods.");
 
         RuleForEach(x => x.AttendancePeriods).SetValidator(new AttendancePeriodUpsertRequestValidator());
 

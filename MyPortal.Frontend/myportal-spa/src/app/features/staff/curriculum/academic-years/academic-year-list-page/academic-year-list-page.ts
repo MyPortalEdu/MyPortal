@@ -21,6 +21,7 @@ import { AcademicYearsDataService } from '../../../../../shared/services/academi
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { AcademicYearService } from '../../../../../core/services/academic-year-service';
+import { SelectedAcademicYearService } from '../../../../../core/services/selected-academic-year-service';
 import { AcademicYearSummary } from '../../../../../core/types/academic-year-summary';
 import { AcademicYearWizardDialog } from '../academic-year-wizard-dialog/academic-year-wizard-dialog';
 
@@ -46,6 +47,7 @@ import { AcademicYearWizardDialog } from '../academic-year-wizard-dialog/academi
 export class AcademicYearListPage implements OnInit {
   private readonly data = inject(AcademicYearsDataService);
   private readonly currentYearCache = inject(AcademicYearService);
+  private readonly selectedYear = inject(SelectedAcademicYearService);
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
@@ -99,6 +101,10 @@ export class AcademicYearListPage implements OnInit {
     this.wizardOpen.set(false);
     this.editYearId.set(null);
     this.refresh();
+    // Rename / date change on the selected year wouldn't otherwise reach the
+    // topbar — its label is bound to the cached summary. A newly-created year
+    // that happens to cover today should also surface there.
+    this.selectedYear.revalidate();
   }
 
   openEdit(year: AcademicYearSummary): void {
@@ -141,6 +147,9 @@ export class AcademicYearListPage implements OnInit {
         // Bust the cached current-AY lookup — deleting the current year
         // changes what /api/academicyears/current returns.
         this.currentYearCache.clearCache();
+        // If the deleted year is the topbar's selected year, fall back to the
+        // calendar-current year instead of leaving a dangling label.
+        this.selectedYear.revalidate();
         this.refresh();
       },
       error: err => this.notify.apiError(err,

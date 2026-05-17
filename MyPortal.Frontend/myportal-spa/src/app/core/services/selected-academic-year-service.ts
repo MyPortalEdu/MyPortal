@@ -67,6 +67,32 @@ export class SelectedAcademicYearService {
     }
   }
 
+  // Re-check the current selection against the latest list. Call after create /
+  // update / delete from the AY list page: if the selected year was deleted,
+  // fall back to the calendar-current year; if it was renamed or had its dates
+  // changed, refresh the cached summary so the topbar label stays in sync.
+  // No-op before init — the app shell will seed the selection itself.
+  revalidate(): void {
+    if (!this._initialized() || !this._currentUserId) return;
+
+    const userId = this._currentUserId;
+    const wantedId = this.selectedId();
+    combineLatest([
+      this.years.list().pipe(catchError(() => of<AcademicYearSummary[]>([]))),
+      this.currentYear.getCurrent().pipe(catchError(() => of<AcademicYearSummary | null>(null))),
+    ]).pipe(take(1)).subscribe(([list, current]) => {
+      const matched = wantedId ? list.find(y => y.id === wantedId) ?? null : null;
+      const chosen = matched ?? current;
+      this._selected.set(chosen);
+
+      // Persisted id is stale (year deleted) — clear or replace so a refresh
+      // doesn't reintroduce the missing year.
+      if (wantedId && !matched) {
+        writeStored(userId, chosen?.id ?? null);
+      }
+    });
+  }
+
   // Wipe the persisted selection — called on logout so the next sign-in (even
   // as the same user) starts on the calendar-current year. Token refresh /
   // silent re-auth doesn't go through this path, so a long-running session
