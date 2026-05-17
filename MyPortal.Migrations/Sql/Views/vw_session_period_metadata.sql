@@ -24,7 +24,10 @@ SELECT
     CASE WHEN CA.Id IS NULL THEN 0 ELSE 1 END   AS IsCover
 FROM dbo.SessionPeriods                AS SP
          JOIN dbo.Sessions                      AS S   ON S.Id = SP.SessionId
-         JOIN dbo.AttendancePeriods             AS AP  ON AP.Id = SP.PeriodId
+         -- Only periods flagged as lessons feed the Sessions/Classes pipeline. A
+         -- reg-only period may share the same SessionPeriod row shape but is
+         -- materialised through the reg-group arm below.
+         JOIN dbo.AttendancePeriods             AS AP  ON AP.Id = SP.PeriodId AND AP.IsLesson = 1
          JOIN dbo.vw_attendance_period_instances AS API ON API.PeriodId = AP.Id
          LEFT JOIN dbo.Classes                  AS C   ON C.Id = S.ClassId
          LEFT JOIN dbo.CurriculumGroups         AS CG  ON CG.Id = C.CurriculumGroupId
@@ -65,6 +68,9 @@ FROM dbo.RegGroups                     AS RG
          LEFT JOIN dbo.Rooms                    AS R  ON R.Id = RG.RoomId
     OUTER APPLY dbo.fn_person_get_name(SM.PersonId, 2, 0, 1) AS FName
 WHERE
-    API.IsAmReg = 1 OR API.IsPmReg = 1
+    -- Reg-group sessions only fire on AM/PM reg periods that are NOT also lessons —
+    -- a lesson-flagged AM/PM reg is materialised by the lesson arm above (taken by
+    -- the subject teacher), not by the form tutor.
+    (API.IsAmReg = 1 OR API.IsPmReg = 1) AND API.IsLesson = 0
 ;
 GO

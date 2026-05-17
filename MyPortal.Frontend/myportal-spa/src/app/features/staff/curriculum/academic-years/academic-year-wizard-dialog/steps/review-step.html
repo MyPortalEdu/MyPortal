@@ -1,0 +1,106 @@
+<ng-container *transloco="let t; prefix: 'academic-years.wizard.review'">
+  <div class="flex flex-col gap-5">
+    <div>
+      <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
+      <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
+    </div>
+
+    <!-- Year banner -->
+    @if (yearName(); as name) {
+      <div class="rounded-lg bg-[var(--p-primary-50)] border border-[var(--p-primary-200)] p-4 flex items-center gap-4">
+        <i class="fa-solid fa-calendar-days text-primary text-2xl"></i>
+        <div class="flex-1">
+          <span class="text-xs uppercase text-muted-color tracking-wide">{{ t('yearLabel') }}</span>
+          <p class="text-xl font-semibold m-0">{{ name }}</p>
+        </div>
+        <div class="text-sm text-muted-color text-right">
+          <div>{{ t('cycleSummary', cycleSummary()) }}</div>
+          @if (cycleSummary().cycleWeeks > 1) {
+            <div>{{ t('startsInWeek', { letter: cycleSummary().firstWeekLetter }) }}</div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Terms -->
+    <section class="flex flex-col gap-2">
+      <h4 class="text-sm font-semibold m-0">{{ t('termsTitle') }}</h4>
+      @if (model().academicTerms.length === 0) {
+        <p class="text-sm text-muted-color m-0">{{ t('termsNone') }}</p>
+      } @else {
+        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+          @for (term of model().academicTerms; track $index) {
+            <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface text-sm">
+              <span class="font-medium flex-1">{{ term.name }}</span>
+              <span class="text-muted-color">
+                {{ term.startDate | date:'mediumDate' }} – {{ term.endDate | date:'mediumDate' }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Periods -->
+    <section class="flex flex-col gap-2">
+      <h4 class="text-sm font-semibold m-0">{{ t('periodsTitle') }}</h4>
+      @if (isCopyingPeriods()) {
+        <div class="px-3 py-2 rounded-lg border border-surface text-sm flex items-center gap-2">
+          <i class="fa-solid fa-clone text-muted-color"></i>
+          <span>{{ t('periodsCopiedFrom', { name: copyPeriodsSourceName() }) }}</span>
+        </div>
+      } @else if (periodDaySummaries().length === 0) {
+        <p class="text-sm text-muted-color m-0">{{ t('periodsNone') }}</p>
+      } @else {
+        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+          @for (row of periodDaySummaries(); track row.day) {
+            <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface text-sm">
+              <span class="font-medium w-24">{{ row.day }}</span>
+              <span class="text-muted-color flex-1">
+                {{ t('periodCount', { count: row.count }) }}
+                @if (row.firstStart && row.lastEnd) {
+                  · {{ row.firstStart | date:'shortTime' }}–{{ row.lastEnd | date:'shortTime' }}
+                }
+              </span>
+              <span class="text-xs text-muted-color">
+                {{ t('rolesSummary', { am: row.amCount, pm: row.pmCount, lessons: row.lessonCount }) }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Holidays -->
+    <section class="flex flex-col gap-2">
+      <h4 class="text-sm font-semibold m-0">{{ t('holidaysTitle') }}</h4>
+      @if (model().schoolHolidays.length === 0) {
+        <p class="text-sm text-muted-color m-0">{{ t('holidaysNone') }}</p>
+      } @else {
+        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+          @for (holiday of model().schoolHolidays; track $index) {
+            <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface text-sm">
+              <span class="font-medium flex-1">{{ holiday.name }}</span>
+              <span class="text-xs uppercase tracking-wide text-muted-color px-2 py-0.5 rounded bg-surface-100">
+                {{ holidayTypeLabel(holiday.type) }}
+              </span>
+              <span class="text-muted-color">
+                {{ holiday.startDate | date:'mediumDate' }} – {{ holiday.endDate | date:'mediumDate' }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Pastoral structure -->
+    <section class="flex flex-col gap-2">
+      <h4 class="text-sm font-semibold m-0">{{ t('pastoralTitle') }}</h4>
+      @if (copyPastoralSourceName(); as source) {
+        <p class="text-sm m-0">{{ t('pastoralCopiedFrom', { name: source }) }}</p>
+      } @else {
+        <p class="text-sm text-muted-color m-0">{{ t('pastoralNone') }}</p>
+      }
+    </section>
+  </div>
+</ng-container>

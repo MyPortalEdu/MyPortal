@@ -3,6 +3,7 @@
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
+    "discard": "Discard",
     "edit": "Edit",
     "close": "Close",
     "confirm": "Confirm",
@@ -10,8 +11,10 @@
     "loading": "Loading…",
     "redirecting": "Redirecting…",
     "new": "New",
+    "discardChanges": "Discard changes?",
+    "discardConfirm": "You have unsaved changes. Discard them?",
     "studentGroupPicker": {
-      "title": "Pick a student group",
+      "title": "Pick a Student Group",
       "add": "Add student group…",
       "code": "Code",
       "name": "Name",
@@ -28,6 +31,21 @@
         "CurriculumGroup": "Curriculum group",
         "Other": "Other"
       }
+    },
+    "localAuthorityPicker": {
+      "title": "Pick a Local Authority",
+      "pick": "Pick local authority…",
+      "leaCode": "LEA code",
+      "name": "Name",
+      "empty": "No local authorities found."
+    },
+    "staffMemberPicker": {
+      "title": "Pick a Staff Member",
+      "pick": "Pick staff member…",
+      "code": "Code",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "empty": "No staff members found."
     }
   },
   "topbar": {
@@ -39,6 +57,13 @@
       "staff": "Staff",
       "student": "Student",
       "parent": "Parent"
+    },
+    "yearSwitcher": {
+      "title": "Switch Academic Year",
+      "empty": "No academic years to switch to.",
+      "currentBadge": "Current",
+      "lockedBadge": "Locked",
+      "loadError": "Couldn't load academic years"
     }
   },
   "userMenu": {
@@ -58,13 +83,27 @@
   "nav": {
     "system": "System",
     "users": "Users",
-    "bulletinSettings": "Bulletin settings"
+    "bulletinSettings": "Bulletin Settings",
+    "school": "School",
+    "schoolDetails": "School Details",
+    "curriculum": "Curriculum",
+    "academicYears": "Academic Years"
   },
   "pages": {
     "home": {
       "title": "Home",
       "timetable": "Timetable",
-      "timetablePlaceholder": "This is a placeholder for the timetable."
+      "timetablePlaceholder": "This is a placeholder for the timetable.",
+      "schoolSetup": {
+        "title": "Enter your school details",
+        "body": "Set up your school's name, identifiers, and head teacher to finish setup.",
+        "action": "Open school details"
+      },
+      "academicYearSetup": {
+        "title": "Set up your first academic year",
+        "body": "Define your timetable cycle, terms, attendance periods, and holidays so the rest of the system has a calendar to hang off.",
+        "action": "Open academic years"
+      }
     },
     "users": {
       "title": "Users"

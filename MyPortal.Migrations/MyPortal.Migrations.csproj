@@ -28,6 +28,7 @@
     <None Remove="Sql\StoredProcedures\usp_directory_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_directory_get_details_by_parent_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_directory_is_in_subtree.sql" />
+    <None Remove="Sql\StoredProcedures\usp_directory_get_referencing_owner.sql" />
     <None Remove="Sql\StoredProcedures\usp_document_get_details_by_directory.sql" />
     <None Remove="Sql\StoredProcedures\usp_document_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_permission_get_by_user_id.sql" />
@@ -42,6 +43,7 @@
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_details_by_parent_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_is_in_subtree.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_referencing_owner.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_document_get_details_by_directory.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_document_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_permission_get_by_user_id.sql" />
@@ -53,6 +55,8 @@
     <None Remove="Sql\Updates\0001_test_update.sql" />
     <None Remove="Sql\Updates\20251101000000_add_identity.sql" />
     <EmbeddedResource Include="Sql\Updates\20251101000000_add_identity.sql" />
+    <None Remove="Sql\Updates\20251101000050_seed_system_user.sql" />
+    <EmbeddedResource Include="Sql\Updates\20251101000050_seed_system_user.sql" />
     <None Remove="Sql\Updates\0002_add_permissions.sql" />
     <None Remove="Sql\Updates\20251101000200_add_auth.sql" />
     <EmbeddedResource Include="Sql\Updates\20251101000200_add_auth.sql" />
@@ -188,6 +192,10 @@
     <EmbeddedResource Include="Sql\Updates\20260511000000_redesign_bulletins.sql" />
     <None Remove="Sql\Updates\20260512000000_add_bulletin_settings_permission.sql" />
     <EmbeddedResource Include="Sql\Updates\20260512000000_add_bulletin_settings_permission.sql" />
+    <None Remove="Sql\Updates\20260514000000_add_agency_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260514000000_add_agency_permissions.sql" />
+    <None Remove="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
   </ItemGroup>
 
   <ItemGroup>

@@ -268,7 +268,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             return false;
         }
 
-        return await CanStructurallyViewDirectoryAsync(entityId, directoryId, cancellationToken);
+        return await base.CanViewDirectoryAsync(entityId, directoryId, cancellationToken);
     }
 
     public override async Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId,
@@ -283,7 +283,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             return false;
         }
 
-        return await CanStructurallyEditDirectoryAsync(entityId, directoryId, cancellationToken);
+        return await base.CanEditDirectoryAsync(entityId, directoryId, cancellationToken);
     }
 
     public override async Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId,
@@ -300,7 +300,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             return false;
         }
 
-        return await CanStructurallyUploadToDirectoryAsync(entityId, directoryId, cancellationToken);
+        return await base.CanUploadToDirectoryAsync(entityId, directoryId, cancellationToken);
     }
 
     private static void ValidateAudiences(IList<BulletinAudienceRequest> audiences)

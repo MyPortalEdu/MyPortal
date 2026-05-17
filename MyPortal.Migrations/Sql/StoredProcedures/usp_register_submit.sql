@@ -53,6 +53,7 @@ BEGIN
         JOIN dbo.vw_attendance_period_instances  AS API ON API.PeriodId = @attendancePeriodId
                                                        AND API.AttendanceWeekId = @attendanceWeekId
                                                        AND (API.IsAmReg = 1 OR API.IsPmReg = 1)
+                                                       AND API.IsLesson = 0
         WHERE RG.Id = @regGroupId;
     END
 

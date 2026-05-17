@@ -1,0 +1,149 @@
+<ng-container *transloco="let t; prefix: 'academic-years.wizard'">
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="$event ? null : onHide()"
+  [modal]="true"
+  [closable]="false"
+  [closeOnEscape]="false"
+  [dismissableMask]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: 'min(64rem, 95vw)' }"
+  styleClass="mp-flush-dialog"
+  [showHeader]="false">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between p-4 border-b border-surface">
+    <h3 class="text-base font-semibold m-0">
+      {{ isEditMode() ? t('editTitle') : t('title') }}
+    </h3>
+    <button type="button" class="mp-icon-button" (click)="onCancel()"
+            [attr.aria-label]="'common.close' | transloco"
+            [disabled]="submitting()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="p-4 flex flex-col gap-5">
+  <!-- Step indicator strip. Each chip shows its position and label; the active
+       chip is filled, completed chips show a check, and upcoming chips are
+       muted. Click-to-jump is intentionally disabled — the wizard validates
+       step-by-step, so users have to walk through in order. -->
+  <ol class="list-none m-0 p-0 flex items-center gap-2 text-sm">
+    @for (key of stepKeys; track key; let i = $index) {
+      <li class="flex items-center gap-2"
+          [class.opacity-60]="i > currentStep()">
+        <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold"
+              [class.bg-green-500]="i < currentStep()"
+              [class.text-white]="i < currentStep()"
+              [class.bg-primary]="i === currentStep()"
+              [class.text-primary-contrast]="i === currentStep()"
+              [class.bg-surface-200]="i > currentStep()"
+              [class.text-muted-color]="i > currentStep()">
+          @if (i < currentStep()) {
+            <i class="fa-solid fa-check"></i>
+          } @else {
+            {{ i + 1 }}
+          }
+        </span>
+        <span [class.font-semibold]="i === currentStep()">
+          {{ t('steps.' + key) }}
+        </span>
+        @if (i < stepKeys.length - 1) {
+          <i class="fa-solid fa-chevron-right text-xs text-muted-color mx-1"></i>
+        }
+      </li>
+    }
+  </ol>
+
+  <!-- Active step body. One component visible at a time keeps each step's
+       state scoped to its own component instance — bookkeeping like "did the
+       user touch this field" doesn't leak across steps. In edit mode the
+       wizard is briefly empty while the GET fires; show a spinner so the
+       user doesn't see an unprefilled form for the round-trip. -->
+  <div class="min-h-[18rem]">
+    @if (loading()) {
+      <div class="flex flex-col items-center justify-center min-h-[18rem] gap-3">
+        <p-progress-spinner [style]="{ width: '2.5rem', height: '2.5rem' }"></p-progress-spinner>
+        <span class="text-sm text-muted-color">{{ t('loading') }}</span>
+      </div>
+    } @else {
+      @switch (currentStepKey()) {
+        @case ('setup') {
+          <mp-academic-year-wizard-setup-step
+            [model]="model()"
+            [editMode]="isEditMode()"
+            (modelChange)="patchModel($event)">
+          </mp-academic-year-wizard-setup-step>
+        }
+        @case ('periods') {
+          <mp-academic-year-wizard-periods-step
+            [model]="model()"
+            [editMode]="isEditMode()"
+            (modelChange)="patchModel($event)">
+          </mp-academic-year-wizard-periods-step>
+        }
+        @case ('holidays') {
+          <mp-academic-year-wizard-holidays-step
+            [model]="model()"
+            (modelChange)="patchModel($event)">
+          </mp-academic-year-wizard-holidays-step>
+        }
+        @case ('review') {
+          <mp-academic-year-wizard-review-step
+            [model]="model()">
+          </mp-academic-year-wizard-review-step>
+        }
+      }
+    }
+  </div>
+
+  </div>
+
+  <!-- Footer is inlined rather than projected via pTemplate="footer" because
+       PrimeNG 20 stopped honouring pTemplate-based slot projection on p-dialog.
+       Mirrors the bulletin-form-dialog footer: bg-emphasis + top border +
+       rounded-b-xl anchor it as a distinct actions strip flush against the
+       dialog's bottom edge (needs the mp-flush-dialog styleClass above to
+       cancel the default content padding). -->
+  <div class="flex items-center justify-between gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+    <p-button
+      [label]="t('cancel')"
+      severity="secondary"
+      [text]="true"
+      [disabled]="submitting()"
+      (click)="onCancel()">
+    </p-button>
+
+    <div class="flex items-center gap-2">
+      <p-button
+        [label]="t('back')"
+        icon="fa-solid fa-arrow-left"
+        severity="secondary"
+        [disabled]="currentStep() === 0 || submitting()"
+        (click)="back()">
+      </p-button>
+
+      @if (isLastStep()) {
+        <p-button
+          [label]="isEditMode() ? t('save') : t('create')"
+          icon="fa-solid fa-check"
+          severity="primary"
+          [disabled]="!canAdvance() || submitting() || loading()"
+          [loading]="submitting()"
+          (click)="save()">
+        </p-button>
+      } @else {
+        <p-button
+          [label]="t('next')"
+          icon="fa-solid fa-arrow-right"
+          iconPos="right"
+          severity="primary"
+          [disabled]="!canAdvance() || submitting() || loading()"
+          (click)="next()">
+        </p-button>
+      }
+    </div>
+  </div>
+</p-dialog>
+</ng-container>

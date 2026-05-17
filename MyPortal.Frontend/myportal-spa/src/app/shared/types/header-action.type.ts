@@ -6,5 +6,6 @@ export type HeaderAction = {
   outlined?: boolean;
   severity?: ButtonSeverity;
   disabled?: boolean;
+  loading?: boolean;
   command?: () => void;
 };

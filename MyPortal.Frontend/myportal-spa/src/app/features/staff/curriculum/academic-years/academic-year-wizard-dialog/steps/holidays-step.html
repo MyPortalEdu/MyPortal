@@ -1,0 +1,77 @@
+<ng-container *transloco="let t; prefix: 'academic-years.wizard.holidays'">
+  <div class="flex flex-col gap-5">
+    <div>
+      <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
+      <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
+    </div>
+
+    <section class="flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <h4 class="text-sm font-semibold m-0">{{ t('listTitle') }}</h4>
+        <p-button
+          icon="fa-solid fa-plus"
+          [label]="t('addHoliday')"
+          size="small"
+          severity="secondary"
+          (click)="addHoliday()">
+        </p-button>
+      </div>
+
+      @if (!hasHolidays()) {
+        <div class="text-sm text-muted-color text-center border border-dashed border-surface rounded-lg p-4">
+          {{ t('noHolidays') }}
+        </div>
+      } @else {
+        <ul class="list-none m-0 p-0 flex flex-col gap-2">
+          @for (holiday of model().schoolHolidays; track $index; let i = $index) {
+            <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
+              <div class="flex flex-col gap-1 flex-1 min-w-[12rem]">
+                <label class="text-xs text-muted-color">{{ t('holidayName') }}</label>
+                <input pInputText type="text"
+                  [ngModel]="holiday.name"
+                  (ngModelChange)="updateHoliday(i, { name: $event })"
+                  [placeholder]="t('holidayNamePlaceholder')" />
+              </div>
+              <div class="flex flex-col gap-1 min-w-[10rem]">
+                <label class="text-xs text-muted-color">{{ t('holidayType') }}</label>
+                <p-select
+                  [ngModel]="holiday.type"
+                  (ngModelChange)="updateHoliday(i, { type: $event })"
+                  [options]="holidayTypes"
+                  optionLabel="label"
+                  optionValue="value"
+                  appendTo="body">
+                </p-select>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-color">{{ t('holidayStart') }}</label>
+                <p-datepicker
+                  [ngModel]="holiday.startDate"
+                  (ngModelChange)="updateHoliday(i, { startDate: $event })"
+                  dateFormat="dd/mm/yy"
+                  appendTo="body">
+                </p-datepicker>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-color">{{ t('holidayEnd') }}</label>
+                <p-datepicker
+                  [ngModel]="holiday.endDate"
+                  (ngModelChange)="updateHoliday(i, { endDate: $event })"
+                  dateFormat="dd/mm/yy"
+                  appendTo="body">
+                </p-datepicker>
+              </div>
+              <p-button
+                icon="fa-solid fa-trash-can"
+                severity="danger"
+                [text]="true"
+                [attr.aria-label]="t('removeHoliday')"
+                (click)="removeHoliday(i)">
+              </p-button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</ng-container>

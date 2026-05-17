@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
+import { ProgressSpinner } from 'primeng/progressspinner';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
@@ -31,7 +32,7 @@ import {
 @Component({
   selector: 'mp-bulletin-detail-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Dialog, Button, TranslocoDirective, BulletinAttachments],
+  imports: [Dialog, Button, ProgressSpinner, TranslocoDirective, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-detail-dialog.html',
 })

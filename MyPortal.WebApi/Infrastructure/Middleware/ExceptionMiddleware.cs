@@ -115,6 +115,14 @@ public class ExceptionMiddleware : IMiddleware
                     title: "Invalid operation.",
                     detail: sex.Message));
         }
+        catch (EntityInUseException iuex)
+        {
+            await WriteProblemAsync(context,
+                _problemFactory.CreateProblemDetails(context,
+                    statusCode: StatusCodes.Status409Conflict,
+                    title: "Entity in use.",
+                    detail: iuex.Message));
+        }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
             context.Response.StatusCode = StatusCodes.Status499ClientClosedRequest;

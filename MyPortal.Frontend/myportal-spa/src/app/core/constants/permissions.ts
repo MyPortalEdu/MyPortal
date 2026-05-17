@@ -9,10 +9,18 @@ export const Permissions = {
     EditGroups:          'System.EditGroups',
     BulletinSettings:    'System.BulletinSettings'
   },
+  Agencies: {
+    ViewAgencies: 'Agencies.ViewAgencies',
+    EditAgencies: 'Agencies.EditAgencies',
+  },
   School: {
     CreateSchoolBulletins: 'School.CreateSchoolBulletins',
     EditSchoolBulletins:   'School.EditSchoolBulletins',
     PinSchoolBulletins:    'School.PinSchoolBulletins',
+  },
+  Curriculum: {
+    ViewAcademicYears: 'Curriculum.ViewAcademicYears',
+    EditAcademicYears: 'Curriculum.EditAcademicYears',
   },
 } as const;
 

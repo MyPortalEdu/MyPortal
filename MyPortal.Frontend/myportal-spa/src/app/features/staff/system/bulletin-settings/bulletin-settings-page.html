@@ -20,7 +20,17 @@
     </div>
 
     @if (categoriesLoading()) {
-      <div class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</div>
+      <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
+        @for (_ of [0, 1, 2]; track $index) {
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
+            <p-skeleton shape="square" size="2.25rem" styleClass="!rounded-lg shrink-0"></p-skeleton>
+            <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+              <p-skeleton width="40%" height="1rem"></p-skeleton>
+              <p-skeleton width="60%" height="0.75rem"></p-skeleton>
+            </div>
+          </li>
+        }
+      </ul>
     } @else if (categories().length === 0) {
       <div class="text-sm text-muted-color py-6 text-center border border-dashed border-surface rounded-lg">
         {{ t('categories.empty') }}
@@ -91,7 +101,16 @@
     </div>
 
     @if (allowedGroupsLoading()) {
-      <div class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</div>
+      <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
+        @for (_ of [0, 1, 2]; track $index) {
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
+            <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+              <p-skeleton width="50%" height="1rem"></p-skeleton>
+              <p-skeleton width="25%" height="0.75rem"></p-skeleton>
+            </div>
+          </li>
+        }
+      </ul>
     } @else if (allowedGroups().length === 0) {
       <div class="text-sm text-muted-color py-6 text-center border border-dashed border-surface rounded-lg">
         {{ t('audiences.empty') }}

@@ -26,8 +26,8 @@
     "errorAcknowledge": "Couldn't acknowledge bulletin"
   },
   "form": {
-    "titleEdit": "Edit bulletin",
-    "titleCreate": "New bulletin",
+    "titleEdit": "Edit Bulletin",
+    "titleCreate": "New Bulletin",
     "titleLabel": "Title",
     "titlePlaceholder": "What is this about?",
     "category": "Category",

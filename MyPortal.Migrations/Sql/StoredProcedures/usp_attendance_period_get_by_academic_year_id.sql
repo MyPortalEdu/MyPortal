@@ -16,7 +16,8 @@ SELECT
     StartTime,
     EndTime,
     IsAmReg,
-    IsPmReg
+    IsPmReg,
+    IsLesson
 FROM
     dbo.AttendancePeriods
 WHERE

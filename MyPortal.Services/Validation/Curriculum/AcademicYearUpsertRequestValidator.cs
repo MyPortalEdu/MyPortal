@@ -47,17 +47,45 @@ public class AcademicYearUpsertRequestValidator : AbstractValidator<AcademicYear
 
         RuleFor(x => x)
             .Must(x => !(x.CopyPeriodsFromAcademicYearId.HasValue && x.AttendancePeriods.Length > 0))
-            .WithMessage("Either CopyPeriodsFromAcademicYearId or AttendancePeriods must be specified.");
+            .WithMessage("Cannot specify both CopyPeriodsFromAcademicYearId and AttendancePeriods.");
 
         RuleForEach(x => x.AttendancePeriods).SetValidator(new AttendancePeriodUpsertRequestValidator());
 
         // CycleDayIndex is bounded by the parent cycle length, so the cross-field check has to
         // live up here (the per-period validator can't see the cycle length).
         RuleFor(x => x.AttendancePeriods)
-            .Must((model, periods) => periods.All(p 
+            .Must((model, periods) => periods.All(p
                 => p.CycleDayIndex < model.TimetableCycleLength))
             .WithMessage("Every attendance period's CycleDayIndex must be less than the timetable cycle length.")
             .When(x => x.TimetableCycleLength > 0);
+
+        // Statutory: schools must take an AM and a PM register every day they operate.
+        // Two registers for the same half-day would create duplicate session records, so
+        // enforce exactly one of each per cycle day rather than at-least-one. Lessons are
+        // unconstrained — primary schools, for example, often run no period-based teaching.
+        // Skipped when copying from a prior year (periods empty); that year already
+        // satisfied this rule when it was created.
+        RuleFor(x => x.AttendancePeriods)
+            .Must((model, periods) => EveryDayHasOneAmAndPmReg(periods, model.TimetableCycleLength))
+            .WithMessage("Each cycle day must have exactly one AM reg and one PM reg period.")
+            .When(x => x.AttendancePeriods.Length > 0 && x.TimetableCycleLength > 0);
+    }
+
+    private static bool EveryDayHasOneAmAndPmReg(AttendancePeriodUpsertRequest[] periods, int cycleLength)
+    {
+        for (var day = 0; day < cycleLength; day++)
+        {
+            var am = 0;
+            var pm = 0;
+            foreach (var p in periods)
+            {
+                if (p.CycleDayIndex != day) continue;
+                if (p.IsAmReg) am++;
+                if (p.IsPmReg) pm++;
+            }
+            if (am != 1 || pm != 1) return false;
+        }
+        return true;
     }
 
     private static bool NotOverlap(AcademicTermUpsertRequest[] terms)
@@ -117,5 +145,11 @@ public class AttendancePeriodUpsertRequestValidator : AbstractValidator<Attendan
 
         RuleFor(x => x.EndTime)
             .GreaterThan(x => x.StartTime).WithMessage("Period end time must be after the start time.");
+
+        // Mirrors the DB CHECK constraint — a period that is neither a lesson nor a
+        // registration session would materialise to nothing.
+        RuleFor(x => x)
+            .Must(x => x.IsLesson || x.IsAmReg || x.IsPmReg)
+            .WithMessage("A period must be a lesson, an AM reg, a PM reg, or some combination.");
     }
 }

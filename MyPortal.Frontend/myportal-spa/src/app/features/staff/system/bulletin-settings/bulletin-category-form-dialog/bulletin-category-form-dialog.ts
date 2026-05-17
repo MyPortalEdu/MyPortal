@@ -19,10 +19,19 @@ import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoSc
 
 import { BulletinsDataService } from '../../../../../shared/services/bulletins-data.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
 import {
   BulletinCategoryResponse,
   BulletinCategoryUpsertRequest,
 } from '../../../../../shared/types/bulletin';
+
+type FormSnapshot = {
+  name: string;
+  icon: string;
+  colour: string;
+  displayOrder: number;
+  active: boolean;
+};
 
 // Curated icon grid — Font Awesome Pro glyphs that read well as category
 // markers in a school-bulletin context. Stored as `fa-regular fa-…` so the
@@ -121,6 +130,7 @@ export class BulletinCategoryFormDialog {
   private readonly data = inject(BulletinsDataService);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
+  private readonly confirmDialog = inject(ConfirmationDialog);
 
   readonly visible = input.required<boolean>();
   /** Pre-fills fields for edit mode; null = create. */
@@ -139,9 +149,41 @@ export class BulletinCategoryFormDialog {
   readonly active = signal(true);
   readonly submitting = signal(false);
 
+  // Manually track which fields the user has blurred. We can't rely on
+  // ngModel's touched state for invalid styling because some PrimeNG inputs
+  // call onModelChange inside writeValue, which Angular interprets as a
+  // user change and flips ng-dirty on mount — making the field look invalid
+  // before the user has touched it. Reset on each dialog open via reset().
+  readonly touchedFields = signal<ReadonlySet<string>>(new Set());
+
+  markTouched(field: string): void {
+    if (this.touchedFields().has(field)) return;
+    this.touchedFields.update(s => new Set(s).add(field));
+  }
+
+  wasTouched(field: string): boolean {
+    return this.touchedFields().has(field);
+  }
+
   readonly isEdit = computed(() => this.existing() !== null);
 
   readonly isValid = computed(() => this.name().trim().length > 0);
+
+  private readonly snapshot = signal<FormSnapshot | null>(null);
+
+  private readonly currentForm = computed<FormSnapshot>(() => ({
+    name: this.name(),
+    icon: this.icon(),
+    colour: this.colour(),
+    displayOrder: this.displayOrder(),
+    active: this.active(),
+  }));
+
+  readonly isDirty = computed(() => {
+    const s = this.snapshot();
+    if (!s) return false;
+    return JSON.stringify(s) !== JSON.stringify(this.currentForm());
+  });
 
   constructor() {
     effect(() => {
@@ -151,11 +193,29 @@ export class BulletinCategoryFormDialog {
     });
   }
 
-  onCancel(): void {
-    this.closed.emit();
+  async onCancel(): Promise<void> {
+    await this.requestClose();
   }
 
   onHide(): void {
+    // PrimeNG fires onHide both when the user triggers a close (Escape) and
+    // when the parent flips `visible` to false in response to our own
+    // `closed`/`saved` events. We can't re-prompt here without re-asking the
+    // user who just clicked Discard — and Escape is gated by closeOnEscape so
+    // it only fires on a clean form anyway. Just keep the parent in sync.
+    this.closed.emit();
+  }
+
+  private async requestClose(): Promise<void> {
+    if (this.isDirty()) {
+      const ok = await this.confirmDialog.confirm({
+        header: this.transloco.translate('common.discardChanges'),
+        message: this.transloco.translate('common.discardConfirm'),
+        acceptLabel: this.transloco.translate('common.discard'),
+        acceptSeverity: 'danger',
+      });
+      if (!ok) return;
+    }
     this.closed.emit();
   }
 
@@ -176,6 +236,9 @@ export class BulletinCategoryFormDialog {
     const t = (key: string) => this.transloco.translate(`bulletin-settings.form.${key}`);
     const onSuccess = () => {
       this.submitting.set(false);
+      // Re-baseline before emitting saved so the parent-driven close doesn't
+      // see isDirty=true and prompt the user.
+      this.snapshot.set(this.currentForm());
       this.notify.success(t(existing ? 'updatedToast' : 'createdToast'));
       this.saved.emit();
     };
@@ -199,12 +262,14 @@ export class BulletinCategoryFormDialog {
       this.colour.set(existing.colourCode || CATEGORY_COLOURS[0]);
       this.displayOrder.set(existing.displayOrder);
       this.active.set(existing.active);
-      return;
+    } else {
+      this.name.set('');
+      this.icon.set(CATEGORY_ICONS[0]);
+      this.colour.set(CATEGORY_COLOURS[0]);
+      this.displayOrder.set(100);
+      this.active.set(true);
     }
-    this.name.set('');
-    this.icon.set(CATEGORY_ICONS[0]);
-    this.colour.set(CATEGORY_COLOURS[0]);
-    this.displayOrder.set(100);
-    this.active.set(true);
+    this.touchedFields.set(new Set());
+    this.snapshot.set(this.currentForm());
   }
 }

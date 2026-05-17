@@ -1,0 +1,253 @@
+<ng-container *transloco="let t; prefix: 'school-details'">
+  <mp-page-header
+    [title]="t('title')"
+    [subtitle]="t('subtitle')"
+    icon="fa-solid fa-school"
+    [actions]="headerActions()">
+  </mp-page-header>
+
+  @if (loading()) {
+    <div class="flex items-center justify-center py-16" aria-busy="true">
+      <p-progressSpinner [ariaLabel]="'common.loading' | transloco" strokeWidth="3" styleClass="!w-12 !h-12"></p-progressSpinner>
+    </div>
+  } @else {
+    @if (!canEdit()) {
+      <div class="mb-3 px-3 py-2 rounded-md bg-surface-100 text-sm text-muted-color">
+        <i class="fa-solid fa-lock mr-2"></i>{{ t('readOnlyHint') }}
+      </div>
+    }
+
+    <form class="flex flex-col gap-4" (ngSubmit)="save()">
+      <!-- Organisation -->
+      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+        <h2 class="text-base font-semibold m-0">{{ t('sections.agency') }}</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.name') }}</span>
+            <input
+              pInputText
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+              [disabled]="!canEdit()"
+              [placeholder]="t('fields.namePlaceholder')"
+              required
+              #nameRef="ngModel"
+              [invalid]="nameRef.touched && nameRef.invalid"
+              name="name"/>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.website') }}</span>
+            <input
+              pInputText
+              [ngModel]="website() ?? ''"
+              (ngModelChange)="website.set($event)"
+              [disabled]="!canEdit()"
+              [placeholder]="t('fields.websitePlaceholder')"
+              name="website"/>
+          </label>
+        </div>
+      </section>
+
+      <!-- School identifiers -->
+      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+        <h2 class="text-base font-semibold m-0">{{ t('sections.school') }}</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.urn') }}</span>
+            <input
+              pInputText
+              [ngModel]="urn()"
+              (ngModelChange)="urn.set($event)"
+              [disabled]="!canEdit()"
+              required
+              #urnRef="ngModel"
+              [invalid]="urnRef.touched && urnRef.invalid"
+              name="urn"/>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.uprn') }}</span>
+            <input
+              pInputText
+              [ngModel]="uprn()"
+              (ngModelChange)="uprn.set($event)"
+              [disabled]="!canEdit()"
+              required
+              #uprnRef="ngModel"
+              [invalid]="uprnRef.touched && uprnRef.invalid"
+              name="uprn"/>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.establishmentNumber') }}</span>
+            <p-inputNumber
+              [ngModel]="establishmentNumber()"
+              (ngModelChange)="establishmentNumber.set($event)"
+              [disabled]="!canEdit()"
+              [useGrouping]="false"
+              mode="decimal"
+              [min]="0"
+              [showButtons]="false"
+              required
+              #estabRef="ngModel"
+              [invalid]="estabRef.touched && estabRef.invalid"
+              name="establishmentNumber">
+            </p-inputNumber>
+          </label>
+        </div>
+
+        <!-- Local authority via picker. Show the picked LA's name; null state
+             reads as "Not set". The picker is hidden in read-only mode. -->
+        <div class="flex flex-col gap-1">
+          <span class="text-sm font-medium">{{ t('fields.localAuthority') }}</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm">
+              @if (localAuthorityName(); as n) {
+                {{ n }}
+              } @else if (localAuthorityId()) {
+                <span class="font-mono text-xs">{{ localAuthorityId() }}</span>
+              } @else {
+                <span class="text-muted-color">{{ t('fields.noLocalAuthority') }}</span>
+              }
+            </span>
+            @if (canEdit()) {
+              <mp-local-authority-picker (picked)="onLocalAuthorityPicked($event)"></mp-local-authority-picker>
+              @if (localAuthorityId()) {
+                <p-button
+                  [label]="t('fields.clear')"
+                  icon="fa-solid fa-xmark"
+                  severity="secondary"
+                  [text]="true"
+                  (click)="clearLocalAuthority()">
+                </p-button>
+              }
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Classification -->
+      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+        <h2 class="text-base font-semibold m-0">{{ t('sections.classification') }}</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.schoolPhase') }}</span>
+            <p-select
+              [options]="schoolPhases()"
+              optionLabel="description"
+              optionValue="id"
+              [ngModel]="schoolPhaseId()"
+              (ngModelChange)="schoolPhaseId.set($event)"
+              [disabled]="!canEdit()"
+              [filter]="true"
+              filterBy="description"
+              appendTo="body"
+              [style]="{ width: '100%' }"
+              required
+              #schoolPhaseRef="ngModel"
+              [invalid]="schoolPhaseRef.touched && schoolPhaseRef.invalid"
+              name="schoolPhaseId">
+            </p-select>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.schoolType') }}</span>
+            <p-select
+              [options]="schoolTypes()"
+              optionLabel="description"
+              optionValue="id"
+              [ngModel]="schoolTypeId()"
+              (ngModelChange)="schoolTypeId.set($event)"
+              [disabled]="!canEdit()"
+              [filter]="true"
+              filterBy="description"
+              appendTo="body"
+              [style]="{ width: '100%' }"
+              required
+              #schoolTypeRef="ngModel"
+              [invalid]="schoolTypeRef.touched && schoolTypeRef.invalid"
+              name="schoolTypeId">
+            </p-select>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.governanceType') }}</span>
+            <p-select
+              [options]="governanceTypes()"
+              optionLabel="description"
+              optionValue="id"
+              [ngModel]="governanceTypeId()"
+              (ngModelChange)="governanceTypeId.set($event)"
+              [disabled]="!canEdit()"
+              [filter]="true"
+              filterBy="description"
+              appendTo="body"
+              [style]="{ width: '100%' }"
+              required
+              #governanceTypeRef="ngModel"
+              [invalid]="governanceTypeRef.touched && governanceTypeRef.invalid"
+              name="governanceTypeId">
+            </p-select>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium">{{ t('fields.intakeType') }}</span>
+            <p-select
+              [options]="intakeTypes()"
+              optionLabel="description"
+              optionValue="id"
+              [ngModel]="intakeTypeId()"
+              (ngModelChange)="intakeTypeId.set($event)"
+              [disabled]="!canEdit()"
+              [filter]="true"
+              filterBy="description"
+              appendTo="body"
+              [style]="{ width: '100%' }"
+              required
+              #intakeTypeRef="ngModel"
+              [invalid]="intakeTypeRef.touched && intakeTypeRef.invalid"
+              name="intakeTypeId">
+            </p-select>
+          </label>
+        </div>
+      </section>
+
+      <!-- Leadership -->
+      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+        <h2 class="text-base font-semibold m-0">{{ t('sections.leadership') }}</h2>
+
+        <div class="flex flex-col gap-1">
+          <span class="text-sm font-medium">{{ t('fields.headTeacher') }}</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm">
+              @if (headTeacherFullName(); as n) {
+                {{ n }}
+              } @else if (headTeacherId()) {
+                <span class="font-mono text-xs">{{ headTeacherId() }}</span>
+              } @else {
+                <span class="text-muted-color">{{ t('fields.noHeadTeacher') }}</span>
+              }
+            </span>
+            @if (canEdit()) {
+              <mp-staff-member-picker (picked)="onHeadTeacherPicked($event)"></mp-staff-member-picker>
+              @if (headTeacherId()) {
+                <p-button
+                  [label]="t('fields.clear')"
+                  icon="fa-solid fa-xmark"
+                  severity="secondary"
+                  [text]="true"
+                  (click)="clearHeadTeacher()">
+                </p-button>
+              }
+            }
+          </div>
+        </div>
+      </section>
+
+    </form>
+  }
+</ng-container>

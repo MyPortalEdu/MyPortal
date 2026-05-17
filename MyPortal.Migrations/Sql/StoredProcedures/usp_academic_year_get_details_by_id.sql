@@ -59,7 +59,8 @@ BEGIN
         StartTime     = AP.StartTime,
         EndTime       = AP.EndTime,
         IsAmReg       = AP.IsAmReg,
-        IsPmReg       = AP.IsPmReg
+        IsPmReg       = AP.IsPmReg,
+        IsLesson      = AP.IsLesson
     FROM dbo.AttendancePeriods AS AP
     WHERE AP.AcademicYearId = @academicYearId
     ORDER BY AP.CycleDayIndex, AP.StartTime;
