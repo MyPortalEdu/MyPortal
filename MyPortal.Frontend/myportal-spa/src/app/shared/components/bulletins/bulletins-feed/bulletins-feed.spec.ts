@@ -5,6 +5,10 @@ import { TranslocoService } from '@jsverse/transloco';
 import { BulletinsFeed } from './bulletins-feed';
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { MeService } from '../../../../core/services/me-service';
+import { Permissions } from '../../../../core/constants/permissions';
+import { UserType } from '../../../../core/types/user-type';
+import { Me } from '../../../../core/types/me';
 import {
   BulletinDetailsResponse,
   BulletinSummaryResponse,
@@ -31,20 +35,36 @@ function makeSummary(overrides: Partial<BulletinSummaryResponse> = {}): Bulletin
   };
 }
 
+function makeMe(overrides: Partial<Me> = {}): Me {
+  return {
+    id: 'me-1',
+    userName: 'me',
+    userType: UserType.Staff,
+    isEnabled: true,
+    isSystem: false,
+    displayName: 'Me',
+    permissions: [Permissions.School.EditSchoolBulletins],
+    ...overrides,
+  };
+}
+
 describe('BulletinsFeed', () => {
   let component: BulletinsFeed;
   let data: jasmine.SpyObj<BulletinsDataService>;
   let notify: jasmine.SpyObj<NotificationService>;
+  let meService: jasmine.SpyObj<MeService>;
 
   beforeEach(async () => {
     data = jasmine.createSpyObj<BulletinsDataService>('BulletinsDataService',
       ['list', 'listCategories', 'delete']);
     notify = jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'apiError']);
+    meService = jasmine.createSpyObj<MeService>('MeService', ['me', 'clearCache']);
 
     // Default refresh() inputs: empty page + empty categories.
     data.list.and.returnValue(of({ items: [], totalItems: 0 } as PageResult<BulletinSummaryResponse>));
     data.listCategories.and.returnValue(of([]));
     data.delete.and.returnValue(of(void 0));
+    meService.me.and.returnValue(of(makeMe()));
 
     // Stub TranslocoService so .translate() returns the key, avoiding the JSON loader.
     const translocoStub = {
@@ -62,6 +82,7 @@ describe('BulletinsFeed', () => {
       providers: [
         { provide: BulletinsDataService, useValue: data },
         { provide: NotificationService, useValue: notify },
+        { provide: MeService, useValue: meService },
         { provide: TranslocoService, useValue: translocoStub },
       ],
     }).compileComponents();
@@ -146,6 +167,35 @@ describe('BulletinsFeed', () => {
 
     component.selectCategory(null);
     expect(component.filteredBulletins().length).toBe(3);
+  });
+
+  // ─── canPost (gate on the "+ New" button) ────────────────────────────────
+  //
+  // `me` is private — poke it directly so we don't have to recreate the
+  // fixture per variation. Server still enforces; this is just so non-editors
+  // don't see a button that would 403.
+
+  type MePoke = { me: { set: (v: Me) => void } };
+
+  it('canPost is true for staff with EditSchoolBulletins', () => {
+    (component as unknown as MePoke).me.set(
+      makeMe({ userType: UserType.Staff, permissions: [Permissions.School.EditSchoolBulletins] }),
+    );
+    expect(component.canPost()).toBeTrue();
+  });
+
+  it('canPost is false for staff without EditSchoolBulletins', () => {
+    (component as unknown as MePoke).me.set(
+      makeMe({ userType: UserType.Staff, permissions: [Permissions.School.ViewSchoolBulletins] }),
+    );
+    expect(component.canPost()).toBeFalse();
+  });
+
+  it('canPost is false for non-staff even with EditSchoolBulletins', () => {
+    (component as unknown as MePoke).me.set(
+      makeMe({ userType: UserType.Student, permissions: [Permissions.School.EditSchoolBulletins] }),
+    );
+    expect(component.canPost()).toBeFalse();
   });
 
   // ─── dialog state ────────────────────────────────────────────────────────

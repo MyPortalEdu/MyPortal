@@ -13,6 +13,10 @@ import { forkJoin } from 'rxjs';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { MeService } from '../../../../core/services/me-service';
+import { Permissions } from '../../../../core/constants/permissions';
+import { UserType } from '../../../../core/types/user-type';
+import { Me } from '../../../../core/types/me';
 import {
   BulletinCategoryResponse,
   BulletinDetailsResponse,
@@ -37,12 +41,22 @@ import { BulletinFormDialog } from '../bulletin-form-dialog/bulletin-form-dialog
 export class BulletinsFeed implements OnInit {
   private readonly data = inject(BulletinsDataService);
   private readonly notify = inject(NotificationService);
+  private readonly meService = inject(MeService);
   private readonly transloco = inject(TranslocoService);
 
   readonly loading = signal(true);
   readonly bulletins = signal<BulletinSummaryResponse[]>([]);
   readonly categories = signal<BulletinCategoryResponse[]>([]);
   readonly selectedCategoryId = signal<string | null>(null);
+  // Permission gate for the "+ New" button. The form / endpoint still enforce
+  // server-side; hiding the button just keeps non-editors from seeing an
+  // action that would 403.
+  private readonly me = signal<Me | null>(null);
+  readonly canPost = computed(() => {
+    const me = this.me();
+    if (!me || me.userType !== UserType.Staff) return false;
+    return !!me.permissions?.includes(Permissions.School.EditSchoolBulletins);
+  });
   readonly detailId = signal<string | null>(null);
   // Form-dialog state. `formOpen` controls visibility; `editingBulletin` switches
   // the dialog between create mode (null) and edit mode (the full bulletin to
@@ -81,6 +95,7 @@ export class BulletinsFeed implements OnInit {
 
   ngOnInit(): void {
     this.refresh();
+    this.meService.me().subscribe(me => this.me.set(me));
   }
 
   refresh(): void {
