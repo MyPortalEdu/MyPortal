@@ -14,7 +14,7 @@ export const Permissions = {
     EditAgencies: 'Agencies.EditAgencies',
   },
   School: {
-    CreateSchoolBulletins: 'School.CreateSchoolBulletins',
+    ViewSchoolBulletins:   'School.ViewSchoolBulletins',
     EditSchoolBulletins:   'School.EditSchoolBulletins',
     PinSchoolBulletins:    'School.PinSchoolBulletins',
   },

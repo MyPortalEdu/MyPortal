@@ -11,7 +11,9 @@
         {{ t('feed.newCount', { count: newCount() }) }}
       </span>
     }
-    <p-button class="ml-auto" [label]="t('feed.new')" icon="fa-solid fa-plus" size="small" (click)="openNew()"></p-button>
+    @if (canPost()) {
+      <p-button class="ml-auto" [label]="t('feed.new')" icon="fa-solid fa-plus" size="small" (click)="openNew()"></p-button>
+    }
   </div>
 
   <!-- Category filter chips. "All" uses primary tint when active; per-category

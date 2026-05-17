@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
@@ -25,11 +26,15 @@ public class SchoolsController : BaseApiController
 
     /// <summary>Get the local school's name as a plain string.</summary>
     /// <remarks>
-    /// Used by the SPA shell for the title bar and the login page header. Returns
-    /// an empty string (not 404) if no school has been configured yet, so the UI
-    /// can render without a special case.
+    /// Used by the SPA shell for the title bar and the login page header, and
+    /// by the iOS app's first-run school-setup screen to confirm the URL the
+    /// user entered points at a MyPortal instance. Anonymous-friendly so the
+    /// iOS flow can validate the URL before sign-in — the school's display
+    /// name isn't sensitive. Returns an empty string (not 404) if no school
+    /// has been configured yet, so the UI can render without a special case.
     /// </remarks>
     [HttpGet("local/name")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(string), 200)]
     public async Task<IActionResult> GetLocalSchoolName()
     {
