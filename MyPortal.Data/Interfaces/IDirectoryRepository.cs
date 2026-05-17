@@ -16,5 +16,8 @@ namespace MyPortal.Data.Interfaces
 
         Task<bool> IsInSubtreeAsync(Guid rootDirectoryId, Guid candidateDirectoryId,
             CancellationToken cancellationToken);
+
+        Task<DirectoryOwnerReference?> GetReferencingOwnerAsync(Guid directoryId,
+            CancellationToken cancellationToken, IDbTransaction? transaction = null);
     }
 }

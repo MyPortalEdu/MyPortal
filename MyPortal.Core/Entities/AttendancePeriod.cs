@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Scaffold = QueryKit.Attributes.ScaffoldAttribute;
 
 namespace MyPortal.Core.Entities
 {
@@ -17,8 +18,15 @@ namespace MyPortal.Core.Entities
         [Required, StringLength(128)]
         public string Name { get; set; } = null!;
 
+        // [Scaffold] is required because QueryKit's IsSimpleType allow-list omits
+        // TimeOnly/DateOnly — without it, GetScaffoldableProperties filters these
+        // columns out of the generated INSERT/UPDATE, sending NULL to a NOT NULL
+        // TIME column. The Dapper TimeOnlyTypeHandler handles the value binding
+        // once the column is included; [Scaffold] is what gets it included.
+        [Scaffold]
         public TimeOnly StartTime { get; set; }
 
+        [Scaffold]
         public TimeOnly EndTime { get; set; }
 
         public bool IsAmReg { get; set; }

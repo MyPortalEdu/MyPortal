@@ -87,5 +87,25 @@ namespace MyPortal.Data.Repositories
 
             return result;
         }
+
+        public async Task<DirectoryOwnerReference?> GetReferencingOwnerAsync(Guid directoryId,
+            CancellationToken cancellationToken, IDbTransaction? transaction = null)
+        {
+            var (conn, owns) = AcquireConnection(transaction);
+            try
+            {
+                var sql = @"[dbo].[usp_directory_get_referencing_owner]";
+                var param = new { directoryId };
+
+                var result = await conn.ExecuteStoredProcedureAsync<DirectoryOwnerReference>(sql, param,
+                    cancellationToken: cancellationToken, transaction: transaction);
+
+                return result.FirstOrDefault();
+            }
+            finally
+            {
+                if (owns) conn.Dispose();
+            }
+        }
     }
 }

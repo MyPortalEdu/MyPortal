@@ -1,0 +1,164 @@
+<ng-container *transloco="let t; prefix: 'academic-years.wizard.periods'">
+  <div class="flex flex-col gap-5">
+    <div>
+      <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
+      <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
+    </div>
+
+    <p-selectButton
+      [options]="modeOptions"
+      [ngModel]="mode()"
+      (ngModelChange)="setMode($event)"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false">
+    </p-selectButton>
+
+    @if (mode() === 'copy') {
+      <section class="flex flex-col gap-2">
+        @if (priorYears().length === 0) {
+          <div class="text-sm text-muted-color border border-dashed border-surface rounded-lg p-4 text-center">
+            {{ t('noPriorYears') }}
+          </div>
+        } @else {
+          <label class="text-sm">{{ t('copyFromLabel') }}</label>
+          <p-select
+            [ngModel]="model().copyPeriodsFromAcademicYearId"
+            (ngModelChange)="onCopyYearPicked($event)"
+            [options]="priorYearOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [placeholder]="t('copyFromPlaceholder')"
+            [showClear]="true"
+            appendTo="body">
+          </p-select>
+        }
+      </section>
+    } @else {
+      @if (amPmIssues().length > 0) {
+        <div class="text-sm rounded-lg border border-amber-300 bg-amber-50 text-amber-900 p-3 flex items-start gap-2">
+          <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+          <div class="flex flex-col gap-1">
+            <span class="font-medium">{{ t('amPmRule') }}</span>
+            <ul class="m-0 p-0 list-none text-xs flex flex-col gap-0.5">
+              @for (issue of amPmIssues(); track issue) {
+                <li>• {{ issue }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+
+      <section class="flex flex-col gap-3">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm">{{ t('dayLabel') }}</label>
+          <p-selectButton
+            [options]="cycleDayOptions()"
+            [ngModel]="displayedDay()"
+            (ngModelChange)="selectedCycleDay.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            [allowEmpty]="false">
+          </p-selectButton>
+        </div>
+
+        <div class="flex items-center justify-between mt-2 gap-2 flex-wrap">
+          <h4 class="text-sm font-semibold m-0">
+            {{ t('periodsFor', { day: displayedDayLabel() }) }}
+          </h4>
+          <div class="flex items-center gap-2">
+            <p-button
+              icon="fa-solid fa-copy"
+              [label]="t('copyToAllDays')"
+              size="small"
+              severity="secondary"
+              [outlined]="true"
+              [disabled]="!canCopyToAllDays()"
+              (click)="copyToAllDays()">
+            </p-button>
+            <p-button
+              icon="fa-solid fa-plus"
+              [label]="t('addPeriod')"
+              size="small"
+              severity="secondary"
+              (click)="addPeriod()">
+            </p-button>
+          </div>
+        </div>
+
+        @if (periodsForDay().length === 0) {
+          <div class="text-sm text-muted-color text-center border border-dashed border-surface rounded-lg p-4">
+            {{ t('noPeriods') }}
+          </div>
+        } @else {
+          <ul class="list-none m-0 p-0 flex flex-col gap-2">
+            @for (entry of periodsForDay(); track entry.fullIndex) {
+              <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
+                <div class="flex flex-col gap-1 flex-1 min-w-[10rem]">
+                  <label class="text-xs text-muted-color">{{ t('periodName') }}</label>
+                  <input pInputText type="text"
+                    [ngModel]="entry.period.name"
+                    (ngModelChange)="updatePeriod(entry.fullIndex, { name: $event })"
+                    [placeholder]="t('periodNamePlaceholder')" />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs text-muted-color">{{ t('startTime') }}</label>
+                  <p-datepicker
+                    [ngModel]="entry.period.startTime"
+                    (ngModelChange)="updatePeriod(entry.fullIndex, { startTime: $event })"
+                    [timeOnly]="true"
+                    hourFormat="24"
+                    appendTo="body">
+                  </p-datepicker>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs text-muted-color">{{ t('endTime') }}</label>
+                  <p-datepicker
+                    [ngModel]="entry.period.endTime"
+                    (ngModelChange)="updatePeriod(entry.fullIndex, { endTime: $event })"
+                    [timeOnly]="true"
+                    hourFormat="24"
+                    appendTo="body">
+                  </p-datepicker>
+                </div>
+                <div class="flex items-center gap-3 self-end pb-2">
+                  <label class="flex items-center gap-1 text-xs cursor-pointer">
+                    <p-checkbox
+                      [binary]="true"
+                      [ngModel]="entry.period.isAmReg"
+                      (ngModelChange)="updatePeriod(entry.fullIndex, { isAmReg: $event })">
+                    </p-checkbox>
+                    {{ t('amReg') }}
+                  </label>
+                  <label class="flex items-center gap-1 text-xs cursor-pointer">
+                    <p-checkbox
+                      [binary]="true"
+                      [ngModel]="entry.period.isPmReg"
+                      (ngModelChange)="updatePeriod(entry.fullIndex, { isPmReg: $event })">
+                    </p-checkbox>
+                    {{ t('pmReg') }}
+                  </label>
+                  <label class="flex items-center gap-1 text-xs cursor-pointer">
+                    <p-checkbox
+                      [binary]="true"
+                      [ngModel]="entry.period.isLesson"
+                      (ngModelChange)="updatePeriod(entry.fullIndex, { isLesson: $event })">
+                    </p-checkbox>
+                    {{ t('lesson') }}
+                  </label>
+                </div>
+                <p-button
+                  icon="fa-solid fa-trash-can"
+                  severity="danger"
+                  [text]="true"
+                  [attr.aria-label]="t('removePeriod')"
+                  (click)="removePeriod(entry.fullIndex)">
+                </p-button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  </div>
+</ng-container>

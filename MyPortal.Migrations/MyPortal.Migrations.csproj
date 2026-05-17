@@ -28,6 +28,7 @@
     <None Remove="Sql\StoredProcedures\usp_directory_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_directory_get_details_by_parent_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_directory_is_in_subtree.sql" />
+    <None Remove="Sql\StoredProcedures\usp_directory_get_referencing_owner.sql" />
     <None Remove="Sql\StoredProcedures\usp_document_get_details_by_directory.sql" />
     <None Remove="Sql\StoredProcedures\usp_document_get_details_by_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_permission_get_by_user_id.sql" />
@@ -42,6 +43,7 @@
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_details_by_parent_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_is_in_subtree.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_directory_get_referencing_owner.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_document_get_details_by_directory.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_document_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_permission_get_by_user_id.sql" />

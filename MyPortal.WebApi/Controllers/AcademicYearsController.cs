@@ -34,7 +34,12 @@ public sealed class AcademicYearsController : BaseApiController
     /// <c>Curriculum.ViewAcademicYears</c>.
     /// </remarks>
     [HttpGet]
-    [Permission(PermissionMode.RequireAny, Permissions.Curriculum.ViewAcademicYears)]
+    // Edit implies read — editors must be able to list years to navigate to the
+    // ones they want to update. Including both lets the FE gate the editor list
+    // page on Edit alone without 403'ing the data call beneath it.
+    [Permission(PermissionMode.RequireAny,
+        Permissions.Curriculum.ViewAcademicYears,
+        Permissions.Curriculum.EditAcademicYears)]
     [ProducesResponseType(typeof(IList<AcademicYearSummaryResponse>), 200)]
     public async Task<IActionResult> ListAsync()
     {
@@ -49,7 +54,9 @@ public sealed class AcademicYearsController : BaseApiController
     /// Useful for the SPA shell to default the AY picker.
     /// </remarks>
     [HttpGet("current")]
-    [Permission(PermissionMode.RequireAny, Permissions.Curriculum.ViewAcademicYears)]
+    [Permission(PermissionMode.RequireAny,
+        Permissions.Curriculum.ViewAcademicYears,
+        Permissions.Curriculum.EditAcademicYears)]
     [ProducesResponseType(typeof(AcademicYearSummaryResponse), 200)]
     [ProducesResponseType(204)]
     public async Task<IActionResult> GetCurrentAsync()
@@ -63,7 +70,9 @@ public sealed class AcademicYearsController : BaseApiController
     /// <summary>Get the full details of an academic year by id.</summary>
     /// <param name="academicYearId">The id of the academic year to look up.</param>
     [HttpGet("{academicYearId:guid}")]
-    [Permission(PermissionMode.RequireAny, Permissions.Curriculum.ViewAcademicYears)]
+    [Permission(PermissionMode.RequireAny,
+        Permissions.Curriculum.ViewAcademicYears,
+        Permissions.Curriculum.EditAcademicYears)]
     [ProducesResponseType(typeof(AcademicYearDetailsResponse), 200)]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid academicYearId)
     {

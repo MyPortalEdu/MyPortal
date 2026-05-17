@@ -21,6 +21,7 @@ import { ConfirmationDialog } from '../../../../../core/services/confirmation.se
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { AcademicYearService } from '../../../../../core/services/academic-year-service';
 import { AcademicYearSummary } from '../../../../../core/types/academic-year-summary';
+import { AcademicYearWizardDialog } from '../academic-year-wizard-dialog/academic-year-wizard-dialog';
 
 @Component({
   selector: 'mp-academic-year-list-page',
@@ -34,6 +35,7 @@ import { AcademicYearSummary } from '../../../../../core/types/academic-year-sum
     Skeleton,
     Tag,
     PageHeader,
+    AcademicYearWizardDialog,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('academic-years')],
@@ -48,6 +50,7 @@ export class AcademicYearListPage implements OnInit {
 
   readonly years = signal<AcademicYearSummary[]>([]);
   readonly loading = signal(false);
+  readonly wizardOpen = signal(false);
 
   readonly headerActions = computed<HeaderAction[]>(() => [
     {
@@ -77,7 +80,16 @@ export class AcademicYearListPage implements OnInit {
   }
 
   openCreateWizard(): void {
-    // TODO: launch the create wizard modal once it's built.
+    this.wizardOpen.set(true);
+  }
+
+  closeWizard(): void {
+    this.wizardOpen.set(false);
+  }
+
+  onWizardSaved(): void {
+    this.wizardOpen.set(false);
+    this.refresh();
   }
 
   openEdit(_year: AcademicYearSummary): void {

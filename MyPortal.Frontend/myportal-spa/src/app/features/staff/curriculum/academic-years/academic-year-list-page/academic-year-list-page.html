@@ -75,4 +75,10 @@
     </p-table>
   }
 </p-card>
+
+<mp-academic-year-wizard-dialog
+  [visible]="wizardOpen()"
+  (closed)="closeWizard()"
+  (saved)="onWizardSaved()">
+</mp-academic-year-wizard-dialog>
 </ng-container>

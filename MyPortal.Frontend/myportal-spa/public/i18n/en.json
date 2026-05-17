@@ -91,6 +91,11 @@
         "title": "Enter your school details",
         "body": "Set up your school's name, identifiers, and head teacher to finish setup.",
         "action": "Open school details"
+      },
+      "academicYearSetup": {
+        "title": "Set up your first academic year",
+        "body": "Define your timetable cycle, terms, attendance periods, and holidays so the rest of the system has a calendar to hang off.",
+        "action": "Open academic years"
       }
     },
     "users": {
