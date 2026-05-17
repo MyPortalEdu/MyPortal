@@ -14,7 +14,10 @@ namespace MyPortal.WebApi.Controllers
     /// display info; every other call should be on a controller scoped to the
     /// resource being acted on, not here.
     /// </summary>
+    // Explicit Route overrides BaseApiController's "api/[controller]" pair.
+    // Mirrors the dual-route pattern on the base: versioned canonical, unversioned alias.
     [Route("api/me")]
+    [Route("api/v{version:apiVersion}/me")]
     public sealed class MeController : BaseApiController
     {
         private readonly IUserService _userService;

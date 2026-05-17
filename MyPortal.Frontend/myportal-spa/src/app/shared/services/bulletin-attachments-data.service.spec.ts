@@ -27,7 +27,7 @@ describe('BulletinAttachmentsDataService', () => {
     };
     service.listContents('b1', 'd1').subscribe(r => expect(r).toEqual(expected));
 
-    const req = http.expectOne('/api/bulletins/b1/attachments/directories/d1/contents');
+    const req = http.expectOne('/api/v1/bulletins/b1/attachments/directories/d1/contents');
     expect(req.request.method).toBe('GET');
     req.flush(expected);
   });
@@ -36,7 +36,7 @@ describe('BulletinAttachmentsDataService', () => {
     const file = new File(['x'], 'pic.png', { type: 'image/png' });
     service.upload('b1', 'd1', file).subscribe();
 
-    const req = http.expectOne('/api/bulletins/b1/attachments/documents');
+    const req = http.expectOne('/api/v1/bulletins/b1/attachments/documents');
     expect(req.request.method).toBe('POST');
     const body = req.request.body as FormData;
     expect(body.get('TypeId')).toBe(OTHER_DOCUMENT_TYPE_ID);
@@ -52,14 +52,14 @@ describe('BulletinAttachmentsDataService', () => {
   it('delete() DELETEs the document endpoint', () => {
     service.delete('b1', 'doc-1').subscribe();
 
-    const req = http.expectOne('/api/bulletins/b1/attachments/documents/doc-1');
+    const req = http.expectOne('/api/v1/bulletins/b1/attachments/documents/doc-1');
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });
 
   it('downloadUrl() composes the download path without hitting the network', () => {
     expect(service.downloadUrl('b1', 'doc-1'))
-      .toBe('/api/bulletins/b1/attachments/documents/doc-1/download');
+      .toBe('/api/v1/bulletins/b1/attachments/documents/doc-1/download');
     // No HTTP traffic for url helpers — http.verify() in afterEach asserts this.
   });
 });

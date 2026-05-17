@@ -26,31 +26,31 @@ export class BulletinsDataService {
     const params = new HttpParams()
       .set('page', String(page))
       .set('pageSize', String(pageSize));
-    return this.http.get<PageResult<BulletinSummaryResponse>>('/api/bulletins', { params });
+    return this.http.get<PageResult<BulletinSummaryResponse>>('/api/v1/bulletins', { params });
   }
 
   getById(bulletinId: string): Observable<BulletinDetailsResponse> {
-    return this.http.get<BulletinDetailsResponse>(`/api/bulletins/${bulletinId}`);
+    return this.http.get<BulletinDetailsResponse>(`/api/v1/bulletins/${bulletinId}`);
   }
 
   create(model: BulletinUpsertRequest): Observable<IdResponse> {
-    return this.http.post<IdResponse>('/api/bulletins', model);
+    return this.http.post<IdResponse>('/api/v1/bulletins', model);
   }
 
   update(bulletinId: string, model: BulletinUpsertRequest): Observable<void> {
-    return this.http.put<void>(`/api/bulletins/${bulletinId}`, model);
+    return this.http.put<void>(`/api/v1/bulletins/${bulletinId}`, model);
   }
 
   pin(bulletinId: string, model: BulletinPinRequest): Observable<void> {
-    return this.http.put<void>(`/api/bulletins/${bulletinId}/pin`, model);
+    return this.http.put<void>(`/api/v1/bulletins/${bulletinId}/pin`, model);
   }
 
   acknowledge(bulletinId: string): Observable<void> {
-    return this.http.post<void>(`/api/bulletins/${bulletinId}/acknowledge`, {});
+    return this.http.post<void>(`/api/v1/bulletins/${bulletinId}/acknowledge`, {});
   }
 
   delete(bulletinId: string): Observable<void> {
-    return this.http.delete<void>(`/api/bulletins/${bulletinId}`);
+    return this.http.delete<void>(`/api/v1/bulletins/${bulletinId}`);
   }
 
   // ─── Categories ──────────────────────────────────────────────────────────
@@ -61,28 +61,28 @@ export class BulletinsDataService {
     // screens where you want fresh data after edits.
     if (includeInactive) {
       const params = new HttpParams().set('includeInactive', 'true');
-      return this.http.get<BulletinCategoryResponse[]>('/api/bulletincategories', { params });
+      return this.http.get<BulletinCategoryResponse[]>('/api/v1/bulletincategories', { params });
     }
     if (!this.activeCategories$) {
       this.activeCategories$ = this.http
-        .get<BulletinCategoryResponse[]>('/api/bulletincategories')
+        .get<BulletinCategoryResponse[]>('/api/v1/bulletincategories')
         .pipe(shareReplay(1));
     }
     return this.activeCategories$;
   }
 
   createCategory(model: BulletinCategoryUpsertRequest): Observable<IdResponse> {
-    return this.http.post<IdResponse>('/api/bulletincategories', model)
+    return this.http.post<IdResponse>('/api/v1/bulletincategories', model)
       .pipe(tap(() => this.invalidateCategoryCache()));
   }
 
   updateCategory(categoryId: string, model: BulletinCategoryUpsertRequest): Observable<void> {
-    return this.http.put<void>(`/api/bulletincategories/${categoryId}`, model)
+    return this.http.put<void>(`/api/v1/bulletincategories/${categoryId}`, model)
       .pipe(tap(() => this.invalidateCategoryCache()));
   }
 
   deleteCategory(categoryId: string): Observable<void> {
-    return this.http.delete<void>(`/api/bulletincategories/${categoryId}`)
+    return this.http.delete<void>(`/api/v1/bulletincategories/${categoryId}`)
       .pipe(tap(() => this.invalidateCategoryCache()));
   }
 
@@ -93,10 +93,10 @@ export class BulletinsDataService {
   // ─── Settings ────────────────────────────────────────────────────────────
 
   getSettings(): Observable<BulletinSettingsResponse> {
-    return this.http.get<BulletinSettingsResponse>('/api/bulletins/settings');
+    return this.http.get<BulletinSettingsResponse>('/api/v1/bulletins/settings');
   }
 
   updateSettings(model: BulletinSettingsUpdateRequest): Observable<void> {
-    return this.http.put<void>('/api/bulletins/settings', model);
+    return this.http.put<void>('/api/v1/bulletins/settings', model);
   }
 }

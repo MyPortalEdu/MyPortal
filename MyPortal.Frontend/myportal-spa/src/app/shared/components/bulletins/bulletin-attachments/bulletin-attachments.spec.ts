@@ -72,7 +72,7 @@ describe('BulletinAttachments', () => {
       of(makeDoc({ id: `doc-${f.name}`, fileName: f.name })),
     );
     data.delete.and.returnValue(of(void 0));
-    data.downloadUrl.and.callFake((b, d) => `/api/bulletins/${b}/attachments/documents/${d}/download`);
+    data.downloadUrl.and.callFake((b, d) => `/api/v1/bulletins/${b}/attachments/documents/${d}/download`);
 
     const translocoStub = {
       translate: (key: string) => key,
@@ -268,7 +268,7 @@ describe('BulletinAttachments', () => {
     setMode('view', 'b1', 'd1');
     const url = component.downloadUrl(makeDoc({ id: 'doc-42' }));
     expect(data.downloadUrl).toHaveBeenCalledWith('b1', 'doc-42');
-    expect(url).toBe('/api/bulletins/b1/attachments/documents/doc-42/download');
+    expect(url).toBe('/api/v1/bulletins/b1/attachments/documents/doc-42/download');
   });
 
   it('formatSize scales bytes into B / KB / MB / GB', () => {

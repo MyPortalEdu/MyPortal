@@ -15,7 +15,10 @@ namespace MyPortal.WebApi.Controllers;
 /// groups that may be picked as a bulletin audience. Read access is granted
 /// alongside View permission; mutating requires the bulletin settings permission.
 /// </summary>
+// Explicit Route overrides BaseApiController's "api/[controller]" pair.
+// Mirrors the dual-route pattern on the base: versioned canonical, unversioned alias.
 [Route("api/bulletins/settings")]
+[Route("api/v{version:apiVersion}/bulletins/settings")]
 public sealed class BulletinSettingsController : BaseApiController
 {
     private readonly IBulletinSettingsService _service;

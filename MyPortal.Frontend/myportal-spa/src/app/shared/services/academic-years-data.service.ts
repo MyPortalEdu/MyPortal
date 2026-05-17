@@ -11,23 +11,23 @@ export class AcademicYearsDataService {
   private readonly http = inject(HttpClient);
 
   list(): Observable<AcademicYearSummary[]> {
-    return this.http.get<AcademicYearSummary[]>('/api/academicyears');
+    return this.http.get<AcademicYearSummary[]>('/api/v1/academicyears');
   }
 
   getById(id: string): Observable<AcademicYearDetailsResponse> {
-    return this.http.get<AcademicYearDetailsResponse>(`/api/academicyears/${id}`);
+    return this.http.get<AcademicYearDetailsResponse>(`/api/v1/academicyears/${id}`);
   }
 
   create(model: AcademicYearUpsertRequest): Observable<IdResponse> {
-    return this.http.post<IdResponse>('/api/academicyears', this.toWire(model));
+    return this.http.post<IdResponse>('/api/v1/academicyears', this.toWire(model));
   }
 
   update(id: string, model: AcademicYearUpsertRequest): Observable<IdResponse> {
-    return this.http.put<IdResponse>(`/api/academicyears/${id}`, this.toWire(model));
+    return this.http.put<IdResponse>(`/api/v1/academicyears/${id}`, this.toWire(model));
   }
 
   delete(id: string): Observable<void> {
-    return this.http.delete<void>(`/api/academicyears/${id}`);
+    return this.http.delete<void>(`/api/v1/academicyears/${id}`);
   }
 
   // Translate the wizard's Date-typed form model into the server's wire format.

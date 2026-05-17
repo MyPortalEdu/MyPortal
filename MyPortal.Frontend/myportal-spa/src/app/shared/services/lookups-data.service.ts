@@ -21,31 +21,31 @@ export class LookupsDataService {
 
   agencyTypes(): Observable<LookupResponse[]> {
     return this.agencyTypes$ ??= this.http
-      .get<LookupResponse[]>('/api/agencytypes')
+      .get<LookupResponse[]>('/api/v1/agencytypes')
       .pipe(shareReplay(1));
   }
 
   governanceTypes(): Observable<LookupResponse[]> {
     return this.governanceTypes$ ??= this.http
-      .get<LookupResponse[]>('/api/governancetypes')
+      .get<LookupResponse[]>('/api/v1/governancetypes')
       .pipe(shareReplay(1));
   }
 
   intakeTypes(): Observable<LookupResponse[]> {
     return this.intakeTypes$ ??= this.http
-      .get<LookupResponse[]>('/api/intaketypes')
+      .get<LookupResponse[]>('/api/v1/intaketypes')
       .pipe(shareReplay(1));
   }
 
   schoolPhases(): Observable<LookupResponse[]> {
     return this.schoolPhases$ ??= this.http
-      .get<LookupResponse[]>('/api/schoolphases')
+      .get<LookupResponse[]>('/api/v1/schoolphases')
       .pipe(shareReplay(1));
   }
 
   schoolTypes(): Observable<LookupResponse[]> {
     return this.schoolTypes$ ??= this.http
-      .get<LookupResponse[]>('/api/schooltypes')
+      .get<LookupResponse[]>('/api/v1/schooltypes')
       .pipe(shareReplay(1));
   }
 

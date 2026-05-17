@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -274,6 +275,35 @@ builder.Services.AddHostedService<TimetableRunWorker>();
 
 builder.Services.AddScoped<CookieAntiforgeryFilter>();
 
+// Wire API versioning before AddControllers so the [ApiVersion] attribute on
+// BaseApiController is honoured by the action selector. Strategy:
+//   - Default version 1.0; unversioned URLs route to it
+//     (AssumeDefaultVersionWhenUnspecified). Existing callers (SPA, iOS,
+//     scripts) don't need to update anything to keep working.
+//   - Combined reader: URL segment OR header. New clients can pin a version
+//     explicitly via "/api/v1/..." or "X-Api-Version: 1.0" and adopt v2
+//     ahead of the SPA when that day arrives.
+//   - ReportApiVersions adds an "api-supported-versions" response header on
+//     every action so a client can discover what's available without a doc.
+// API explorer's GroupNameFormat = "'v'V" -> "v1" matches the existing Scalar
+// doc name; SubstituteApiVersionInUrl turns the {version:apiVersion} route
+// placeholder into a literal "v1" in the generated OpenAPI paths.
+builder.Services.AddApiVersioning(o =>
+    {
+        o.DefaultApiVersion = new ApiVersion(1, 0);
+        o.AssumeDefaultVersionWhenUnspecified = true;
+        o.ReportApiVersions = true;
+        o.ApiVersionReader = ApiVersionReader.Combine(
+            new UrlSegmentApiVersionReader(),
+            new HeaderApiVersionReader("X-Api-Version"));
+    })
+    .AddMvc()
+    .AddApiExplorer(o =>
+    {
+        o.GroupNameFormat = "'v'V";
+        o.SubstituteApiVersionInUrl = true;
+    });
+
 builder.Services.AddControllers(o =>
 {
     o.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
@@ -306,6 +336,18 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<AuthorizeCheckOperationFilter>();
     c.OperationFilter<ResponseTypesOperationFilter>();
     c.DocumentFilter<OAuth2AbsoluteUrlDocumentFilter>();
+
+    // Each controller carries two routes — versioned ("api/v1/...") and
+    // unversioned ("api/..."). Both work at runtime; only the versioned form
+    // is canonical in the docs, otherwise Scalar shows every operation twice.
+    // OAuth endpoints under /connect are kept so the Authorize flow still
+    // shows up in Scalar's security panel.
+    c.DocInclusionPredicate((_, apiDesc) =>
+    {
+        var path = apiDesc.RelativePath ?? string.Empty;
+        return path.StartsWith("api/v", StringComparison.Ordinal)
+               || path.StartsWith("connect", StringComparison.Ordinal);
+    });
 
     // Pull XML doc comments into the OpenAPI document so Scalar can render
     // controller / endpoint summaries and remarks.

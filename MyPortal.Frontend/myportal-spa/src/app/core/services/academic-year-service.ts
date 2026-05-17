@@ -13,7 +13,7 @@ export class AcademicYearService {
   getCurrent(): Observable<AcademicYearSummary | null> {
     if (!this.current$) {
       this.current$ = this.http
-        .get<AcademicYearSummary | null>('/api/academicyears/current')
+        .get<AcademicYearSummary | null>('/api/v1/academicyears/current')
         .pipe(shareReplay(1));
     }
     return this.current$;

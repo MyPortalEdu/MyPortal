@@ -16,7 +16,7 @@ export class StaffMembersDataService {
     if (params.filter) httpParams = httpParams.set('filter', params.filter);
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
-    return this.http.get<PageResult<StaffMemberSummaryResponse>>('/api/people/staff', {
+    return this.http.get<PageResult<StaffMemberSummaryResponse>>('/api/v1/people/staff', {
       params: httpParams,
     });
   }
