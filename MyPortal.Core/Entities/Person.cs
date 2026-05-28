@@ -44,10 +44,19 @@ namespace MyPortal.Core.Entities
 
         public Guid? EthnicityId { get; set; }
 
+        public Guid? NationalityId { get; set; }
+
+        public Guid? FirstLanguageId { get; set; }
+
+        public Guid? MaritalStatusId { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public Photo? Photo { get; set; }
         public Ethnicity? Ethnicity { get; set; }
+        public Nationality? Nationality { get; set; }
+        public Language? FirstLanguage { get; set; }
+        public MaritalStatus? MaritalStatus { get; set; }
         public Directory? Directory { get; set; }
         
         // Audit

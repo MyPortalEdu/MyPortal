@@ -30,6 +30,8 @@ namespace MyPortal.Core.Entities
 
         public Guid? HeadTeacherId { get; set; }
 
+        public Guid? PayZoneId { get; set; }
+
         public bool IsLocal { get; set; }
 
         public Agency? Agency { get; set; }
@@ -39,5 +41,6 @@ namespace MyPortal.Core.Entities
         public IntakeType? IntakeType { get; set; }
         public Person? HeadTeacher { get; set; }
         public LocalAuthority? LocalAuthority { get; set; }
+        public PayZone? PayZone { get; set; }
     }
 }

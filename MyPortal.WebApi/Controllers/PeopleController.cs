@@ -19,18 +19,18 @@ namespace MyPortal.WebApi.Controllers;
 /// </summary>
 public sealed class PeopleController : BaseApiController
 {
-    private readonly IPersonService _personService;
+    private readonly IStaffMemberService _staffMemberService;
 
     public PeopleController(ProblemDetailsFactory problemFactory, ILogger<PeopleController> logger,
-        IPersonService personService) : base(problemFactory, logger)
+        IStaffMemberService staffMemberService) : base(problemFactory, logger)
     {
-        _personService = personService;
+        _staffMemberService = staffMemberService;
     }
 
     /// <summary>Page through staff-member summaries for the staff picker.</summary>
     /// <remarks>
-    /// Permission gating lives on the service (currently <c>Agencies.ViewAgencies</c>,
-    /// matching the only consumer — the school details edit page).
+    /// Permission gating lives on the service (<c>Staff.ViewAllStaffBasicDetails</c>) —
+    /// consumers such as the school-details head-teacher picker must hold it.
     /// </remarks>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>
@@ -44,7 +44,7 @@ public sealed class PeopleController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _personService.GetStaffMembersAsync(options.FilterOptions, options.SortOptions,
+        var result = await _staffMemberService.GetStaffMembersAsync(options.FilterOptions, options.SortOptions,
             options.PageOptions, CancellationToken);
 
         return Ok(result);

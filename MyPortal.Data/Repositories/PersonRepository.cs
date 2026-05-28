@@ -1,4 +1,6 @@
-﻿using MyPortal.Auth.Interfaces;
+﻿using System.Data;
+using Dapper;
+using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
@@ -18,7 +20,7 @@ namespace MyPortal.Data.Repositories
         {
         }
 
-        public async Task<PageResult<PersonSummaryResponse>> GetPeople(FilterOptions? filter = null,
+        public async Task<PageResult<PersonSummaryResponse>> GetSummariesAsync(FilterOptions? filter = null,
             SortOptions? sort = null, PageOptions? paging = null,
             bool includeDeleted = false, CancellationToken cancellationToken = default)
         {
@@ -30,14 +32,38 @@ namespace MyPortal.Data.Repositories
             return result;
         }
 
-        public async Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
-            SortOptions? sort = null, PageOptions? paging = null,
-            CancellationToken cancellationToken = default)
+        public async Task<PersonDetailsResponse?> GetDetailsByIdAsync(Guid personId, CancellationToken cancellationToken,
+            IDbTransaction? transaction = null)
         {
-            var sql = SqlResourceLoader.Load("People.GetStaffMemberSummaries.sql");
+            var (conn, owns) = AcquireConnection(transaction);
 
-            return await GetListPagedAsync<StaffMemberSummaryResponse>(sql, null, filter, sort, paging, false,
-                cancellationToken);
+            try
+            {
+                var p = new { personId };
+
+                var command = new CommandDefinition("[dbo].[usp_person_get_details_by_id]", p,
+                    commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+                
+                await using var reader = await conn.QueryMultipleAsync(command);
+                
+                var header = await reader.ReadFirstOrDefaultAsync<PersonDetailsResponse>();
+
+                if (header == null)
+                {
+                    return null;
+                }
+                
+                // expand as required
+
+                return header;
+            }
+            finally
+            {
+                if (owns)
+                {
+                    conn.Dispose();
+                }
+            }
         }
     }
 }

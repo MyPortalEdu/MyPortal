@@ -49,6 +49,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddScoped<ISchoolHolidayRepository, SchoolHolidayRepository>();
+        services.AddScoped<IStaffMemberRepository, StaffMemberRepository>();
         services.AddScoped<IStudentGroupRepository, StudentGroupRepository>();
         services.AddScoped<IStudentGroupSupervisorRepository, StudentGroupSupervisorRepository>();
         services.AddScoped<ITimetableRepository, TimetableRepository>();

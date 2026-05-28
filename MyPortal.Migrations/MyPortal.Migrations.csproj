@@ -196,6 +196,20 @@
     <EmbeddedResource Include="Sql\Updates\20260514000000_add_agency_permissions.sql" />
     <None Remove="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
     <EmbeddedResource Include="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
+    <None Remove="Sql\Updates\20260518000000_add_staff_details_entities.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260518000000_add_staff_details_entities.sql" />
+    <None Remove="Sql\Updates\20260518000100_seed_staff_details_lookups.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260518000100_seed_staff_details_lookups.sql" />
+    <None Remove="Sql\Updates\20260518000200_add_pay_scale_points.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260518000200_add_pay_scale_points.sql" />
+    <None Remove="Sql\Updates\20260518000300_seed_pay_scale_points.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260518000300_seed_pay_scale_points.sql" />
+    <None Remove="Sql\StoredProcedures\usp_person_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_person_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_staff_member_get_details_by_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_staff_member_get_details_by_id.sql" />
+    <None Remove="Sql\Updates\20260518000400_add_staff_profile_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260518000400_add_staff_profile_permissions.sql" />
   </ItemGroup>
 
   <ItemGroup>

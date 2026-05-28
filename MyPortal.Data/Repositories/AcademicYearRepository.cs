@@ -93,7 +93,7 @@ public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicY
             new { academicYearId },
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 
-        using var reader = await conn.QueryMultipleAsync(command);
+        await using var reader = await conn.QueryMultipleAsync(command);
 
         var header = await reader.ReadFirstOrDefaultAsync<AcademicYearDetailsResponse>();
         if (header is null)
