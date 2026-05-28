@@ -18,6 +18,11 @@ public class AuthorizationService : IAuthorizationService
         return _user.UserId;
     }
 
+    public Guid? GetCurrentUserPersonId()
+    {
+        return _user.PersonId;
+    }
+
     public string? GetCurrentUserIpAddress()
     {
         return _user.IpAddress;
@@ -31,6 +36,11 @@ public class AuthorizationService : IAuthorizationService
     public Task<bool> HasPermissionAsync(string permission, CancellationToken cancellationToken)
     {
         return _perms.HasPermissionAsync(permission, cancellationToken);
+    }
+
+    public Task<IReadOnlySet<string>> GetPermissionsAsync(CancellationToken cancellationToken = default)
+    {
+        return _perms.GetCurrentUserPermissionsAsync(cancellationToken);
     }
 
     public async Task RequirePermissionAsync(string permission, CancellationToken ct)

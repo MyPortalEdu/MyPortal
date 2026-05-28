@@ -61,6 +61,13 @@ public static class ClaimsPrincipalExtensions
                         OpenIddictConstants.Destinations.IdentityToken
                     },
 
+                Constants.ClaimTypes.PersonId
+                    => new[]
+                    {
+                        OpenIddictConstants.Destinations.AccessToken,
+                        OpenIddictConstants.Destinations.IdentityToken
+                    },
+
                 _ => Array.Empty<string>()
             };
         });
