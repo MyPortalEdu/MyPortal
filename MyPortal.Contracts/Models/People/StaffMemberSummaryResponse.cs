@@ -1,14 +1,14 @@
 namespace MyPortal.Contracts.Models.People;
 
 /// <summary>
-/// Lightweight staff row for "pick a staff member" UI (e.g. assigning a head
-/// teacher on the school details page). <see cref="Id"/> is the underlying
-/// <c>Person</c> id — the same value used in any <c>HeadTeacherId</c> /
-/// person-FK column on related tables.
+/// Lightweight staff row for "pick a staff member" UI. <see cref="Id"/> is the StaffMember id
+/// (the key for the staff profile / CRUD endpoints); <see cref="PersonId"/> is the underlying
+/// Person id, the value to write into person-FK columns (HeadTeacherId etc.).
 /// </summary>
 public class StaffMemberSummaryResponse
 {
     public Guid Id { get; set; }
+    public Guid PersonId { get; set; }
     public string Code { get; set; } = null!;
     public string? Title { get; set; }
     public string FirstName { get; set; } = null!;

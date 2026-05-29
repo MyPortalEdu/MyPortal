@@ -5,6 +5,7 @@ using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Models;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
 using QueryKit.Repositories.Filtering;
@@ -30,7 +31,7 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
             cancellationToken);
     }
 
-    public async Task<StaffMemberDetailsResponse?> GetDetailsByIdAsync(Guid staffMemberId,
+    public async Task<StaffMemberHeaderRow?> GetHeaderByIdAsync(Guid staffMemberId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
         var (conn, owns) = AcquireConnection(transaction);
@@ -39,22 +40,10 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
         {
             var p = new { staffMemberId };
 
-            var command = new CommandDefinition("[dbo].[usp_staff_member_get_details_by_id]", p,
-                transaction: transaction, commandType: CommandType.StoredProcedure,
-                cancellationToken: cancellationToken);
+            var command = new CommandDefinition("[dbo].[usp_staff_member_get_header_by_id]", p, transaction,
+                commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
 
-            await using var reader = await conn.QueryMultipleAsync(command);
-
-            var header = await reader.ReadFirstOrDefaultAsync<StaffMemberDetailsResponse>();
-
-            if (header == null)
-            {
-                return null;
-            }
-
-            header.Person = await reader.ReadFirstAsync<PersonDetailsResponse>();
-
-            return header;
+            return await conn.QueryFirstOrDefaultAsync<StaffMemberHeaderRow>(command);
         }
         finally
         {

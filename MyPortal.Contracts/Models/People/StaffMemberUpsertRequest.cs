@@ -1,10 +1,8 @@
 namespace MyPortal.Contracts.Models.People;
 
 /// <summary>
-/// Create/update payload for a staff member. <see cref="Person"/> carries the
-/// biographical fields written to the underlying Person row; the remaining
-/// fields are staff-specific. On create the service writes both the Person and
-/// StaffMember rows in one transaction.
+/// Create/update payload. <see cref="Person"/> populates the underlying Person row; the rest is
+/// staff-specific. Create writes both rows in one transaction.
 /// </summary>
 public class StaffMemberUpsertRequest
 {

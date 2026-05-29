@@ -1,16 +1,6 @@
--- ============================================================================
--- Staff-profile permission catalogue (scoped: Own / Managed / All).
---
--- Backs the relationship-aware staff details page — see
--- docs/staff-profile-access.md. Naming: Staff.{Verb}{Scope}Staff{Section}. Only
--- the cells that exist here are grantable; the resolver can never grant a string
--- that isn't seeded. None are auto-assigned to a role — assignment is a separate
--- admin step.
---
--- Supersedes the unscoped placeholders Staff.ViewStaffBasicDetails /
--- Staff.EditStaffBasicDetails (never shipped). The DELETEs below clean those up
--- on any database that ran the earlier draft.
--- ============================================================================
+-- Staff-profile permission catalogue (Staff.{Verb}{Scope}Staff{Area}, Scope ∈ Own/Managed/All).
+-- See docs/staff-profile-access.md. The DELETEs supersede the unscoped placeholders
+-- Staff.ViewStaffBasicDetails / Staff.EditStaffBasicDetails on any DB that ran the earlier draft.
 
 DELETE rp
 FROM dbo.RolePermissions rp

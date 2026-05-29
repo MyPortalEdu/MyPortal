@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.People;
@@ -9,12 +10,19 @@ using Task = System.Threading.Tasks.Task;
 namespace MyPortal.Services.People;
 
 /// <summary>
-/// Resolves staff-profile section access for the current viewer. Single source of truth for both
-/// the capability map and the per-endpoint guards. See docs/staff-profile-access.md.
+/// Resolves the viewer's relationship to a staff member and answers, for an (area, access)
+/// pair, whether they're allowed. The (area × access) → permission-constant table below is the
+/// single audit-able source of truth: every endpoint's gating ultimately resolves to one of
+/// these constants, with no derivation / no drift. See docs/staff-profile-access.md.
 /// </summary>
 public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
 {
     private readonly IStaffMemberRepository _staffMemberRepository;
+
+    // Per-request caches (the service is scoped). A header request typically resolves a guard
+    // plus an explicit relationship read; without these, that's 2× the DB lookups.
+    private (Guid SubjectId, StaffRelationship Value)? _cachedRelationship;
+    private IReadOnlySet<string>? _cachedPermissions;
 
     public StaffMemberAccessService(IAuthorizationService authorizationService,
         ILogger<StaffMemberAccessService> logger, IStaffMemberRepository staffMemberRepository)
@@ -23,88 +31,81 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
         _staffMemberRepository = staffMemberRepository;
     }
 
-    // Permission scopes, encoded into the permission name (Staff.{Verb}{Scope}Staff{Section}).
-    private enum Scope
-    {
-        Own,
-        Managed,
-        All
-    }
-
-    private sealed record SectionScopes(Scope[] View, Scope[] Edit);
-
-    // The section -> grantable-scopes matrix. A scope absent here is not grantable for that
-    // section/verb, so the resolver can never grant it even if a (non-existent) permission were
-    // held. Mirrors the table in docs/staff-profile-access.md and the seeded catalogue exactly
-    // (asserted by StaffMemberAccessServiceTests against Permissions.Staff).
-    private static readonly IReadOnlyDictionary<StaffProfileSection, SectionScopes> Matrix =
-        new Dictionary<StaffProfileSection, SectionScopes>
+    // (Area, single access flag) → the seeded permission constant that grants it. Missing
+    // combinations are not grantable — the lookup misses and the branch is skipped.
+    private static readonly IReadOnlyDictionary<(StaffArea Area, StaffAccess Access), string>
+        AccessPermission = new Dictionary<(StaffArea, StaffAccess), string>
         {
-            [StaffProfileSection.BasicDetails]         = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Managed, Scope.All]),
-            [StaffProfileSection.EqualityAndIdentity]  = new([Scope.Own, Scope.All],                [Scope.All]),
-            [StaffProfileSection.ContactMethods]       = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Own, Scope.Managed, Scope.All]),
-            [StaffProfileSection.Addresses]            = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Own, Scope.Managed, Scope.All]),
-            [StaffProfileSection.EmergencyContacts]    = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Own, Scope.Managed, Scope.All]),
-            [StaffProfileSection.Professional]         = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Managed, Scope.All]),
-            [StaffProfileSection.QualificationsAndCpd] = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Own, Scope.Managed, Scope.All]),
-            [StaffProfileSection.Employment]           = new([Scope.Own, Scope.All],                [Scope.All]),
-            [StaffProfileSection.PreEmploymentChecks]  = new([Scope.All],                           [Scope.All]),
-            [StaffProfileSection.AbsencesAndLeave]     = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Managed, Scope.All]),
-            [StaffProfileSection.Timetable]            = new([Scope.Own, Scope.Managed, Scope.All], [Scope.All]),
-            [StaffProfileSection.Documents]            = new([Scope.Own, Scope.Managed, Scope.All], [Scope.Own, Scope.Managed, Scope.All]),
-            [StaffProfileSection.Performance]          = new([Scope.Managed, Scope.All],            [Scope.Managed, Scope.All]),
+            // Basic details (incl. contact methods, addresses, emergency contacts)
+            [(StaffArea.BasicDetails, StaffAccess.ViewOwn)]            = Permissions.Staff.ViewOwnStaffBasicDetails,
+            [(StaffArea.BasicDetails, StaffAccess.ViewManaged)]        = Permissions.Staff.ViewManagedStaffBasicDetails,
+            [(StaffArea.BasicDetails, StaffAccess.ViewAll)]            = Permissions.Staff.ViewAllStaffBasicDetails,
+            [(StaffArea.BasicDetails, StaffAccess.EditManaged)]        = Permissions.Staff.EditManagedStaffBasicDetails,
+            [(StaffArea.BasicDetails, StaffAccess.EditAll)]            = Permissions.Staff.EditAllStaffBasicDetails,
+
+            // Equality & identity (special-category)
+            [(StaffArea.EqualityDetails, StaffAccess.ViewOwn)]         = Permissions.Staff.ViewOwnStaffEqualityDetails,
+            [(StaffArea.EqualityDetails, StaffAccess.ViewAll)]         = Permissions.Staff.ViewAllStaffEqualityDetails,
+            [(StaffArea.EqualityDetails, StaffAccess.EditAll)]         = Permissions.Staff.EditAllStaffEqualityDetails,
+
+            // Professional (incl. qualifications & CPD)
+            [(StaffArea.ProfessionalDetails, StaffAccess.ViewOwn)]     = Permissions.Staff.ViewOwnStaffProfessionalDetails,
+            [(StaffArea.ProfessionalDetails, StaffAccess.ViewManaged)] = Permissions.Staff.ViewManagedStaffProfessionalDetails,
+            [(StaffArea.ProfessionalDetails, StaffAccess.ViewAll)]     = Permissions.Staff.ViewAllStaffProfessionalDetails,
+            [(StaffArea.ProfessionalDetails, StaffAccess.EditManaged)] = Permissions.Staff.EditManagedStaffProfessionalDetails,
+            [(StaffArea.ProfessionalDetails, StaffAccess.EditAll)]     = Permissions.Staff.EditAllStaffProfessionalDetails,
+
+            // Employment & contract (incl. pay, bank)
+            [(StaffArea.EmploymentDetails, StaffAccess.ViewOwn)]       = Permissions.Staff.ViewOwnStaffEmploymentDetails,
+            [(StaffArea.EmploymentDetails, StaffAccess.ViewAll)]       = Permissions.Staff.ViewAllStaffEmploymentDetails,
+            [(StaffArea.EmploymentDetails, StaffAccess.EditAll)]       = Permissions.Staff.EditAllStaffEmploymentDetails,
+
+            // Pre-employment checks (DBS, RTW)
+            [(StaffArea.PreEmploymentChecks, StaffAccess.ViewAll)]     = Permissions.Staff.ViewAllStaffPreEmploymentChecks,
+            [(StaffArea.PreEmploymentChecks, StaffAccess.EditAll)]     = Permissions.Staff.EditAllStaffPreEmploymentChecks,
+
+            // Absences (health data)
+            [(StaffArea.Absences, StaffAccess.ViewOwn)]                = Permissions.Staff.ViewOwnStaffAbsences,
+            [(StaffArea.Absences, StaffAccess.ViewManaged)]            = Permissions.Staff.ViewManagedStaffAbsences,
+            [(StaffArea.Absences, StaffAccess.ViewAll)]                = Permissions.Staff.ViewAllStaffAbsences,
+            [(StaffArea.Absences, StaffAccess.EditManaged)]            = Permissions.Staff.EditManagedStaffAbsences,
+            [(StaffArea.Absences, StaffAccess.EditAll)]                = Permissions.Staff.EditAllStaffAbsences,
+
+            // Timetable
+            [(StaffArea.Timetable, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffTimetable,
+            [(StaffArea.Timetable, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffTimetable,
+            [(StaffArea.Timetable, StaffAccess.ViewAll)]               = Permissions.Staff.ViewAllStaffTimetable,
+            [(StaffArea.Timetable, StaffAccess.EditAll)]               = Permissions.Staff.EditAllStaffTimetable,
+
+            // Documents
+            [(StaffArea.Documents, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffDocuments,
+            [(StaffArea.Documents, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffDocuments,
+            [(StaffArea.Documents, StaffAccess.ViewAll)]               = Permissions.Staff.ViewAllStaffDocuments,
+            [(StaffArea.Documents, StaffAccess.EditOwn)]               = Permissions.Staff.EditOwnStaffDocuments,
+            [(StaffArea.Documents, StaffAccess.EditManaged)]           = Permissions.Staff.EditManagedStaffDocuments,
+            [(StaffArea.Documents, StaffAccess.EditAll)]               = Permissions.Staff.EditAllStaffDocuments,
+
+            // Performance (no Own scope)
+            [(StaffArea.PerformanceDetails, StaffAccess.ViewManaged)]  = Permissions.Staff.ViewManagedStaffPerformanceDetails,
+            [(StaffArea.PerformanceDetails, StaffAccess.ViewAll)]      = Permissions.Staff.ViewAllStaffPerformanceDetails,
+            [(StaffArea.PerformanceDetails, StaffAccess.EditManaged)]  = Permissions.Staff.EditManagedStaffPerformanceDetails,
+            [(StaffArea.PerformanceDetails, StaffAccess.EditAll)]      = Permissions.Staff.EditAllStaffPerformanceDetails,
         };
-
-    // Section -> the fragment used in the permission name. Must match the seeded catalogue.
-    private static readonly IReadOnlyDictionary<StaffProfileSection, string> NameFragment =
-        new Dictionary<StaffProfileSection, string>
-        {
-            [StaffProfileSection.BasicDetails]         = "BasicDetails",
-            [StaffProfileSection.EqualityAndIdentity]  = "EqualityDetails",
-            [StaffProfileSection.ContactMethods]       = "ContactMethods",
-            [StaffProfileSection.Addresses]            = "Addresses",
-            [StaffProfileSection.EmergencyContacts]    = "EmergencyContacts",
-            [StaffProfileSection.Professional]         = "ProfessionalDetails",
-            [StaffProfileSection.QualificationsAndCpd] = "Qualifications",
-            [StaffProfileSection.Employment]           = "EmploymentDetails",
-            [StaffProfileSection.PreEmploymentChecks]  = "PreEmploymentChecks",
-            [StaffProfileSection.AbsencesAndLeave]     = "Absences",
-            [StaffProfileSection.Timetable]            = "Timetable",
-            [StaffProfileSection.Documents]            = "Documents",
-            [StaffProfileSection.Performance]          = "PerformanceDetails",
-        };
-
-    private static string PermissionName(StaffSectionVerb verb, Scope scope, StaffProfileSection section)
-        => $"Staff.{verb}{scope}Staff{NameFragment[section]}";
-
-    /// <summary>
-    /// Every permission string the matrix can require. Lets tests assert this exactly matches the
-    /// seeded <c>Permissions.Staff</c> catalogue, closing the gap where a derived name could drift
-    /// from a declared constant (a mismatch would silently deny access).
-    /// </summary>
-    public static IReadOnlySet<string> AllPermissions { get; } = BuildAllPermissions();
-
-    private static IReadOnlySet<string> BuildAllPermissions()
-    {
-        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var (section, scopes) in Matrix)
-        {
-            foreach (var scope in scopes.View)
-            {
-                set.Add(PermissionName(StaffSectionVerb.View, scope, section));
-            }
-
-            foreach (var scope in scopes.Edit)
-            {
-                set.Add(PermissionName(StaffSectionVerb.Edit, scope, section));
-            }
-        }
-
-        return set;
-    }
 
     public async Task<StaffRelationship> GetRelationshipAsync(Guid staffMemberId, CancellationToken cancellationToken)
+    {
+        if (_cachedRelationship is { } cached && cached.SubjectId == staffMemberId)
+        {
+            return cached.Value;
+        }
+
+        var relationship = await ComputeRelationshipAsync(staffMemberId, cancellationToken);
+        _cachedRelationship = (staffMemberId, relationship);
+        return relationship;
+    }
+
+    private async Task<StaffRelationship> ComputeRelationshipAsync(Guid staffMemberId,
+        CancellationToken cancellationToken)
     {
         var currentPersonId = AuthorizationService.GetCurrentUserPersonId();
 
@@ -141,69 +142,53 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
         return managed ? StaffRelationship.LineManaged : StaffRelationship.Unrelated;
     }
 
-    public async Task<bool> CanAsync(Guid staffMemberId, StaffProfileSection section, StaffSectionVerb verb,
-        CancellationToken cancellationToken)
+    private async Task<IReadOnlySet<string>> GetPermissionsAsync(CancellationToken cancellationToken)
     {
-        var relationship = await GetRelationshipAsync(staffMemberId, cancellationToken);
-        var permissions = await AuthorizationService.GetPermissionsAsync(cancellationToken);
-
-        return Evaluate(section, verb, relationship, permissions);
+        return _cachedPermissions ??= await AuthorizationService.GetPermissionsAsync(cancellationToken);
     }
 
-    public async Task RequireAsync(Guid staffMemberId, StaffProfileSection section, StaffSectionVerb verb,
+    public async Task<bool> CanAsync(Guid staffMemberId, StaffArea area, StaffAccess acceptable,
         CancellationToken cancellationToken)
     {
-        if (!await CanAsync(staffMemberId, section, verb, cancellationToken))
+        if (acceptable == StaffAccess.None)
+        {
+            // Surface the bug — silently always denying would be invisible.
+            throw new InvalidOperationException(
+                "CanAsync requires at least one acceptable StaffAccess flag.");
+        }
+
+        var relationship = await GetRelationshipAsync(staffMemberId, cancellationToken);
+        var permissions = await GetPermissionsAsync(cancellationToken);
+
+        // All first (covers any relationship, incl. Self); then Managed (LineManaged only);
+        // then Own (Self only). Short-circuit on first match.
+        if (acceptable.HasFlag(StaffAccess.ViewAll) && Held(area, StaffAccess.ViewAll, permissions)) return true;
+        if (acceptable.HasFlag(StaffAccess.EditAll) && Held(area, StaffAccess.EditAll, permissions)) return true;
+
+        if (relationship == StaffRelationship.LineManaged)
+        {
+            if (acceptable.HasFlag(StaffAccess.ViewManaged) && Held(area, StaffAccess.ViewManaged, permissions)) return true;
+            if (acceptable.HasFlag(StaffAccess.EditManaged) && Held(area, StaffAccess.EditManaged, permissions)) return true;
+        }
+
+        if (relationship == StaffRelationship.Self)
+        {
+            if (acceptable.HasFlag(StaffAccess.ViewOwn) && Held(area, StaffAccess.ViewOwn, permissions)) return true;
+            if (acceptable.HasFlag(StaffAccess.EditOwn) && Held(area, StaffAccess.EditOwn, permissions)) return true;
+        }
+
+        return false;
+    }
+
+    public async Task RequireAsync(Guid staffMemberId, StaffArea area, StaffAccess acceptable,
+        CancellationToken cancellationToken)
+    {
+        if (!await CanAsync(staffMemberId, area, acceptable, cancellationToken))
         {
             throw new ForbiddenException("You do not have permission to access this staff information.");
         }
     }
 
-    public async Task<IReadOnlyDictionary<StaffProfileSection, SectionAccess>> GetCapabilitiesAsync(
-        Guid staffMemberId, CancellationToken cancellationToken)
-    {
-        // Resolve the relationship and permission set once, then evaluate every section in memory.
-        var relationship = await GetRelationshipAsync(staffMemberId, cancellationToken);
-        var permissions = await AuthorizationService.GetPermissionsAsync(cancellationToken);
-
-        var map = new Dictionary<StaffProfileSection, SectionAccess>();
-
-        foreach (var section in Enum.GetValues<StaffProfileSection>())
-        {
-            map[section] = new SectionAccess
-            {
-                CanView = Evaluate(section, StaffSectionVerb.View, relationship, permissions),
-                CanEdit = Evaluate(section, StaffSectionVerb.Edit, relationship, permissions)
-            };
-        }
-
-        return map;
-    }
-
-    // The single decision. All-scope covers any relationship (incl. self); Managed covers only
-    // LineManaged (a viewer is never their own report); Own covers only Self.
-    private static bool Evaluate(StaffProfileSection section, StaffSectionVerb verb, StaffRelationship relationship,
-        IReadOnlySet<string> permissions)
-    {
-        var scopes = verb == StaffSectionVerb.View ? Matrix[section].View : Matrix[section].Edit;
-
-        if (scopes.Contains(Scope.All) && permissions.Contains(PermissionName(verb, Scope.All, section)))
-        {
-            return true;
-        }
-
-        if (relationship == StaffRelationship.LineManaged && scopes.Contains(Scope.Managed) &&
-            permissions.Contains(PermissionName(verb, Scope.Managed, section)))
-        {
-            return true;
-        }
-
-        if (relationship == StaffRelationship.Self && scopes.Contains(Scope.Own) &&
-            permissions.Contains(PermissionName(verb, Scope.Own, section)))
-        {
-            return true;
-        }
-
-        return false;
-    }
+    private static bool Held(StaffArea area, StaffAccess access, IReadOnlySet<string> permissions)
+        => AccessPermission.TryGetValue((area, access), out var name) && permissions.Contains(name);
 }

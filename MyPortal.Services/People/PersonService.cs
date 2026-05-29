@@ -11,9 +11,6 @@ using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Documents;
 using MyPortal.Services.Interfaces.People;
-using QueryKit.Repositories.Filtering;
-using QueryKit.Repositories.Paging;
-using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 using Task = System.Threading.Tasks.Task;
 
@@ -45,25 +42,6 @@ public class PersonService : BaseService, IPersonService
         _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    public async Task<PageResult<PersonSummaryResponse>> GetSummariesAsync(FilterOptions filter, SortOptions sort,
-        PageOptions? paging,
-        CancellationToken cancellationToken)
-    {
-        return await _personRepository.GetSummariesAsync(filter, sort, paging, false, cancellationToken);
-    }
-
-    public async Task<PersonDetailsResponse> GetDetailsAsync(Guid id, CancellationToken cancellationToken)
-    {
-        var details = await _personRepository.GetDetailsByIdAsync(id, cancellationToken);
-
-        if (details == null)
-        {
-            throw new NotFoundException("Person not found.");
-        }
-
-        return details;
-    }
-
     public async Task<Guid> CreateAsync(PersonUpsertRequest model, CancellationToken cancellationToken,
         IUnitOfWork? uow = null)
     {
@@ -71,8 +49,7 @@ public class PersonService : BaseService, IPersonService
 
         var personId = SqlConvention.SequentialGuid();
 
-        // Each person owns a private directory subtree for their documents (mirrors
-        // AgencyService). The name is derived from the id so it's unique and stable.
+        // Each person owns a private directory subtree for their documents.
         var directoryRequest = new DirectoryUpsertRequest
         {
             Name = $"person-{personId:N}",
@@ -157,8 +134,7 @@ public class PersonService : BaseService, IPersonService
 
         await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
-            // The person row holds an FK to its directory, so drop the person first to
-            // release the FK, then hard-delete the directory subtree (matches AgencyService).
+            // Person → directory FK: drop the person row first to release it.
             await _personRepository.DeleteAsync(id, cancellationToken, softDelete: false, ownedUow.Transaction);
 
             await _directoryService.DeleteAsync(person.DirectoryId, cancellationToken, ownedUow, softDelete: false);

@@ -8,28 +8,20 @@ namespace MyPortal.Services.Interfaces.People;
 
 public interface IStaffMemberService
 {
-    /// <summary>
-    /// Paged staff-member summary used by the staff/head-teacher picker.
-    /// </summary>
+    /// <summary>Paged staff summary for the staff/head-teacher picker.</summary>
     Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Staff member core + person biographical details for the profile page,
-    /// keyed by StaffMember id.
-    /// </summary>
-    Task<StaffMemberDetailsResponse> GetDetailsAsync(Guid id, CancellationToken cancellationToken);
+    /// <summary>Staff profile header — identity + status + viewer relationship.
+    /// 403 if no view-basic-details scope covers the subject.</summary>
+    Task<StaffMemberHeaderResponse> GetHeaderAsync(Guid id, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Creates the underlying Person and the StaffMember row in one transaction,
-    /// returning the new StaffMember id.
-    /// </summary>
+    /// <summary>Creates Person + StaffMember in one transaction; returns the StaffMember id.</summary>
     Task<Guid> CreateAsync(StaffMemberUpsertRequest model, CancellationToken cancellationToken);
 
-    /// <summary>Updates the StaffMember and its underlying Person biographical fields.</summary>
     Task UpdateAsync(Guid id, StaffMemberUpsertRequest model, CancellationToken cancellationToken);
 
-    /// <summary>Soft-deletes the StaffMember row (the underlying Person is left intact).</summary>
+    /// <summary>Soft-deletes the StaffMember row; the underlying Person is left intact.</summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

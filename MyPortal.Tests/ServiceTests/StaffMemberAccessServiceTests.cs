@@ -1,5 +1,4 @@
 using System.Data;
-using System.Reflection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using MyPortal.Auth.Constants;
@@ -33,7 +32,6 @@ public class StaffMemberAccessServiceTests
 
         _subjectId = Guid.NewGuid();
 
-        // Default: no permissions. Individual tests override.
         SetPermissions();
     }
 
@@ -81,17 +79,77 @@ public class StaffMemberAccessServiceTests
         _auth.Setup(a => a.GetCurrentUserPersonId()).Returns((Guid?)null);
     }
 
+    private void AsViewerNotStaff()
+    {
+        var viewerPersonId = Guid.NewGuid();
+        _auth.Setup(a => a.GetCurrentUserPersonId()).Returns(viewerPersonId);
+        _repo.Setup(r => r.GetByIdAsync(_subjectId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction>()))
+            .ReturnsAsync(new StaffMember { Id = _subjectId, PersonId = Guid.NewGuid(), Code = "S1" });
+        _repo.Setup(r => r.GetStaffMemberIdByPersonIdAsync(viewerPersonId, It.IsAny<CancellationToken>(),
+                It.IsAny<IDbTransaction>()))
+            .ReturnsAsync((Guid?)null);
+    }
+
     private void SetPermissions(params string[] permissions)
     {
         _auth.Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new HashSet<string>(permissions, StringComparer.OrdinalIgnoreCase));
     }
 
-    private Task<bool> CanView(StaffProfileSection section)
-        => _service.CanAsync(_subjectId, section, StaffSectionVerb.View, CancellationToken.None);
+    private Task<bool> Can(StaffArea area, StaffAccess acceptable)
+        => _service.CanAsync(_subjectId, area, acceptable, CancellationToken.None);
 
-    private Task<bool> CanEdit(StaffProfileSection section)
-        => _service.CanAsync(_subjectId, section, StaffSectionVerb.Edit, CancellationToken.None);
+    // ----- relationship resolution ---------------------------------------------------------
+
+    [Test]
+    public async Task GetRelationship_PersonLessViewer_IsUnrelated()
+    {
+        AsNoPersonIdentity();
+
+        Assert.That(await _service.GetRelationshipAsync(_subjectId, CancellationToken.None),
+            Is.EqualTo(StaffRelationship.Unrelated));
+
+        _repo.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction>()),
+            Times.Never, "Should short-circuit before any subject lookup.");
+    }
+
+    [Test]
+    public async Task GetRelationship_SubjectSharesPersonWithViewer_IsSelf()
+    {
+        AsSelf();
+
+        Assert.That(await _service.GetRelationshipAsync(_subjectId, CancellationToken.None),
+            Is.EqualTo(StaffRelationship.Self));
+    }
+
+    [Test]
+    public async Task GetRelationship_ViewerInChainAboveSubject_IsLineManaged()
+    {
+        AsLineManaged();
+
+        Assert.That(await _service.GetRelationshipAsync(_subjectId, CancellationToken.None),
+            Is.EqualTo(StaffRelationship.LineManaged));
+    }
+
+    [Test]
+    public async Task GetRelationship_ViewerIsNotStaff_IsUnrelated()
+    {
+        AsViewerNotStaff();
+
+        Assert.That(await _service.GetRelationshipAsync(_subjectId, CancellationToken.None),
+            Is.EqualTo(StaffRelationship.Unrelated));
+    }
+
+    [Test]
+    public async Task GetRelationship_MissingSubject_IsUnrelated()
+    {
+        _auth.Setup(a => a.GetCurrentUserPersonId()).Returns(Guid.NewGuid());
+        _repo.Setup(r => r.GetByIdAsync(_subjectId, It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction>()))
+            .ReturnsAsync((StaffMember?)null);
+
+        Assert.That(await _service.GetRelationshipAsync(_subjectId, CancellationToken.None),
+            Is.EqualTo(StaffRelationship.Unrelated));
+    }
 
     // ----- All scope: grants regardless of relationship ------------------------------------
 
@@ -101,7 +159,7 @@ public class StaffMemberAccessServiceTests
         AsUnrelated();
         SetPermissions(Permissions.Staff.ViewAllStaffEmploymentDetails);
 
-        Assert.That(await CanView(StaffProfileSection.Employment), Is.True);
+        Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewAll), Is.True);
     }
 
     [Test]
@@ -110,7 +168,7 @@ public class StaffMemberAccessServiceTests
         AsSelf();
         SetPermissions(Permissions.Staff.ViewAllStaffEmploymentDetails);
 
-        Assert.That(await CanView(StaffProfileSection.Employment), Is.True);
+        Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewAll), Is.True);
     }
 
     // ----- Own scope: self only ------------------------------------------------------------
@@ -121,7 +179,7 @@ public class StaffMemberAccessServiceTests
         AsSelf();
         SetPermissions(Permissions.Staff.ViewOwnStaffEmploymentDetails);
 
-        Assert.That(await CanView(StaffProfileSection.Employment), Is.True);
+        Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewOwn), Is.True);
     }
 
     [Test]
@@ -130,7 +188,7 @@ public class StaffMemberAccessServiceTests
         AsLineManaged();
         SetPermissions(Permissions.Staff.ViewOwnStaffEmploymentDetails);
 
-        Assert.That(await CanView(StaffProfileSection.Employment), Is.False);
+        Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewOwn), Is.False);
     }
 
     [Test]
@@ -139,7 +197,7 @@ public class StaffMemberAccessServiceTests
         AsUnrelated();
         SetPermissions(Permissions.Staff.ViewOwnStaffEmploymentDetails);
 
-        Assert.That(await CanView(StaffProfileSection.Employment), Is.False);
+        Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewOwn), Is.False);
     }
 
     // ----- Managed scope: line-managed only; never self ------------------------------------
@@ -148,9 +206,9 @@ public class StaffMemberAccessServiceTests
     public async Task ManagedScope_GrantsToLineManagedViewer()
     {
         AsLineManaged();
-        SetPermissions(Permissions.Staff.ViewManagedStaffContactMethods);
+        SetPermissions(Permissions.Staff.ViewManagedStaffBasicDetails);
 
-        Assert.That(await CanView(StaffProfileSection.ContactMethods), Is.True);
+        Assert.That(await Can(StaffArea.BasicDetails, StaffAccess.ViewManaged), Is.True);
     }
 
     [Test]
@@ -158,56 +216,57 @@ public class StaffMemberAccessServiceTests
     {
         // A viewer is never their own report: holding only Managed must NOT grant on own record.
         AsSelf();
-        SetPermissions(Permissions.Staff.ViewManagedStaffContactMethods);
+        SetPermissions(Permissions.Staff.ViewManagedStaffBasicDetails);
 
-        Assert.That(await CanView(StaffProfileSection.ContactMethods), Is.False);
+        Assert.That(await Can(StaffArea.BasicDetails, StaffAccess.ViewManaged), Is.False);
     }
 
     [Test]
     public async Task ManagedScope_DeniesUnrelatedViewer()
     {
         AsUnrelated();
-        SetPermissions(Permissions.Staff.ViewManagedStaffContactMethods);
+        SetPermissions(Permissions.Staff.ViewManagedStaffBasicDetails);
 
-        Assert.That(await CanView(StaffProfileSection.ContactMethods), Is.False);
+        Assert.That(await Can(StaffArea.BasicDetails, StaffAccess.ViewManaged), Is.False);
     }
 
-    // ----- Matrix gate: scope not grantable for a section ----------------------------------
+    // ----- Combined ------------------------------------------------------------------------
 
     [Test]
-    public async Task ScopeNotInMatrix_IsNeverGranted()
+    public async Task GrantsViaManagedBranch_WhenAcceptableIncludesAll()
     {
-        // Employment view has no Managed scope. Even a line manager holding the (non-existent)
-        // managed permission string must be denied — the matrix gate stops it.
+        // Endpoint declares Own | Managed | All; viewer holds only Managed, is LineManaged → grant.
         AsLineManaged();
-        SetPermissions("Staff.ViewManagedStaffEmploymentDetails");
+        SetPermissions(Permissions.Staff.ViewManagedStaffBasicDetails);
 
-        Assert.That(await CanView(StaffProfileSection.Employment), Is.False);
+        Assert.That(await Can(StaffArea.BasicDetails,
+            StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll), Is.True);
     }
 
     [Test]
-    public async Task PerformanceHasNoOwnScope_SelfCannotView()
+    public async Task NoMatchingPermission_Denies()
     {
-        // Performance has no Own scope at all; a self viewer holding only the managed permission
-        // can never see their own appraisal (Self is not LineManaged, and there's no Own to match).
+        // Endpoint accepts ViewOwn + ViewAll on Employment; viewer is Self but holds neither.
         AsSelf();
-        SetPermissions(Permissions.Staff.ViewManagedStaffPerformanceDetails);
+        SetPermissions("Staff.SomeOtherPermission");
 
-        Assert.That(await CanView(StaffProfileSection.Performance), Is.False);
+        Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewOwn | StaffAccess.ViewAll),
+            Is.False);
     }
-
-    // ----- No permissions / no identity ----------------------------------------------------
 
     [Test]
-    public async Task NoPermissions_DeniesEverything()
+    public async Task AccessFlagWithNoSeededPermissionForArea_IsNeverGranted()
     {
-        AsSelf();
-        SetPermissions();
+        // Employment has no Managed scope in the catalogue. A LineManaged viewer holding a
+        // (non-existent) managed-employment string still gets nothing — the lookup misses.
+        AsLineManaged();
+        SetPermissions("Staff.ViewManagedStaffEmploymentDetails");  // not seeded
 
-        Assert.That(await CanView(StaffProfileSection.BasicDetails), Is.False);
-        Assert.That(await CanView(StaffProfileSection.Employment), Is.False);
-        Assert.That(await CanEdit(StaffProfileSection.ContactMethods), Is.False);
+        Assert.That(await Can(StaffArea.EmploymentDetails,
+            StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll), Is.False);
     }
+
+    // ----- No identity / no permissions ----------------------------------------------------
 
     [Test]
     public async Task NoPersonIdentity_AllScopeStillApplies()
@@ -215,7 +274,8 @@ public class StaffMemberAccessServiceTests
         AsNoPersonIdentity();
         SetPermissions(Permissions.Staff.ViewAllStaffBasicDetails);
 
-        Assert.That(await CanView(StaffProfileSection.BasicDetails), Is.True);
+        Assert.That(await Can(StaffArea.BasicDetails, StaffAccess.ViewOwn | StaffAccess.ViewAll),
+            Is.True);
     }
 
     [Test]
@@ -224,21 +284,9 @@ public class StaffMemberAccessServiceTests
         AsNoPersonIdentity();
         SetPermissions(Permissions.Staff.ViewOwnStaffBasicDetails);
 
-        Assert.That(await CanView(StaffProfileSection.BasicDetails), Is.False);
+        Assert.That(await Can(StaffArea.BasicDetails, StaffAccess.ViewOwn), Is.False);
         _repo.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction>()),
             Times.Never, "Person-less viewer should short-circuit before any subject lookup.");
-    }
-
-    // ----- Edit vs View independence -------------------------------------------------------
-
-    [Test]
-    public async Task ViewPermission_DoesNotGrantEdit()
-    {
-        AsUnrelated();
-        SetPermissions(Permissions.Staff.ViewAllStaffBasicDetails);
-
-        Assert.That(await CanView(StaffProfileSection.BasicDetails), Is.True);
-        Assert.That(await CanEdit(StaffProfileSection.BasicDetails), Is.False);
     }
 
     // ----- RequireAsync --------------------------------------------------------------------
@@ -250,7 +298,7 @@ public class StaffMemberAccessServiceTests
         SetPermissions();
 
         Assert.ThrowsAsync<ForbiddenException>(() =>
-            _service.RequireAsync(_subjectId, StaffProfileSection.Employment, StaffSectionVerb.View,
+            _service.RequireAsync(_subjectId, StaffArea.EmploymentDetails, StaffAccess.ViewAll,
                 CancellationToken.None));
     }
 
@@ -261,64 +309,20 @@ public class StaffMemberAccessServiceTests
         SetPermissions(Permissions.Staff.ViewAllStaffEmploymentDetails);
 
         Assert.DoesNotThrowAsync(() =>
-            _service.RequireAsync(_subjectId, StaffProfileSection.Employment, StaffSectionVerb.View,
+            _service.RequireAsync(_subjectId, StaffArea.EmploymentDetails, StaffAccess.ViewAll,
                 CancellationToken.None));
     }
 
-    // ----- Capability map ------------------------------------------------------------------
+    // ----- Misuse guard --------------------------------------------------------------------
 
     [Test]
-    public async Task GetCapabilities_AllPermissionsHeld_EverySectionViewableAndEditable()
+    public void CanAsync_WithNoneFlag_Throws()
     {
-        // All-scope grants regardless of relationship, and every section has an All scope for both
-        // verbs, so a holder of the whole catalogue sees and can edit everything.
-        AsUnrelated();
-        SetPermissions(StaffMemberAccessService.AllPermissions.ToArray());
-
-        var caps = await _service.GetCapabilitiesAsync(_subjectId, CancellationToken.None);
-
-        Assert.That(caps, Has.Count.EqualTo(Enum.GetValues<StaffProfileSection>().Length));
-        Assert.That(caps.Values.All(v => v.CanView && v.CanEdit), Is.True);
-    }
-
-    [Test]
-    public async Task GetCapabilities_NoPermissions_EverythingFalse()
-    {
-        AsUnrelated();
-        SetPermissions();
-
-        var caps = await _service.GetCapabilitiesAsync(_subjectId, CancellationToken.None);
-
-        Assert.That(caps.Values.All(v => v is { CanView: false, CanEdit: false }), Is.True);
-    }
-
-    [Test]
-    public async Task GetCapabilities_SelfWithOwnEmployment_ViewButNotEdit()
-    {
-        // Employment is Own-viewable but All-only for edit — a staff member sees their own
-        // employment/pay but cannot edit it.
+        // Passing StaffAccess.None would silently always deny; surface the bug instead.
         AsSelf();
-        SetPermissions(Permissions.Staff.ViewOwnStaffEmploymentDetails);
 
-        var caps = await _service.GetCapabilitiesAsync(_subjectId, CancellationToken.None);
-
-        Assert.That(caps[StaffProfileSection.Employment].CanView, Is.True);
-        Assert.That(caps[StaffProfileSection.Employment].CanEdit, Is.False);
-    }
-
-    // ----- Catalogue alignment: the resolver's names must match the seeded permissions ------
-
-    [Test]
-    public void AllPermissions_ExactlyMatchSeededStaffCatalogue()
-    {
-        var declared = typeof(Permissions.Staff)
-            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-            .Where(f => f is { IsLiteral: true, IsInitOnly: false } && f.FieldType == typeof(string))
-            .Select(f => (string)f.GetRawConstantValue()!)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        // Every permission the resolver can require must be a real, seeded constant (else it would
-        // silently deny), and there should be no orphan staff constants the resolver never uses.
-        Assert.That(StaffMemberAccessService.AllPermissions, Is.EquivalentTo(declared));
+        Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.CanAsync(_subjectId, StaffArea.BasicDetails, StaffAccess.None,
+                CancellationToken.None));
     }
 }

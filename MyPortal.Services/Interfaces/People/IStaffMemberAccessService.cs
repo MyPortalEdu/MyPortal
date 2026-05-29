@@ -2,47 +2,54 @@ using MyPortal.Contracts.Models.People;
 
 namespace MyPortal.Services.Interfaces.People;
 
-/// <summary>What the current viewer may do with a section of a staff record.</summary>
-public enum StaffSectionVerb
+/// <summary>
+/// Permission domain over staff data. Server-internal grouping, NOT a UI section — a single
+/// area can back several sidebar panels in the FE.
+/// </summary>
+public enum StaffArea
 {
-    View,
-    Edit
-}
-
-/// <summary>Relationship of the current viewer to the subject staff member.</summary>
-public enum StaffRelationship
-{
-    /// <summary>No self or line-management link (or the viewer has no person identity).</summary>
-    Unrelated,
-
-    /// <summary>The viewer is somewhere above the subject in the line-management chain (transitive).</summary>
-    LineManaged,
-
-    /// <summary>The subject is the viewer's own record.</summary>
-    Self
+    BasicDetails,
+    EqualityDetails,
+    ProfessionalDetails,
+    EmploymentDetails,
+    PreEmploymentChecks,
+    Absences,
+    Timetable,
+    Documents,
+    PerformanceDetails
 }
 
 /// <summary>
-/// The single authority for "can this viewer see/edit this section of this staff member?".
-/// Both the capability map (what the sidebar shows) and every section endpoint guard go through
-/// this, so they can never disagree. Resolves the viewer→subject relationship and tests it
-/// against the scoped permissions the viewer holds. See docs/staff-profile-access.md.
+/// Access types an endpoint will accept, composed via OR. Scope dictates the viewer→subject
+/// relationship needed: Own⇢Self, Managed⇢LineManaged (transitive), All⇢any.
+/// </summary>
+[Flags]
+public enum StaffAccess
+{
+    None        = 0,
+    ViewOwn     = 1,
+    ViewManaged = 1 << 1,
+    ViewAll     = 1 << 2,
+    EditOwn     = 1 << 3,
+    EditManaged = 1 << 4,
+    EditAll     = 1 << 5,
+}
+
+/// <summary>
+/// Single authority for staff-data gating. The endpoint declares (area, acceptable access);
+/// the resolver answers whether the viewer holds a matching permission AND their relationship
+/// satisfies its scope. See docs/staff-profile-access.md.
 /// </summary>
 public interface IStaffMemberAccessService
 {
-    /// <summary>Relationship of the current viewer to the given staff member.</summary>
     Task<StaffRelationship> GetRelationshipAsync(Guid staffMemberId, CancellationToken cancellationToken);
 
-    /// <summary>Whether the current viewer may perform <paramref name="verb"/> on
-    /// <paramref name="section"/> of the given staff member.</summary>
-    Task<bool> CanAsync(Guid staffMemberId, StaffProfileSection section, StaffSectionVerb verb,
+    /// <summary>Throws <see cref="InvalidOperationException"/> if <paramref name="acceptable"/>
+    /// is <see cref="StaffAccess.None"/> (would silently deny).</summary>
+    Task<bool> CanAsync(Guid staffMemberId, StaffArea area, StaffAccess acceptable,
         CancellationToken cancellationToken);
 
-    /// <summary>Throwing guard for section endpoints. Throws <c>ForbiddenException</c> when denied.</summary>
-    Task RequireAsync(Guid staffMemberId, StaffProfileSection section, StaffSectionVerb verb,
-        CancellationToken cancellationToken);
-
-    /// <summary>Resolves view/edit access for every section at once — for the header load.</summary>
-    Task<IReadOnlyDictionary<StaffProfileSection, SectionAccess>> GetCapabilitiesAsync(Guid staffMemberId,
+    /// <summary>Throwing guard for endpoints (<c>ForbiddenException</c> ⇢ 403).</summary>
+    Task RequireAsync(Guid staffMemberId, StaffArea area, StaffAccess acceptable,
         CancellationToken cancellationToken);
 }

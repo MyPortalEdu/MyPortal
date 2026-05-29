@@ -20,15 +20,18 @@ namespace MyPortal.Services.People;
 public class StaffMemberService : BaseService, IStaffMemberService
 {
     private readonly IStaffMemberRepository _staffMemberRepository;
+    private readonly IStaffMemberAccessService _accessService;
     private readonly IPersonService _personService;
     private readonly IValidationService _validationService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
     public StaffMemberService(IAuthorizationService authorizationService, ILogger<StaffMemberService> logger,
-        IStaffMemberRepository staffMemberRepository, IPersonService personService,
-        IValidationService validationService, IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
+        IStaffMemberRepository staffMemberRepository, IStaffMemberAccessService accessService,
+        IPersonService personService, IValidationService validationService, IUnitOfWorkFactory unitOfWorkFactory)
+        : base(authorizationService, logger)
     {
         _staffMemberRepository = staffMemberRepository;
+        _accessService = accessService;
         _personService = personService;
         _validationService = validationService;
         _unitOfWorkFactory = unitOfWorkFactory;
@@ -38,36 +41,45 @@ public class StaffMemberService : BaseService, IStaffMemberService
         SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default)
     {
-        // Listing every staff member is inherently an All-scope read; consumers such as the
-        // school-details head-teacher picker must hold this. (A future Own/Managed-scoped staff
-        // list would filter to the subjects the viewer can see — out of scope here.)
+        // Listing every staff member is inherently an All-scope read.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.ViewAllStaffBasicDetails, cancellationToken);
 
         return await _staffMemberRepository.GetStaffMembersAsync(filter, sort, paging, cancellationToken);
     }
 
-    public async Task<StaffMemberDetailsResponse> GetDetailsAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<StaffMemberHeaderResponse> GetHeaderAsync(Guid id, CancellationToken cancellationToken)
     {
-        // INTERIM: flat All-scope gate until IStaffMemberAccessService lands (steps 4–5 of
-        // docs/staff-profile-access.md), at which point this becomes a relationship-aware
-        // RequireAsync(id, BasicDetails, View). All-scope is a strict subset of the final
-        // behaviour, so this never over-exposes — it's just temporarily stricter for self/managed.
-        await AuthorizationService.RequirePermissionAsync(Permissions.Staff.ViewAllStaffBasicDetails, cancellationToken);
+        // Minimum-to-open: any view-basic-details scope covering this subject, else 403.
+        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+            StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
 
-        var details = await _staffMemberRepository.GetDetailsByIdAsync(id, cancellationToken);
+        var row = await _staffMemberRepository.GetHeaderByIdAsync(id, cancellationToken);
 
-        if (details == null)
+        if (row == null)
         {
+            // Only All-scope holders reach this branch; non-All viewers 403 above, so the
+            // 404 here doesn't leak existence.
             throw new NotFoundException("Staff member not found.");
         }
 
-        return details;
+        var relationship = await _accessService.GetRelationshipAsync(id, cancellationToken);
+
+        return new StaffMemberHeaderResponse
+        {
+            Id = row.Id,
+            PersonId = row.PersonId,
+            Code = row.Code,
+            DisplayName = row.DisplayName,
+            PreferredName = row.PreferredName,
+            PhotoId = row.PhotoId,
+            Status = row.IsDeleted ? StaffStatus.Inactive : StaffStatus.Active,
+            Relationship = relationship
+        };
     }
 
     public async Task<Guid> CreateAsync(StaffMemberUpsertRequest model, CancellationToken cancellationToken)
     {
-        // Creating a new staff member isn't relationship-scoped (there's no subject yet), so this
-        // stays an All-scope action permanently.
+        // Create has no subject yet, so it can't be relationship-scoped — All only.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.EditAllStaffBasicDetails, cancellationToken);
 
         await _validationService.ValidateAsync(model);
@@ -76,9 +88,8 @@ public class StaffMemberService : BaseService, IStaffMemberService
 
         return await _unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async ownedUow =>
         {
-            // Person + directory created first; the staff member hangs off the new person.
-            // Passing ownedUow keeps both rows in one transaction (and tells PersonService
-            // the staff gate above already covers this).
+            // Person row + its directory first; the staff row hangs off the new person, both in
+            // one transaction.
             var personId = await _personService.CreateAsync(model.Person, cancellationToken, ownedUow);
 
             var staffMember = new StaffMember
@@ -88,7 +99,6 @@ public class StaffMemberService : BaseService, IStaffMemberService
             };
 
             ApplyStaffFields(staffMember, model);
-            staffMember.IsDeleted = false;
 
             await _staffMemberRepository.InsertAsync(staffMember, cancellationToken, ownedUow.Transaction);
 
@@ -98,8 +108,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
 
     public async Task UpdateAsync(Guid id, StaffMemberUpsertRequest model, CancellationToken cancellationToken)
     {
-        // INTERIM: flat All-scope gate until the resolver lands (becomes RequireAsync(id,
-        // BasicDetails, Edit) + the relevant section gates). See GetDetailsAsync note.
+        // INTERIM: monolithic update; will be replaced by per-section PUTs once those land.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.EditAllStaffBasicDetails, cancellationToken);
 
         await _validationService.ValidateAsync(model);
@@ -123,7 +132,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        // INTERIM: flat All-scope gate until the resolver lands. See GetDetailsAsync note.
+        // HR-only action; All-scope.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.EditAllStaffBasicDetails, cancellationToken);
 
         var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken);
@@ -133,8 +142,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
             throw new NotFoundException("Staff member not found.");
         }
 
-        // Soft-delete the staff member only. The underlying Person may also be a
-        // contact/student and is left intact; reinstating a leaver is a future slice.
+        // Soft-delete the staff row only — the person may also be a contact/student.
         await _staffMemberRepository.DeleteAsync(id, cancellationToken);
     }
 

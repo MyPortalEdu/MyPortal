@@ -1,8 +1,5 @@
-﻿using MyPortal.Common.Interfaces;
+using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
-using QueryKit.Repositories.Filtering;
-using QueryKit.Repositories.Paging;
-using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Services.Interfaces.People;
 
@@ -11,13 +8,13 @@ namespace MyPortal.Services.Interfaces.People;
 /// (staff/student/contact/agent). It performs NO authorization — the calling layer owns the
 /// permission gate. Every mutating method accepts an optional <see cref="IUnitOfWork"/> so the
 /// caller can fold the person write into its own transaction.
+///
+/// Read methods are intentionally NOT exposed here: every read of person data is shaped by the
+/// subtype context (e.g. a staff profile header bundles person bio with staff fields), so
+/// reads live on the subtype service and gate per-subtype.
 /// </summary>
 public interface IPersonService
 {
-    Task<PageResult<PersonSummaryResponse>> GetSummariesAsync(FilterOptions filter, SortOptions sort,
-        PageOptions? paging, CancellationToken cancellationToken);
-    Task<PersonDetailsResponse> GetDetailsAsync(Guid id, CancellationToken cancellationToken);
-
     /// <summary>
     /// Creates a Person (and its backing directory). When <paramref name="uow"/> is supplied the
     /// work joins the caller's transaction and the caller owns the commit.
