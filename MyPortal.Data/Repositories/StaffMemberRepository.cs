@@ -64,4 +64,51 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
             }
         }
     }
+
+    public async Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
+    {
+        const string sql =
+            "SELECT TOP 1 [Id] FROM [dbo].[StaffMembers] WHERE [PersonId] = @personId AND [IsDeleted] = 0;";
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, new { personId }, transaction,
+                cancellationToken: cancellationToken);
+
+            return await conn.ExecuteScalarAsync<Guid?>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<bool> IsManagedByAsync(Guid subjectStaffMemberId, Guid managerStaffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var p = new { subjectStaffMemberId, managerStaffMemberId };
+
+            var command = new CommandDefinition("[dbo].[usp_staff_member_is_managed_by]", p, transaction,
+                commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+            return await conn.ExecuteScalarAsync<bool>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
 }

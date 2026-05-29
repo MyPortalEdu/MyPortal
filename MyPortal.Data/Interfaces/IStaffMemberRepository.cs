@@ -26,4 +26,19 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
     Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The StaffMember id for a given person, or null if the person isn't (active) staff.
+    /// Used to resolve the current user's own staff record for line-management checks.
+    /// </summary>
+    Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// Transitive line-management test: true when <paramref name="managerStaffMemberId"/> appears
+    /// anywhere above <paramref name="subjectStaffMemberId"/> in the LineManagerId chain.
+    /// Backed by usp_staff_member_is_managed_by.
+    /// </summary>
+    Task<bool> IsManagedByAsync(Guid subjectStaffMemberId, Guid managerStaffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null);
 }
