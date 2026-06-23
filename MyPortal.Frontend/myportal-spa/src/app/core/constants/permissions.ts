@@ -22,6 +22,55 @@ export const Permissions = {
     ViewAcademicYears: 'Curriculum.ViewAcademicYears',
     EditAcademicYears: 'Curriculum.EditAcademicYears',
   },
+  // Scoped staff-profile permissions: Staff.{Verb}{Scope}Staff{Area}.
+  // See docs/staff-profile-access.md.
+  Staff: {
+    ViewOwnStaffBasicDetails:            'Staff.ViewOwnStaffBasicDetails',
+    ViewManagedStaffBasicDetails:        'Staff.ViewManagedStaffBasicDetails',
+    ViewAllStaffBasicDetails:            'Staff.ViewAllStaffBasicDetails',
+    EditManagedStaffBasicDetails:        'Staff.EditManagedStaffBasicDetails',
+    EditAllStaffBasicDetails:            'Staff.EditAllStaffBasicDetails',
+
+    ViewOwnStaffEqualityDetails:         'Staff.ViewOwnStaffEqualityDetails',
+    ViewAllStaffEqualityDetails:         'Staff.ViewAllStaffEqualityDetails',
+    EditAllStaffEqualityDetails:         'Staff.EditAllStaffEqualityDetails',
+
+    ViewOwnStaffProfessionalDetails:     'Staff.ViewOwnStaffProfessionalDetails',
+    ViewManagedStaffProfessionalDetails: 'Staff.ViewManagedStaffProfessionalDetails',
+    ViewAllStaffProfessionalDetails:     'Staff.ViewAllStaffProfessionalDetails',
+    EditManagedStaffProfessionalDetails: 'Staff.EditManagedStaffProfessionalDetails',
+    EditAllStaffProfessionalDetails:     'Staff.EditAllStaffProfessionalDetails',
+
+    ViewOwnStaffEmploymentDetails:       'Staff.ViewOwnStaffEmploymentDetails',
+    ViewAllStaffEmploymentDetails:       'Staff.ViewAllStaffEmploymentDetails',
+    EditAllStaffEmploymentDetails:       'Staff.EditAllStaffEmploymentDetails',
+
+    ViewAllStaffPreEmploymentChecks:     'Staff.ViewAllStaffPreEmploymentChecks',
+    EditAllStaffPreEmploymentChecks:     'Staff.EditAllStaffPreEmploymentChecks',
+
+    ViewOwnStaffAbsences:                'Staff.ViewOwnStaffAbsences',
+    ViewManagedStaffAbsences:            'Staff.ViewManagedStaffAbsences',
+    ViewAllStaffAbsences:                'Staff.ViewAllStaffAbsences',
+    EditManagedStaffAbsences:            'Staff.EditManagedStaffAbsences',
+    EditAllStaffAbsences:                'Staff.EditAllStaffAbsences',
+
+    ViewOwnStaffTimetable:               'Staff.ViewOwnStaffTimetable',
+    ViewManagedStaffTimetable:           'Staff.ViewManagedStaffTimetable',
+    ViewAllStaffTimetable:               'Staff.ViewAllStaffTimetable',
+    EditAllStaffTimetable:               'Staff.EditAllStaffTimetable',
+
+    ViewOwnStaffDocuments:               'Staff.ViewOwnStaffDocuments',
+    ViewManagedStaffDocuments:           'Staff.ViewManagedStaffDocuments',
+    ViewAllStaffDocuments:               'Staff.ViewAllStaffDocuments',
+    EditOwnStaffDocuments:               'Staff.EditOwnStaffDocuments',
+    EditManagedStaffDocuments:           'Staff.EditManagedStaffDocuments',
+    EditAllStaffDocuments:               'Staff.EditAllStaffDocuments',
+
+    ViewManagedStaffPerformanceDetails:  'Staff.ViewManagedStaffPerformanceDetails',
+    ViewAllStaffPerformanceDetails:      'Staff.ViewAllStaffPerformanceDetails',
+    EditManagedStaffPerformanceDetails:  'Staff.EditManagedStaffPerformanceDetails',
+    EditAllStaffPerformanceDetails:      'Staff.EditAllStaffPerformanceDetails',
+  },
 } as const;
 
 // Flatten to a union of all permission string literals across every category.

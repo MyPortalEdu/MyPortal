@@ -54,6 +54,29 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
         }
     }
 
+    public async Task<StaffBasicDetailsResponse?> GetBasicDetailsByIdAsync(Guid staffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var p = new { staffMemberId };
+
+            var command = new CommandDefinition("[dbo].[usp_staff_member_get_basic_details_by_id]", p, transaction,
+                commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+            return await conn.QueryFirstOrDefaultAsync<StaffBasicDetailsResponse>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
     public async Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {
@@ -68,6 +91,31 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
                 cancellationToken: cancellationToken);
 
             return await conn.ExecuteScalarAsync<Guid?>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<IReadOnlyList<PersonMatchResponse>> SearchPeopleForStaffCreateAsync(string like,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var sql = SqlResourceLoader.Load("People.SearchPeopleForStaffCreate.sql");
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, new { like }, transaction,
+                cancellationToken: cancellationToken);
+
+            var rows = await conn.QueryAsync<PersonMatchResponse>(command);
+
+            return rows.AsList();
         }
         finally
         {

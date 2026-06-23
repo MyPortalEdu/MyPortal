@@ -3,9 +3,9 @@ using MyPortal.Contracts.Models.People;
 
 namespace MyPortal.Services.Validation.People;
 
-public class PersonUpsertRequestValidator : AbstractValidator<PersonUpsertRequest>
+public class StaffBasicDetailsUpsertRequestValidator : AbstractValidator<StaffBasicDetailsUpsertRequest>
 {
-    public PersonUpsertRequestValidator()
+    public StaffBasicDetailsUpsertRequestValidator()
     {
         RuleFor(x => x.FirstName)
             .NotEmpty().WithMessage("First name is required.")
@@ -15,7 +15,6 @@ public class PersonUpsertRequestValidator : AbstractValidator<PersonUpsertReques
             .NotEmpty().WithMessage("Last name is required.")
             .MaximumLength(256).WithMessage("Last name must not exceed 256 characters.");
 
-        // Single-character ISO-style gender code, mirroring Person.Gender's [StringLength(1)].
         RuleFor(x => x.Gender)
             .NotEmpty().WithMessage("Gender is required.")
             .MaximumLength(1).WithMessage("Gender must be a single-character code.");
@@ -32,7 +31,8 @@ public class PersonUpsertRequestValidator : AbstractValidator<PersonUpsertReques
         RuleFor(x => x.PreferredLastName)
             .MaximumLength(256).WithMessage("Preferred last name must not exceed 256 characters.");
 
-        RuleFor(x => x.NhsNumber)
-            .MaximumLength(10).WithMessage("NHS number must not exceed 10 characters.");
+        RuleFor(x => x.Code)
+            .NotEmpty().WithMessage("Staff code is required.")
+            .MaximumLength(128).WithMessage("Staff code must not exceed 128 characters.");
     }
 }

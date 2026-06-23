@@ -1,0 +1,80 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('staff-members.title')"
+    icon="fa-solid fa-id-badge"
+    [actions]="headerActions()"
+  ></mp-page-header>
+
+  <mp-staff-member-create-dialog
+    [open]="createOpen()"
+    (closed)="onCreateClosed()"
+    (created)="onCreated($event)"
+    (openExisting)="onOpenExisting($event)"
+  ></mp-staff-member-create-dialog>
+
+  <p-card>
+    <p-table
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="25"
+      [totalRecords]="totalRecords()"
+      [loading]="loading()"
+      [value]="rows()"
+      (onLazyLoad)="load($event)"
+      [filterDelay]="300"
+      dataKey="id"
+      selectionMode="single"
+      (onRowSelect)="openDetails($any($event).data)"
+      [scrollable]="true">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="code" style="width: 12rem">
+            {{ t('staff-members.columns.code') }}
+            <p-sortIcon field="code"></p-sortIcon>
+          </th>
+          <th pSortableColumn="firstName">
+            {{ t('staff-members.columns.firstName') }}
+            <p-sortIcon field="firstName"></p-sortIcon>
+          </th>
+          <th pSortableColumn="lastName">
+            {{ t('staff-members.columns.lastName') }}
+            <p-sortIcon field="lastName"></p-sortIcon>
+          </th>
+          <th style="width: 8rem">
+            {{ t('staff-members.columns.title') }}
+          </th>
+        </tr>
+        <tr>
+          <th>
+            <p-columnFilter type="text" field="code" matchMode="contains" display="row"></p-columnFilter>
+          </th>
+          <th>
+            <p-columnFilter type="text" field="firstName" matchMode="contains" display="row"></p-columnFilter>
+          </th>
+          <th>
+            <p-columnFilter type="text" field="lastName" matchMode="contains" display="row"></p-columnFilter>
+          </th>
+          <th></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr [pSelectableRow]="row" class="cursor-pointer">
+          <td class="font-mono text-xs">{{ row.code }}</td>
+          <td>{{ row.preferredFirstName ?? row.firstName }}</td>
+          <td>{{ row.preferredLastName ?? row.lastName }}</td>
+          <td class="text-muted-color">{{ row.title }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="text-center text-sm text-muted-color py-6">
+            {{ t('staff-members.empty') }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</ng-container>

@@ -203,7 +203,8 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   onHeadTeacherPicked(s: StaffMemberSummaryResponse): void {
-    this.headTeacherId.set(s.id);
+    // HeadTeacherId is a person FK — use personId, not the picker row's StaffMember id.
+    this.headTeacherId.set(s.personId);
     this.headTeacherFullName.set(this.formatName(s));
   }
 

@@ -240,6 +240,82 @@ Empty cells = no permission string seeded → `(area, that-flag)` lookup misses 
 naturally denies. Expanding (e.g. adding `EditOwn` to ProfessionalDetails for self-logged CPD) is
 one constant + one MERGE row + one lookup entry.
 
+## Role model (cross-cutting)
+
+Three relevant facts about how roles are organised across the system, locked in alongside the
+staff slice because they shape every subtype's permission story:
+
+- **System roles for Student and Parent.** Shipped roles, one each. Other system roles (Admin,
+  etc.) already exist. School-created custom roles are allowed for staff but **not** for
+  Student / Parent — those two roles are immutable system roles.
+- **UserType-locked role assignment.** A user whose `UserType` is `Student` can only ever hold
+  the Student role; a `Parent` user can only ever hold the Parent role; staff users can hold any
+  number of staff-applicable roles. Enforced at the user-role-assignment endpoint, not just by
+  convention.
+- **Per-school behavioural toggles** (e.g. "show pupils their behaviour log") go in **school
+  settings**, not in role permissions. Avoids fragmenting the permission catalogue for what are
+  really school-policy switches.
+- **AuthSeeder auto-grants every permission to the Admin role.** No need to update seeding when
+  new permissions are added — admins always have everything.
+
+### Permission applicability flags
+
+Even with UserType-locked role assignment, the role *editor* could surface staff-only
+permissions to a school admin editing (a hypothetical permission-editable) Student role — or,
+more pressingly, surface them in any future "browse all permissions" UI. The
+`[UserType(UserType.Staff)]` attribute on each staff endpoint already harmlessly blocks a
+student user from ever exercising such a permission, but the noise in the editor is a footgun
+for admins who don't know about the downstream UserType guard. Semantic cleanliness, not
+runtime enforcement.
+
+Implementation: two bool columns on `dbo.Permissions`:
+
+```sql
+ALTER TABLE dbo.Permissions
+    ADD IsAssignableToStudents BIT NOT NULL CONSTRAINT DF_Permissions_StudentAssignable DEFAULT 0,
+        IsAssignableToParents  BIT NOT NULL CONSTRAINT DF_Permissions_ParentAssignable  DEFAULT 0;
+```
+
+- Defaults to `0`/`0` so every existing staff permission stays staff-only, no backfill needed.
+- New student / parent permission seed migrations set the flag in the same MERGE rows that
+  insert them (also propagated via `WHEN MATCHED UPDATE` so flag changes apply on re-seed).
+- The `Permission` entity / read DTO gains two bool properties.
+- The role-management endpoint filters the assignable-permission list by which role's UserType
+  is being edited: Student role editor → `WHERE IsAssignableToStudents = 1`; Parent role editor
+  → `WHERE IsAssignableToParents = 1`; Staff role editor → everything not flagged for the other
+  two (i.e. the staff-only set).
+
+**Runtime enforcement does NOT consult these flags.** The actual safety gate stays the
+`[UserType(...)]` attribute on the endpoint + the resolver. The flags are metadata that drive
+the role-editor UI's filter, nothing more — don't be tempted to plumb them into the auth
+pipeline, that's duplication.
+
+Defer the migration until the first student/parent permissions land (so flags get set in the
+same seed); the staff permissions stay at the defaults.
+
+> Reminder: even with the flags, the Student and Parent system roles themselves stay locked.
+> The flags ensure the *permission catalogue* the role editor surfaces is filtered correctly;
+> the *role assignment* enforcement (Student users get Student role only) lives at the
+> user-role link, independently.
+
+## Other subtypes — preview
+
+The above is the **staff** shape and is justified by staff's Own/Managed/All scope nuance over
+~9 data domains. Other subtypes will not (and should not) replicate it verbatim:
+
+- **Students** — no scope dimension; access is `Self` / `Parent` / `Unrelated` (via the
+  resolver) + a small flat permission set for staff (`ViewAllStudents`, plus narrow gates for
+  SEND / Medical / Safeguarding). No `StudentArea` enum, no `StudentAccess` flags, no lookup
+  table — each endpoint composes its own gate inline. ~10 permissions vs staff's 37.
+- **Contacts / Agents** — probably no relationship resolver at all; just flat `ViewAllContacts`
+  / `EditAllContacts` permissions. Staff-only audience.
+
+Lesson from sizing students against staff: subtype access shapes should match each subtype's
+actual access reality, not be force-symmetric for consistency's sake. The staff resolver's
+infrastructure (lookup table, area enum) is justified *for staff*; copying it to a simpler
+subtype is itself a kind of over-engineering. See the student/parent shape (TBD doc) when that
+slice lands.
+
 ## Build order
 
 1. ✅ Permission catalogue + seed migration.
@@ -248,6 +324,23 @@ one constant + one MERGE row + one lookup entry.
 3. ✅ `IStaffMemberAccessService` (StaffArea / StaffAccess flags / 37-entry lookup) + truth-table
    tests.
 4. ✅ Header endpoint (`GetHeaderAsync` returning identity + `Relationship`).
-5. Section endpoints, one slice at a time. Start with **basic details** (reuses
-   `usp_staff_member_get_details_by_id` + `StaffMemberDetailsResponse`); then employment,
-   absences, etc. Each declares its `(StaffArea, StaffAccess)` at the `RequireAsync` call.
+5. Section endpoints, one slice at a time. Each defines a focused per-area response and
+   composes Person + StaffMember writes through `PersonService.UpdateBasicBioAsync`-style
+   granular methods (no monolithic update).
+   - ✅ **Basic details** (`GET/PUT /api/staffmembers/{id}/basic-details`) — person bio sans
+     equality + staff `Code`.
+   - ⏳ Equality details — special-category bio (`NhsNumber`, `EthnicityId`) + staff disability
+     fields.
+   - ⏳ Employment & contract — tenures, post, FTE, pay scale, salary, bank, `LineManagerId`,
+     `NiNumber`.
+   - ⏳ Professional — `TeacherReferenceNumber`, `IsTeachingStaff`, QTS, `InductionStatusId`,
+     induction dates, qualifications.
+   - ⏳ Pre-employment checks, Absences, Timetable, Documents, Performance.
+6. Role applicability flags migration + Permissions entity update (do this alongside the first
+   student/parent permission seed, not standalone).
+
+> The monolithic `StaffMemberService.UpdateAsync` from earlier drafts has been removed at step
+> 5's start: it gated on `EditAllStaffBasicDetails` while writing equality/employment fields,
+> bypassing those areas' tighter gates. Per-area PUTs are the only edit surface. Create flow is
+> unchanged — it writes all fields atomically at birth, gated on `EditAllStaffBasicDetails`
+> (no relationship dimension since there's no subject yet).

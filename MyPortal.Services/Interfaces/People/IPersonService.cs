@@ -1,7 +1,26 @@
 using MyPortal.Common.Interfaces;
-using MyPortal.Contracts.Models.People;
 
 namespace MyPortal.Services.Interfaces.People;
+
+/// <summary>
+/// Basic biographical fields of a person — the subset that any subtype's "basic details" area
+/// composes into. Excludes equality-sensitive fields (NHS no., ethnicity) and any subtype-
+/// specific fields (Code, Bank, etc.). Passed to <see cref="IPersonService.UpdateBasicBioAsync"/>.
+/// </summary>
+public sealed record PersonBasicBio(
+    string? Title,
+    string FirstName,
+    string? MiddleName,
+    string LastName,
+    string? PreferredFirstName,
+    string? PreferredLastName,
+    Guid? PhotoId,
+    string Gender,
+    DateTime? Dob,
+    DateTime? Deceased,
+    Guid? NationalityId,
+    Guid? FirstLanguageId,
+    Guid? MaritalStatusId);
 
 /// <summary>
 /// Infrastructure for the shared <c>Person</c> record, composed by the subtype services
@@ -9,23 +28,23 @@ namespace MyPortal.Services.Interfaces.People;
 /// permission gate. Every mutating method accepts an optional <see cref="IUnitOfWork"/> so the
 /// caller can fold the person write into its own transaction.
 ///
-/// Read methods are intentionally NOT exposed here: every read of person data is shaped by the
-/// subtype context (e.g. a staff profile header bundles person bio with staff fields), so
-/// reads live on the subtype service and gate per-subtype.
+/// Both Create and UpdateBasicBio take the shared <see cref="PersonBasicBio"/>, so equality
+/// fields (NhsNumber, EthnicityId) are never set through here — they're a separate per-area
+/// concern. This mirrors the per-area edit model: each surface only writes the fields it gates.
 /// </summary>
 public interface IPersonService
 {
     /// <summary>
-    /// Creates a Person (and its backing directory). When <paramref name="uow"/> is supplied the
-    /// work joins the caller's transaction and the caller owns the commit.
+    /// Creates a Person (and its backing directory) populated with basic bio only. Equality
+    /// fields are left null and populated post-creation via the equality-area endpoint.
     /// </summary>
-    Task<Guid> CreateAsync(PersonUpsertRequest model, CancellationToken cancellationToken, IUnitOfWork? uow = null);
+    Task<Guid> CreateAsync(PersonBasicBio bio, CancellationToken cancellationToken, IUnitOfWork? uow = null);
 
-    /// <summary>Updates a Person's biographical fields. See <see cref="CreateAsync"/> for the
-    /// <paramref name="uow"/> transaction semantics.</summary>
-    Task UpdateAsync(Guid id, PersonUpsertRequest model, CancellationToken cancellationToken, IUnitOfWork? uow = null);
+    /// <summary>Updates the basic bio fields only. Equality-sensitive fields are untouched —
+    /// they have their own per-area update method (to land with the EqualityDetails area).</summary>
+    Task UpdateBasicBioAsync(Guid personId, PersonBasicBio bio, CancellationToken cancellationToken,
+        IUnitOfWork? uow = null);
 
-    /// <summary>Hard-deletes a Person and its backing directory. See <see cref="CreateAsync"/>
-    /// for the <paramref name="uow"/> transaction semantics.</summary>
+    /// <summary>Hard-deletes a Person and its backing directory.</summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken, IUnitOfWork? uow = null);
 }

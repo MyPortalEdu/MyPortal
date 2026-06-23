@@ -1,0 +1,72 @@
+{
+  "title": "Staff members",
+  "new": "New staff member",
+  "empty": "No staff members found.",
+  "loadError": "Couldn't load staff members",
+  "loadHeaderError": "Couldn't load staff member profile",
+  "loadBasicError": "Couldn't load basic details",
+  "saveError": "Couldn't save basic details",
+  "savedToast": "Basic details saved",
+  "createError": "Couldn't create staff member",
+  "createdToast": "Staff member created",
+  "create": {
+    "header": "New staff member",
+    "searchLabel": "Search existing people",
+    "searchPlaceholder": "Type a name…",
+    "searchHint": "They may already be on file (e.g. as a contact or former student) — pick the existing record to avoid duplicates.",
+    "searchError": "Couldn't search people",
+    "matchesLabel": "Possible matches",
+    "orCreateNew": "or add someone new",
+    "alreadyStaff": "Already a staff member",
+    "attachHeader": "Add staff role",
+    "attachHint": "This person is already on file. Adding a staff code creates their staff record — their existing details are reused, not duplicated.",
+    "attachSubmit": "Create",
+    "hint": "Capture the joiner data — name, code, gender, optional DOB. Employment, pay, pre-employment checks and other areas are filled in afterwards from the staff profile page.",
+    "submit": "Create"
+  },
+  "columns": {
+    "code": "Code",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "title": "Title"
+  },
+  "status": {
+    "Active": "Active",
+    "Inactive": "Inactive"
+  },
+  "relationship": {
+    "Self": "Your record",
+    "LineManaged": "Your report",
+    "Unrelated": ""
+  },
+  "areas": {
+    "basicDetails": "Basic details",
+    "equalityDetails": "Equality & identity",
+    "professionalDetails": "Professional",
+    "employmentDetails": "Employment & contract",
+    "preEmploymentChecks": "Pre-employment checks",
+    "absences": "Absences & leave",
+    "timetable": "Timetable",
+    "documents": "Documents",
+    "performanceDetails": "Performance",
+    "comingSoon": "Coming soon"
+  },
+  "details": {
+    "loadingTitle": "Staff profile",
+    "backToList": "Back to list",
+    "basicHint": "Name, photo, date of birth, and staff code. Equality fields (ethnicity, NHS no.) live in the Equality & identity area.",
+    "lookupsPending": "Nationality, first language and marital status will become editable once their pickers land.",
+    "areaComingSoon": "This area's endpoint is on the roadmap — not wired up yet."
+  },
+  "fields": {
+    "code": "Staff code",
+    "title": "Title",
+    "firstName": "First name",
+    "middleName": "Middle name",
+    "lastName": "Last name",
+    "preferredFirstName": "Preferred first name",
+    "preferredLastName": "Preferred last name",
+    "gender": "Gender",
+    "dob": "Date of birth"
+  }
+}

@@ -1,0 +1,208 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="header()?.displayName ?? t('staff-members.details.loadingTitle')"
+    [subtitle]="header()?.code"
+    icon="fa-solid fa-id-badge"
+    [actions]="headerActions()"
+  ></mp-page-header>
+
+  @if (loadingHeader() && !header()) {
+    <div class="flex justify-center py-10">
+      <p-progressSpinner [style]="{ width: '2.5rem', height: '2.5rem' }"></p-progressSpinner>
+    </div>
+  } @else if (header(); as h) {
+    <!-- Identity strip -->
+    <p-card styleClass="mb-4">
+      <div class="flex items-center gap-4">
+        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-primary-100 text-lg font-semibold text-primary-700">
+          {{ initials() }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-lg font-semibold">{{ h.displayName }}</span>
+            <p-tag
+              [value]="t('staff-members.status.' + h.status)"
+              [severity]="statusSeverity()"
+            ></p-tag>
+            <span class="text-sm text-muted-color">{{ relationshipLabel(h.relationship) }}</span>
+          </div>
+          <div class="text-sm text-muted-color font-mono">{{ h.code }}</div>
+        </div>
+        <p-button
+          [label]="t('staff-members.details.backToList')"
+          icon="fa-solid fa-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="backToList()"
+        ></p-button>
+      </div>
+    </p-card>
+
+    <!-- Sidebar + content -->
+    <div class="flex flex-col gap-4 md:flex-row">
+      <!-- Section sidebar -->
+      <p-card styleClass="md:w-72 md:flex-shrink-0">
+        <div class="flex flex-col gap-1 text-sm">
+          @for (area of areas; track area.key) {
+            <button
+              type="button"
+              class="flex items-center gap-2 rounded px-3 py-2 text-left transition-colors"
+              [class.bg-primary-50]="activeArea() === area.key && area.enabled"
+              [class.text-primary-700]="activeArea() === area.key && area.enabled"
+              [class.font-semibold]="activeArea() === area.key && area.enabled"
+              [class.text-muted-color]="!area.enabled"
+              [class.cursor-not-allowed]="!area.enabled"
+              [class.hover:bg-surface-100]="area.enabled && activeArea() !== area.key"
+              [disabled]="!area.enabled"
+              (click)="pickArea(area)">
+              <i [class]="area.icon + ' w-4 text-center'"></i>
+              <span class="flex-1">{{ t('staff-members.areas.' + area.key) }}</span>
+              @if (!area.enabled) {
+                <span class="text-xs text-muted-color">{{ t('staff-members.areas.comingSoon') }}</span>
+              }
+            </button>
+          }
+        </div>
+      </p-card>
+
+      <!-- Active section panel -->
+      <p-card class="flex-1">
+        @switch (activeArea()) {
+          @case ('basicDetails') {
+            @if (loadingBasic() && !current()) {
+              <div class="flex justify-center py-10">
+                <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+              </div>
+            } @else if (current()) {
+              <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.basicDetails') }}</h3>
+              <p class="text-sm text-muted-color mb-4">
+                {{ t('staff-members.details.basicHint') }}
+              </p>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <!-- Code -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="code">
+                    {{ t('staff-members.fields.code') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="code" [ngModel]="code()" (ngModelChange)="code.set($event)" />
+                  } @else {
+                    <span class="font-mono">{{ code() }}</span>
+                  }
+                </div>
+
+                <!-- Title -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="title">
+                    {{ t('staff-members.fields.title') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="title" [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)" />
+                  } @else {
+                    <span>{{ title() || '—' }}</span>
+                  }
+                </div>
+
+                <!-- First name -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="firstName">
+                    {{ t('staff-members.fields.firstName') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="firstName" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)" />
+                  } @else {
+                    <span>{{ firstName() }}</span>
+                  }
+                </div>
+
+                <!-- Middle name -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="middleName">
+                    {{ t('staff-members.fields.middleName') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="middleName" [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)" />
+                  } @else {
+                    <span>{{ middleName() || '—' }}</span>
+                  }
+                </div>
+
+                <!-- Last name -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="lastName">
+                    {{ t('staff-members.fields.lastName') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="lastName" [ngModel]="lastName()" (ngModelChange)="lastName.set($event)" />
+                  } @else {
+                    <span>{{ lastName() }}</span>
+                  }
+                </div>
+
+                <!-- Preferred first -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="preferredFirst">
+                    {{ t('staff-members.fields.preferredFirstName') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="preferredFirst" [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)" />
+                  } @else {
+                    <span>{{ preferredFirstName() || '—' }}</span>
+                  }
+                </div>
+
+                <!-- Preferred last -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="preferredLast">
+                    {{ t('staff-members.fields.preferredLastName') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="preferredLast" [ngModel]="preferredLastName() ?? ''" (ngModelChange)="preferredLastName.set($event)" />
+                  } @else {
+                    <span>{{ preferredLastName() || '—' }}</span>
+                  }
+                </div>
+
+                <!-- Gender (single-character ISO-style code today; a picker will land with the lookup endpoints) -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="gender">
+                    {{ t('staff-members.fields.gender') }}
+                  </label>
+                  @if (editing()) {
+                    <input pInputText id="gender" maxlength="1" [ngModel]="gender()" (ngModelChange)="gender.set($event)" />
+                  } @else {
+                    <span>{{ gender() || '—' }}</span>
+                  }
+                </div>
+
+                <!-- DOB -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-sm font-medium" for="dob">
+                    {{ t('staff-members.fields.dob') }}
+                  </label>
+                  @if (editing()) {
+                    <p-datepicker id="dob" [ngModel]="dob()" (ngModelChange)="dob.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                  } @else {
+                    <span>{{ dob() ? (dob() | date:'mediumDate') : '—' }}</span>
+                  }
+                </div>
+              </div>
+
+              @if (!editing()) {
+                <p class="text-xs text-muted-color mt-6">
+                  {{ t('staff-members.details.lookupsPending') }}
+                </p>
+              }
+            }
+          }
+          @default {
+            <div class="text-sm text-muted-color text-center py-10">
+              {{ t('staff-members.details.areaComingSoon') }}
+            </div>
+          }
+        }
+      </p-card>
+    </div>
+  }
+</ng-container>

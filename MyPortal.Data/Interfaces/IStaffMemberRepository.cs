@@ -19,6 +19,12 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
         IDbTransaction? transaction = null);
 
     /// <summary>
+    /// Basic-details area: person bio (no equality fields) + staff code. Null if no match.
+    /// </summary>
+    Task<StaffBasicDetailsResponse?> GetBasicDetailsByIdAsync(Guid staffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null);
+
+    /// <summary>
     /// Paged staff-only summary for the staff/head-teacher picker. Backed by an
     /// inner join on <c>StaffMembers</c> so people who only exist as
     /// students/contacts are excluded.
@@ -33,6 +39,16 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
     /// </summary>
     Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// Search existing People (any subtype) by name for the "new staff member" create flow, so a
+    /// joiner who is already on file gets a staff role attached to their existing Person rather
+    /// than a duplicate. Each result carries <c>ExistingStaffMemberId</c> when the person is
+    /// already (active) staff. <paramref name="like"/> is the caller-built contains pattern.
+    /// Capped at 25 rows.
+    /// </summary>
+    Task<IReadOnlyList<PersonMatchResponse>> SearchPeopleForStaffCreateAsync(string like,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null);
 
     /// <summary>
     /// Transitive line-management test: true when <paramref name="managerStaffMemberId"/> appears

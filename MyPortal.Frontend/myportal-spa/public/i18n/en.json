@@ -1,6 +1,7 @@
 {
   "common": {
     "cancel": "Cancel",
+    "back": "Back",
     "save": "Save",
     "delete": "Delete",
     "discard": "Discard",
@@ -87,7 +88,9 @@
     "school": "School",
     "schoolDetails": "School Details",
     "curriculum": "Curriculum",
-    "academicYears": "Academic Years"
+    "academicYears": "Academic Years",
+    "people": "People",
+    "staffMembers": "Staff"
   },
   "pages": {
     "home": {

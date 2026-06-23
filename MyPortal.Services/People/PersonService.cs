@@ -4,11 +4,9 @@ using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
-using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
-using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.Documents;
 using MyPortal.Services.Interfaces.People;
 using QueryKit.Sql;
@@ -24,29 +22,29 @@ namespace MyPortal.Services.People;
 /// person" in the abstract. Each method may take an <see cref="IUnitOfWork"/> to join the
 /// caller's transaction. Do not expose these directly from a controller without the calling
 /// layer applying the appropriate subtype permission gate.
+///
+/// Both Create and UpdateBasicBio take the shared <see cref="PersonBasicBio"/> record, so
+/// equality-sensitive fields (NhsNumber, EthnicityId) are never set through here — they're
+/// populated post-creation via the equality-area endpoint when that ships.
 /// </summary>
 public class PersonService : BaseService, IPersonService
 {
     private readonly IPersonRepository _personRepository;
     private readonly IDirectoryService _directoryService;
-    private readonly IValidationService _validationService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
     public PersonService(IAuthorizationService authorizationService, ILogger<PersonService> logger,
-        IPersonRepository personRepository, IDirectoryService directoryService, IValidationService validationService,
+        IPersonRepository personRepository, IDirectoryService directoryService,
         IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
     {
         _personRepository = personRepository;
         _directoryService = directoryService;
-        _validationService = validationService;
         _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    public async Task<Guid> CreateAsync(PersonUpsertRequest model, CancellationToken cancellationToken,
+    public async Task<Guid> CreateAsync(PersonBasicBio bio, CancellationToken cancellationToken,
         IUnitOfWork? uow = null)
     {
-        await _validationService.ValidateAsync(model);
-
         var personId = SqlConvention.SequentialGuid();
 
         // Each person owns a private directory subtree for their documents.
@@ -65,22 +63,21 @@ public class PersonService : BaseService, IPersonService
             {
                 Id = personId,
                 DirectoryId = directory.Id,
-                Title = model.Title,
-                PreferredFirstName = model.PreferredFirstName,
-                PreferredLastName = model.PreferredLastName,
-                FirstName = model.FirstName,
-                MiddleName = model.MiddleName,
-                LastName = model.LastName,
-                PhotoId = model.PhotoId,
-                NhsNumber = model.NhsNumber,
-                Gender = model.Gender,
-                Dob = model.Dob,
-                Deceased = model.Deceased,
-                EthnicityId = model.EthnicityId,
-                NationalityId = model.NationalityId,
-                FirstLanguageId = model.FirstLanguageId,
-                MaritalStatusId = model.MaritalStatusId,
-                IsDeleted = false
+                Title = bio.Title,
+                FirstName = bio.FirstName,
+                MiddleName = bio.MiddleName,
+                LastName = bio.LastName,
+                PreferredFirstName = bio.PreferredFirstName,
+                PreferredLastName = bio.PreferredLastName,
+                PhotoId = bio.PhotoId,
+                Gender = bio.Gender,
+                Dob = bio.Dob,
+                Deceased = bio.Deceased,
+                NationalityId = bio.NationalityId,
+                FirstLanguageId = bio.FirstLanguageId,
+                MaritalStatusId = bio.MaritalStatusId
+                // NhsNumber + EthnicityId deliberately omitted — equality-area concern,
+                // populated via the equality-area PUT post-creation.
             };
 
             await _personRepository.InsertAsync(person, cancellationToken, ownedUow.Transaction);
@@ -89,33 +86,30 @@ public class PersonService : BaseService, IPersonService
         }, cancellationToken);
     }
 
-    public async Task UpdateAsync(Guid id, PersonUpsertRequest model, CancellationToken cancellationToken,
+    public async Task UpdateBasicBioAsync(Guid personId, PersonBasicBio bio, CancellationToken cancellationToken,
         IUnitOfWork? uow = null)
     {
-        await _validationService.ValidateAsync(model);
-
-        var person = await _personRepository.GetByIdAsync(id, cancellationToken);
+        var person = await _personRepository.GetByIdAsync(personId, cancellationToken);
 
         if (person == null)
         {
             throw new NotFoundException("Person not found.");
         }
 
-        person.Title = model.Title;
-        person.PreferredFirstName = model.PreferredFirstName;
-        person.PreferredLastName = model.PreferredLastName;
-        person.FirstName = model.FirstName;
-        person.MiddleName = model.MiddleName;
-        person.LastName = model.LastName;
-        person.PhotoId = model.PhotoId;
-        person.NhsNumber = model.NhsNumber;
-        person.Gender = model.Gender;
-        person.Dob = model.Dob;
-        person.Deceased = model.Deceased;
-        person.EthnicityId = model.EthnicityId;
-        person.NationalityId = model.NationalityId;
-        person.FirstLanguageId = model.FirstLanguageId;
-        person.MaritalStatusId = model.MaritalStatusId;
+        person.Title = bio.Title;
+        person.FirstName = bio.FirstName;
+        person.MiddleName = bio.MiddleName;
+        person.LastName = bio.LastName;
+        person.PreferredFirstName = bio.PreferredFirstName;
+        person.PreferredLastName = bio.PreferredLastName;
+        person.PhotoId = bio.PhotoId;
+        person.Gender = bio.Gender;
+        person.Dob = bio.Dob;
+        person.Deceased = bio.Deceased;
+        person.NationalityId = bio.NationalityId;
+        person.FirstLanguageId = bio.FirstLanguageId;
+        person.MaritalStatusId = bio.MaritalStatusId;
+        // NhsNumber and EthnicityId deliberately not touched — equality-area concern.
 
         await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
