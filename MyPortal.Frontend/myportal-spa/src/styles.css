@@ -227,4 +227,29 @@ body {
     background-color: var(--p-content-hover-background);
     color: var(--p-text-color);
   }
+
+  /* Sidebar nav item states, built on PrimeNG semantic vars so they flip with
+     the theme automatically (no light/dark Tailwind class pairs to keep in
+     sync). `--active` is the selected section; `--hoverable` is an idle,
+     enabled item that tints on hover. Used by the staff profile section nav. */
+  .mp-nav-item--active {
+    background-color: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+    color: var(--p-primary-color);
+  }
+  .mp-nav-item--hoverable:hover {
+    background-color: var(--p-content-hover-background);
+  }
+
+  /* Destructive p-menu item — paints the label + icon danger-red. Applied via a
+     MenuItem's `styleClass` (e.g. the staff profile's Delete action). Lives in
+     global CSS because p-menu renders with `appendTo="body"`, outside any
+     component's encapsulated styles. */
+  .mp-menu-item--danger .p-menu-item-link .p-menu-item-icon,
+  .mp-menu-item--danger .p-menu-item-link .p-menu-item-label {
+    color: var(--p-red-600);
+  }
+  .mp-menu-item--danger .p-menu-item-link:hover .p-menu-item-icon,
+  .mp-menu-item--danger .p-menu-item-link:hover .p-menu-item-label {
+    color: var(--p-red-700);
+  }
 }

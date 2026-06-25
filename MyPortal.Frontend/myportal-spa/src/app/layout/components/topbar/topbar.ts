@@ -39,6 +39,17 @@ export class Topbar implements OnInit {
   readonly switcherOpen = signal(false);
   readonly UserType = UserType;
 
+  // Topbar avatar inverts with the theme so it pops against the bar: white disc /
+  // indigo initials on the light (indigo) bar, indigo disc / white initials on
+  // the dark bar. Driven by the theme signal rather than `dark:` utilities to
+  // sidestep !important/variant ordering ambiguity for this one element.
+  readonly topbarAvatarClass = computed(
+    () =>
+      (this.themeService.isDark()
+        ? '!bg-indigo-500 !text-white'
+        : '!bg-white !text-indigo-600') + ' !w-9 !h-9 !text-sm font-medium',
+  );
+
   // School name as a signal — toSignal must be called in injection context, so
   // the bridge sits here as a field initializer rather than in ngOnInit.
   // School can 403 for users without view permission; fall back to null so the

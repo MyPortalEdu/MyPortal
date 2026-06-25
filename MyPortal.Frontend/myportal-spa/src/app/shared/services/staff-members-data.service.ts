@@ -9,6 +9,16 @@ import {
   StaffBasicDetailsUpsertRequest,
 } from '../types/staff-basic-details';
 import {
+  StaffContactDetailsResponse,
+  StaffContactDetailsUpsertRequest,
+} from '../types/staff-contact-details';
+import {
+  AddressListResponse,
+  AddressMatchResponse,
+  PersonAddressUpdateRequest,
+  PersonAddressUpsertRequest,
+} from '../types/staff-address';
+import {
   PersonMatchResponse,
   StaffMemberCreateForPersonRequest,
 } from '../types/person-match';
@@ -47,6 +57,55 @@ export class StaffMembersDataService {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/basic-details`,
       payload,
+    );
+  }
+
+  getContactDetails(staffMemberId: string): Observable<StaffContactDetailsResponse> {
+    return this.http.get<StaffContactDetailsResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/contact-details`,
+    );
+  }
+
+  updateContactDetails(
+    staffMemberId: string,
+    payload: StaffContactDetailsUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/contact-details`,
+      payload,
+    );
+  }
+
+  getAddresses(staffMemberId: string): Observable<AddressListResponse> {
+    return this.http.get<AddressListResponse>(`/api/v1/staffmembers/${staffMemberId}/addresses`);
+  }
+
+  searchAddressMatches(staffMemberId: string, query: string): Observable<AddressMatchResponse[]> {
+    const params = new HttpParams().set('query', query);
+    return this.http.get<AddressMatchResponse[]>(
+      `/api/v1/staffmembers/${staffMemberId}/address-matches`,
+      { params },
+    );
+  }
+
+  addAddress(staffMemberId: string, payload: PersonAddressUpsertRequest): Observable<IdResponse> {
+    return this.http.post<IdResponse>(`/api/v1/staffmembers/${staffMemberId}/addresses`, payload);
+  }
+
+  updateAddress(
+    staffMemberId: string,
+    addressPersonId: string,
+    payload: PersonAddressUpdateRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/addresses/${addressPersonId}`,
+      payload,
+    );
+  }
+
+  removeAddress(staffMemberId: string, addressPersonId: string): Observable<void> {
+    return this.http.delete<void>(
+      `/api/v1/staffmembers/${staffMemberId}/addresses/${addressPersonId}`,
     );
   }
 

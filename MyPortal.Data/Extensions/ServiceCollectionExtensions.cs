@@ -21,6 +21,9 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IAcademicYearRepository, AcademicYearRepository>();
         services.AddScoped<IAcademicTermRepository, AcademicTermRepository>();
+        services.AddScoped<IAddressRepository, AddressRepository>();
+        services.AddScoped<IAddressPersonRepository, AddressPersonRepository>();
+        services.AddScoped<IAddressTypeRepository, AddressTypeRepository>();
         services.AddScoped<IAgencyRepository, AgencyRepository>();
         services.AddScoped<IAttendanceCodeRepository, AttendanceCodeRepository>();
         services.AddScoped<IAttendanceMarkRepository, AttendanceMarkRepository>();
@@ -31,6 +34,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBulletinAcknowledgementRepository, BulletinAcknowledgementRepository>();
         services.AddScoped<IBulletinSettingsRepository, BulletinSettingsRepository>();
         services.AddScoped<IDiaryEventRepository, DiaryEventRepository>();
+        services.AddScoped<IEmailAddressRepository, EmailAddressRepository>();
+        services.AddScoped<IEmailAddressTypeRepository, EmailAddressTypeRepository>();
+        services.AddScoped<IPhoneNumberRepository, PhoneNumberRepository>();
+        services.AddScoped<IPhoneNumberTypeRepository, PhoneNumberTypeRepository>();
         services.AddScoped<IDirectoryRepository, DirectoryRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();

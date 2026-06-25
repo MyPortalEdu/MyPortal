@@ -214,6 +214,20 @@
     <EmbeddedResource Include="Sql\Updates\20260518000400_add_staff_profile_permissions.sql" />
     <None Remove="Sql\Updates\20260518000500_collapse_staff_profile_permissions.sql" />
     <EmbeddedResource Include="Sql\Updates\20260518000500_collapse_staff_profile_permissions.sql" />
+    <None Remove="Sql\Updates\20260625000000_add_contact_details_plumbing.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260625000000_add_contact_details_plumbing.sql" />
+    <None Remove="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_phone_number_get_by_person_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_phone_number_get_by_person_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_address_get_by_person_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_address_get_by_person_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_address_search.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_address_search.sql" />
+    <None Remove="Sql\StoredProcedures\usp_address_find_by_match_key.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_address_find_by_match_key.sql" />
+    <None Remove="Sql\StoredProcedures\usp_address_person_get_by_person_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_address_person_get_by_person_id.sql" />
   </ItemGroup>
 
   <ItemGroup>

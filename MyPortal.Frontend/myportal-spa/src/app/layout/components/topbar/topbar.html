@@ -2,19 +2,19 @@
 <div
   class="sticky top-0 z-[1003] h-14 w-full
          flex items-center justify-between px-3 md:px-4
-         backdrop-blur
-         bg-[var(--p-surface-0)]/95 dark:bg-[var(--p-surface-900)]/95
-         border-b border-[var(--p-surface-200)] dark:border-[var(--p-surface-800)]
-         text-[var(--p-text-color)] transition-colors"
+         backdrop-blur shadow-sm
+         bg-indigo-600/95 dark:bg-[var(--p-surface-900)]
+         border-b border-indigo-700 dark:border-[var(--p-surface-800)]
+         text-white dark:text-[var(--p-text-color)] transition-colors"
 >
   <!-- left -->
   <div class="flex items-center gap-3">
-    <button pButton type="button" class="p-button-text p-button-sm" (click)="menuToggle.emit()" [attr.aria-label]="t('topbar.toggleNavigation')">
+    <button pButton type="button" class="p-button-text p-button-sm !text-white dark:!text-[var(--p-text-color)] hover:!bg-white/10 dark:hover:!bg-white/10" (click)="menuToggle.emit()" [attr.aria-label]="t('topbar.toggleNavigation')">
       <i pButtonIcon class="fa-solid fa-bars"></i>
     </button>
 
     <a routerLink="/portal" class="flex items-center gap-2 select-none">
-      <i class="fa-solid fa-graduation-cap text-primary text-base md:text-lg shrink-0" aria-hidden="true"></i>
+      <i class="fa-solid fa-graduation-cap text-white dark:text-primary text-base md:text-lg shrink-0" aria-hidden="true"></i>
       <span class="text-base md:text-lg font-semibold tracking-tight">{{ t('topbar.appName') }}</span>
     </a>
 
@@ -22,8 +22,8 @@
       @if (label.school || label.year) {
         <div
           class="hidden md:flex items-center gap-1.5 text-sm
-                 text-[var(--p-text-color)] opacity-75
-                 border-l border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]
+                 text-white dark:text-[var(--p-text-color)] opacity-80 dark:opacity-75
+                 border-l border-white/30 dark:border-[var(--p-surface-700)]
                  pl-3 ml-1 truncate"
           [attr.aria-label]="t('topbar.context')"
         >
@@ -38,11 +38,11 @@
   <!-- right -->
   <div class="flex items-center gap-2 sm:gap-3">
     @if (me$ | async; as me) {
-      <button pButton class="!p-0 !rounded-full w-9 h-9" (click)="userMenu.toggle($event)" [attr.aria-label]="t('topbar.userMenu')">
+      <button pButton class="!p-0 !rounded-full w-9 h-9 !bg-transparent !border-0" (click)="userMenu.toggle($event)" [attr.aria-label]="t('topbar.userMenu')">
         <p-avatar
           shape="circle"
           [label]="initials(me.displayName)"
-          styleClass="!bg-indigo-500 !text-white !w-9 !h-9 !text-sm font-medium"
+          [styleClass]="topbarAvatarClass()"
         ></p-avatar>
       </button>
 

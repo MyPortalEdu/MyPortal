@@ -25,11 +25,16 @@ namespace MyPortal.WebApi.Controllers;
 public sealed class StaffMembersController : BaseApiController
 {
     private readonly IStaffMemberService _staffMemberService;
+    private readonly IStaffContactService _staffContactService;
+    private readonly IStaffAddressService _staffAddressService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
-        IStaffMemberService staffMemberService) : base(problemFactory, logger)
+        IStaffMemberService staffMemberService, IStaffContactService staffContactService,
+        IStaffAddressService staffAddressService) : base(problemFactory, logger)
     {
         _staffMemberService = staffMemberService;
+        _staffContactService = staffContactService;
+        _staffAddressService = staffAddressService;
     }
 
     /// <summary>Get the staff profile header for a given staff member id.</summary>
@@ -73,6 +78,103 @@ public sealed class StaffMembersController : BaseApiController
     {
         await _staffMemberService.UpdateBasicDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Contact Details area — the staff member's owned emails and phone numbers, plus
+    /// the type options for the editor. Shared addresses arrive in a later slice.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/contact-details")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffContactDetailsResponse), 200)]
+    public async Task<IActionResult> GetContactDetailsAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffContactService.GetContactDetailsAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Replace the Contact Details area. Each list is a whole-collection replace — the
+    /// server inserts new rows, updates matched ids, and soft-deletes anything dropped.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new emails and phone numbers.</param>
+    [HttpPut("{staffMemberId:guid}/contact-details")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateContactDetailsAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffContactDetailsUpsertRequest model)
+    {
+        await _staffContactService.UpdateContactDetailsAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Addresses section of Contact Details — a staff member's linked addresses + type
+    /// options. Addresses are shared entities, so writes are granular rather than a bulk replace.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/addresses")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(AddressListResponse), 200)]
+    public async Task<IActionResult> GetAddressesAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffAddressService.GetAddressesAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Search existing addresses for the search-before-add flow (avoids duplicate rows for
+    /// people who share an address). Blank / too-short queries return an empty list.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="query">Postcode / street / building fragment to search for.</param>
+    [HttpGet("{staffMemberId:guid}/address-matches")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IReadOnlyList<AddressMatchResponse>), 200)]
+    public async Task<IActionResult> SearchAddressMatchesAsync([FromRoute] Guid staffMemberId,
+        [FromQuery] string? query)
+    {
+        var result = await _staffAddressService.SearchAddressesAsync(staffMemberId, query, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Add an address to a staff member — link an existing one or create a new one.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The address to link/create, with type and main flag.</param>
+    [HttpPost("{staffMemberId:guid}/addresses")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> AddAddressAsync([FromRoute] Guid staffMemberId,
+        [FromBody] PersonAddressUpsertRequest model)
+    {
+        var addressPersonId = await _staffAddressService.AddAddressAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = addressPersonId });
+    }
+
+    /// <summary>Update an address link. When the address is shared, <c>Mode</c> decides whether the
+    /// edit applies to everyone (FixInPlace) or forks a new address for this person (Moved).</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="addressPersonId">The address-link id (from the address list).</param>
+    /// <param name="model">The updated address + link details and edit mode.</param>
+    [HttpPut("{staffMemberId:guid}/addresses/{addressPersonId:guid}")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateAddressAsync([FromRoute] Guid staffMemberId,
+        [FromRoute] Guid addressPersonId, [FromBody] PersonAddressUpdateRequest model)
+    {
+        await _staffAddressService.UpdateAddressAsync(staffMemberId, addressPersonId, model, CancellationToken);
+        return Ok(new IdResponse { Id = addressPersonId });
+    }
+
+    /// <summary>Unlink an address from a staff member. The shared address itself is left for anyone
+    /// else linked to it.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="addressPersonId">The address-link id to remove.</param>
+    [HttpDelete("{staffMemberId:guid}/addresses/{addressPersonId:guid}")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> RemoveAddressAsync([FromRoute] Guid staffMemberId,
+        [FromRoute] Guid addressPersonId)
+    {
+        await _staffAddressService.RemoveAddressAsync(staffMemberId, addressPersonId, CancellationToken);
+        return NoContent();
     }
 
     /// <summary>Create a new staff member with basic details only. Equality, employment,

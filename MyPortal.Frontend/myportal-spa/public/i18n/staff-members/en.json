@@ -8,6 +8,9 @@
   "loadBasicError": "Couldn't load basic details",
   "saveError": "Couldn't save basic details",
   "savedToast": "Basic details saved",
+  "loadContactError": "Couldn't load contact details",
+  "saveContactError": "Couldn't save contact details",
+  "savedContactToast": "Contact details saved",
   "createError": "Couldn't create staff member",
   "createdToast": "Staff member created",
   "create": {
@@ -54,11 +57,29 @@
     "performanceDetails": "Performance",
     "comingSoon": "Coming soon"
   },
+  "delete": {
+    "menu": "More actions",
+    "menuItem": "Delete Staff Member",
+    "header": "Delete Staff Member",
+    "confirm": "This removes the staff record entirely. If this person has simply left, set a leaving date in Employment instead. The record can be restored by an administrator.",
+    "toast": "Staff member deleted",
+    "error": "Couldn't delete the staff member"
+  },
+  "contact": {
+    "hint": "Email addresses, phone numbers, and addresses for this staff member.",
+    "emailsHeading": "Email Addresses",
+    "phonesHeading": "Phone Numbers",
+    "addressesHeading": "Addresses"
+  },
   "details": {
     "pageTitle": "Staff Details",
     "backToList": "Back to list",
-    "basicHint": "Name, photo, date of birth, and staff code. Equality fields (ethnicity, NHS no.) live in the Equality & Diversity area.",
-    "lookupsPending": "Nationality, first language and marital status will become editable once their pickers land.",
+    "groups": {
+      "identity": "Identity",
+      "name": "Name",
+      "personal": "Personal"
+    },
+    "basicHint": "Name, photo, date of birth, and staff code.",
     "areaComingSoon": "This area's endpoint is on the roadmap — not wired up yet."
   },
   "fields": {

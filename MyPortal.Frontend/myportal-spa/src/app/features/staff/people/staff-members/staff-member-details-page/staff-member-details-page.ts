@@ -10,10 +10,12 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { DatePicker } from 'primeng/datepicker';
 import { InputText } from 'primeng/inputtext';
+import { Menu } from 'primeng/menu';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { Tag } from 'primeng/tag';
 import { firstValueFrom } from 'rxjs';
@@ -39,6 +41,17 @@ import {
   StaffBasicDetailsResponse,
   StaffBasicDetailsUpsertRequest,
 } from '../../../../../shared/types/staff-basic-details';
+import {
+  PersonEmailUpsertItem,
+  PersonPhoneUpsertItem,
+  StaffContactDetailsResponse,
+  StaffContactDetailsUpsertRequest,
+} from '../../../../../shared/types/staff-contact-details';
+import { PersonEmails } from '../../../../../shared/components/contact/person-emails/person-emails';
+import { PersonPhones } from '../../../../../shared/components/contact/person-phones/person-phones';
+import { PersonAddresses } from '../../../../../shared/components/contact/person-addresses/person-addresses';
+import { GenderSelect } from '../../../../../shared/components/gender-select/gender-select';
+import { GenderLabelPipe } from '../../../../../shared/pipes/gender-label.pipe';
 
 type BasicFormSnapshot = {
   code: string;
@@ -75,7 +88,7 @@ interface AreaTab {
 
 const AREAS: AreaTab[] = [
   { key: 'basicDetails',         icon: 'fa-solid fa-user',            enabled: true  },
-  { key: 'contactDetails',       icon: 'fa-solid fa-address-book',    enabled: false },
+  { key: 'contactDetails',       icon: 'fa-solid fa-address-book',    enabled: true  },
   { key: 'equalityDetails',      icon: 'fa-solid fa-scale-balanced',  enabled: false },
   { key: 'professionalDetails',  icon: 'fa-solid fa-graduation-cap',  enabled: false },
   { key: 'employmentDetails',    icon: 'fa-solid fa-briefcase',       enabled: false },
@@ -97,9 +110,15 @@ const AREAS: AreaTab[] = [
     Card,
     DatePicker,
     InputText,
+    Menu,
     ProgressSpinner,
     Tag,
     PageHeader,
+    PersonEmails,
+    PersonPhones,
+    PersonAddresses,
+    GenderSelect,
+    GenderLabelPipe,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('staff-members')],
@@ -119,12 +138,21 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected readonly loadingHeader = signal(false);
   protected readonly loadingBasic = signal(false);
+  protected readonly loadingContact = signal(false);
   protected readonly saving = signal(false);
   protected readonly editing = signal(false);
 
   protected readonly staffMemberId = signal<string>('');
   protected readonly header = signal<StaffMemberHeaderResponse | null>(null);
   protected readonly current = signal<StaffBasicDetailsResponse | null>(null);
+
+  // Contact-details panel: editable email/phone lists + their type options.
+  protected readonly contact = signal<StaffContactDetailsResponse | null>(null);
+  protected readonly emails = signal<PersonEmailUpsertItem[]>([]);
+  protected readonly phones = signal<PersonPhoneUpsertItem[]>([]);
+  protected readonly emailTypes = computed(() => this.contact()?.emailTypes ?? []);
+  protected readonly phoneTypes = computed(() => this.contact()?.phoneTypes ?? []);
+  private readonly contactSnapshot = signal<string>('');
 
   // Form-field signals for the basic-details panel. Mirror the upsert request.
   protected readonly code = signal('');
@@ -148,12 +176,47 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  protected readonly isValid = computed(
+  // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
+  // Other areas aren't editable yet.
+  protected readonly canEditActiveArea = computed(() => {
+    const area = this.activeArea();
+    return (area === 'basicDetails' || area === 'contactDetails') && this.canEditBasic();
+  });
+
+  // Deleting a staff record is HR-only (All scope) — the kebab doesn't render otherwise.
+  protected readonly canDelete = computed(() =>
+    this.heldPerms().has(Permissions.Staff.EditAllStaffBasicDetails),
+  );
+
+  protected readonly deleting = signal(false);
+
+  // Single destructive action tucked behind the kebab. styleClass paints it
+  // danger-red so it reads as destructive even inside the menu.
+  protected readonly deleteMenuItems = computed<MenuItem[]>(() => [
+    {
+      label: this.transloco.translate('staff-members.delete.menuItem'),
+      icon: 'fa-solid fa-trash',
+      styleClass: 'mp-menu-item--danger',
+      command: () => this.confirmDelete(),
+    },
+  ]);
+
+  private readonly basicValid = computed(
     () =>
       this.firstName().trim().length > 0 &&
       this.lastName().trim().length > 0 &&
       this.gender().trim().length > 0 &&
       this.code().trim().length > 0,
+  );
+
+  private readonly contactValid = computed(
+    () =>
+      this.emails().every(e => !!e.typeId && e.address.trim().length > 0) &&
+      this.phones().every(p => !!p.typeId && p.number.trim().length > 0),
+  );
+
+  protected readonly isValid = computed(() =>
+    this.activeArea() === 'contactDetails' ? this.contactValid() : this.basicValid(),
   );
 
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
@@ -170,14 +233,24 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     dob: this.dob()?.toISOString() ?? null,
   }));
 
-  protected readonly isDirty = computed(() => {
+  private readonly basicDirty = computed(() => {
     const s = this.snapshot();
     if (!s) return false;
     return JSON.stringify(s) !== JSON.stringify(this.currentForm());
   });
 
+  private readonly contactDirty = computed(
+    () =>
+      this.contactSnapshot() !==
+      JSON.stringify({ emails: this.emails(), phones: this.phones() }),
+  );
+
+  protected readonly isDirty = computed(() =>
+    this.activeArea() === 'contactDetails' ? this.contactDirty() : this.basicDirty(),
+  );
+
   protected readonly headerActions = computed<HeaderAction[]>(() => {
-    if (!this.canEditBasic() || this.activeArea() !== 'basicDetails') return [];
+    if (!this.canEditActiveArea()) return [];
     if (this.editing()) {
       return [
         {
@@ -216,6 +289,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
     this.loadHeader();
     this.loadBasic();
+    this.loadContact();
   }
 
   private loadHeader(): void {
@@ -247,8 +321,23 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     });
   }
 
+  private loadContact(): void {
+    this.loadingContact.set(true);
+    this.data.getContactDetails(this.staffMemberId()).subscribe({
+      next: row => {
+        this.contact.set(row);
+        this.applyContact(row);
+        this.loadingContact.set(false);
+      },
+      error: err => {
+        this.loadingContact.set(false);
+        this.notify.apiError(err, this.transloco.translate('staff-members.loadContactError'));
+      },
+    });
+  }
+
   protected pickArea(area: AreaTab): void {
-    if (!area.enabled) return;
+    if (!area.enabled || area.key === this.activeArea()) return;
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -259,6 +348,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       });
       return;
     }
+    // Leaving edit mode behind when switching to a fresh, clean area.
+    this.editing.set(false);
     this.activeArea.set(area.key);
   }
 
@@ -284,12 +375,24 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   protected cancelEdit(): void {
-    this.applyToForm(this.current());
+    if (this.activeArea() === 'contactDetails') {
+      this.applyContact(this.contact());
+    } else {
+      this.applyToForm(this.current());
+    }
     this.editing.set(false);
   }
 
   async save(): Promise<void> {
-    if (!this.canEditBasic() || !this.isValid() || this.saving()) return;
+    if (this.activeArea() === 'contactDetails') {
+      await this.saveContact();
+    } else {
+      await this.saveBasic();
+    }
+  }
+
+  private async saveBasic(): Promise<void> {
+    if (!this.canEditBasic() || !this.basicValid() || this.saving()) return;
     this.saving.set(true);
 
     const c = this.current();
@@ -326,8 +429,74 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     }
   }
 
+  private async saveContact(): Promise<void> {
+    if (!this.canEditBasic() || !this.contactValid() || this.saving()) return;
+    this.saving.set(true);
+
+    const payload: StaffContactDetailsUpsertRequest = {
+      emails: this.emails(),
+      phones: this.phones(),
+    };
+
+    try {
+      await firstValueFrom(this.data.updateContactDetails(this.staffMemberId(), payload));
+      this.notify.success(this.transloco.translate('staff-members.savedContactToast'));
+      this.editing.set(false);
+      this.loadContact();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.saveContactError'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private applyContact(row: StaffContactDetailsResponse | null): void {
+    this.emails.set(
+      (row?.emails ?? []).map(e => ({
+        id: e.id,
+        typeId: e.typeId,
+        address: e.address,
+        isMain: e.isMain,
+        notes: e.notes ?? null,
+      })),
+    );
+    this.phones.set(
+      (row?.phones ?? []).map(p => ({
+        id: p.id,
+        typeId: p.typeId,
+        number: p.number,
+        isMain: p.isMain,
+      })),
+    );
+    this.contactSnapshot.set(JSON.stringify({ emails: this.emails(), phones: this.phones() }));
+  }
+
   protected backToList(): void {
     this.router.navigate(['/staff/people/staff-members']);
+  }
+
+  protected async confirmDelete(): Promise<void> {
+    if (this.deleting()) return;
+
+    const ok = await this.confirm.confirm({
+      header: this.transloco.translate('staff-members.delete.header'),
+      message: this.transloco.translate('staff-members.delete.confirm'),
+      acceptLabel: this.transloco.translate('common.delete'),
+      acceptSeverity: 'danger',
+    });
+
+    if (!ok) return;
+
+    this.deleting.set(true);
+    try {
+      await firstValueFrom(this.data.delete(this.staffMemberId()));
+      this.notify.success(this.transloco.translate('staff-members.delete.toast'));
+      this.router.navigate(['/staff/people/staff-members']);
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.delete.error'));
+    } finally {
+      this.deleting.set(false);
+    }
   }
 
   private applyToForm(row: StaffBasicDetailsResponse | null): void {

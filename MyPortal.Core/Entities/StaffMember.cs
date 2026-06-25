@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MyPortal.Core.Interfaces;
+using QueryKit.Repositories.Attributes;
 
 namespace MyPortal.Core.Entities
 {
@@ -56,6 +57,7 @@ namespace MyPortal.Core.Entities
         [Range(0, int.MaxValue)]
         public int PpaPeriodsPerWeek { get; set; }
 
+        [SoftDelete]
         public bool IsDeleted { get; set; }
 
         public Person? Person { get; set; }
