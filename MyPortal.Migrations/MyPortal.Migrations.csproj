@@ -216,6 +216,10 @@
     <EmbeddedResource Include="Sql\Updates\20260518000500_collapse_staff_profile_permissions.sql" />
     <None Remove="Sql\Updates\20260625000000_add_contact_details_plumbing.sql" />
     <EmbeddedResource Include="Sql\Updates\20260625000000_add_contact_details_plumbing.sql" />
+    <None Remove="Sql\Updates\20260625000100_add_directory_soft_delete.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260625000100_add_directory_soft_delete.sql" />
+    <None Remove="Sql\Updates\20260625000200_seed_staff_document_types.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260625000200_seed_staff_document_types.sql" />
     <None Remove="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_phone_number_get_by_person_id.sql" />

@@ -4,6 +4,7 @@ using MyPortal.Auth.Attributes;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.People;
 using MyPortal.WebApi.Infrastructure.Attributes;
 
@@ -21,8 +22,13 @@ namespace MyPortal.WebApi.Controllers;
 /// plain <c>RequirePermissionAsync</c> for non-relationship-scoped actions like Create / Delete).
 /// The controller deliberately doesn't carry <c>[Permission]</c> attributes so the service stays
 /// the single source of truth and the two can't drift.
+///
+/// The staff <b>Documents</b> area is served by the inherited attachment endpoints
+/// (<c>{staffMemberId}/attachments/...</c>) from <see cref="BaseDirectoryEntityController{Person}"/>;
+/// the route's entityId is the staff member id, which <see cref="IStaffAttachmentsService"/> resolves
+/// to the owning Person's directory tree and gates on the staff Documents permission domain.
 /// </remarks>
-public sealed class StaffMembersController : BaseApiController
+public sealed class StaffMembersController : BaseDirectoryEntityController<Person>
 {
     private readonly IStaffMemberService _staffMemberService;
     private readonly IStaffContactService _staffContactService;
@@ -30,7 +36,8 @@ public sealed class StaffMembersController : BaseApiController
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
-        IStaffAddressService staffAddressService) : base(problemFactory, logger)
+        IStaffAddressService staffAddressService, IStaffAttachmentsService staffAttachmentsService)
+        : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
         _staffContactService = staffContactService;

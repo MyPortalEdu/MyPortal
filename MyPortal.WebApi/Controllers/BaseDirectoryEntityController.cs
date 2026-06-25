@@ -64,6 +64,19 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
         return Ok(result);
     }
 
+    /// <summary>List the immediate contents of the entity's root directory.</summary>
+    /// <remarks>Entry point for a directory browser when the caller knows the entity id but not its
+    /// root directory id.</remarks>
+    /// <param name="entityId">The owning entity.</param>
+    [HttpGet("{entityId:guid}/attachments/root/contents")]
+    [ProducesResponseType(typeof(DirectoryContentsResponse), 200)]
+    public async Task<IActionResult> GetRootDirectoryContentsAsync([FromRoute] Guid entityId)
+    {
+        var result = await _directoryEntityService.GetRootDirectoryContentsAsync(entityId, CancellationToken);
+
+        return Ok(result);
+    }
+
     /// <summary>Get the full directory tree rooted at a directory.</summary>
     /// <remarks>
     /// Returns all sub-directories recursively. Used by the SPA's tree-picker UI

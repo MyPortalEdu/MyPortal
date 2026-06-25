@@ -80,6 +80,7 @@
       "personal": "Personal"
     },
     "basicHint": "Name, photo, date of birth, and staff code.",
+    "documentsHint": "Files and folders for this staff member — contracts, certificates, and other records.",
     "areaComingSoon": "This area's endpoint is on the roadmap — not wired up yet."
   },
   "fields": {

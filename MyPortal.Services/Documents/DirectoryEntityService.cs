@@ -221,6 +221,14 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
         throw new ForbiddenException("You do not have permission to view this directory.");
     }
 
+    public async Task<DirectoryContentsResponse> GetRootDirectoryContentsAsync(Guid entityId,
+        CancellationToken cancellationToken)
+    {
+        var entity = await GetByIdAsync(entityId, cancellationToken);
+
+        return await GetDirectoryContentsAsync(entityId, entity.DirectoryId, cancellationToken);
+    }
+
     public async Task<DirectoryTreeResponse> GetDirectoryTreeAsync(Guid entityId, Guid directoryId, CancellationToken cancellationToken,
         bool includeDeletedDocs = true)
     {

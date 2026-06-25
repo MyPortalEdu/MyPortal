@@ -52,6 +52,9 @@ import { PersonPhones } from '../../../../../shared/components/contact/person-ph
 import { PersonAddresses } from '../../../../../shared/components/contact/person-addresses/person-addresses';
 import { GenderSelect } from '../../../../../shared/components/gender-select/gender-select';
 import { GenderLabelPipe } from '../../../../../shared/pipes/gender-label.pipe';
+import { DirectoryBrowser } from '../../../../../shared/components/documents/directory-browser/directory-browser';
+import { DirectoryDataService } from '../../../../../shared/services/directory-data.service';
+import { LookupResponse } from '../../../../../shared/types/lookup';
 
 type BasicFormSnapshot = {
   code: string;
@@ -96,7 +99,7 @@ const AREAS: AreaTab[] = [
   { key: 'absences',             icon: 'fa-solid fa-calendar-xmark',  enabled: false },
   { key: 'timetable',            icon: 'fa-solid fa-calendar-days',   enabled: false },
   { key: 'performanceDetails',   icon: 'fa-solid fa-chart-line',      enabled: false },
-  { key: 'documents',            icon: 'fa-solid fa-folder',          enabled: false },
+  { key: 'documents',            icon: 'fa-solid fa-folder',          enabled: true },
 ];
 
 @Component({
@@ -119,6 +122,7 @@ const AREAS: AreaTab[] = [
     PersonAddresses,
     GenderSelect,
     GenderLabelPipe,
+    DirectoryBrowser,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('staff-members')],
@@ -132,6 +136,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
+  private readonly directoryData = inject(DirectoryDataService);
 
   protected readonly areas = AREAS;
   protected readonly activeArea = signal<AreaKey>('basicDetails');
@@ -173,6 +178,28 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     const rel = this.header()?.relationship;
     if (perms.has(Permissions.Staff.EditAllStaffBasicDetails)) return true;
     if (rel === 'LineManaged' && perms.has(Permissions.Staff.EditManagedStaffBasicDetails)) return true;
+    return false;
+  });
+
+  // Attachments endpoints are inherited on the staff-members controller; the
+  // directory browser keys off this base URL (entityId = staff member id).
+  protected readonly documentsBaseUrl = computed(
+    () => `/api/v1/staffmembers/${this.staffMemberId()}/attachments`,
+  );
+
+  // Staff-facet document types for the upload/classify picker (lazy-loaded the
+  // first time the Documents area is opened).
+  protected readonly documentTypes = signal<LookupResponse[]>([]);
+  private documentTypesLoaded = false;
+
+  // Documents edit gate — same relationship-scoped shape as basic details, but on
+  // the Staff Documents permission domain.
+  protected readonly canEditDocuments = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (perms.has(Permissions.Staff.EditAllStaffDocuments)) return true;
+    if (rel === 'LineManaged' && perms.has(Permissions.Staff.EditManagedStaffDocuments)) return true;
+    if (rel === 'Self' && perms.has(Permissions.Staff.EditOwnStaffDocuments)) return true;
     return false;
   });
 
@@ -338,6 +365,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected pickArea(area: AreaTab): void {
     if (!area.enabled || area.key === this.activeArea()) return;
+    if (area.key === 'documents') this.loadDocumentTypes();
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -351,6 +379,17 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     // Leaving edit mode behind when switching to a fresh, clean area.
     this.editing.set(false);
     this.activeArea.set(area.key);
+  }
+
+  // Staff-facet types only (plus the catch-all "Other", which is flagged on
+  // every facet). Failure is non-fatal — the picker just stays hidden.
+  private loadDocumentTypes(): void {
+    if (this.documentTypesLoaded) return;
+    this.documentTypesLoaded = true;
+    this.directoryData.getDocumentTypes({ staff: true }).subscribe({
+      next: types => this.documentTypes.set(types),
+      error: () => (this.documentTypesLoaded = false),
+    });
   }
 
   protected statusSeverity(): 'success' | 'secondary' {

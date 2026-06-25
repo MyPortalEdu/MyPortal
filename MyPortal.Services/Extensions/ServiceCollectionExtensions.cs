@@ -73,6 +73,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffMemberAccessService, StaffMemberAccessService>();
         services.AddScoped<IStaffContactService, StaffContactService>();
         services.AddScoped<IStaffAddressService, StaffAddressService>();
+        services.AddScoped<IStaffAttachmentsService, StaffAttachmentsService>();
         services.AddScoped<IRegisterService, RegisterService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<ISchoolService, SchoolService>();

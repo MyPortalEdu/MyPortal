@@ -1,0 +1,385 @@
+<ng-container *transloco="let t">
+  <!-- Toolbar -->
+  <div class="flex items-center gap-2 flex-wrap mb-3">
+    <div class="flex items-center gap-1">
+      <p-button
+        icon="fa-solid fa-arrow-left"
+        severity="secondary"
+        [text]="true"
+        [disabled]="!canBack()"
+        [ariaLabel]="t('documents.toolbar.back')"
+        [title]="t('documents.toolbar.back')"
+        (onClick)="back()"></p-button>
+      <p-button
+        icon="fa-solid fa-arrow-right"
+        severity="secondary"
+        [text]="true"
+        [disabled]="!canForward()"
+        [ariaLabel]="t('documents.toolbar.forward')"
+        [title]="t('documents.toolbar.forward')"
+        (onClick)="forward()"></p-button>
+      <p-button
+        icon="fa-solid fa-arrow-up"
+        severity="secondary"
+        [text]="true"
+        [disabled]="!canUp()"
+        [ariaLabel]="t('documents.toolbar.up')"
+        [title]="t('documents.toolbar.up')"
+        (onClick)="up()"></p-button>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-1 flex-wrap text-sm min-w-0 flex-1">
+      @for (crumb of crumbs(); track crumb.dir.id; let last = $last; let i = $index) {
+        @if (last) {
+          <span class="font-semibold truncate">{{ crumb.label }}</span>
+        } @else {
+          <button type="button" class="text-primary hover:underline truncate" (click)="goToCrumb(i)">
+            {{ crumb.label }}
+          </button>
+          <i class="fa-solid fa-chevron-right text-xs text-muted-color" aria-hidden="true"></i>
+        }
+      }
+    </nav>
+
+    @if (canEdit()) {
+      <div class="flex items-center gap-2">
+        <p-button
+          [label]="t('documents.toolbar.newFolder')"
+          icon="fa-solid fa-folder-plus"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="openNewFolder()"></p-button>
+        <p-button
+          [label]="t('documents.toolbar.upload')"
+          icon="fa-solid fa-upload"
+          [loading]="uploading()"
+          (onClick)="openUpload()"></p-button>
+      </div>
+    }
+  </div>
+
+  <input #fileInput type="file" multiple class="hidden" (change)="onFileInputChange($event)" />
+
+  <!-- Contents (drop target when editable) -->
+  <div
+    class="rounded border transition-colors"
+    [class.border-surface-200]="!dragOver()"
+    [class.dark:border-surface-700]="!dragOver()"
+    [class.border-primary]="dragOver()"
+    [class.bg-primary-50]="dragOver()"
+    [class.dark:bg-primary-900\/20]="dragOver()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)">
+
+    @if (loading() && !rows().length) {
+      <div class="flex justify-center py-10">
+        <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+      </div>
+    } @else if (!rows().length) {
+      <div class="text-center text-sm text-muted-color py-10">
+        {{ t('documents.empty') }}
+        @if (canEdit()) {
+          <div class="mt-1 text-xs">{{ t('documents.dropHint', { limit: sizeLabel }) }}</div>
+        }
+      </div>
+    } @else {
+      <p-table [value]="rows()" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ t('documents.columns.name') }}</th>
+            @if (hasTypes()) {
+              <th class="w-40">{{ t('documents.columns.type') }}</th>
+            }
+            <th class="w-28">{{ t('documents.columns.size') }}</th>
+            <th class="w-40">{{ t('documents.columns.modified') }}</th>
+            <th class="w-32"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <!-- Name -->
+            <td class="min-w-0">
+              @if (row.kind === 'dir') {
+                <button type="button" class="flex items-center gap-2 min-w-0 text-left hover:text-primary" (click)="openFolder(row.dir)">
+                  <i class="fa-solid fa-folder text-amber-400 shrink-0"></i>
+                  <span class="truncate font-medium">{{ row.dir.name }}</span>
+                </button>
+              } @else {
+                <div class="flex items-center gap-2 min-w-0">
+                  <i [class]="fileIcon(row.doc.contentType) + ' text-muted-color shrink-0'"></i>
+                  <span class="truncate">{{ row.doc.title || row.doc.fileName }}</span>
+                </div>
+              }
+            </td>
+            <!-- Type -->
+            @if (hasTypes()) {
+              <td class="text-sm text-muted-color">
+                {{ row.kind === 'file' ? typeLabel(row.doc) : '—' }}
+              </td>
+            }
+            <!-- Size -->
+            <td class="text-sm text-muted-color">
+              {{ row.kind === 'file' ? formatFileSize(row.doc.sizeBytes) : '—' }}
+            </td>
+            <!-- Modified -->
+            <td class="text-sm text-muted-color">
+              {{ row.kind === 'file' ? (row.doc.lastModifiedAt | date: 'mediumDate') : '—' }}
+            </td>
+            <!-- Actions -->
+            <td>
+              <div class="flex items-center justify-end gap-1">
+                @if (row.kind === 'file') {
+                  <a
+                    class="mp-icon-button shrink-0"
+                    [href]="downloadUrl(row.doc)"
+                    target="_blank"
+                    rel="noopener"
+                    [title]="t('documents.actions.download')"
+                    [attr.aria-label]="t('documents.actions.download')">
+                    <i class="fa-solid fa-download text-sm"></i>
+                  </a>
+                }
+                @if (canEdit()) {
+                  @if (row.kind === 'dir') {
+                    <p-button
+                      icon="fa-solid fa-pen"
+                      [text]="true"
+                      severity="secondary"
+                      [ariaLabel]="t('documents.actions.rename')"
+                      [title]="t('documents.actions.rename')"
+                      (onClick)="openRename(row.dir)"></p-button>
+                  }
+                  @if (row.kind === 'file' && hasTypes()) {
+                    <p-button
+                      icon="fa-solid fa-tag"
+                      [text]="true"
+                      severity="secondary"
+                      [ariaLabel]="t('documents.actions.changeType')"
+                      [title]="t('documents.actions.changeType')"
+                      (onClick)="openChangeType(row.doc)"></p-button>
+                  }
+                  <p-button
+                    icon="fa-solid fa-arrows-up-down-left-right"
+                    [text]="true"
+                    severity="secondary"
+                    [ariaLabel]="t('documents.actions.move')"
+                    [title]="t('documents.actions.move')"
+                    (onClick)="openMove(row)"></p-button>
+                  <p-button
+                    icon="fa-solid fa-trash"
+                    [text]="true"
+                    severity="danger"
+                    [ariaLabel]="t('documents.actions.delete')"
+                    [title]="t('documents.actions.delete')"
+                    (onClick)="row.kind === 'dir' ? deleteFolder(row.dir) : deleteFile(row.doc)"></p-button>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </div>
+
+  <!-- New folder / rename dialog -->
+  <p-dialog
+    [visible]="nameDialogOpen()"
+    (visibleChange)="nameDialogOpen.set($event)"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '24rem' }"
+    [header]="nameDialogMode() === 'new' ? t('documents.newFolder.header') : t('documents.rename.header')">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium" for="dirName">
+        {{ nameDialogMode() === 'new' ? t('documents.newFolder.nameLabel') : t('documents.rename.nameLabel') }}
+      </label>
+      <input
+        pInputText
+        id="dirName"
+        [placeholder]="t('documents.newFolder.namePlaceholder')"
+        [ngModel]="nameValue()"
+        (ngModelChange)="nameValue.set($event)"
+        (keyup.enter)="submitName()" />
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+        [label]="t('common.cancel')"
+        severity="secondary"
+        [text]="true"
+        (onClick)="nameDialogOpen.set(false)"></p-button>
+      <p-button
+        [label]="nameDialogMode() === 'new' ? t('documents.newFolder.submit') : t('documents.rename.submit')"
+        [loading]="nameSaving()"
+        [disabled]="!nameValue().trim()"
+        (onClick)="submitName()"></p-button>
+    </div>
+  </p-dialog>
+
+  <!-- Move dialog -->
+  <p-dialog
+    [visible]="moveDialogOpen()"
+    (visibleChange)="moveDialogOpen.set($event)"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '26rem' }"
+    [header]="t('documents.move.header', { name: moveTargetName() })">
+    <p class="text-sm text-muted-color mb-2">{{ t('documents.move.hint') }}</p>
+    @if (moveTree().length) {
+      <div class="flex flex-col max-h-72 overflow-auto rounded border border-surface-200 dark:border-surface-700">
+        @for (flat of moveTree(); track flat.dir.id) {
+          @if (flat.dir.id === moveCurrentContainerId()) {
+            <div
+              class="flex items-center gap-2 px-2 py-1.5 text-sm text-muted-color"
+              [style.padding-left.rem]="0.5 + flat.depth * 1.25">
+              <i class="fa-solid fa-folder text-amber-400/60 shrink-0"></i>
+              <span class="truncate">{{ moveCrumbLabel(flat) }}</span>
+              <span class="text-xs">({{ t('documents.move.currentLocation') }})</span>
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="flex items-center gap-2 px-2 py-1.5 text-sm text-left hover:bg-surface-100 dark:hover:bg-surface-800"
+              [class.bg-primary-50]="moveSelectedId() === flat.dir.id"
+              [class.dark:bg-primary-900\/30]="moveSelectedId() === flat.dir.id"
+              [style.padding-left.rem]="0.5 + flat.depth * 1.25"
+              (click)="moveSelectedId.set(flat.dir.id)">
+              <i class="fa-solid fa-folder text-amber-400 shrink-0"></i>
+              <span class="truncate">{{ moveCrumbLabel(flat) }}</span>
+            </button>
+          }
+        }
+      </div>
+    } @else {
+      <p class="text-sm text-muted-color py-4 text-center">{{ t('documents.move.noTargets') }}</p>
+    }
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+        [label]="t('common.cancel')"
+        severity="secondary"
+        [text]="true"
+        (onClick)="moveDialogOpen.set(false)"></p-button>
+      <p-button
+        [label]="t('documents.move.submit')"
+        [loading]="moveSaving()"
+        [disabled]="!moveSelectedId()"
+        (onClick)="submitMove()"></p-button>
+    </div>
+  </p-dialog>
+
+  <!-- Upload dialog -->
+  <p-dialog
+    [visible]="uploadDialogOpen()"
+    (visibleChange)="uploadDialogOpen.set($event)"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '32rem' }"
+    [header]="t('documents.upload.header')">
+    @if (hasTypes()) {
+      <div class="flex flex-col gap-1 mb-3">
+        <label class="text-sm font-medium" for="uploadType">{{ t('documents.upload.typeLabel') }}</label>
+        <p-select
+          inputId="uploadType"
+          [options]="documentTypes()"
+          optionLabel="description"
+          optionValue="id"
+          [ngModel]="selectedTypeId()"
+          (ngModelChange)="selectedTypeId.set($event)"
+          appendTo="body"
+          styleClass="w-full"></p-select>
+      </div>
+    }
+
+    <!-- Drop zone / browse -->
+    <button
+      type="button"
+      class="w-full rounded border-2 border-dashed px-4 py-8 text-center text-sm transition-colors hover:border-primary"
+      [class.border-surface-300]="!dragOver()"
+      [class.dark:border-surface-600]="!dragOver()"
+      [class.border-primary]="dragOver()"
+      [class.bg-primary-50]="dragOver()"
+      [class.dark:bg-primary-900\/20]="dragOver()"
+      (click)="onBrowseClick()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)">
+      <i class="fa-solid fa-cloud-arrow-up text-2xl text-muted-color"></i>
+      <div class="mt-2">{{ t('documents.dropHint', { limit: sizeLabel }) }}</div>
+    </button>
+
+    @if (stagedFiles().length) {
+      <ul class="mt-3 flex flex-col divide-y divide-surface-200 dark:divide-surface-700 rounded border border-surface-200 dark:border-surface-700 max-h-52 overflow-auto">
+        @for (file of stagedFiles(); track $index) {
+          <li class="flex items-center gap-2 px-3 py-2 text-sm">
+            <i [class]="fileIcon(file.type) + ' text-muted-color shrink-0'"></i>
+            <span class="truncate flex-1">{{ file.name }}</span>
+            <span class="text-xs text-muted-color shrink-0">{{ formatFileSize(file.size) }}</span>
+            <button
+              type="button"
+              class="mp-icon-button shrink-0"
+              [title]="t('common.remove')"
+              [attr.aria-label]="t('common.remove')"
+              (click)="removeStaged($index)">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+        [label]="t('common.cancel')"
+        severity="secondary"
+        [text]="true"
+        (onClick)="uploadDialogOpen.set(false)"></p-button>
+      <p-button
+        [label]="stagedFiles().length ? t('documents.upload.submit', { count: stagedFiles().length }) : t('documents.toolbar.upload')"
+        icon="fa-solid fa-upload"
+        [loading]="uploading()"
+        [disabled]="!stagedFiles().length"
+        (onClick)="confirmUpload()"></p-button>
+    </div>
+  </p-dialog>
+
+  <!-- Change type dialog -->
+  <p-dialog
+    [visible]="typeDialogOpen()"
+    (visibleChange)="typeDialogOpen.set($event)"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '24rem' }"
+    [header]="t('documents.changeType.header', { name: typeTargetName() })">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium" for="changeType">
+        {{ t('documents.changeType.label') }}
+      </label>
+      <p-select
+        inputId="changeType"
+        [options]="documentTypes()"
+        optionLabel="description"
+        optionValue="id"
+        [ngModel]="typeSelectedId()"
+        (ngModelChange)="typeSelectedId.set($event)"
+        appendTo="body"
+        styleClass="w-full"></p-select>
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+        [label]="t('common.cancel')"
+        severity="secondary"
+        [text]="true"
+        (onClick)="typeDialogOpen.set(false)"></p-button>
+      <p-button
+        [label]="t('documents.changeType.submit')"
+        [loading]="typeSaving()"
+        [disabled]="!typeSelectedId()"
+        (onClick)="submitChangeType()"></p-button>
+    </div>
+  </p-dialog>
+</ng-container>

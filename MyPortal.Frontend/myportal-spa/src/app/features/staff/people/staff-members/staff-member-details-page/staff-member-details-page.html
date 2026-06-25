@@ -278,6 +278,15 @@
               </div>
             }
           }
+          @case ('documents') {
+            <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.documents') }}</h3>
+            <p class="text-sm text-muted-color mb-4">{{ t('staff-members.details.documentsHint') }}</p>
+            <mp-directory-browser
+              [baseUrl]="documentsBaseUrl()"
+              [canEdit]="canEditDocuments()"
+              [documentTypes]="documentTypes()"
+              [defaultPrivate]="true"></mp-directory-browser>
+          }
           @default {
             <div class="text-sm text-muted-color text-center py-10">
               {{ t('staff-members.details.areaComingSoon') }}
