@@ -1,7 +1,8 @@
 {
-  "title": "Staff members",
-  "new": "New staff member",
+  "title": "Staff Members",
+  "new": "New Staff Member",
   "empty": "No staff members found.",
+  "searchPlaceholder": "Search by name or code…",
   "loadError": "Couldn't load staff members",
   "loadHeaderError": "Couldn't load staff member profile",
   "loadBasicError": "Couldn't load basic details",
@@ -10,7 +11,7 @@
   "createError": "Couldn't create staff member",
   "createdToast": "Staff member created",
   "create": {
-    "header": "New staff member",
+    "header": "New Staff Member",
     "searchLabel": "Search existing people",
     "searchPlaceholder": "Type a name…",
     "searchHint": "They may already be on file (e.g. as a contact or former student) — pick the existing record to avoid duplicates.",
@@ -25,6 +26,7 @@
     "submit": "Create"
   },
   "columns": {
+    "name": "Name",
     "code": "Code",
     "firstName": "First name",
     "lastName": "Last name",
@@ -40,21 +42,22 @@
     "Unrelated": ""
   },
   "areas": {
-    "basicDetails": "Basic details",
-    "equalityDetails": "Equality & identity",
-    "professionalDetails": "Professional",
-    "employmentDetails": "Employment & contract",
-    "preEmploymentChecks": "Pre-employment checks",
-    "absences": "Absences & leave",
+    "basicDetails": "Basic Details",
+    "contactDetails": "Contact Details",
+    "equalityDetails": "Equality & Diversity",
+    "professionalDetails": "Professional Details",
+    "employmentDetails": "Employment Details",
+    "preEmploymentChecks": "Pre-Employment Checks",
+    "absences": "Absences & Leave",
     "timetable": "Timetable",
     "documents": "Documents",
     "performanceDetails": "Performance",
     "comingSoon": "Coming soon"
   },
   "details": {
-    "loadingTitle": "Staff profile",
+    "pageTitle": "Staff Details",
     "backToList": "Back to list",
-    "basicHint": "Name, photo, date of birth, and staff code. Equality fields (ethnicity, NHS no.) live in the Equality & identity area.",
+    "basicHint": "Name, photo, date of birth, and staff code. Equality fields (ethnicity, NHS no.) live in the Equality & Diversity area.",
     "lookupsPending": "Nationality, first language and marital status will become editable once their pickers land.",
     "areaComingSoon": "This area's endpoint is on the roadmap — not wired up yet."
   },

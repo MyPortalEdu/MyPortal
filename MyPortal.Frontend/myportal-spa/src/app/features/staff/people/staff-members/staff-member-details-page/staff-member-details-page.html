@@ -1,7 +1,6 @@
 <ng-container *transloco="let t">
   <mp-page-header
-    [title]="header()?.displayName ?? t('staff-members.details.loadingTitle')"
-    [subtitle]="header()?.code"
+    [title]="t('staff-members.details.pageTitle')"
     icon="fa-solid fa-id-badge"
     [actions]="headerActions()"
   ></mp-page-header>
@@ -24,7 +23,9 @@
               [value]="t('staff-members.status.' + h.status)"
               [severity]="statusSeverity()"
             ></p-tag>
-            <span class="text-sm text-muted-color">{{ relationshipLabel(h.relationship) }}</span>
+            @if (h.relationship !== 'Unrelated') {
+              <span class="text-sm text-muted-color">{{ relationshipLabel(h.relationship) }}</span>
+            }
           </div>
           <div class="text-sm text-muted-color font-mono">{{ h.code }}</div>
         </div>

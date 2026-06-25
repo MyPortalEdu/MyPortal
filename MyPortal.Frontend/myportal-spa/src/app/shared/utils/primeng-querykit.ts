@@ -89,8 +89,15 @@ const OPERATOR_MAP: Record<string, FilterOperator> = {
  *
  * Returns plain primitives, not an HttpParams instance, so callers can stitch
  * extra params (e.g. academicYearId) in without round-tripping through HttpParams.
+ *
+ * `opts.globalFields` supports a single search box (PrimeNG's `filterGlobal`):
+ * the one search term is expanded into an OR group of `Contains` predicates
+ * across the listed columns.
  */
-export function toQueryKitParams(event: TableLazyLoadEvent): QueryKitParams {
+export function toQueryKitParams(
+  event: TableLazyLoadEvent,
+  opts: { globalFields?: string[] } = {},
+): QueryKitParams {
   const pageSize = event.rows ?? DEFAULT_PAGE_SIZE;
   // PrimeNG's `first` is the row offset; QueryKit's `page` is 1-based.
   const page = Math.floor((event.first ?? 0) / pageSize) + 1;
@@ -100,7 +107,7 @@ export function toQueryKitParams(event: TableLazyLoadEvent): QueryKitParams {
   const sort = buildSort(event);
   if (sort) params.sort = encodeBase64Url(JSON.stringify(sort));
 
-  const filter = buildFilter(event);
+  const filter = buildFilter(event, opts.globalFields ?? []);
   if (filter) params.filter = encodeBase64Url(JSON.stringify(filter));
 
   return params;
@@ -137,13 +144,21 @@ function toDirection(order: number | null | undefined): SortDirection | null {
   return null;
 }
 
-function buildFilter(event: TableLazyLoadEvent): FilterOptions | null {
+function buildFilter(event: TableLazyLoadEvent, globalFields: string[]): FilterOptions | null {
   const fieldFilters = event.filters;
   if (!fieldFilters) return null;
 
   const groups: FilterGroup[] = [];
 
   for (const [field, raw] of Object.entries(fieldFilters)) {
+    // PrimeNG's single search box arrives under the `global` key. Fan it out
+    // into one OR group across the configured columns.
+    if (field === 'global') {
+      const group = buildGlobalGroup(raw, globalFields);
+      if (group) groups.push(group);
+      continue;
+    }
+
     // PrimeNG passes either a single FilterMetadata (basic mode) or an array
     // (advanced mode, with per-clause and/or operator). Normalise to array.
     const metas: FilterMetadata[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
@@ -162,6 +177,21 @@ function buildFilter(event: TableLazyLoadEvent): FilterOptions | null {
   }
 
   return groups.length ? { join: 'And', groups } : null;
+}
+
+function buildGlobalGroup(
+  raw: FilterMetadata | FilterMetadata[] | undefined,
+  globalFields: string[],
+): FilterGroup | null {
+  const meta = Array.isArray(raw) ? raw[0] : raw;
+  const value = meta?.value;
+  if (value === undefined || value === null || value === '' || !globalFields.length) {
+    return null;
+  }
+  return {
+    join: 'Or',
+    criteria: globalFields.map(columnName => ({ columnName, operator: 'Contains', value })),
+  };
 }
 
 function toCriterion(field: string, m: FilterMetadata): FilterCriterion | null {

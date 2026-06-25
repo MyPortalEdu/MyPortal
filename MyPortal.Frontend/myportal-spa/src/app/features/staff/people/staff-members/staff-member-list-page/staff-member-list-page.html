@@ -14,6 +14,7 @@
 
   <p-card>
     <p-table
+      #dt
       [lazy]="true"
       [paginator]="true"
       [rows]="25"
@@ -22,55 +23,60 @@
       [value]="rows()"
       (onLazyLoad)="load($event)"
       [filterDelay]="300"
+      [globalFilterFields]="['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code']"
       dataKey="id"
       selectionMode="single"
       (onRowSelect)="openDetails($any($event).data)"
       [scrollable]="true">
 
+      <ng-template pTemplate="caption">
+        <div class="flex justify-end">
+          <span class="relative w-full sm:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
+            <input
+              pInputText
+              type="text"
+              class="w-full pl-9"
+              [placeholder]="t('staff-members.searchPlaceholder')"
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </span>
+        </div>
+      </ng-template>
+
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 4rem"></th>
+          <th pSortableColumn="lastName">
+            {{ t('staff-members.columns.name') }}
+            <p-sortIcon field="lastName"></p-sortIcon>
+          </th>
           <th pSortableColumn="code" style="width: 12rem">
             {{ t('staff-members.columns.code') }}
             <p-sortIcon field="code"></p-sortIcon>
           </th>
-          <th pSortableColumn="firstName">
-            {{ t('staff-members.columns.firstName') }}
-            <p-sortIcon field="firstName"></p-sortIcon>
-          </th>
-          <th pSortableColumn="lastName">
-            {{ t('staff-members.columns.lastName') }}
-            <p-sortIcon field="lastName"></p-sortIcon>
-          </th>
-          <th style="width: 8rem">
-            {{ t('staff-members.columns.title') }}
-          </th>
-        </tr>
-        <tr>
-          <th>
-            <p-columnFilter type="text" field="code" matchMode="contains" display="row"></p-columnFilter>
-          </th>
-          <th>
-            <p-columnFilter type="text" field="firstName" matchMode="contains" display="row"></p-columnFilter>
-          </th>
-          <th>
-            <p-columnFilter type="text" field="lastName" matchMode="contains" display="row"></p-columnFilter>
-          </th>
-          <th></th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-row>
         <tr [pSelectableRow]="row" class="cursor-pointer">
-          <td class="font-mono text-xs">{{ row.code }}</td>
-          <td>{{ row.preferredFirstName ?? row.firstName }}</td>
-          <td>{{ row.preferredLastName ?? row.lastName }}</td>
-          <td class="text-muted-color">{{ row.title }}</td>
+          <td>
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+              {{ initials(row) }}
+            </div>
+          </td>
+          <td>
+            <div class="font-medium">{{ displayName(row) }}</div>
+            @if (legalName(row); as legal) {
+              <div class="text-xs text-muted-color">{{ legal }}</div>
+            }
+          </td>
+          <td class="font-mono text-xs text-muted-color">{{ row.code }}</td>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="4" class="text-center text-sm text-muted-color py-6">
+          <td colspan="3" class="text-center text-sm text-muted-color py-6">
             {{ t('staff-members.empty') }}
           </td>
         </tr>

@@ -52,19 +52,20 @@ type BasicFormSnapshot = {
   dob: string | null;
 };
 
-// The 9 sidebar areas the staff profile will eventually surface. Only Basic
+// The 10 sidebar areas the staff profile will eventually surface. Only Basic
 // details is wired up in this slice; the rest render as disabled placeholders
 // so the layout reads right and adding a section is a focused follow-up.
 type AreaKey =
   | 'basicDetails'
+  | 'contactDetails'
   | 'equalityDetails'
   | 'professionalDetails'
   | 'employmentDetails'
   | 'preEmploymentChecks'
   | 'absences'
   | 'timetable'
-  | 'documents'
-  | 'performanceDetails';
+  | 'performanceDetails'
+  | 'documents';
 
 interface AreaTab {
   key: AreaKey;
@@ -74,14 +75,15 @@ interface AreaTab {
 
 const AREAS: AreaTab[] = [
   { key: 'basicDetails',         icon: 'fa-solid fa-user',            enabled: true  },
+  { key: 'contactDetails',       icon: 'fa-solid fa-address-book',    enabled: false },
   { key: 'equalityDetails',      icon: 'fa-solid fa-scale-balanced',  enabled: false },
   { key: 'professionalDetails',  icon: 'fa-solid fa-graduation-cap',  enabled: false },
   { key: 'employmentDetails',    icon: 'fa-solid fa-briefcase',       enabled: false },
   { key: 'preEmploymentChecks',  icon: 'fa-solid fa-shield-halved',   enabled: false },
   { key: 'absences',             icon: 'fa-solid fa-calendar-xmark',  enabled: false },
   { key: 'timetable',            icon: 'fa-solid fa-calendar-days',   enabled: false },
-  { key: 'documents',            icon: 'fa-solid fa-folder',          enabled: false },
   { key: 'performanceDetails',   icon: 'fa-solid fa-chart-line',      enabled: false },
+  { key: 'documents',            icon: 'fa-solid fa-folder',          enabled: false },
 ];
 
 @Component({
@@ -264,13 +266,12 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return this.header()?.status === 'Active' ? 'success' : 'secondary';
   }
 
+  // Initials for the avatar. Use the actual first/last name rather than parsing
+  // displayName — that leads with the title (e.g. "Ms Jessica … Pearson"), which
+  // would yield "MP" instead of "JP". Empty until basic details load.
   protected initials(): string {
-    const h = this.header();
-    if (!h) return '';
-    const parts = h.displayName.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '';
-    const first = parts[0]?.[0] ?? '';
-    const last = parts[parts.length - 1]?.[0] ?? '';
+    const first = this.firstName().trim().charAt(0);
+    const last = this.lastName().trim().charAt(0);
     return (first + last).toUpperCase();
   }
 

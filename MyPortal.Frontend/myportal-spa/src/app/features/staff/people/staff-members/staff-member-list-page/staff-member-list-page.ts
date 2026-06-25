@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Card } from 'primeng/card';
+import { InputText } from 'primeng/inputtext';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
@@ -14,11 +15,15 @@ import { Permissions } from '../../../../../core/constants/permissions';
 import { toQueryKitParams } from '../../../../../shared/utils/primeng-querykit';
 import { StaffMemberCreateDialog } from '../staff-member-create-dialog/staff-member-create-dialog';
 
+// Columns the single search box matches against. Includes preferred names so a
+// search hits whatever the grid actually displays, not just the legal name.
+const SEARCH_FIELDS = ['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code'];
+
 @Component({
   selector: 'mp-staff-member-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Card, TableModule, PageHeader, StaffMemberCreateDialog, TranslocoDirective],
+  imports: [Card, InputText, TableModule, PageHeader, StaffMemberCreateDialog, TranslocoDirective],
   providers: [provideTranslocoScope('staff-members')],
   templateUrl: './staff-member-list-page.html',
 })
@@ -57,7 +62,7 @@ export class StaffMemberListPage implements OnInit {
 
   load(event: TableLazyLoadEvent): void {
     this.loading.set(true);
-    this.data.list(toQueryKitParams(event)).subscribe({
+    this.data.list(toQueryKitParams(event, { globalFields: SEARCH_FIELDS })).subscribe({
       next: page => {
         this.rows.set(page.items ?? []);
         this.totalRecords.set(page.totalItems ?? 0);
@@ -72,6 +77,26 @@ export class StaffMemberListPage implements OnInit {
 
   openDetails(row: StaffMemberSummaryResponse): void {
     this.router.navigate(['/staff/people/staff-members', row.id]);
+  }
+
+  // Name shown in the grid: preferred name wins over legal where set.
+  protected displayName(row: StaffMemberSummaryResponse): string {
+    const first = row.preferredFirstName?.trim() || row.firstName;
+    const last = row.preferredLastName?.trim() || row.lastName;
+    return `${first} ${last}`.trim();
+  }
+
+  // Legal name, shown as a muted second line only when it differs from the
+  // preferred name above — so a row never repeats the same name twice.
+  protected legalName(row: StaffMemberSummaryResponse): string | null {
+    const legal = `${row.firstName} ${row.lastName}`.trim();
+    return legal === this.displayName(row) ? null : legal;
+  }
+
+  protected initials(row: StaffMemberSummaryResponse): string {
+    const first = (row.preferredFirstName?.trim() || row.firstName).charAt(0);
+    const last = (row.preferredLastName?.trim() || row.lastName).charAt(0);
+    return (first + last).toUpperCase();
   }
 
   protected onCreateClosed(): void {
