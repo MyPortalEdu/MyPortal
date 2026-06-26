@@ -65,6 +65,9 @@ namespace MyPortal.Core.Entities
 
         public DateTime? EnglishProficiencyDate { get; set; }
 
+        // At-a-glance flag that the person has medical needs (detail in PersonConditions).
+        public bool HasMedicalNeeds { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public Photo? Photo { get; set; }

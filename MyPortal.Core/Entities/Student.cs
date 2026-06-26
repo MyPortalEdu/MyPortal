@@ -27,6 +27,14 @@ namespace MyPortal.Core.Entities
 
         public bool PupilPremium { get; set; }
 
+        // Which pupil premium the pupil attracts (CBDS CS106) + FSM category (CS133).
+        public Guid? PupilPremiumIndicatorId { get; set; }
+
+        public Guid? FsmCategoryId { get; set; }
+
+        // Date the pupil's current SEN need / register entry began.
+        public DateTime? SenStartDate { get; set; }
+
         [StringLength(13)]
         public string? Upn { get; set; }
 
@@ -88,6 +96,8 @@ namespace MyPortal.Core.Entities
         public EnrolmentStatus? EnrolmentStatus { get; set; }
         public BoarderStatus? BoarderStatus { get; set; }
         public UpnUnknownReason? UpnUnknownReason { get; set; }
+        public PupilPremiumIndicator? PupilPremiumIndicator { get; set; }
+        public FsmCategory? FsmCategory { get; set; }
         public LocalAuthority? CaringAuthority { get; set; }
         public PostLookedAfterArrangement? PostLookedAfterArrangement { get; set; }
         public ServiceChildIndicator? ServiceChildIndicator { get; set; }

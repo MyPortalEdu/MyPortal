@@ -4,14 +4,12 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // Outcome of an exclusion review (CBDS CS105).
-    [Table("ExclusionAppealResults")]
-    public class ExclusionAppealResult : LookupEntity, ISystemEntity, IOrderedLookupEntity
+    // Result type/format of an exam component, e.g. grade / mark / IB level (CBDS CS094).
+    [Table("ExamComponentResultTypes")]
+    public class ExamComponentResultType : LookupEntity, IOrderedLookupEntity
     {
         [StringLength(10)]
         public string? Code { get; set; }
-
-        public bool IsSystem { get; set; }
 
         public int DisplayOrder { get; set; }
     }

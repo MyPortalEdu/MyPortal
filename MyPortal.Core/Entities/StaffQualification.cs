@@ -24,12 +24,16 @@ namespace MyPortal.Core.Entities
         [StringLength(20)]
         public string? Grade { get; set; }
 
+        // Class of degree (CBDS CS062) where the qualification is a degree — structures Grade.
+        public Guid? ClassOfDegreeId { get; set; }
+
         public int? YearAwarded { get; set; }
 
         public bool IsDeleted { get; set; }
 
         public StaffMember? StaffMember { get; set; }
         public QualificationLevel? QualificationLevel { get; set; }
+        public ClassOfDegree? ClassOfDegree { get; set; }
 
         // Audit
         public Guid CreatedById { get; set; }

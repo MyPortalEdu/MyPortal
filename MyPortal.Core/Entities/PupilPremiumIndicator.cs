@@ -4,14 +4,12 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // Outcome of an exclusion review (CBDS CS105).
-    [Table("ExclusionAppealResults")]
-    public class ExclusionAppealResult : LookupEntity, ISystemEntity, IOrderedLookupEntity
+    // Which pupil premium a pupil attracts, e.g. deprivation / service / post-LAC (CBDS CS106).
+    [Table("PupilPremiumIndicators")]
+    public class PupilPremiumIndicator : LookupEntity, IOrderedLookupEntity
     {
         [StringLength(10)]
         public string? Code { get; set; }
-
-        public bool IsSystem { get; set; }
 
         public int DisplayOrder { get; set; }
     }

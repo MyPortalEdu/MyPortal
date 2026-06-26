@@ -32,6 +32,37 @@ namespace MyPortal.Core.Entities
 
         public Guid? PayZoneId { get; set; }
 
+        // UK Provider Reference Number (8 digits) — distinct from URN and the UPRN property reference.
+        [StringLength(8)]
+        public string? Ukprn { get; set; }
+
+        // Statutory age range (lowest / highest national-curriculum ages admitted).
+        public int? LowestAge { get; set; }
+
+        public int? HighestAge { get; set; }
+
+        // Net capacity + the date it was assessed.
+        public int? NetCapacity { get; set; }
+
+        public DateTime? NetCapacityAssessmentDate { get; set; }
+
+        // Special-school establishment facts (CBDS CS038 / CS077); gated by IsSpecialSchool.
+        public bool IsSpecialSchool { get; set; }
+
+        public Guid? SpecialSchoolOrganisationId { get; set; }
+
+        public Guid? SpecialSchoolTypeId { get; set; }
+
+        // Maximum boarding pupils (boarding establishments).
+        public int? MaxBoarders { get; set; }
+
+        // Direct establishment contact (the school currently inherits this from its Agency).
+        [StringLength(30)]
+        public string? Telephone { get; set; }
+
+        [StringLength(256)]
+        public string? Email { get; set; }
+
         public bool IsLocal { get; set; }
 
         public Agency? Agency { get; set; }
@@ -42,5 +73,7 @@ namespace MyPortal.Core.Entities
         public Person? HeadTeacher { get; set; }
         public LocalAuthority? LocalAuthority { get; set; }
         public PayZone? PayZone { get; set; }
+        public SpecialSchoolOrganisation? SpecialSchoolOrganisation { get; set; }
+        public SpecialSchoolType? SpecialSchoolType { get; set; }
     }
 }
