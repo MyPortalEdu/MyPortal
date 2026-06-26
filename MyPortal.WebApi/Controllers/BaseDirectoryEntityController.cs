@@ -13,12 +13,7 @@ using MyPortal.WebApi.Models.Documents;
 namespace MyPortal.WebApi.Controllers;
 
 
-/// <summary>
-/// Base controller for any entity that owns an attachments tree (directories +
-/// documents). Endpoints under <c>/{entityId}/attachments/...</c> are inherited
-/// by every concrete subclass (e.g. <see cref="BulletinsController"/>) and act
-/// against the entity identified by <c>entityId</c> in the route.
-/// </summary>
+/// <summary>Shared attachment endpoints for directory-owning entities.</summary>
 public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiController where TDirectoryEntity : IDirectoryEntity
 {
     private readonly IDirectoryEntityService<TDirectoryEntity> _directoryEntityService;
@@ -29,15 +24,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
         _directoryEntityService = directoryEntityService;
     }
 
-    /// <summary>
-    /// Whether DELETE on attachments under this entity should hard-delete
-    /// (true) or soft-delete (false, the default). Subclasses whose
-    /// attachments have no retention requirement and would otherwise pile
-    /// up as soft-deleted rows (bulletins, future news/announcements)
-    /// override this. Subclasses owning person-scoped documents (student,
-    /// staff, contact) should leave it as the default so deletions remain
-    /// recoverable / auditable.
-    /// </summary>
+    /// <summary>Whether attachment deletes should hard-delete instead of soft-delete.</summary>
     protected virtual bool HardDeleteDocuments => false;
 
     /// <summary>Get a single directory by id.</summary>
@@ -65,8 +52,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     }
 
     /// <summary>List the immediate contents of the entity's root directory.</summary>
-    /// <remarks>Entry point for a directory browser when the caller knows the entity id but not its
-    /// root directory id.</remarks>
+    /// <remarks>Use this when the caller knows the entity id but not the root directory id.</remarks>
     /// <param name="entityId">The owning entity.</param>
     [HttpGet("{entityId:guid}/attachments/root/contents")]
     [ProducesResponseType(typeof(DirectoryContentsResponse), 200)]
@@ -78,10 +64,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     }
 
     /// <summary>Get the full directory tree rooted at a directory.</summary>
-    /// <remarks>
-    /// Returns all sub-directories recursively. Used by the SPA's tree-picker UI
-    /// when moving items between directories.
-    /// </remarks>
+    /// <remarks>Returns the full subtree for tree-picker style UIs.</remarks>
     /// <param name="entityId">The owning entity.</param>
     /// <param name="directoryId">The root directory to start the tree at.</param>
     [HttpGet("{entityId:guid}/attachments/directories/{directoryId:guid}/tree")]
@@ -123,7 +106,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     }
 
     /// <summary>Delete a directory and its contents.</summary>
-    /// <remarks>Recursively deletes sub-directories and documents. Cannot be undone — backend may reject if soft-delete is configured.</remarks>
+    /// <remarks>Recursively deletes sub-directories and documents.</remarks>
     /// <param name="entityId">The owning entity.</param>
     /// <param name="directoryId">The directory to delete.</param>
     [HttpDelete("{entityId:guid}/attachments/directories/{directoryId:guid}")]
@@ -149,11 +132,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     }
 
     /// <summary>Download a document's content.</summary>
-    /// <remarks>
-    /// Returns the file body with sanitised <c>Content-Type</c>, <c>X-Content-Type-Options: nosniff</c>,
-    /// and an <c>ETag</c>/<c>Last-Modified</c> when available so the browser can cache.
-    /// Supports range requests on seekable streams.
-    /// </remarks>
+    /// <remarks>Returns the file body with safe headers and range support where available.</remarks>
     /// <param name="entityId">The owning entity.</param>
     /// <param name="documentId">The document to download.</param>
     [HttpGet("{entityId:guid}/attachments/documents/{documentId:guid}/download")]
@@ -182,11 +161,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     }
 
     /// <summary>Upload a new document to the entity.</summary>
-    /// <remarks>
-    /// Multipart form upload. <c>File</c> is the binary content; the rest of the
-    /// form populates document metadata (type, target directory, title,
-    /// description, privacy flag).
-    /// </remarks>
+    /// <remarks>Multipart form upload with file content and document metadata.</remarks>
     /// <param name="entityId">The owning entity.</param>
     /// <param name="form">The file plus metadata fields.</param>
     [HttpPost("{entityId:guid}/attachments/documents")]
@@ -225,11 +200,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     }
 
     /// <summary>Update a document's metadata and/or replace its content.</summary>
-    /// <remarks>
-    /// If <c>File</c> is omitted from the form, only metadata is updated; the
-    /// existing binary content is preserved. If <c>File</c> is present, the
-    /// content is replaced and a new hash recorded.
-    /// </remarks>
+    /// <remarks>If <c>File</c> is omitted, only metadata is updated.</remarks>
     /// <param name="entityId">The owning entity.</param>
     /// <param name="documentId">The document to update.</param>
     /// <param name="form">Metadata and (optionally) replacement file.</param>
@@ -264,10 +235,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     }
 
     /// <summary>Delete a document.</summary>
-    /// <remarks>
-    /// Backed by either a hard delete or a soft delete depending on the storage
-    /// provider. The blob in file storage is removed on a hard delete.
-    /// </remarks>
+    /// <remarks>Uses hard or soft delete depending on the entity configuration.</remarks>
     /// <param name="entityId">The owning entity.</param>
     /// <param name="documentId">The document to delete.</param>
     [HttpDelete("{entityId:guid}/attachments/documents/{documentId:guid}")]

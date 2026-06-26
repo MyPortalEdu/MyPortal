@@ -13,10 +13,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Paged catalogue of local authorities. The list is large enough (~150 LAs)
-/// that the school-details page uses a picker rather than a flat dropdown.
-/// </summary>
+/// <summary>Local-authority lookup endpoints.</summary>
 public sealed class LocalAuthoritiesController : BaseApiController
 {
     private readonly ILocalAuthorityService _service;

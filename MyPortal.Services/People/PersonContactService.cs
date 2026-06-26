@@ -62,8 +62,8 @@ public class PersonContactService : IPersonContactService
                 Number = p.Number,
                 IsMain = p.IsMain
             }).ToList(),
-            EmailTypes = emailTypes.ToAlphabeticalLookups(),
-            PhoneTypes = phoneTypes.ToOrderedLookups()
+            EmailTypes = emailTypes.ToAlphabeticalLookup(),
+            PhoneTypes = phoneTypes.ToOrderedLookup()
         };
     }
 

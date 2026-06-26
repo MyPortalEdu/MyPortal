@@ -10,11 +10,7 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// The teacher-facing register flow — fetch one register's worth of students for a
-/// specific period+week, then submit marks for it. For the wider "edit any cell"
-/// admin grid, see <see cref="AttendanceMarksController"/>.
-/// </summary>
+/// <summary>Attendance register endpoints.</summary>
 public sealed class RegistersController : BaseApiController
 {
     private readonly IRegisterService _registerService;
@@ -25,12 +21,8 @@ public sealed class RegistersController : BaseApiController
         _registerService = registerService;
     }
 
-    /// <summary>Get the register for a lesson session in a given attendance week.</summary>
-    /// <remarks>
-    /// A "lesson" register is taken against a <c>SessionPeriod</c> (a teaching
-    /// session in the timetable). Returns the student roster, any existing marks,
-    /// and the cell shape needed to render the register grid.
-    /// </remarks>
+    /// <summary>Get the register for a lesson session.</summary>
+    /// <remarks>Returns the roster, existing marks, and cell shape for the register grid.</remarks>
     /// <param name="sessionPeriodId">The session period whose register to load.</param>
     /// <param name="attendanceWeekId">The attendance week (calendar week within the AY) to load marks for.</param>
     [HttpGet("lesson/{sessionPeriodId:guid}/{attendanceWeekId:guid}")]
@@ -46,11 +38,7 @@ public sealed class RegistersController : BaseApiController
     }
 
     /// <summary>Get the AM/PM statutory register for a registration group.</summary>
-    /// <remarks>
-    /// Reg-group registers are the statutory AM/PM marks for a tutor group. The
-    /// <paramref name="attendancePeriodId"/> identifies which sitting (AM or PM)
-    /// within the cycle day.
-    /// </remarks>
+    /// <remarks><paramref name="attendancePeriodId"/> selects the AM or PM sitting.</remarks>
     /// <param name="regGroupId">The registration (tutor) group.</param>
     /// <param name="attendancePeriodId">The attendance period (AM or PM sitting).</param>
     /// <param name="attendanceWeekId">The attendance week to load marks for.</param>
@@ -67,11 +55,7 @@ public sealed class RegistersController : BaseApiController
     }
 
     /// <summary>Submit a teacher's marks for a lesson register.</summary>
-    /// <remarks>
-    /// Upserts marks for every student in the register. Restricted codes (e.g.
-    /// <c>B</c>, <c>K</c>, <c>E</c>) are silently ignored unless the caller has
-    /// <c>Attendance.UseRestrictedCodes</c>.
-    /// </remarks>
+    /// <remarks>Restricted codes are ignored unless the caller can use them.</remarks>
     /// <param name="sessionPeriodId">The session period the register belongs to.</param>
     /// <param name="attendanceWeekId">The attendance week the register is for.</param>
     /// <param name="model">The student-keyed marks to submit.</param>
@@ -90,11 +74,7 @@ public sealed class RegistersController : BaseApiController
     }
 
     /// <summary>Submit a tutor's AM/PM marks for a registration group.</summary>
-    /// <remarks>
-    /// Same submission semantics as the lesson variant; the period+week+group
-    /// combination identifies the register. Restricted codes are filtered as on
-    /// the lesson endpoint.
-    /// </remarks>
+    /// <remarks>Same submission semantics as the lesson variant.</remarks>
     /// <param name="regGroupId">The registration (tutor) group.</param>
     /// <param name="attendancePeriodId">The AM or PM sitting.</param>
     /// <param name="attendanceWeekId">The attendance week.</param>

@@ -12,11 +12,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Endpoints for browsing people across the various subtypes (staff, students,
-/// contacts, agents). Currently surfaces only the staff slice — used by the
-/// head-teacher picker on the school-details page.
-/// </summary>
+/// <summary>People lookup endpoints.</summary>
 public sealed class PeopleController : BaseApiController
 {
     private readonly IStaffMemberService _staffMemberService;
@@ -27,11 +23,8 @@ public sealed class PeopleController : BaseApiController
         _staffMemberService = staffMemberService;
     }
 
-    /// <summary>Page through staff-member summaries for the staff picker.</summary>
-    /// <remarks>
-    /// Permission gating lives on the service (<c>Staff.ViewAllStaffBasicDetails</c>) —
-    /// consumers such as the school-details head-teacher picker must hold it.
-    /// </remarks>
+    /// <summary>Page through staff-member summaries for the picker.</summary>
+    /// <remarks>Requires <c>Staff.ViewAllStaffBasicDetails</c>.</remarks>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>
     /// <param name="filter">Optional QueryKit filter (Base64-encoded JSON).</param>

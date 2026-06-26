@@ -68,13 +68,13 @@ public class PersonEqualityService : IPersonEqualityService
             ReligionId = person.ReligionId,
             SexualOrientationId = person.SexualOrientationId,
             GenderIdentityId = person.GenderIdentityId,
-            Ethnicities = ethnicities.ToOrderedLookups(),
-            Nationalities = nationalities.ToAlphabeticalLookups(),
-            Languages = languages.ToAlphabeticalLookups(),
-            MaritalStatuses = maritalStatuses.ToAlphabeticalLookups(),
-            Religions = religions.ToOrderedLookups(),
-            SexualOrientations = sexualOrientations.ToOrderedLookups(),
-            GenderIdentities = genderIdentities.ToOrderedLookups()
+            Ethnicities = ethnicities.ToOrderedLookup(),
+            Nationalities = nationalities.ToAlphabeticalLookup(),
+            Languages = languages.ToAlphabeticalLookup(),
+            MaritalStatuses = maritalStatuses.ToAlphabeticalLookup(),
+            Religions = religions.ToOrderedLookup(),
+            SexualOrientations = sexualOrientations.ToOrderedLookup(),
+            GenderIdentities = genderIdentities.ToOrderedLookup()
         };
     }
 

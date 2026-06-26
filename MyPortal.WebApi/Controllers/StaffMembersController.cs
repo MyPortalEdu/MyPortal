@@ -11,22 +11,10 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>
-/// Manage individual staff-member records. <see cref="GetHeaderAsync"/> returns the identity
-/// header + the viewer's relationship to the subject; per-section bodies are fetched through
-/// their own endpoints (currently: basic details), each gated server-side via
-/// <c>IStaffMemberAccessService</c>. Use <c>GET /api/people/staff</c> for the lightweight
-/// staff picker.
+/// Staff-member detail endpoints.
 /// </summary>
 /// <remarks>
-/// Permission gating lives in the service layer (the access resolver for per-subject reads/writes,
-/// plain <c>RequirePermissionAsync</c> for non-relationship-scoped actions like Create / Delete).
-/// The controller deliberately doesn't carry <c>[Permission]</c> attributes so the service stays
-/// the single source of truth and the two can't drift.
-///
-/// The staff <b>Documents</b> area is served by the inherited attachment endpoints
-/// (<c>{staffMemberId}/attachments/...</c>) from <see cref="BaseDirectoryEntityController{Person}"/>;
-/// the route's entityId is the staff member id, which <see cref="IStaffAttachmentsService"/> resolves
-/// to the owning Person's directory tree and gates on the staff Documents permission domain.
+/// Use <c>GET /api/people/staff</c> for the lightweight staff picker.
 /// </remarks>
 public sealed class StaffMembersController : BaseDirectoryEntityController<Person>
 {
@@ -47,12 +35,10 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         _staffEqualityService = staffEqualityService;
     }
 
-    /// <summary>Get the staff profile header for a given staff member id.</summary>
+    /// <summary>Get the staff profile header.</summary>
     /// <remarks>
-    /// Returns identity + status + the viewer's <c>Relationship</c> to the subject. The FE
-    /// composes the sidebar from <c>Relationship</c> plus its own permission claim. 403 if the
-    /// viewer holds no scope of <c>ViewStaffBasicDetails</c> covering this subject; 404 if the
-    /// staff member doesn't exist (only reachable by All-scope holders, so existence isn't leaked).
+    /// Returns identity, status, and the viewer's <c>Relationship</c> to the subject. Returns 403
+    /// if the viewer lacks access and 404 if the staff member does not exist.
     /// </remarks>
     /// <param name="staffMemberId">The StaffMember id.</param>
     [HttpGet("{staffMemberId:guid}")]
@@ -64,7 +50,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(result);
     }
 
-    /// <summary>Basic details area — person bio (sans equality fields) + staff code.</summary>
+    /// <summary>Get the basic details area.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     [HttpGet("{staffMemberId:guid}/basic-details")]
     [UserType(UserType.Staff)]
@@ -75,8 +61,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(result);
     }
 
-    /// <summary>Update the basic details area. Does not touch equality, employment, or
-    /// professional fields — each of those has its own endpoint.</summary>
+    /// <summary>Update the basic details area.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     /// <param name="model">The new basic-details payload.</param>
     [HttpPut("{staffMemberId:guid}/basic-details")]
@@ -90,8 +75,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
-    /// <summary>Contact Details area — the staff member's owned emails and phone numbers, plus
-    /// the type options for the editor. Shared addresses arrive in a later slice.</summary>
+    /// <summary>Get the contact details area.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     [HttpGet("{staffMemberId:guid}/contact-details")]
     [UserType(UserType.Staff)]
@@ -102,8 +86,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(result);
     }
 
-    /// <summary>Replace the Contact Details area. Each list is a whole-collection replace — the
-    /// server inserts new rows, updates matched ids, and soft-deletes anything dropped.</summary>
+    /// <summary>Replace the contact details area.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     /// <param name="model">The new emails and phone numbers.</param>
     [HttpPut("{staffMemberId:guid}/contact-details")]
@@ -117,8 +100,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
-    /// <summary>Equality &amp; Diversity area — special-category equality fields + the staff
-    /// disability declaration, with the option lists for each picker. HR-only edit; self/HR view.</summary>
+    /// <summary>Get the equality details area.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     [HttpGet("{staffMemberId:guid}/equality-details")]
     [UserType(UserType.Staff)]
@@ -129,8 +111,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(result);
     }
 
-    /// <summary>Update the Equality &amp; Diversity area. Writes the person equality single-selects
-    /// and the staff disability declaration/specifics; no other area's fields are reachable.</summary>
+    /// <summary>Update the equality details area.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     /// <param name="model">The new equality payload.</param>
     [HttpPut("{staffMemberId:guid}/equality-details")]
@@ -144,8 +125,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
-    /// <summary>Addresses section of Contact Details — a staff member's linked addresses + type
-    /// options. Addresses are shared entities, so writes are granular rather than a bulk replace.</summary>
+    /// <summary>Get the addresses section.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     [HttpGet("{staffMemberId:guid}/addresses")]
     [UserType(UserType.Staff)]
@@ -156,8 +136,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(result);
     }
 
-    /// <summary>Search existing addresses for the search-before-add flow (avoids duplicate rows for
-    /// people who share an address). Blank / too-short queries return an empty list.</summary>
+    /// <summary>Search for existing addresses to add.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     /// <param name="query">Postcode / street / building fragment to search for.</param>
     [HttpGet("{staffMemberId:guid}/address-matches")]
@@ -170,7 +149,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(result);
     }
 
-    /// <summary>Add an address to a staff member — link an existing one or create a new one.</summary>
+    /// <summary>Add an address to a staff member.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     /// <param name="model">The address to link/create, with type and main flag.</param>
     [HttpPost("{staffMemberId:guid}/addresses")]
@@ -184,8 +163,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(new IdResponse { Id = addressPersonId });
     }
 
-    /// <summary>Update an address link. When the address is shared, <c>Mode</c> decides whether the
-    /// edit applies to everyone (FixInPlace) or forks a new address for this person (Moved).</summary>
+    /// <summary>Update an address link.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     /// <param name="addressPersonId">The address-link id (from the address list).</param>
     /// <param name="model">The updated address + link details and edit mode.</param>
@@ -200,8 +178,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(new IdResponse { Id = addressPersonId });
     }
 
-    /// <summary>Unlink an address from a staff member. The shared address itself is left for anyone
-    /// else linked to it.</summary>
+    /// <summary>Unlink an address from a staff member.</summary>
     /// <param name="staffMemberId">The StaffMember id.</param>
     /// <param name="addressPersonId">The address-link id to remove.</param>
     [HttpDelete("{staffMemberId:guid}/addresses/{addressPersonId:guid}")]
@@ -214,8 +191,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return NoContent();
     }
 
-    /// <summary>Create a new staff member with basic details only. Equality, employment,
-    /// professional, etc. are populated post-creation via their area PUTs.</summary>
+    /// <summary>Create a new staff member.</summary>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -226,12 +202,10 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(new IdResponse { Id = id });
     }
 
-    /// <summary>Search existing People for the new-staff-member flow.</summary>
+    /// <summary>Search for existing people to attach a staff role to.</summary>
     /// <remarks>
-    /// HR searches existing People (any subtype) so a joiner already on file — a contact, agent,
-    /// former student — gets a staff role attached to their existing Person rather than a
-    /// duplicate. Results flag anyone who is already staff (<c>ExistingStaffMemberId</c>). Gated
-    /// in the service on the create scope. Blank / too-short queries return an empty list.
+    /// Results include anyone already staff via <c>ExistingStaffMemberId</c>. Blank or too-short
+    /// queries return an empty list.
     /// </remarks>
     /// <param name="query">The name fragment to search for.</param>
     [HttpGet("person-matches")]
@@ -243,11 +217,10 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         return Ok(result);
     }
 
-    /// <summary>Attach a staff role to an existing Person (no new Person row).</summary>
+    /// <summary>Attach a staff role to an existing person.</summary>
     /// <remarks>
-    /// Used by the create flow when HR picks an existing person. Only the staff code is supplied —
-    /// the person's bio is left untouched. 404 if the person doesn't exist; 400 if they're already
-    /// staff.
+    /// Only the staff code is supplied. Returns 404 if the person does not exist and 400 if they
+    /// are already staff.
     /// </remarks>
     [HttpPost("for-person")]
     [ValidateModel]

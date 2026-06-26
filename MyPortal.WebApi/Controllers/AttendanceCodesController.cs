@@ -8,12 +8,7 @@ using MyPortal.Services.Interfaces.Attendance;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Read-only access to the school's active attendance codes (DfE 2024 codes plus
-/// any school-defined additions). Used by the register UI to populate the code
-/// dropdowns. Code authoring/restriction is managed via attendance settings, not
-/// this controller.
-/// </summary>
+/// <summary>Read-only attendance-code catalogue.</summary>
 public sealed class AttendanceCodesController : BaseApiController
 {
     private readonly IAttendanceCodeService _attendanceCodeService;
@@ -25,12 +20,8 @@ public sealed class AttendanceCodesController : BaseApiController
         _attendanceCodeService = attendanceCodeService;
     }
 
-    /// <summary>List every active attendance code, including restricted ones.</summary>
-    /// <remarks>
-    /// All active codes are returned regardless of restriction; the UI greys out
-    /// restricted entries for users without <c>Attendance.UseRestrictedCodes</c>.
-    /// Inactive codes (e.g. legacy <c>H</c>, <c>J</c>, generic <c>Y</c>) are excluded.
-    /// </remarks>
+    /// <summary>List active attendance codes.</summary>
+    /// <remarks>Restricted codes are included; inactive codes are excluded.</remarks>
     [HttpGet("active")]
     [Permission(PermissionMode.RequireAny, Permissions.Attendance.ViewAttendanceMarks)]
     [ProducesResponseType(typeof(IList<AttendanceCodeResponse>), 200)]

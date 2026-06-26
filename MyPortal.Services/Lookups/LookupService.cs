@@ -30,30 +30,30 @@ public class LookupService : BaseService, ILookupService
     public async Task<IList<LookupResponse>> GetAgencyTypesAsync(CancellationToken cancellationToken)
     {
         var rows = await _agencyTypes.GetListAsync(cancellationToken: cancellationToken);
-        return rows.ToAlphabeticalLookups();
+        return rows.ToAlphabeticalLookup();
     }
 
     public async Task<IList<LookupResponse>> GetGovernanceTypesAsync(CancellationToken cancellationToken)
     {
         var rows = await _governanceTypes.GetListAsync(cancellationToken: cancellationToken);
-        return rows.ToOrderedLookups();
+        return rows.ToOrderedLookup();
     }
 
     public async Task<IList<LookupResponse>> GetIntakeTypesAsync(CancellationToken cancellationToken)
     {
         var rows = await _intakeTypes.GetListAsync(cancellationToken: cancellationToken);
-        return rows.ToOrderedLookups();
+        return rows.ToOrderedLookup();
     }
 
     public async Task<IList<LookupResponse>> GetSchoolPhasesAsync(CancellationToken cancellationToken)
     {
         var rows = await _schoolPhases.GetListAsync(cancellationToken: cancellationToken);
-        return rows.ToOrderedLookups();
+        return rows.ToOrderedLookup();
     }
 
     public async Task<IList<LookupResponse>> GetSchoolTypesAsync(CancellationToken cancellationToken)
     {
         var rows = await _schoolTypes.GetListAsync(cancellationToken: cancellationToken);
-        return rows.ToOrderedLookups();
+        return rows.ToOrderedLookup();
     }
 }

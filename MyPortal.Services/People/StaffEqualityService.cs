@@ -69,7 +69,7 @@ public class StaffEqualityService : BaseService, IStaffEqualityService
         response.DisabilityIds = links.Select(l => l.DisabilityId).ToList();
 
         var disabilities = await _disabilityRepository.GetListAsync(cancellationToken: cancellationToken);
-        response.Disabilities = disabilities.ToOrderedLookups();
+        response.Disabilities = disabilities.ToOrderedLookup();
 
         return response;
     }

@@ -11,13 +11,7 @@ using OpenIddict.Server.AspNetCore;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// OAuth 2.0 / OpenID Connect endpoints (authorize, token, userinfo, end session).
-/// These are passthrough handlers that delegate the heavy lifting to OpenIddict;
-/// the OpenIddict server settings are wired up in <c>Program.cs</c>. Used by the
-/// Scalar UI's "Authorize" flow and by future native clients (e.g. iOS app)
-/// running the Authorization Code + PKCE flow.
-/// </summary>
+/// <summary>OAuth 2.0 / OpenID Connect endpoints.</summary>
 [ApiController]
 [AllowAnonymous]
 [Route("connect")]
@@ -33,13 +27,7 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>OAuth 2.0 authorization endpoint (GET).</summary>
-    /// <remarks>
-    /// Entry point for the Authorization Code + PKCE flow. If the caller isn't
-    /// signed in, redirects them to the local Razor login page; once authenticated
-    /// the request is re-issued and OpenIddict mints an authorization code that's
-    /// returned to the registered redirect URI. Anonymous (unsigned) callers get
-    /// challenged here, not 401.
-    /// </remarks>
+    /// <remarks>Challenges anonymous callers and resumes the authorize flow after sign-in.</remarks>
     [HttpGet("authorize")]
     public async Task<IActionResult> GetAuthorize()
     {
@@ -49,13 +37,7 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>OAuth 2.0 authorization endpoint (POST).</summary>
-    /// <remarks>
-    /// Same flow as the GET variant; called by user agents that re-submit the
-    /// authorize request after the consent screen. Returns the OpenIddict-built
-    /// SignIn result that produces the redirect with the authorization code.
-    /// Antiforgery is intentionally bypassed — this is an OAuth endpoint, not a
-    /// browser form post.
-    /// </remarks>
+    /// <remarks>Same flow as GET. Antiforgery is intentionally bypassed.</remarks>
     [HttpPost("authorize")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> PostAuthorize()
@@ -91,14 +73,7 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>OAuth 2.0 token endpoint.</summary>
-    /// <remarks>
-    /// Exchanges an authorization code (with PKCE verifier) for an access token,
-    /// or trades a refresh token for a new access token. <c>IsEnabled</c> is
-    /// re-checked on every refresh so disabling a user invalidates their device
-    /// within one access-token lifetime (60 min). Only authorization_code and
-    /// refresh_token grant types are supported; anything else is rejected as
-    /// <c>unsupported_grant_type</c>.
-    /// </remarks>
+    /// <remarks>Supports authorization code and refresh token grants.</remarks>
     [HttpPost("token")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Token()
@@ -132,11 +107,7 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>OpenID Connect userinfo endpoint.</summary>
-    /// <remarks>
-    /// Bearer-only — requires an access token issued via the OAuth flow. Returns
-    /// a minimal subject + user-type payload; expand here if more standard claims
-    /// (name, email, etc.) are needed by clients.
-    /// </remarks>
+    /// <remarks>Requires a bearer token and returns the current subject and user type.</remarks>
     [Authorize(AuthenticationSchemes = OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
     [HttpGet("userinfo")]
     public IActionResult UserInfo([FromServices] ICurrentUser me)
@@ -150,16 +121,12 @@ public sealed class AuthController : ControllerBase
     }
 
     /// <summary>OpenID Connect end-session endpoint (GET).</summary>
-    /// <remarks>
-    /// Signs the user out of the local cookie session and invokes OpenIddict's
-    /// end-session handling, which redirects to the registered post-logout URI
-    /// (or <c>/</c> if none was supplied).
-    /// </remarks>
+    /// <remarks>Signs out the local session and redirects to the post-logout URI.</remarks>
     [HttpGet("endsession")]
     public Task<IActionResult> GetEndSession() => HandleEndSessionAsync();
 
     /// <summary>OpenID Connect end-session endpoint (POST).</summary>
-    /// <remarks>Same behaviour as the GET variant, for clients that POST to logout.</remarks>
+    /// <remarks>Same behaviour as the GET variant.</remarks>
     [HttpPost("endsession")]
     [IgnoreAntiforgeryToken]
     public Task<IActionResult> PostEndSession() => HandleEndSessionAsync();
