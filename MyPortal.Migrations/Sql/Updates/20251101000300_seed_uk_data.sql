@@ -2173,6 +2173,10 @@ UPDATE SET Description = Source.Description
 INSERT (Id, Code, Description, Active)
 VALUES (Id, Code, Description, 1);
 
+-- DEPRECATED: superseded by the CBDS pupil seed (20260626000310_seed_cbds_pupil_lookups),
+-- now the source of truth for SenTypes (DfE CS071). Left commented so new databases
+-- don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[SenTypes] AS Target
     USING (VALUES
     ('2E7EE554-CDBA-4237-88D2-B8A1E93E506B', 'SPLD', 'Specific Learning Difficulty'),
@@ -2197,6 +2201,7 @@ UPDATE SET Description = Source.Description
     WHEN NOT MATCHED THEN
 INSERT (Id, Code, Description, Active)
 VALUES (Id, Code, Description, 1);
+*/
 
 MERGE INTO [dbo].[DiaryEventAttendeeResponses] AS Target
     USING (VALUES
@@ -3124,6 +3129,11 @@ MERGE INTO [dbo].[SubjectCodes] AS Target
     INSERT (Id, SubjectCodeSetId, Description, Active, Code)
     VALUES (Id, SubjectCodeSetId, Description, Active, Code);
 
+-- DEPRECATED: ExclusionTypes and ExclusionReasons are superseded by the CBDS
+-- pupil seed (20260626000310_seed_cbds_pupil_lookups), now the source of truth
+-- (DfE CS048 / CS010). Left commented so new databases don't reintroduce the old
+-- rows.
+/*
 MERGE INTO [dbo].[ExclusionTypes] AS Target
     USING (VALUES
     ('8BE7A245-E1BB-44DC-B427-0247D9CEA9AB', 'FIXD', 'Fixed Term', 1, 1),
@@ -3161,6 +3171,7 @@ MERGE INTO [dbo].[ExclusionReasons] AS Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Active, IsSystem)
     VALUES (Id, Description, Active, System);
+*/
 
 MERGE INTO [dbo].[AgencyTypes] AS Target
     USING (VALUES
@@ -3223,6 +3234,10 @@ MERGE INTO [dbo].[BehaviourRoleTypes] AS Target
     INSERT (Id, Description, Active, DefaultPoints)
     VALUES (Id, Description, Active, DefaultPoints);
 
+-- DEPRECATED: superseded by the CBDS pupil seed (20260626000310_seed_cbds_pupil_lookups),
+-- now the source of truth for BoarderStatus (DfE Pupil Boarder). Left commented so
+-- new databases don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[BoarderStatus] as Target
     USING (VALUES
     ('4dbc575c-a035-4409-917a-3a116d51258f', 'Boarder', 1, 'B'),
@@ -3235,6 +3250,7 @@ MERGE INTO [dbo].[BoarderStatus] as Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Active, Code)
     VALUES (Id, Description, Active, Code);
+*/
 
 -- DEPRECATED: superseded by the CBDS seed (20260626000300_seed_cbds_lookups),
 -- now the source of truth for StaffAbsenceTypes (DfE workforce-census absence
