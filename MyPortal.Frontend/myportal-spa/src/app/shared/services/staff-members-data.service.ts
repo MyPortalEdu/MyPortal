@@ -17,6 +17,10 @@ import {
   StaffEqualityDetailsUpsertRequest,
 } from '../types/staff-equality-details';
 import {
+  StaffProfessionalDetailsResponse,
+  StaffProfessionalDetailsUpsertRequest,
+} from '../types/staff-professional-details';
+import {
   AddressListResponse,
   AddressMatchResponse,
   PersonAddressUpdateRequest,
@@ -92,6 +96,22 @@ export class StaffMembersDataService {
   ): Observable<IdResponse> {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/equality-details`,
+      payload,
+    );
+  }
+
+  getProfessionalDetails(staffMemberId: string): Observable<StaffProfessionalDetailsResponse> {
+    return this.http.get<StaffProfessionalDetailsResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/professional-details`,
+    );
+  }
+
+  updateProfessionalDetails(
+    staffMemberId: string,
+    payload: StaffProfessionalDetailsUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/professional-details`,
       payload,
     );
   }

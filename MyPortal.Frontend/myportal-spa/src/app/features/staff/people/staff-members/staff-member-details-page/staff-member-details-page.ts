@@ -63,6 +63,11 @@ import {
   StaffEqualityDetailsResponse,
   StaffEqualityDetailsUpsertRequest,
 } from '../../../../../shared/types/staff-equality-details';
+import {
+  StaffProfessionalDetailsResponse,
+  StaffProfessionalDetailsUpsertRequest,
+  StaffQualificationUpsertItem,
+} from '../../../../../shared/types/staff-professional-details';
 
 type BasicFormSnapshot = {
   code: string;
@@ -150,12 +155,14 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly transloco = inject(TranslocoService);
   private readonly directoryData = inject(DirectoryDataService);
 
-  // Equality is special-category and has no Managed scope, so its tab is only
-  // enabled when the viewer can actually see it (HR, or self with view-own).
+  // A couple of areas gate their own tab on the viewer's access rather than the
+  // static flag: equality (special-category, no Managed scope) and professional.
   protected readonly areas = computed<AreaTab[]>(() =>
-    AREAS.map(a =>
-      a.key === 'equalityDetails' ? { ...a, enabled: this.canViewEquality() } : a,
-    ),
+    AREAS.map(a => {
+      if (a.key === 'equalityDetails') return { ...a, enabled: this.canViewEquality() };
+      if (a.key === 'professionalDetails') return { ...a, enabled: this.canViewProfessional() };
+      return a;
+    }),
   );
   protected readonly activeArea = signal<AreaKey>('basicDetails');
 
@@ -204,6 +211,49 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly sexualOrientations = computed(() => this.equality()?.sexualOrientations ?? []);
   protected readonly genderIdentities = computed(() => this.equality()?.genderIdentities ?? []);
   protected readonly disabilities = computed(() => this.equality()?.disabilities ?? []);
+
+  // Professional Details panel. Lazy-loaded the first time the area is opened
+  // (it 403s for viewers without professional view scope, so we don't fetch eagerly).
+  protected readonly loadingProfessional = signal(false);
+  protected readonly professional = signal<StaffProfessionalDetailsResponse | null>(null);
+  private professionalLoaded = false;
+
+  protected readonly isTeachingStaff = signal<boolean>(false);
+  protected readonly hasQts = signal<boolean>(false);
+  protected readonly hasHlta = signal<boolean>(false);
+  protected readonly hasQtls = signal<boolean>(false);
+  protected readonly hasEyts = signal<boolean>(false);
+  protected readonly isSeniorLeadership = signal<boolean>(false);
+  protected readonly teacherReferenceNumber = signal<string | null>(null);
+  protected readonly qtsRouteId = signal<string | null>(null);
+  protected readonly qtsAwardedDate = signal<Date | null>(null);
+  protected readonly inductionStatusId = signal<string | null>(null);
+  protected readonly inductionStartDate = signal<Date | null>(null);
+  protected readonly inductionCompletedDate = signal<Date | null>(null);
+  protected readonly qualificationsSummary = signal<string | null>(null);
+  protected readonly qualifications = signal<StaffQualificationUpsertItem[]>([]);
+  private readonly professionalSnapshot = signal<string>('');
+
+  // Option lists travel with the professional payload so the editor is self-contained.
+  protected readonly qtsRoutes = computed(() => this.professional()?.qtsRoutes ?? []);
+  protected readonly inductionStatuses = computed(() => this.professional()?.inductionStatuses ?? []);
+  protected readonly qualificationLevels = computed(() => this.professional()?.qualificationLevels ?? []);
+  protected readonly classesOfDegree = computed(() => this.professional()?.classesOfDegree ?? []);
+
+  // The teaching-status checkboxes, driven by a small descriptor list so the template
+  // doesn't repeat the same get/set block six times. The i18n key is the field name.
+  protected readonly professionalFlags: {
+    key: string;
+    get: () => boolean;
+    set: (value: boolean) => void;
+  }[] = [
+    { key: 'isTeachingStaff', get: () => this.isTeachingStaff(), set: v => this.isTeachingStaff.set(v) },
+    { key: 'hasQts', get: () => this.hasQts(), set: v => this.hasQts.set(v) },
+    { key: 'hasHlta', get: () => this.hasHlta(), set: v => this.hasHlta.set(v) },
+    { key: 'hasQtls', get: () => this.hasQtls(), set: v => this.hasQtls.set(v) },
+    { key: 'hasEyts', get: () => this.hasEyts(), set: v => this.hasEyts.set(v) },
+    { key: 'isSeniorLeadership', get: () => this.isSeniorLeadership(), set: v => this.isSeniorLeadership.set(v) },
+  ];
 
   // Form-field signals for the basic-details panel. Mirror the upsert request.
   protected readonly code = signal('');
@@ -264,12 +314,43 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     this.heldPerms().has(Permissions.Staff.EditAllStaffEqualityDetails),
   );
 
+  // Professional details: relationship-scoped view (Own/Managed/All); an edit grant
+  // implies view. Self can view-own but never edit (HR-verified data).
+  protected readonly canViewProfessional = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (
+      perms.has(Permissions.Staff.ViewAllStaffProfessionalDetails) ||
+      perms.has(Permissions.Staff.EditAllStaffProfessionalDetails)
+    )
+      return true;
+    if (
+      rel === 'LineManaged' &&
+      (perms.has(Permissions.Staff.ViewManagedStaffProfessionalDetails) ||
+        perms.has(Permissions.Staff.EditManagedStaffProfessionalDetails))
+    )
+      return true;
+    if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffProfessionalDetails)) return true;
+    return false;
+  });
+
+  // Professional edit: HR (All) or the line manager (Managed) — no self-edit.
+  protected readonly canEditProfessional = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (perms.has(Permissions.Staff.EditAllStaffProfessionalDetails)) return true;
+    if (rel === 'LineManaged' && perms.has(Permissions.Staff.EditManagedStaffProfessionalDetails))
+      return true;
+    return false;
+  });
+
   // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
   // Other editable areas have their own gate.
   protected readonly canEditActiveArea = computed(() => {
     const area = this.activeArea();
     if (area === 'basicDetails' || area === 'contactDetails') return this.canEditBasic();
     if (area === 'equalityDetails') return this.canEditEquality();
+    if (area === 'professionalDetails') return this.canEditProfessional();
     return false;
   });
 
@@ -305,6 +386,13 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       this.phones().every(p => !!p.typeId && p.number.trim().length > 0),
   );
 
+  // A 7-digit TRN when provided, and every qualification row needs a title.
+  private readonly professionalValid = computed(() => {
+    const trn = (this.teacherReferenceNumber() ?? '').trim();
+    if (trn.length > 0 && !/^\d{7}$/.test(trn)) return false;
+    return this.qualifications().every(q => q.title.trim().length > 0);
+  });
+
   protected readonly isValid = computed(() => {
     switch (this.activeArea()) {
       case 'contactDetails':
@@ -312,6 +400,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       case 'equalityDetails':
         // Every equality field is optional — nothing to invalidate.
         return true;
+      case 'professionalDetails':
+        return this.professionalValid();
       default:
         return this.basicValid();
     }
@@ -336,6 +426,31 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   private readonly equalityDirty = computed(
     () => this.equality() != null && this.equalitySnapshot() !== this.equalityForm(),
+  );
+
+  // Serialised professional edit state for the dirty check. Dates normalised to ISO
+  // so a Date instance vs string doesn't read as a change.
+  private readonly professionalForm = computed(() =>
+    JSON.stringify({
+      isTeachingStaff: this.isTeachingStaff(),
+      hasQts: this.hasQts(),
+      hasHlta: this.hasHlta(),
+      hasQtls: this.hasQtls(),
+      hasEyts: this.hasEyts(),
+      isSeniorLeadership: this.isSeniorLeadership(),
+      teacherReferenceNumber: this.teacherReferenceNumber(),
+      qtsRouteId: this.qtsRouteId(),
+      qtsAwardedDate: this.qtsAwardedDate()?.toISOString() ?? null,
+      inductionStatusId: this.inductionStatusId(),
+      inductionStartDate: this.inductionStartDate()?.toISOString() ?? null,
+      inductionCompletedDate: this.inductionCompletedDate()?.toISOString() ?? null,
+      qualificationsSummary: this.qualificationsSummary(),
+      qualifications: this.qualifications(),
+    }),
+  );
+
+  private readonly professionalDirty = computed(
+    () => this.professional() != null && this.professionalSnapshot() !== this.professionalForm(),
   );
 
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
@@ -370,6 +485,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.contactDirty();
       case 'equalityDetails':
         return this.equalityDirty();
+      case 'professionalDetails':
+        return this.professionalDirty();
       default:
         return this.basicDirty();
     }
@@ -484,6 +601,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (!area.enabled || area.key === this.activeArea()) return;
     if (area.key === 'documents') this.loadDocumentTypes();
     if (area.key === 'equalityDetails') this.loadEquality();
+    if (area.key === 'professionalDetails') this.loadProfessional();
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -552,6 +670,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       case 'equalityDetails':
         this.applyEquality(this.equality());
         break;
+      case 'professionalDetails':
+        this.applyProfessional(this.professional());
+        break;
       default:
         this.applyToForm(this.current());
     }
@@ -563,6 +684,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       await this.saveContact();
     } else if (this.activeArea() === 'equalityDetails') {
       await this.saveEquality();
+    } else if (this.activeArea() === 'professionalDetails') {
+      await this.saveProfessional();
     } else {
       await this.saveBasic();
     }
@@ -687,6 +810,146 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     this.disabilityDetails.set(row?.disabilityDetails ?? null);
     this.disabilityIds.set([...(row?.disabilityIds ?? [])]);
     this.equalitySnapshot.set(this.equalityForm());
+  }
+
+  private loadProfessional(): void {
+    if (this.professionalLoaded) return;
+    this.professionalLoaded = true;
+    this.loadingProfessional.set(true);
+    this.data.getProfessionalDetails(this.staffMemberId()).subscribe({
+      next: row => {
+        this.professional.set(row);
+        this.applyProfessional(row);
+        this.loadingProfessional.set(false);
+      },
+      error: err => {
+        this.loadingProfessional.set(false);
+        this.professionalLoaded = false;
+        this.notify.apiError(err, this.transloco.translate('staff-members.loadProfessionalError'));
+      },
+    });
+  }
+
+  private async saveProfessional(): Promise<void> {
+    if (!this.canEditProfessional() || !this.professionalValid() || this.saving()) return;
+    this.saving.set(true);
+
+    const payload: StaffProfessionalDetailsUpsertRequest = {
+      isTeachingStaff: this.isTeachingStaff(),
+      hasQts: this.hasQts(),
+      hasHlta: this.hasHlta(),
+      hasQtls: this.hasQtls(),
+      hasEyts: this.hasEyts(),
+      isSeniorLeadership: this.isSeniorLeadership(),
+      teacherReferenceNumber: this.normalise(this.teacherReferenceNumber()),
+      qtsRouteId: this.qtsRouteId(),
+      qtsAwardedDate: this.qtsAwardedDate()?.toISOString() ?? null,
+      inductionStatusId: this.inductionStatusId(),
+      inductionStartDate: this.inductionStartDate()?.toISOString() ?? null,
+      inductionCompletedDate: this.inductionCompletedDate()?.toISOString() ?? null,
+      qualificationsSummary: this.normalise(this.qualificationsSummary()),
+      qualifications: this.qualifications().map(q => ({
+        id: q.id ?? null,
+        qualificationLevelId: q.qualificationLevelId ?? null,
+        title: q.title.trim(),
+        subject: this.normalise(q.subject),
+        awardingBody: this.normalise(q.awardingBody),
+        grade: this.normalise(q.grade),
+        classOfDegreeId: q.classOfDegreeId ?? null,
+        yearAwarded: q.yearAwarded ?? null,
+      })),
+    };
+
+    try {
+      await firstValueFrom(this.data.updateProfessionalDetails(this.staffMemberId(), payload));
+      this.notify.success(this.transloco.translate('staff-members.savedProfessionalToast'));
+      this.editing.set(false);
+      // Refetch so server-assigned ids (new rows) and any normalisation become the baseline.
+      this.professionalLoaded = false;
+      this.loadProfessional();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.saveProfessionalError'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private applyProfessional(row: StaffProfessionalDetailsResponse | null): void {
+    this.isTeachingStaff.set(row?.isTeachingStaff ?? false);
+    this.hasQts.set(row?.hasQts ?? false);
+    this.hasHlta.set(row?.hasHlta ?? false);
+    this.hasQtls.set(row?.hasQtls ?? false);
+    this.hasEyts.set(row?.hasEyts ?? false);
+    this.isSeniorLeadership.set(row?.isSeniorLeadership ?? false);
+    this.teacherReferenceNumber.set(row?.teacherReferenceNumber ?? null);
+    this.qtsRouteId.set(row?.qtsRouteId ?? null);
+    this.qtsAwardedDate.set(row?.qtsAwardedDate ? new Date(row.qtsAwardedDate) : null);
+    this.inductionStatusId.set(row?.inductionStatusId ?? null);
+    this.inductionStartDate.set(row?.inductionStartDate ? new Date(row.inductionStartDate) : null);
+    this.inductionCompletedDate.set(
+      row?.inductionCompletedDate ? new Date(row.inductionCompletedDate) : null,
+    );
+    this.qualificationsSummary.set(row?.qualificationsSummary ?? null);
+    this.qualifications.set(
+      (row?.qualifications ?? []).map(q => ({
+        id: q.id,
+        qualificationLevelId: q.qualificationLevelId ?? null,
+        title: q.title,
+        subject: q.subject ?? null,
+        awardingBody: q.awardingBody ?? null,
+        grade: q.grade ?? null,
+        classOfDegreeId: q.classOfDegreeId ?? null,
+        yearAwarded: q.yearAwarded ?? null,
+      })),
+    );
+    this.professionalSnapshot.set(this.professionalForm());
+  }
+
+  // Qualifications grid — a new row has no id (the server inserts it); editing a
+  // field rewrites the array immutably so the dirty check and OnPush both fire.
+  protected addQualification(): void {
+    this.qualifications.update(rows => [
+      ...rows,
+      {
+        id: null,
+        qualificationLevelId: null,
+        title: '',
+        subject: null,
+        awardingBody: null,
+        grade: null,
+        classOfDegreeId: null,
+        yearAwarded: null,
+      },
+    ]);
+  }
+
+  protected removeQualification(index: number): void {
+    this.qualifications.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  // One-line read-only summary of a qualification's secondary fields (level, subject,
+  // grade, class, awarding body, year) — empty fields dropped.
+  protected qualificationLine(q: StaffQualificationUpsertItem): string {
+    const parts = [
+      this.lookupLabel(this.qualificationLevels(), q.qualificationLevelId),
+      q.subject,
+      q.grade,
+      this.lookupLabel(this.classesOfDegree(), q.classOfDegreeId),
+      q.awardingBody,
+      q.yearAwarded != null ? String(q.yearAwarded) : null,
+    ];
+    const shown = parts.filter(p => p && p !== '—');
+    return shown.length ? shown.join(' · ') : '—';
+  }
+
+  protected patchQualification<K extends keyof StaffQualificationUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffQualificationUpsertItem[K],
+  ): void {
+    this.qualifications.update(rows =>
+      rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    );
   }
 
   protected backToList(): void {

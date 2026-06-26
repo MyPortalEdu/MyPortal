@@ -59,6 +59,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IGenderIdentityRepository, GenderIdentityRepository>();
         services.AddScoped<IDisabilityRepository, DisabilityRepository>();
         services.AddScoped<IStaffMemberDisabilityRepository, StaffMemberDisabilityRepository>();
+        services.AddScoped<IStaffQualificationRepository, StaffQualificationRepository>();
+        services.AddScoped<IQtsRouteRepository, QtsRouteRepository>();
+        services.AddScoped<IInductionStatusRepository, InductionStatusRepository>();
+        services.AddScoped<IQualificationLevelRepository, QualificationLevelRepository>();
+        services.AddScoped<IClassOfDegreeRepository, ClassOfDegreeRepository>();
         services.AddScoped<IRegGroupRepository, RegGroupRepository>();
         services.AddScoped<IRegisterRepository, RegisterRepository>();
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();

@@ -22,17 +22,19 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     private readonly IStaffContactService _staffContactService;
     private readonly IStaffAddressService _staffAddressService;
     private readonly IStaffEqualityService _staffEqualityService;
+    private readonly IStaffProfessionalService _staffProfessionalService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
         IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
-        IStaffAttachmentsService staffAttachmentsService)
+        IStaffProfessionalService staffProfessionalService, IStaffAttachmentsService staffAttachmentsService)
         : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
         _staffContactService = staffContactService;
         _staffAddressService = staffAddressService;
         _staffEqualityService = staffEqualityService;
+        _staffProfessionalService = staffProfessionalService;
     }
 
     /// <summary>Get the staff profile header.</summary>
@@ -122,6 +124,31 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         [FromBody] StaffEqualityDetailsUpsertRequest model)
     {
         await _staffEqualityService.UpdateEqualityDetailsAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the professional details area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/professional-details")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffProfessionalDetailsResponse), 200)]
+    public async Task<IActionResult> GetProfessionalDetailsAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffProfessionalService.GetProfessionalDetailsAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the professional details area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new professional-details payload.</param>
+    [HttpPut("{staffMemberId:guid}/professional-details")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateProfessionalDetailsAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffProfessionalDetailsUpsertRequest model)
+    {
+        await _staffProfessionalService.UpdateProfessionalDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 

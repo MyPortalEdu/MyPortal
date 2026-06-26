@@ -431,6 +431,212 @@
               </div>
             }
           }
+          @case ('professionalDetails') {
+            @if (loadingProfessional() && !professional()) {
+              <div class="flex justify-center py-10">
+                <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+              </div>
+            } @else if (professional()) {
+              <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.professionalDetails') }}</h3>
+              <p class="text-sm text-muted-color mb-4">{{ t('staff-members.professional.hint') }}</p>
+
+              <div class="flex flex-col gap-6">
+                <!-- Teaching status -->
+                <section>
+                  <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+                    <i class="fa-solid fa-chalkboard-user text-muted-color"></i>
+                    {{ t('staff-members.professional.statusHeading') }}
+                  </h4>
+                  <div class="grid gap-3 md:grid-cols-2">
+                    @for (flag of professionalFlags; track flag.key) {
+                      <div class="flex flex-col gap-1">
+                        @if (editing()) {
+                          <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                            <p-checkbox [inputId]="flag.key" [binary]="true" [ngModel]="flag.get()" (ngModelChange)="flag.set($event)"></p-checkbox>
+                            {{ t('staff-members.professional.' + flag.key) }}
+                          </label>
+                        } @else {
+                          <label class="text-sm font-medium">{{ t('staff-members.professional.' + flag.key) }}</label>
+                          <span>{{ flag.get() ? t('common.yes') : t('common.no') }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </section>
+
+                <!-- Qualified Teacher Status -->
+                <section>
+                  <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+                    <i class="fa-solid fa-certificate text-muted-color"></i>
+                    {{ t('staff-members.professional.qtsHeading') }}
+                  </h4>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <!-- TRN -->
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="trn">{{ t('staff-members.professional.trn') }}</label>
+                      @if (editing()) {
+                        <input pInputText id="trn" inputmode="numeric" maxlength="7"
+                          [ngModel]="teacherReferenceNumber() ?? ''" (ngModelChange)="teacherReferenceNumber.set($event)" />
+                      } @else {
+                        <span class="font-mono">{{ teacherReferenceNumber() || '—' }}</span>
+                      }
+                    </div>
+
+                    <!-- QTS route -->
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="qtsRoute">{{ t('staff-members.professional.qtsRoute') }}</label>
+                      @if (editing()) {
+                        <mp-lookup-select inputId="qtsRoute" [options]="qtsRoutes()" [value]="qtsRouteId()" (valueChange)="qtsRouteId.set($event)"></mp-lookup-select>
+                      } @else {
+                        <span>{{ lookupLabel(qtsRoutes(), qtsRouteId()) }}</span>
+                      }
+                    </div>
+
+                    <!-- QTS awarded -->
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="qtsAwarded">{{ t('staff-members.professional.qtsAwardedDate') }}</label>
+                      @if (editing()) {
+                        <p-datepicker id="qtsAwarded" [ngModel]="qtsAwardedDate()" (ngModelChange)="qtsAwardedDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                      } @else {
+                        <span>{{ qtsAwardedDate() ? (qtsAwardedDate() | date:'mediumDate') : '—' }}</span>
+                      }
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Induction -->
+                <section>
+                  <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+                    <i class="fa-solid fa-seedling text-muted-color"></i>
+                    {{ t('staff-members.professional.inductionHeading') }}
+                  </h4>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <!-- Induction status -->
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="inductionStatus">{{ t('staff-members.professional.inductionStatus') }}</label>
+                      @if (editing()) {
+                        <mp-lookup-select inputId="inductionStatus" [options]="inductionStatuses()" [value]="inductionStatusId()" (valueChange)="inductionStatusId.set($event)"></mp-lookup-select>
+                      } @else {
+                        <span>{{ lookupLabel(inductionStatuses(), inductionStatusId()) }}</span>
+                      }
+                    </div>
+
+                    <!-- Induction start -->
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="inductionStart">{{ t('staff-members.professional.inductionStartDate') }}</label>
+                      @if (editing()) {
+                        <p-datepicker id="inductionStart" [ngModel]="inductionStartDate()" (ngModelChange)="inductionStartDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                      } @else {
+                        <span>{{ inductionStartDate() ? (inductionStartDate() | date:'mediumDate') : '—' }}</span>
+                      }
+                    </div>
+
+                    <!-- Induction completed -->
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="inductionCompleted">{{ t('staff-members.professional.inductionCompletedDate') }}</label>
+                      @if (editing()) {
+                        <p-datepicker id="inductionCompleted" [ngModel]="inductionCompletedDate()" (ngModelChange)="inductionCompletedDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                      } @else {
+                        <span>{{ inductionCompletedDate() ? (inductionCompletedDate() | date:'mediumDate') : '—' }}</span>
+                      }
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Qualifications -->
+                <section>
+                  <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+                    <i class="fa-solid fa-graduation-cap text-muted-color"></i>
+                    {{ t('staff-members.professional.qualificationsHeading') }}
+                  </h4>
+
+                  <!-- Free-text summary -->
+                  <div class="flex flex-col gap-1 mb-4">
+                    <label class="text-sm font-medium" for="qualSummary">{{ t('staff-members.professional.qualificationsSummary') }}</label>
+                    @if (editing()) {
+                      <input pInputText id="qualSummary" maxlength="128"
+                        [placeholder]="t('staff-members.professional.qualificationsSummaryPlaceholder')"
+                        [ngModel]="qualificationsSummary() ?? ''" (ngModelChange)="qualificationsSummary.set($event)" />
+                    } @else {
+                      <span>{{ qualificationsSummary() || '—' }}</span>
+                    }
+                  </div>
+
+                  <!-- Structured qualifications -->
+                  @if (editing()) {
+                    <div class="flex flex-col gap-3">
+                      @for (q of qualifications(); track $index) {
+                        <div class="rounded border border-surface-200 dark:border-surface-700 p-3">
+                          <div class="flex items-start justify-between gap-2 mb-2">
+                            <span class="text-sm font-medium text-muted-color">#{{ $index + 1 }}</span>
+                            <p-button
+                              icon="fa-solid fa-trash"
+                              severity="danger"
+                              [text]="true"
+                              size="small"
+                              [ariaLabel]="t('staff-members.professional.removeQualification')"
+                              (onClick)="removeQualification($index)"></p-button>
+                          </div>
+                          <div class="grid gap-3 md:grid-cols-2">
+                            <div class="flex flex-col gap-1">
+                              <label class="text-sm font-medium">{{ t('staff-members.professional.qualTitle') }}</label>
+                              <input pInputText [ngModel]="q.title" (ngModelChange)="patchQualification($index, 'title', $event)" />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                              <label class="text-sm font-medium">{{ t('staff-members.professional.qualLevel') }}</label>
+                              <mp-lookup-select [options]="qualificationLevels()" [value]="q.qualificationLevelId ?? null" (valueChange)="patchQualification($index, 'qualificationLevelId', $event)"></mp-lookup-select>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                              <label class="text-sm font-medium">{{ t('staff-members.professional.qualSubject') }}</label>
+                              <input pInputText [ngModel]="q.subject ?? ''" (ngModelChange)="patchQualification($index, 'subject', $event)" />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                              <label class="text-sm font-medium">{{ t('staff-members.professional.qualAwardingBody') }}</label>
+                              <input pInputText [ngModel]="q.awardingBody ?? ''" (ngModelChange)="patchQualification($index, 'awardingBody', $event)" />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                              <label class="text-sm font-medium">{{ t('staff-members.professional.qualGrade') }}</label>
+                              <input pInputText maxlength="20" [ngModel]="q.grade ?? ''" (ngModelChange)="patchQualification($index, 'grade', $event)" />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                              <label class="text-sm font-medium">{{ t('staff-members.professional.qualClassOfDegree') }}</label>
+                              <mp-lookup-select [options]="classesOfDegree()" [value]="q.classOfDegreeId ?? null" (valueChange)="patchQualification($index, 'classOfDegreeId', $event)"></mp-lookup-select>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                              <label class="text-sm font-medium">{{ t('staff-members.professional.qualYearAwarded') }}</label>
+                              <input pInputText type="number" inputmode="numeric" [ngModel]="q.yearAwarded" (ngModelChange)="patchQualification($index, 'yearAwarded', $event)" />
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <div>
+                        <p-button
+                          [label]="t('staff-members.professional.addQualification')"
+                          icon="fa-solid fa-plus"
+                          severity="secondary"
+                          [outlined]="true"
+                          size="small"
+                          (onClick)="addQualification()"></p-button>
+                      </div>
+                    </div>
+                  } @else {
+                    @if (qualifications().length) {
+                      <div class="flex flex-col gap-2">
+                        @for (q of qualifications(); track $index) {
+                          <div class="rounded border border-surface-200 dark:border-surface-700 p-3">
+                            <div class="font-medium">{{ q.title }}</div>
+                            <div class="text-sm text-muted-color">{{ qualificationLine(q) }}</div>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <span class="text-sm text-muted-color">{{ t('staff-members.professional.noQualifications') }}</span>
+                    }
+                  }
+                </section>
+              </div>
+            }
+          }
           @case ('documents') {
             <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.documents') }}</h3>
             <p class="text-sm text-muted-color mb-4">{{ t('staff-members.details.documentsHint') }}</p>
