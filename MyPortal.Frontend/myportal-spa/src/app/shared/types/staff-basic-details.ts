@@ -15,9 +15,6 @@ export interface StaffBasicDetailsResponse {
   gender: string;
   dob?: string | null;
   deceased?: string | null;
-  nationalityId?: string | null;
-  firstLanguageId?: string | null;
-  maritalStatusId?: string | null;
 }
 
 // Mirrors MyPortal.Contracts.Models.People.StaffBasicDetailsUpsertRequest —
@@ -33,8 +30,5 @@ export interface StaffBasicDetailsUpsertRequest {
   gender: string;
   dob?: string | null;
   deceased?: string | null;
-  nationalityId?: string | null;
-  firstLanguageId?: string | null;
-  maritalStatusId?: string | null;
   code: string;
 }

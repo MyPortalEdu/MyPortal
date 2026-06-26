@@ -130,10 +130,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
             PhotoId: model.PhotoId,
             Gender: model.Gender,
             Dob: model.Dob,
-            Deceased: model.Deceased,
-            NationalityId: model.NationalityId,
-            FirstLanguageId: model.FirstLanguageId,
-            MaritalStatusId: model.MaritalStatusId);
+            Deceased: model.Deceased);
 
         await _unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
         {
@@ -165,10 +162,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
                 PhotoId: model.PhotoId,
                 Gender: model.Gender,
                 Dob: model.Dob,
-                Deceased: model.Deceased,
-                NationalityId: model.NationalityId,
-                FirstLanguageId: model.FirstLanguageId,
-                MaritalStatusId: model.MaritalStatusId);
+                Deceased: model.Deceased);
 
             var personId = await _personService.CreateAsync(bio, cancellationToken, ownedUow);
 

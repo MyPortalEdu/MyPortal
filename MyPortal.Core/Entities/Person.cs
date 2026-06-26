@@ -50,6 +50,12 @@ namespace MyPortal.Core.Entities
 
         public Guid? MaritalStatusId { get; set; }
 
+        public Guid? ReligionId { get; set; }
+
+        public Guid? SexualOrientationId { get; set; }
+
+        public Guid? GenderIdentityId { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public Photo? Photo { get; set; }
@@ -57,6 +63,9 @@ namespace MyPortal.Core.Entities
         public Nationality? Nationality { get; set; }
         public Language? FirstLanguage { get; set; }
         public MaritalStatus? MaritalStatus { get; set; }
+        public Religion? Religion { get; set; }
+        public SexualOrientation? SexualOrientation { get; set; }
+        public GenderIdentity? GenderIdentity { get; set; }
         public Directory? Directory { get; set; }
         
         // Audit

@@ -18,6 +18,9 @@ import { InputText } from 'primeng/inputtext';
 import { Menu } from 'primeng/menu';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { Tag } from 'primeng/tag';
+import { Checkbox } from 'primeng/checkbox';
+import { Textarea } from 'primeng/textarea';
+import { MultiSelect } from 'primeng/multiselect';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -52,9 +55,14 @@ import { PersonPhones } from '../../../../../shared/components/contact/person-ph
 import { PersonAddresses } from '../../../../../shared/components/contact/person-addresses/person-addresses';
 import { GenderSelect } from '../../../../../shared/components/gender-select/gender-select';
 import { GenderLabelPipe } from '../../../../../shared/pipes/gender-label.pipe';
+import { LookupSelect } from '../../../../../shared/components/lookup-select/lookup-select';
 import { DirectoryBrowser } from '../../../../../shared/components/documents/directory-browser/directory-browser';
 import { DirectoryDataService } from '../../../../../shared/services/directory-data.service';
 import { LookupResponse } from '../../../../../shared/types/lookup';
+import {
+  StaffEqualityDetailsResponse,
+  StaffEqualityDetailsUpsertRequest,
+} from '../../../../../shared/types/staff-equality-details';
 
 type BasicFormSnapshot = {
   code: string;
@@ -116,12 +124,16 @@ const AREAS: AreaTab[] = [
     Menu,
     ProgressSpinner,
     Tag,
+    Checkbox,
+    Textarea,
+    MultiSelect,
     PageHeader,
     PersonEmails,
     PersonPhones,
     PersonAddresses,
     GenderSelect,
     GenderLabelPipe,
+    LookupSelect,
     DirectoryBrowser,
     TranslocoDirective,
   ],
@@ -138,7 +150,13 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly transloco = inject(TranslocoService);
   private readonly directoryData = inject(DirectoryDataService);
 
-  protected readonly areas = AREAS;
+  // Equality is special-category and has no Managed scope, so its tab is only
+  // enabled when the viewer can actually see it (HR, or self with view-own).
+  protected readonly areas = computed<AreaTab[]>(() =>
+    AREAS.map(a =>
+      a.key === 'equalityDetails' ? { ...a, enabled: this.canViewEquality() } : a,
+    ),
+  );
   protected readonly activeArea = signal<AreaKey>('basicDetails');
 
   protected readonly loadingHeader = signal(false);
@@ -158,6 +176,34 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly emailTypes = computed(() => this.contact()?.emailTypes ?? []);
   protected readonly phoneTypes = computed(() => this.contact()?.phoneTypes ?? []);
   private readonly contactSnapshot = signal<string>('');
+
+  // Equality & Diversity panel. Lazy-loaded the first time the area is opened
+  // (it 403s for viewers without the equality scope, so we don't fetch eagerly).
+  protected readonly loadingEquality = signal(false);
+  protected readonly equality = signal<StaffEqualityDetailsResponse | null>(null);
+  private equalityLoaded = false;
+
+  protected readonly ethnicityId = signal<string | null>(null);
+  protected readonly nationalityId = signal<string | null>(null);
+  protected readonly firstLanguageId = signal<string | null>(null);
+  protected readonly maritalStatusId = signal<string | null>(null);
+  protected readonly religionId = signal<string | null>(null);
+  protected readonly sexualOrientationId = signal<string | null>(null);
+  protected readonly genderIdentityId = signal<string | null>(null);
+  protected readonly hasDisability = signal<boolean>(false);
+  protected readonly disabilityDetails = signal<string | null>(null);
+  protected readonly disabilityIds = signal<string[]>([]);
+  private readonly equalitySnapshot = signal<string>('');
+
+  // Option lists travel with the equality payload so the editor is self-contained.
+  protected readonly ethnicities = computed(() => this.equality()?.ethnicities ?? []);
+  protected readonly nationalities = computed(() => this.equality()?.nationalities ?? []);
+  protected readonly languages = computed(() => this.equality()?.languages ?? []);
+  protected readonly maritalStatuses = computed(() => this.equality()?.maritalStatuses ?? []);
+  protected readonly religions = computed(() => this.equality()?.religions ?? []);
+  protected readonly sexualOrientations = computed(() => this.equality()?.sexualOrientations ?? []);
+  protected readonly genderIdentities = computed(() => this.equality()?.genderIdentities ?? []);
+  protected readonly disabilities = computed(() => this.equality()?.disabilities ?? []);
 
   // Form-field signals for the basic-details panel. Mirror the upsert request.
   protected readonly code = signal('');
@@ -203,11 +249,28 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
+  // Equality is special-category: HR (All) or the person themselves (view-own). No Managed.
+  protected readonly canViewEquality = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (perms.has(Permissions.Staff.ViewAllStaffEqualityDetails)) return true;
+    if (perms.has(Permissions.Staff.EditAllStaffEqualityDetails)) return true;
+    if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffEqualityDetails)) return true;
+    return false;
+  });
+
+  // Equality is HR-edit-only — no self/managed edit.
+  protected readonly canEditEquality = computed(() =>
+    this.heldPerms().has(Permissions.Staff.EditAllStaffEqualityDetails),
+  );
+
   // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
-  // Other areas aren't editable yet.
+  // Other editable areas have their own gate.
   protected readonly canEditActiveArea = computed(() => {
     const area = this.activeArea();
-    return (area === 'basicDetails' || area === 'contactDetails') && this.canEditBasic();
+    if (area === 'basicDetails' || area === 'contactDetails') return this.canEditBasic();
+    if (area === 'equalityDetails') return this.canEditEquality();
+    return false;
   });
 
   // Deleting a staff record is HR-only (All scope) — the kebab doesn't render otherwise.
@@ -242,8 +305,37 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       this.phones().every(p => !!p.typeId && p.number.trim().length > 0),
   );
 
-  protected readonly isValid = computed(() =>
-    this.activeArea() === 'contactDetails' ? this.contactValid() : this.basicValid(),
+  protected readonly isValid = computed(() => {
+    switch (this.activeArea()) {
+      case 'contactDetails':
+        return this.contactValid();
+      case 'equalityDetails':
+        // Every equality field is optional — nothing to invalidate.
+        return true;
+      default:
+        return this.basicValid();
+    }
+  });
+
+  // Serialised edit state for the dirty check; disability ids sorted so reorder
+  // alone isn't treated as a change.
+  private readonly equalityForm = computed(() =>
+    JSON.stringify({
+      ethnicityId: this.ethnicityId(),
+      nationalityId: this.nationalityId(),
+      firstLanguageId: this.firstLanguageId(),
+      maritalStatusId: this.maritalStatusId(),
+      religionId: this.religionId(),
+      sexualOrientationId: this.sexualOrientationId(),
+      genderIdentityId: this.genderIdentityId(),
+      hasDisability: this.hasDisability(),
+      disabilityDetails: this.disabilityDetails(),
+      disabilityIds: [...this.disabilityIds()].sort(),
+    }),
+  );
+
+  private readonly equalityDirty = computed(
+    () => this.equality() != null && this.equalitySnapshot() !== this.equalityForm(),
   );
 
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
@@ -272,9 +364,16 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       JSON.stringify({ emails: this.emails(), phones: this.phones() }),
   );
 
-  protected readonly isDirty = computed(() =>
-    this.activeArea() === 'contactDetails' ? this.contactDirty() : this.basicDirty(),
-  );
+  protected readonly isDirty = computed(() => {
+    switch (this.activeArea()) {
+      case 'contactDetails':
+        return this.contactDirty();
+      case 'equalityDetails':
+        return this.equalityDirty();
+      default:
+        return this.basicDirty();
+    }
+  });
 
   protected readonly headerActions = computed<HeaderAction[]>(() => {
     if (!this.canEditActiveArea()) return [];
@@ -363,9 +462,28 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     });
   }
 
+  private loadEquality(): void {
+    if (this.equalityLoaded) return;
+    this.equalityLoaded = true;
+    this.loadingEquality.set(true);
+    this.data.getEqualityDetails(this.staffMemberId()).subscribe({
+      next: row => {
+        this.equality.set(row);
+        this.applyEquality(row);
+        this.loadingEquality.set(false);
+      },
+      error: err => {
+        this.loadingEquality.set(false);
+        this.equalityLoaded = false;
+        this.notify.apiError(err, this.transloco.translate('staff-members.loadEqualityError'));
+      },
+    });
+  }
+
   protected pickArea(area: AreaTab): void {
     if (!area.enabled || area.key === this.activeArea()) return;
     if (area.key === 'documents') this.loadDocumentTypes();
+    if (area.key === 'equalityDetails') this.loadEquality();
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -409,15 +527,33 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return this.transloco.translate(`staff-members.relationship.${rel}`);
   }
 
+  // Resolve a lookup id to its description for read-only display; em dash if unset.
+  protected lookupLabel(list: LookupResponse[], id: string | null | undefined): string {
+    if (!id) return '—';
+    return list.find(x => x.id === id)?.description ?? '—';
+  }
+
+  // Comma-joined descriptions for a set of lookup ids (read-only multi-select view).
+  protected selectedLabels(list: LookupResponse[], ids: string[]): string {
+    if (!ids.length) return '—';
+    const byId = new Map(list.map(x => [x.id, x.description]));
+    return ids.map(id => byId.get(id)).filter(Boolean).join(', ') || '—';
+  }
+
   protected startEdit(): void {
     this.editing.set(true);
   }
 
   protected cancelEdit(): void {
-    if (this.activeArea() === 'contactDetails') {
-      this.applyContact(this.contact());
-    } else {
-      this.applyToForm(this.current());
+    switch (this.activeArea()) {
+      case 'contactDetails':
+        this.applyContact(this.contact());
+        break;
+      case 'equalityDetails':
+        this.applyEquality(this.equality());
+        break;
+      default:
+        this.applyToForm(this.current());
     }
     this.editing.set(false);
   }
@@ -425,6 +561,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   async save(): Promise<void> {
     if (this.activeArea() === 'contactDetails') {
       await this.saveContact();
+    } else if (this.activeArea() === 'equalityDetails') {
+      await this.saveEquality();
     } else {
       await this.saveBasic();
     }
@@ -435,9 +573,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     this.saving.set(true);
 
     const c = this.current();
-    // Preserve fields we don't yet render an input for (Nationality / Language /
-    // MaritalStatus / PhotoId / Deceased) — these come back to UI when their
-    // lookup endpoints land. Sending the existing values keeps the row honest.
+    // Preserve fields we don't render an input for (PhotoId / Deceased) by echoing
+    // their existing values. Equality fields are owned by the Equality area now.
     const payload: StaffBasicDetailsUpsertRequest = {
       title: this.normalise(this.title()),
       firstName: this.firstName().trim(),
@@ -449,9 +586,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       dob: this.dob()?.toISOString() ?? null,
       photoId: c?.photoId ?? null,
       deceased: c?.deceased ?? null,
-      nationalityId: c?.nationalityId ?? null,
-      firstLanguageId: c?.firstLanguageId ?? null,
-      maritalStatusId: c?.maritalStatusId ?? null,
       code: this.code().trim(),
     };
 
@@ -508,6 +642,51 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       })),
     );
     this.contactSnapshot.set(JSON.stringify({ emails: this.emails(), phones: this.phones() }));
+  }
+
+  private async saveEquality(): Promise<void> {
+    if (!this.canEditEquality() || this.saving()) return;
+    this.saving.set(true);
+
+    const payload: StaffEqualityDetailsUpsertRequest = {
+      ethnicityId: this.ethnicityId(),
+      nationalityId: this.nationalityId(),
+      firstLanguageId: this.firstLanguageId(),
+      maritalStatusId: this.maritalStatusId(),
+      religionId: this.religionId(),
+      sexualOrientationId: this.sexualOrientationId(),
+      genderIdentityId: this.genderIdentityId(),
+      hasDisability: this.hasDisability(),
+      disabilityDetails: this.normalise(this.disabilityDetails()),
+      disabilityIds: this.disabilityIds(),
+    };
+
+    try {
+      await firstValueFrom(this.data.updateEqualityDetails(this.staffMemberId(), payload));
+      this.notify.success(this.transloco.translate('staff-members.savedEqualityToast'));
+      this.editing.set(false);
+      // Refetch so the snapshot (and any server normalisation) is the new baseline.
+      this.equalityLoaded = false;
+      this.loadEquality();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.saveEqualityError'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private applyEquality(row: StaffEqualityDetailsResponse | null): void {
+    this.ethnicityId.set(row?.ethnicityId ?? null);
+    this.nationalityId.set(row?.nationalityId ?? null);
+    this.firstLanguageId.set(row?.firstLanguageId ?? null);
+    this.maritalStatusId.set(row?.maritalStatusId ?? null);
+    this.religionId.set(row?.religionId ?? null);
+    this.sexualOrientationId.set(row?.sexualOrientationId ?? null);
+    this.genderIdentityId.set(row?.genderIdentityId ?? null);
+    this.hasDisability.set(row?.hasDisability ?? false);
+    this.disabilityDetails.set(row?.disabilityDetails ?? null);
+    this.disabilityIds.set([...(row?.disabilityIds ?? [])]);
+    this.equalitySnapshot.set(this.equalityForm());
   }
 
   protected backToList(): void {

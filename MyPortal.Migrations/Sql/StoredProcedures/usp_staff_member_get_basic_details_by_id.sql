@@ -3,8 +3,9 @@ SET ANSI_NULLS ON;
 GO
 
 -- Basic-details section of the staff profile: person bio (excluding equality fields
--- — NhsNumber and EthnicityId live in the EqualityDetails proc when that area ships)
--- plus the staff code. Other staff fields belong to their own areas.
+-- — NhsNumber, EthnicityId, NationalityId, FirstLanguageId, MaritalStatusId,
+-- ReligionId, SexualOrientationId, GenderIdentityId live in the EqualityDetails
+-- proc) plus the staff code. Other staff fields belong to their own areas.
 CREATE OR ALTER PROCEDURE [dbo].[usp_staff_member_get_basic_details_by_id]
     @staffMemberId UNIQUEIDENTIFIER
 AS
@@ -24,10 +25,7 @@ SELECT
     [P].[PhotoId],
     [P].[Gender],
     [P].[Dob],
-    [P].[Deceased],
-    [P].[NationalityId],
-    [P].[FirstLanguageId],
-    [P].[MaritalStatusId]
+    [P].[Deceased]
 FROM [dbo].[StaffMembers] [SM]
     INNER JOIN [dbo].[People] [P] ON [SM].[PersonId] = [P].[Id]
 WHERE [SM].[Id] = @staffMemberId;

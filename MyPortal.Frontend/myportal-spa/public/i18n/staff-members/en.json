@@ -11,6 +11,9 @@
   "loadContactError": "Couldn't load contact details",
   "saveContactError": "Couldn't save contact details",
   "savedContactToast": "Contact details saved",
+  "loadEqualityError": "Couldn't load equality details",
+  "saveEqualityError": "Couldn't save equality details",
+  "savedEqualityToast": "Equality details saved",
   "createError": "Couldn't create staff member",
   "createdToast": "Staff member created",
   "create": {
@@ -70,6 +73,23 @@
     "emailsHeading": "Email Addresses",
     "phonesHeading": "Phone Numbers",
     "addressesHeading": "Addresses"
+  },
+  "equality": {
+    "hint": "Special-category equality data. Visible to HR and the staff member themselves; only HR can edit it.",
+    "backgroundHeading": "Identity & Background",
+    "disabilityHeading": "Disability",
+    "ethnicity": "Ethnicity",
+    "nationality": "Nationality",
+    "firstLanguage": "First language",
+    "maritalStatus": "Marital status",
+    "religion": "Religion or belief",
+    "sexualOrientation": "Sexual orientation",
+    "genderIdentity": "Gender identity",
+    "hasDisability": "Declares a disability",
+    "disabilities": "Disabilities",
+    "disabilitiesPlaceholder": "Select all that apply",
+    "details": "Details",
+    "detailsPlaceholder": "Any adjustments or specifics (optional)"
   },
   "details": {
     "pageTitle": "Staff Details",

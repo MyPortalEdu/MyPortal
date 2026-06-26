@@ -17,9 +17,6 @@ public class StaffBasicDetailsUpsertRequest
     public string Gender { get; set; } = null!;
     public DateTime? Dob { get; set; }
     public DateTime? Deceased { get; set; }
-    public Guid? NationalityId { get; set; }
-    public Guid? FirstLanguageId { get; set; }
-    public Guid? MaritalStatusId { get; set; }
 
     public string Code { get; set; } = null!;
 }

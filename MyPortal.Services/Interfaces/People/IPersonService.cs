@@ -4,8 +4,10 @@ namespace MyPortal.Services.Interfaces.People;
 
 /// <summary>
 /// Basic biographical fields of a person — the subset that any subtype's "basic details" area
-/// composes into. Excludes equality-sensitive fields (NHS no., ethnicity) and any subtype-
-/// specific fields (Code, Bank, etc.). Passed to <see cref="IPersonService.UpdateBasicBioAsync"/>.
+/// composes into. Excludes equality fields (NHS no., ethnicity, nationality, first language,
+/// marital status, religion, sexual orientation, gender identity — all owned by the Equality
+/// area) and any subtype-specific fields (Code, Bank, etc.). Passed to
+/// <see cref="IPersonService.UpdateBasicBioAsync"/>.
 /// </summary>
 public sealed record PersonBasicBio(
     string? Title,
@@ -17,10 +19,7 @@ public sealed record PersonBasicBio(
     Guid? PhotoId,
     string Gender,
     DateTime? Dob,
-    DateTime? Deceased,
-    Guid? NationalityId,
-    Guid? FirstLanguageId,
-    Guid? MaritalStatusId);
+    DateTime? Deceased);
 
 /// <summary>
 /// Infrastructure for the shared <c>Person</c> record, composed by the subtype services

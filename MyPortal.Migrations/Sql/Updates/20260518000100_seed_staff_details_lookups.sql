@@ -35,6 +35,10 @@ MERGE INTO [dbo].[Departments] AS Target
 GO
 
 -- ContractTypes --------------------------------------------------------------
+-- DEPRECATED: superseded by the CBDS seed (20260626000300_seed_cbds_lookups),
+-- now the source of truth for ContractTypes. Left commented so new databases
+-- don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[ContractTypes] AS Target
     USING (VALUES
     ('A8B7C6D5-0001-4000-8000-000000000001', 'Permanent'),
@@ -52,6 +56,7 @@ MERGE INTO [dbo].[ContractTypes] AS Target
 
     WHEN MATCHED THEN
     UPDATE SET Description = Source.Description;
+*/
 GO
 
 -- ServiceTerms ---------------------------------------------------------------
@@ -205,6 +210,10 @@ MERGE INTO [dbo].[InductionStatuses] AS Target
 GO
 
 -- Nationalities (starter set; extend as needed) ------------------------------
+-- DEPRECATED: superseded by the CBDS seed (20260626000300_seed_cbds_lookups),
+-- which loads the full nationality list. Left commented so new databases don't
+-- reintroduce the old starter rows.
+/*
 MERGE INTO [dbo].[Nationalities] AS Target
     USING (VALUES
     ('B1A2C3D4-0001-4000-8000-000000000001', 'British',       'GBR'),
@@ -231,6 +240,7 @@ MERGE INTO [dbo].[Nationalities] AS Target
     WHEN MATCHED THEN
     UPDATE SET Description = Source.Description,
                IsoCode = Source.IsoCode;
+*/
 GO
 
 -- PayScales ------------------------------------------------------------------

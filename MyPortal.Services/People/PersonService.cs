@@ -72,12 +72,10 @@ public class PersonService : BaseService, IPersonService
                 PhotoId = bio.PhotoId,
                 Gender = bio.Gender,
                 Dob = bio.Dob,
-                Deceased = bio.Deceased,
-                NationalityId = bio.NationalityId,
-                FirstLanguageId = bio.FirstLanguageId,
-                MaritalStatusId = bio.MaritalStatusId
-                // NhsNumber + EthnicityId deliberately omitted — equality-area concern,
-                // populated via the equality-area PUT post-creation.
+                Deceased = bio.Deceased
+                // Equality fields (NhsNumber, EthnicityId, NationalityId, FirstLanguageId,
+                // MaritalStatusId, ReligionId, SexualOrientationId, GenderIdentityId) are
+                // deliberately omitted — they're populated via the equality-area PUT.
             };
 
             await _personRepository.InsertAsync(person, cancellationToken, ownedUow.Transaction);
@@ -106,10 +104,9 @@ public class PersonService : BaseService, IPersonService
         person.Gender = bio.Gender;
         person.Dob = bio.Dob;
         person.Deceased = bio.Deceased;
-        person.NationalityId = bio.NationalityId;
-        person.FirstLanguageId = bio.FirstLanguageId;
-        person.MaritalStatusId = bio.MaritalStatusId;
-        // NhsNumber and EthnicityId deliberately not touched — equality-area concern.
+        // Equality fields (NhsNumber, EthnicityId, NationalityId, FirstLanguageId,
+        // MaritalStatusId, ReligionId, SexualOrientationId, GenderIdentityId) are not
+        // touched here — they're owned by the equality-area update.
 
         await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {

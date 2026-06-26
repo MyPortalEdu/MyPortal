@@ -217,9 +217,6 @@ export class StaffMemberCreateDialog {
       gender: this.gender().trim(),
       dob: this.dob()?.toISOString() ?? null,
       deceased: null,
-      nationalityId: null,
-      firstLanguageId: null,
-      maritalStatusId: null,
       code: this.code().trim(),
     };
 

@@ -1770,6 +1770,10 @@ MERGE INTO [dbo].[EmailAddressTypes] AS Target
     INSERT (Id, Description, Active)
     VALUES (Id, Description, 1);
 
+-- DEPRECATED: superseded by the CBDS seed (20260626000300_seed_cbds_lookups),
+-- now the source of truth for PhoneNumberTypes. Left commented so new databases
+-- don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[PhoneNumberTypes] AS Target
     USING (VALUES
     ('4BE15DCD-8F53-4AB9-933E-4E586B6FBF6E', 'Mobile'),
@@ -1783,6 +1787,7 @@ MERGE INTO [dbo].[PhoneNumberTypes] AS Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Active)
     VALUES (Id, Description, 1);
+*/
 
 MERGE INTO [dbo].[DocumentTypes] AS Target
     USING (VALUES
@@ -1860,6 +1865,10 @@ MERGE INTO [dbo].[DietaryRequirements] AS Target
     INSERT (Id, Description, Active)
     VALUES (Id, Description, 1);
 
+-- DEPRECATED: superseded by the CBDS seed (20260626000300_seed_cbds_lookups),
+-- now the source of truth for RelationshipTypes. Left commented so new databases
+-- don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[RelationshipTypes] AS Target
     USING (VALUES
     ('4266BFD8-7983-4324-B741-AD5FAEC36688', 'Mother'),
@@ -1884,6 +1893,7 @@ MERGE INTO [dbo].[RelationshipTypes] AS Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Active)
     VALUES (Id, Description, 1);
+*/
 
 MERGE INTO [dbo].[ObservationOutcomes] AS Target
     USING (VALUES
@@ -1965,6 +1975,10 @@ MERGE INTO [dbo].[LogNoteTypes] AS Target
     INSERT (Id, Description, ColourCode, IconClass, Active)
     VALUES (Id, Description, ColourCode, IconClass, 1);
 
+-- DEPRECATED: GovernanceTypes and IntakeTypes are superseded by the CBDS seed
+-- (20260626000300_seed_cbds_lookups), now the source of truth. Left commented so
+-- new databases don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[GovernanceTypes] AS Target
     USING (VALUES
     ('DE23BD7A-5A3C-452C-BF58-CACFE574B631', 'Community', 'CO'),
@@ -1999,6 +2013,7 @@ MERGE INTO [dbo].[IntakeTypes] AS Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Code, Active)
     VALUES (Id, Description, Code, 1);
+*/
 
 MERGE INTO [dbo].[Locations] AS Target
     USING (VALUES
@@ -2025,6 +2040,10 @@ MERGE INTO [dbo].[Locations] AS Target
     INSERT (Id, Description, IsSystem)
     VALUES (Id, Description, 1);
 
+-- DEPRECATED: SchoolPhases and SchoolTypes are superseded by the CBDS seed
+-- (20260626000300_seed_cbds_lookups), now the source of truth. Left commented so
+-- new databases don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[SchoolPhases] AS Target
     USING (VALUES
     ('5C75D59C-CE4B-4568-A95D-7E27F284B168', 'Primary', 'PS'),
@@ -2070,6 +2089,7 @@ MERGE INTO [dbo].[SchoolTypes] AS Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Code, Active)
     VALUES (Id, Description, Code, 1);
+*/
 
 MERGE INTO [dbo].[SenEventTypes] AS Target
     USING (VALUES
@@ -2447,6 +2467,10 @@ MERGE INTO [dbo].[TaskTypes] AS Target
     WHEN MATCHED THEN
 UPDATE SET Description = Source.Description, Active = Source.Active, IsPersonal = Source.Personal, ColourCode = Source.ColourCode, IsSystem = Source.System;
 
+-- DEPRECATED: superseded by the CBDS seed (20260626000300_seed_cbds_lookups),
+-- now the source of truth for Ethnicities. Left commented so new databases don't
+-- reintroduce the old rows.
+/*
 MERGE INTO [dbo].[Ethnicities] AS Target
     USING (VALUES
     ('A70481B2-8AD3-4927-863A-E03882CF0307', 'White, British', 'WBRI'),
@@ -2475,6 +2499,7 @@ MERGE INTO [dbo].[Ethnicities] AS Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Code, Active)
     VALUES (Id, Description, Code, 1);
+*/
 
 MERGE INTO [dbo].[VatRates] AS Target
     USING (VALUES
@@ -3211,6 +3236,10 @@ MERGE INTO [dbo].[BoarderStatus] as Target
     INSERT (Id, Description, Active, Code)
     VALUES (Id, Description, Active, Code);
 
+-- DEPRECATED: superseded by the CBDS seed (20260626000300_seed_cbds_lookups),
+-- now the source of truth for StaffAbsenceTypes (DfE workforce-census absence
+-- categories). Left commented so new databases don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[StaffAbsenceTypes] as Target
     USING (VALUES
     ('6bdf1ac6-63de-4f2c-a3ca-1ef69eda2b90', 'Illness', 1, 1, 1),
@@ -3225,5 +3254,6 @@ MERGE INTO [dbo].[StaffAbsenceTypes] as Target
     WHEN NOT MATCHED THEN
     INSERT (Id, Description, Active, IsSystem, IsAuthorised)
     VALUES (Id, Description, Active, System, Authorised);
+*/
 
 EXEC sp_MSforeachtable @command1="print '?'", @command2="ALTER TABLE ? WITH CHECK CHECK CONSTRAINT all";

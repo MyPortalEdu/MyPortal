@@ -13,6 +13,10 @@ import {
   StaffContactDetailsUpsertRequest,
 } from '../types/staff-contact-details';
 import {
+  StaffEqualityDetailsResponse,
+  StaffEqualityDetailsUpsertRequest,
+} from '../types/staff-equality-details';
+import {
   AddressListResponse,
   AddressMatchResponse,
   PersonAddressUpdateRequest,
@@ -72,6 +76,22 @@ export class StaffMembersDataService {
   ): Observable<IdResponse> {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/contact-details`,
+      payload,
+    );
+  }
+
+  getEqualityDetails(staffMemberId: string): Observable<StaffEqualityDetailsResponse> {
+    return this.http.get<StaffEqualityDetailsResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/equality-details`,
+    );
+  }
+
+  updateEqualityDetails(
+    staffMemberId: string,
+    payload: StaffEqualityDetailsUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/equality-details`,
       payload,
     );
   }

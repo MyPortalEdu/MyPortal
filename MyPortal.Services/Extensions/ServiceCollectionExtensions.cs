@@ -69,10 +69,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IPersonContactService, PersonContactService>();
         services.AddScoped<IPersonAddressService, PersonAddressService>();
+        services.AddScoped<IPersonEqualityService, PersonEqualityService>();
         services.AddScoped<IStaffMemberService, StaffMemberService>();
         services.AddScoped<IStaffMemberAccessService, StaffMemberAccessService>();
         services.AddScoped<IStaffContactService, StaffContactService>();
         services.AddScoped<IStaffAddressService, StaffAddressService>();
+        services.AddScoped<IStaffEqualityService, StaffEqualityService>();
         services.AddScoped<IStaffAttachmentsService, StaffAttachmentsService>();
         services.AddScoped<IRegisterService, RegisterService>();
         services.AddScoped<IRoleService, RoleService>();

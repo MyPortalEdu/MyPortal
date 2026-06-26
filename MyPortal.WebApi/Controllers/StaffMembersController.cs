@@ -33,15 +33,18 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     private readonly IStaffMemberService _staffMemberService;
     private readonly IStaffContactService _staffContactService;
     private readonly IStaffAddressService _staffAddressService;
+    private readonly IStaffEqualityService _staffEqualityService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
-        IStaffAddressService staffAddressService, IStaffAttachmentsService staffAttachmentsService)
+        IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
+        IStaffAttachmentsService staffAttachmentsService)
         : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
         _staffContactService = staffContactService;
         _staffAddressService = staffAddressService;
+        _staffEqualityService = staffEqualityService;
     }
 
     /// <summary>Get the staff profile header for a given staff member id.</summary>
@@ -111,6 +114,33 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         [FromBody] StaffContactDetailsUpsertRequest model)
     {
         await _staffContactService.UpdateContactDetailsAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Equality &amp; Diversity area — special-category equality fields + the staff
+    /// disability declaration, with the option lists for each picker. HR-only edit; self/HR view.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/equality-details")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffEqualityDetailsResponse), 200)]
+    public async Task<IActionResult> GetEqualityDetailsAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffEqualityService.GetEqualityDetailsAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the Equality &amp; Diversity area. Writes the person equality single-selects
+    /// and the staff disability declaration/specifics; no other area's fields are reachable.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new equality payload.</param>
+    [HttpPut("{staffMemberId:guid}/equality-details")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateEqualityDetailsAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffEqualityDetailsUpsertRequest model)
+    {
+        await _staffEqualityService.UpdateEqualityDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
