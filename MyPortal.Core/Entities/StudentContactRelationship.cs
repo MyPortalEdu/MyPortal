@@ -19,6 +19,9 @@ namespace MyPortal.Core.Entities
 
         public bool HasCourtOrder { get; set; }
 
+        // Statutory contact priority / emergency-contact order (1 = first to call).
+        public int ContactOrder { get; set; }
+
         public RelationshipType? RelationshipType { get; set; }
         public Student? Student { get; set; }
         public Contact? Contact { get; set; }

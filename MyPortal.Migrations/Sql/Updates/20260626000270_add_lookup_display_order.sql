@@ -60,11 +60,11 @@ UPDATE [dbo].[SexualOrientations] SET [DisplayOrder] = CASE [Id]
     ELSE [DisplayOrder] END;
 GO
 
+-- GenderIdentities are aligned to CBDS CS120 in 20260626000200; Ids match that seed.
 UPDATE [dbo].[GenderIdentities] SET [DisplayOrder] = CASE [Id]
-    WHEN 'A3B4C5D6-0002-4000-8000-000000000001' THEN 1   -- Same as sex registered at birth
-    WHEN 'A3B4C5D6-0002-4000-8000-000000000002' THEN 2   -- Different from sex registered at birth
-    WHEN 'A3B4C5D6-0002-4000-8000-000000000003' THEN 3   -- Non-binary
-    WHEN 'A3B4C5D6-0002-4000-8000-000000000004' THEN 800 -- Prefer to self-describe
-    WHEN 'A3B4C5D6-0002-4000-8000-000000000005' THEN 900 -- Prefer not to say
+    WHEN 'A3B4C5D6-0120-4000-8000-000000000001' THEN 1   -- Man / Boy / Male
+    WHEN 'A3B4C5D6-0120-4000-8000-000000000002' THEN 2   -- Woman / Girl / Female
+    WHEN 'A3B4C5D6-0120-4000-8000-000000000003' THEN 800 -- Prefer to self-describe
+    WHEN 'A3B4C5D6-0120-4000-8000-000000000004' THEN 900 -- Not known
     ELSE [DisplayOrder] END;
 GO

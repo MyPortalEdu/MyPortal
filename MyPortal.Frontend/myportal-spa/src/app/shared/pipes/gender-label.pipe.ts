@@ -2,7 +2,7 @@ import { Pipe, PipeTransform, inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 
 /**
- * Renders a stored gender code (M/F/X) as a friendly label, e.g. `M` → "Male".
+ * Renders a stored gender code (M/F/U) as a friendly label, e.g. `M` → "Male".
  * Falls back to the raw code for values not in `common.gender.*` (legacy /
  * unknown) and an em dash when empty. Pair with {@link GenderSelect} for editing.
  */

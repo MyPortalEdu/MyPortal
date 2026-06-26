@@ -80,6 +80,10 @@ MERGE INTO [dbo].[ServiceTerms] AS Target
 GO
 
 -- LeavingReasons -------------------------------------------------------------
+-- DEPRECATED: superseded by 20260626000410_seed_workforce_result_lookups, which
+-- refreshes LeavingReasons to the CBDS CS097 staff subset. Left commented so new
+-- databases don't reintroduce the old rows.
+/*
 MERGE INTO [dbo].[LeavingReasons] AS Target
     USING (VALUES
     ('F1E2D3C4-0001-4000-8000-000000000001', 'Resignation'),
@@ -98,6 +102,7 @@ MERGE INTO [dbo].[LeavingReasons] AS Target
 
     WHEN MATCHED THEN
     UPDATE SET Description = Source.Description;
+*/
 GO
 
 -- DbsCheckTypes --------------------------------------------------------------

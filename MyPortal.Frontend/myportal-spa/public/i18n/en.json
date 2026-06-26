@@ -24,7 +24,7 @@
       "select": "Select gender",
       "M": "Male",
       "F": "Female",
-      "X": "Unknown"
+      "U": "Unknown"
     },
     "contact": {
       "type": "Type",

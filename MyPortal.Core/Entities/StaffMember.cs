@@ -41,6 +41,20 @@ namespace MyPortal.Core.Entities
 
         public bool HasQts { get; set; }
 
+        // Higher Level Teaching Assistant status (workforce census).
+        public bool HasHlta { get; set; }
+
+        // QTLS / EYTS — QTS-equivalent statuses (workforce census, timetabling eligibility).
+        public bool HasQtls { get; set; }
+
+        public bool HasEyts { get; set; }
+
+        // Member of the Senior Leadership Team (workforce census role classification).
+        public bool IsSeniorLeadership { get; set; }
+
+        // Route by which QTS was gained (CBDS CS069) — e.g. School Direct, Teach First.
+        public Guid? QtsRouteId { get; set; }
+
         public DateTime? QtsAwardedDate { get; set; }
 
         public DateTime? InductionStartDate { get; set; }
@@ -65,7 +79,9 @@ namespace MyPortal.Core.Entities
         public StaffMember? LineManager { get; set; }
 
         public InductionStatus? InductionStatus { get; set; }
-        
+
+        public QtsRoute? QtsRoute { get; set; }
+
         // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;

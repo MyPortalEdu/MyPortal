@@ -16,7 +16,10 @@ namespace MyPortal.Core.Entities
         public DateTime Date { get; set; }
 
         public Guid? GradeId { get; set; }
-        
+
+        // Nature of the result — Estimate / Interim / Provisional / Result / Target (CBDS CS014).
+        public Guid? ResultTypeId { get; set; }
+
         public decimal? Mark { get; set; }
 
         // Used for comment result types
@@ -29,6 +32,7 @@ namespace MyPortal.Core.Entities
         public string? Note { get; set; }
         
         public ResultSet? ResultSet { get; set; }
+        public ResultType? ResultType { get; set; }
         public Aspect? Aspect { get; set; }
         public Student? Student { get; set; }
         public Grade? Grade { get; set; }

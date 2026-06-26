@@ -29,6 +29,10 @@ namespace MyPortal.Core.Entities
         [StringLength(256)]
         public string LastName { get; set; } = null!;
 
+        // Former / previous surname (CTF & census). Distinct from the preferred name.
+        [StringLength(256)]
+        public string? FormerSurname { get; set; }
+
         public Guid? PhotoId { get; set; }
         
         [StringLength(10)]
@@ -56,6 +60,11 @@ namespace MyPortal.Core.Entities
 
         public Guid? GenderIdentityId { get; set; }
 
+        // Proficiency in English / EAL stage (CBDS CS089) + the date assessed.
+        public Guid? EnglishProficiencyId { get; set; }
+
+        public DateTime? EnglishProficiencyDate { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public Photo? Photo { get; set; }
@@ -66,6 +75,7 @@ namespace MyPortal.Core.Entities
         public Religion? Religion { get; set; }
         public SexualOrientation? SexualOrientation { get; set; }
         public GenderIdentity? GenderIdentity { get; set; }
+        public EnglishProficiency? EnglishProficiency { get; set; }
         public Directory? Directory { get; set; }
         
         // Audit

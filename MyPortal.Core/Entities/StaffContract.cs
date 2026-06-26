@@ -11,6 +11,12 @@ namespace MyPortal.Core.Entities
 
         public Guid ContractTypeId { get; set; }
 
+        // DfE workforce-census staff role (CS050). PostTitle stays for display.
+        public Guid? StaffRoleId { get; set; }
+
+        // Where the staff member was recruited from (CBDS CS055) — census arrivals.
+        public Guid? OriginId { get; set; }
+
         public Guid? ServiceTermId { get; set; }
 
         public Guid? DepartmentId { get; set; }
@@ -47,10 +53,21 @@ namespace MyPortal.Core.Entities
         [Column(TypeName = "decimal(10,2)")]
         public decimal? AnnualSalary { get; set; }
 
+        // Agency / supply worker (workforce census).
+        public bool IsAgencySupply { get; set; }
+
+        // Pay protected at a higher safeguarded rate (workforce census pay collection).
+        public bool SafeguardedSalary { get; set; }
+
+        // Paid at a daily rate rather than annual salary (supply staff).
+        public bool DailyRate { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public StaffEmployment? StaffEmployment { get; set; }
         public ContractType? ContractType { get; set; }
+        public StaffRole? StaffRole { get; set; }
+        public StaffOrigin? Origin { get; set; }
         public ServiceTerm? ServiceTerm { get; set; }
         public Department? Department { get; set; }
         public PayScale? PayScale { get; set; }

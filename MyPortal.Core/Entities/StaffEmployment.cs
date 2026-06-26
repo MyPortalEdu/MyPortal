@@ -14,12 +14,16 @@ namespace MyPortal.Core.Entities
 
         public Guid? LeavingReasonId { get; set; }
 
+        // Destination on leaving (CBDS CS042) — workforce-census leavers return.
+        public Guid? DestinationId { get; set; }
+
         public string? Notes { get; set; }
 
         public bool IsDeleted { get; set; }
 
         public StaffMember? StaffMember { get; set; }
         public LeavingReason? LeavingReason { get; set; }
+        public StaffDestination? Destination { get; set; }
 
         // Audit
         public Guid CreatedById { get; set; }
