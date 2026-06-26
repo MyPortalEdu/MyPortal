@@ -9,8 +9,6 @@
 -- New lookup tables ----------------------------------------------------------
 DECLARE @lookups TABLE (name sysname);
 INSERT INTO @lookups (name) VALUES
-    ('ExamComponentResultTypes'),
-    ('AssessmentStages'),
     ('ExclusionReviewCategories'),
     ('SpecialSchoolOrganisations'),
     ('SpecialSchoolTypes'),
@@ -48,9 +46,7 @@ INSERT INTO @cols (tbl, col, def) VALUES
     ('ExclusionAppealResults', 'DisplayOrder', 'int NOT NULL CONSTRAINT DF_ExclusionAppealResults_DisplayOrder DEFAULT (0)'),
     -- Exams & assessment
     ('ExamQualifications', 'QualificationNumber', 'nvarchar(8) NULL'),
-    ('ExamBaseComponents', 'ResultTypeId', 'uniqueidentifier NULL'),
     ('ExamBaseElements', 'DiscountCode', 'nvarchar(10) NULL'),
-    ('ExamAssessments', 'StageId', 'uniqueidentifier NULL'),
     ('ExamAssessments', 'Locale', 'nvarchar(3) NULL'),
     -- Exclusions
     ('Exclusions', 'SessionCount', 'int NULL'),
@@ -106,8 +102,6 @@ GO
 -- Foreign keys ---------------------------------------------------------------
 DECLARE @fks TABLE (fk sysname, tbl sysname, col sysname, ref sysname);
 INSERT INTO @fks (fk, tbl, col, ref) VALUES
-    ('FK_ExamBaseComponents_ResultTypeId_ExamComponentResultTypes', 'ExamBaseComponents', 'ResultTypeId', 'ExamComponentResultTypes'),
-    ('FK_ExamAssessments_StageId_AssessmentStages', 'ExamAssessments', 'StageId', 'AssessmentStages'),
     ('FK_Exclusions_ReviewCategoryId_ExclusionReviewCategories', 'Exclusions', 'ReviewCategoryId', 'ExclusionReviewCategories'),
     ('FK_Schools_SpecialSchoolOrganisationId_SpecialSchoolOrganisations', 'Schools', 'SpecialSchoolOrganisationId', 'SpecialSchoolOrganisations'),
     ('FK_Schools_SpecialSchoolTypeId_SpecialSchoolTypes', 'Schools', 'SpecialSchoolTypeId', 'SpecialSchoolTypes'),

@@ -45,21 +45,21 @@ DECLARE @cols TABLE (tbl sysname, col sysname, def nvarchar(200));
 INSERT INTO @cols (tbl, col, def) VALUES
     -- People
     ('People', 'FormerSurname', 'nvarchar(256) NULL'),
-    ('People', 'EnglishProficiencyId', 'uniqueidentifier NULL'),
-    ('People', 'EnglishProficiencyDate', 'datetime2 NULL'),
     -- StaffMembers
     ('StaffMembers', 'HasHlta', 'bit NOT NULL CONSTRAINT DF_StaffMembers_HasHlta DEFAULT (0)'),
     ('StaffMembers', 'HasQtls', 'bit NOT NULL CONSTRAINT DF_StaffMembers_HasQtls DEFAULT (0)'),
     ('StaffMembers', 'HasEyts', 'bit NOT NULL CONSTRAINT DF_StaffMembers_HasEyts DEFAULT (0)'),
     ('StaffMembers', 'IsSeniorLeadership', 'bit NOT NULL CONSTRAINT DF_StaffMembers_IsSeniorLeadership DEFAULT (0)'),
     -- StaffContracts
-    ('StaffContracts', 'OriginId', 'uniqueidentifier NULL'),
     ('StaffContracts', 'IsAgencySupply', 'bit NOT NULL CONSTRAINT DF_StaffContracts_IsAgencySupply DEFAULT (0)'),
     ('StaffContracts', 'SafeguardedSalary', 'bit NOT NULL CONSTRAINT DF_StaffContracts_SafeguardedSalary DEFAULT (0)'),
     ('StaffContracts', 'DailyRate', 'bit NOT NULL CONSTRAINT DF_StaffContracts_DailyRate DEFAULT (0)'),
-    -- StaffEmployments
+    -- StaffEmployments: Origin/Destination are the arrival/departure pair of an employment spell
+    ('StaffEmployments', 'OriginId', 'uniqueidentifier NULL'),
     ('StaffEmployments', 'DestinationId', 'uniqueidentifier NULL'),
     -- Students
+    ('Students', 'EnglishProficiencyId', 'uniqueidentifier NULL'),
+    ('Students', 'EnglishProficiencyDate', 'datetime2 NULL'),
     ('Students', 'FormerUpn', 'nvarchar(13) NULL'),
     ('Students', 'UpnUnknownReasonId', 'uniqueidentifier NULL'),
     ('Students', 'Uln', 'nvarchar(10) NULL'),
@@ -100,9 +100,9 @@ GO
 -- Foreign keys ---------------------------------------------------------------
 DECLARE @fks TABLE (fk sysname, tbl sysname, col sysname, ref sysname);
 INSERT INTO @fks (fk, tbl, col, ref) VALUES
-    ('FK_StaffContracts_OriginId_StaffOrigins', 'StaffContracts', 'OriginId', 'StaffOrigins'),
+    ('FK_StaffEmployments_OriginId_StaffOrigins', 'StaffEmployments', 'OriginId', 'StaffOrigins'),
     ('FK_StaffEmployments_DestinationId_StaffDestinations', 'StaffEmployments', 'DestinationId', 'StaffDestinations'),
-    ('FK_People_EnglishProficiencyId_EnglishProficiencies', 'People', 'EnglishProficiencyId', 'EnglishProficiencies'),
+    ('FK_Students_EnglishProficiencyId_EnglishProficiencies', 'Students', 'EnglishProficiencyId', 'EnglishProficiencies'),
     ('FK_Students_UpnUnknownReasonId_UpnUnknownReasons', 'Students', 'UpnUnknownReasonId', 'UpnUnknownReasons'),
     ('FK_Students_CaringAuthorityId_LocalAuthorities', 'Students', 'CaringAuthorityId', 'LocalAuthorities'),
     ('FK_Students_PostLookedAfterArrangementId_PostLookedAfterArrangements', 'Students', 'PostLookedAfterArrangementId', 'PostLookedAfterArrangements'),

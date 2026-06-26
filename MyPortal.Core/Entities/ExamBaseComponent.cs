@@ -11,11 +11,7 @@ namespace MyPortal.Core.Entities
 
         public string? ComponentCode { get; set; }
 
-        // Result type/format this component is reported in (CBDS CS094).
-        public Guid? ResultTypeId { get; set; }
-
         public ExamAssessmentMode? AssessmentMode { get; set; }
         public ExamAssessment? Assessment { get; set; }
-        public ExamComponentResultType? ResultType { get; set; }
     }
 }

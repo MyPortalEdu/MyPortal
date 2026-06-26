@@ -35,6 +35,11 @@ namespace MyPortal.Core.Entities
         // Date the pupil's current SEN need / register entry began.
         public DateTime? SenStartDate { get; set; }
 
+        // Proficiency in English / EAL stage (CBDS CS089) + the date assessed — pupil-only.
+        public Guid? EnglishProficiencyId { get; set; }
+
+        public DateTime? EnglishProficiencyDate { get; set; }
+
         [StringLength(13)]
         public string? Upn { get; set; }
 
@@ -98,6 +103,7 @@ namespace MyPortal.Core.Entities
         public UpnUnknownReason? UpnUnknownReason { get; set; }
         public PupilPremiumIndicator? PupilPremiumIndicator { get; set; }
         public FsmCategory? FsmCategory { get; set; }
+        public EnglishProficiency? EnglishProficiency { get; set; }
         public LocalAuthority? CaringAuthority { get; set; }
         public PostLookedAfterArrangement? PostLookedAfterArrangement { get; set; }
         public ServiceChildIndicator? ServiceChildIndicator { get; set; }

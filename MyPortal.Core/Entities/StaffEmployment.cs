@@ -14,6 +14,10 @@ namespace MyPortal.Core.Entities
 
         public Guid? LeavingReasonId { get; set; }
 
+        // Where the staff member was recruited from (CBDS CS055) — census arrivals.
+        // Pairs with DestinationId: one origin/destination per employment spell.
+        public Guid? OriginId { get; set; }
+
         // Destination on leaving (CBDS CS042) — workforce-census leavers return.
         public Guid? DestinationId { get; set; }
 
@@ -23,6 +27,7 @@ namespace MyPortal.Core.Entities
 
         public StaffMember? StaffMember { get; set; }
         public LeavingReason? LeavingReason { get; set; }
+        public StaffOrigin? Origin { get; set; }
         public StaffDestination? Destination { get; set; }
 
         // Audit

@@ -60,11 +60,6 @@ namespace MyPortal.Core.Entities
 
         public Guid? GenderIdentityId { get; set; }
 
-        // Proficiency in English / EAL stage (CBDS CS089) + the date assessed.
-        public Guid? EnglishProficiencyId { get; set; }
-
-        public DateTime? EnglishProficiencyDate { get; set; }
-
         // At-a-glance flag that the person has medical needs (detail in PersonConditions).
         public bool HasMedicalNeeds { get; set; }
 
@@ -78,7 +73,6 @@ namespace MyPortal.Core.Entities
         public Religion? Religion { get; set; }
         public SexualOrientation? SexualOrientation { get; set; }
         public GenderIdentity? GenderIdentity { get; set; }
-        public EnglishProficiency? EnglishProficiency { get; set; }
         public Directory? Directory { get; set; }
         
         // Audit

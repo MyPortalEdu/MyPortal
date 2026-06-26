@@ -14,9 +14,6 @@ namespace MyPortal.Core.Entities
         // DfE workforce-census staff role (CS050). PostTitle stays for display.
         public Guid? StaffRoleId { get; set; }
 
-        // Where the staff member was recruited from (CBDS CS055) — census arrivals.
-        public Guid? OriginId { get; set; }
-
         public Guid? ServiceTermId { get; set; }
 
         public Guid? DepartmentId { get; set; }
@@ -67,7 +64,6 @@ namespace MyPortal.Core.Entities
         public StaffEmployment? StaffEmployment { get; set; }
         public ContractType? ContractType { get; set; }
         public StaffRole? StaffRole { get; set; }
-        public StaffOrigin? Origin { get; set; }
         public ServiceTerm? ServiceTerm { get; set; }
         public Department? Department { get; set; }
         public PayScale? PayScale { get; set; }
