@@ -32,6 +32,7 @@ import {
   StaffAbsencesResponse,
   StaffAbsencesUpsertRequest,
 } from '../types/staff-absences';
+import { StaffCalendarResponse } from '../types/staff-timetable';
 import {
   AddressListResponse,
   AddressMatchResponse,
@@ -158,6 +159,27 @@ export class StaffMembersDataService {
       `/api/v1/staffmembers/${staffMemberId}/pre-employment-checks`,
       payload,
     );
+  }
+
+  // Read-only timetable feed for a visible window. `from`/`to` are ISO datetimes (the
+  // calendar's current range); the server clamps an over-wide window.
+  getTimetable(
+    staffMemberId: string,
+    from: string,
+    to: string,
+  ): Observable<StaffCalendarResponse> {
+    const params = new HttpParams().set('from', from).set('to', to);
+    return this.http.get<StaffCalendarResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/timetable`,
+      { params },
+    );
+  }
+
+  // The current user's own timetable feed for the home dashboard. Resolves the staff member
+  // server-side from the session; degrades to public diary events when there's no staff record.
+  getMyTimetable(from: string, to: string): Observable<StaffCalendarResponse> {
+    const params = new HttpParams().set('from', from).set('to', to);
+    return this.http.get<StaffCalendarResponse>('/api/v1/me/timetable', { params });
   }
 
   getAbsences(staffMemberId: string): Observable<StaffAbsencesResponse> {

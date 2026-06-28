@@ -26,13 +26,14 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     private readonly IStaffEmploymentService _staffEmploymentService;
     private readonly IStaffPreEmploymentService _staffPreEmploymentService;
     private readonly IStaffAbsenceService _staffAbsenceService;
+    private readonly IStaffTimetableService _staffTimetableService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
         IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
         IStaffProfessionalService staffProfessionalService, IStaffEmploymentService staffEmploymentService,
         IStaffPreEmploymentService staffPreEmploymentService, IStaffAbsenceService staffAbsenceService,
-        IStaffAttachmentsService staffAttachmentsService)
+        IStaffTimetableService staffTimetableService, IStaffAttachmentsService staffAttachmentsService)
         : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
@@ -43,6 +44,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         _staffEmploymentService = staffEmploymentService;
         _staffPreEmploymentService = staffPreEmploymentService;
         _staffAbsenceService = staffAbsenceService;
+        _staffTimetableService = staffTimetableService;
     }
 
     /// <summary>Get the staff profile header.</summary>
@@ -233,6 +235,25 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     {
         await _staffAbsenceService.UpdateAbsencesAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the timetable / calendar area for a date window.</summary>
+    /// <remarks>
+    /// Returns every calendar entry overlapping [<paramref name="from"/>, <paramref name="to"/>) the
+    /// viewer may see — lessons, detentions, diary events, non-contact periods, parent-evening
+    /// appointments and (when permitted) absences. Read-only.
+    /// </remarks>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="from">Inclusive window start.</param>
+    /// <param name="to">Exclusive window end.</param>
+    [HttpGet("{staffMemberId:guid}/timetable")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffCalendarResponse), 200)]
+    public async Task<IActionResult> GetTimetableAsync([FromRoute] Guid staffMemberId,
+        [FromQuery] DateTime from, [FromQuery] DateTime to)
+    {
+        var result = await _staffTimetableService.GetCalendarAsync(staffMemberId, from, to, CancellationToken);
+        return Ok(result);
     }
 
     /// <summary>Get the addresses section.</summary>

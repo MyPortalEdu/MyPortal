@@ -58,6 +58,7 @@ import { GenderSelect } from '../../../../../shared/components/gender-select/gen
 import { GenderLabelPipe } from '../../../../../shared/pipes/gender-label.pipe';
 import { LookupSelect } from '../../../../../shared/components/lookup-select/lookup-select';
 import { DirectoryBrowser } from '../../../../../shared/components/documents/directory-browser/directory-browser';
+import { StaffTimetable } from '../../../../../shared/components/staff-timetable/staff-timetable';
 import { DirectoryDataService } from '../../../../../shared/services/directory-data.service';
 import { LookupResponse } from '../../../../../shared/types/lookup';
 import {
@@ -162,6 +163,7 @@ const AREAS: AreaTab[] = [
     GenderLabelPipe,
     LookupSelect,
     DirectoryBrowser,
+    StaffTimetable,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('staff-members')],
@@ -186,6 +188,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       if (a.key === 'employmentDetails') return { ...a, enabled: this.canViewEmployment() };
       if (a.key === 'preEmploymentChecks') return { ...a, enabled: this.canViewPreEmployment() };
       if (a.key === 'absences') return { ...a, enabled: this.canViewAbsences() };
+      if (a.key === 'timetable') return { ...a, enabled: this.canViewTimetable() };
       return a;
     }),
   );
@@ -557,6 +560,21 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly canManageConfidential = computed(() =>
     this.heldPerms().has(Permissions.Staff.EditAllStaffAbsences),
   );
+
+  // Timetable is read-only here: relationship-scoped view (Own/Managed/All). There's no
+  // self/managed edit — timetabling is a central scheduling action handled elsewhere.
+  protected readonly canViewTimetable = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (
+      perms.has(Permissions.Staff.ViewAllStaffTimetable) ||
+      perms.has(Permissions.Staff.EditAllStaffTimetable)
+    )
+      return true;
+    if (rel === 'LineManaged' && perms.has(Permissions.Staff.ViewManagedStaffTimetable)) return true;
+    if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffTimetable)) return true;
+    return false;
+  });
 
   // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
   // Other editable areas have their own gate.

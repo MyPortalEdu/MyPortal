@@ -71,6 +71,14 @@
         "country": "Country"
       }
     },
+    "timetable": {
+      "loadError": "Couldn't load the timetable",
+      "noEvents": "Nothing scheduled",
+      "today": "Today",
+      "week": "Week",
+      "day": "Day",
+      "list": "List"
+    },
     "studentGroupPicker": {
       "title": "Pick a Student Group",
       "add": "Add student group…",
@@ -153,7 +161,6 @@
     "home": {
       "title": "Home",
       "timetable": "Timetable",
-      "timetablePlaceholder": "This is a placeholder for the timetable.",
       "schoolSetup": {
         "title": "Enter your school details",
         "body": "Set up your school's name, identifiers, and head teacher to finish setup.",

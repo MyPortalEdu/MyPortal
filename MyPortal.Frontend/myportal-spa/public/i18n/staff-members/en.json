@@ -254,6 +254,9 @@
     "confidential": "Confidential",
     "markConfidential": "Mark as confidential (HR only)"
   },
+  "timetable": {
+    "hint": "Lessons, cover, detentions, school events, non-contact time, parent-evening appointments and leave for this staff member."
+  },
   "details": {
     "pageTitle": "Staff Details",
     "backToList": "Back to list",

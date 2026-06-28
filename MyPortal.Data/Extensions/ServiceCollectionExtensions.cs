@@ -84,6 +84,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffAbsenceRepository, StaffAbsenceRepository>();
         services.AddScoped<IStaffAbsenceTypeRepository, StaffAbsenceTypeRepository>();
         services.AddScoped<IStaffIllnessTypeRepository, StaffIllnessTypeRepository>();
+        // Timetable (read-only calendar aggregation).
+        services.AddScoped<IStaffCalendarRepository, StaffCalendarRepository>();
         services.AddScoped<IStaffRoleRepository, StaffRoleRepository>();
         services.AddScoped<IServiceTermRepository, ServiceTermRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
