@@ -313,7 +313,6 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         entity.PayScaleId = item.PayScaleId;
         entity.PayScalePointId = item.PayScalePointId;
         entity.PostTitle = item.PostTitle;
-        entity.SpinePoint = item.SpinePoint;
         entity.StartDate = item.StartDate;
         entity.EndDate = item.EndDate;
         entity.Fte = item.Fte;
@@ -335,7 +334,6 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         PayScaleId = c.PayScaleId,
         PayScalePointId = c.PayScalePointId,
         PostTitle = c.PostTitle,
-        SpinePoint = c.SpinePoint,
         StartDate = c.StartDate,
         EndDate = c.EndDate,
         Fte = c.Fte,

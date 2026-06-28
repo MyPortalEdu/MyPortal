@@ -165,9 +165,9 @@
             <label class="text-sm font-medium" for="create-gender">
               {{ t('staff-members.fields.gender') }}
             </label>
-            <input pInputText id="create-gender" maxlength="1"
-                   [ngModel]="gender()" (ngModelChange)="gender.set($event)"
-                   (keydown.enter)="save()" />
+            <mp-gender-select inputId="create-gender"
+                              [value]="gender()"
+                              (valueChange)="gender.set($event ?? '')"></mp-gender-select>
           </div>
 
           <!-- DOB -->

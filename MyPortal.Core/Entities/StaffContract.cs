@@ -26,12 +26,6 @@ namespace MyPortal.Core.Entities
         [StringLength(256)]
         public string PostTitle { get; set; } = null!;
 
-        // Free-text spine point — kept for locally determined / non-statutory
-        // pay where there's no structured PayScalePoint row. If PayScalePointId
-        // is set, the UI should prefer that and treat this as descriptive only.
-        [StringLength(20)]
-        public string? SpinePoint { get; set; }
-
         public DateTime StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }

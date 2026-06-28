@@ -11,7 +11,9 @@ namespace MyPortal.Core.Entities
 
         public Guid DocumentTypeId { get; set; }
 
-        public Guid VerifiedById { get; set; }
+        // The staff member who verified the documents — recorded server-side as the
+        // current user where they are themselves staff; otherwise left null.
+        public Guid? VerifiedById { get; set; }
 
         [StringLength(64)]
         public string? DocumentNumber { get; set; }

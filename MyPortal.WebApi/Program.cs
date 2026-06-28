@@ -242,7 +242,13 @@ builder.Services.AddAuthentication(options =>
             ctx.Response.Redirect(ctx.RedirectUri);
             return Task.CompletedTask;
         };
-    });
+    })
+    // AddIdentityCore (unlike AddIdentity) does not register these cookie schemes,
+    // but SignInManager.SignOutAsync() — invoked by SecurityStampValidator when it
+    // rejects a stale stamp — signs out all three. Register them so that sign-out
+    // is a no-op rather than throwing "No sign-out authentication handler...".
+    .AddCookie(IdentityConstants.ExternalScheme)
+    .AddCookie(IdentityConstants.TwoFactorRememberMeScheme);
 
 builder.Services.AddAuthorization(o =>
 {

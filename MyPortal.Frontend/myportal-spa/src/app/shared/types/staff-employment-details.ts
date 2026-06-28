@@ -19,7 +19,6 @@ export interface StaffContractResponse {
   payScaleId?: string | null;
   payScalePointId?: string | null;
   postTitle: string;
-  spinePoint?: string | null;
   startDate: string;
   endDate?: string | null;
   fte: number;
@@ -42,7 +41,6 @@ export interface StaffContractUpsertItem {
   payScaleId?: string | null;
   payScalePointId?: string | null;
   postTitle: string;
-  spinePoint?: string | null;
   startDate: string | null;
   endDate?: string | null;
   fte: number;

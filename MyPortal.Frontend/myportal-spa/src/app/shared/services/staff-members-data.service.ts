@@ -25,6 +25,10 @@ import {
   StaffEmploymentDetailsUpsertRequest,
 } from '../types/staff-employment-details';
 import {
+  StaffPreEmploymentChecksResponse,
+  StaffPreEmploymentChecksUpsertRequest,
+} from '../types/staff-pre-employment-checks';
+import {
   AddressListResponse,
   AddressMatchResponse,
   PersonAddressUpdateRequest,
@@ -132,6 +136,22 @@ export class StaffMembersDataService {
   ): Observable<IdResponse> {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/employment-details`,
+      payload,
+    );
+  }
+
+  getPreEmploymentChecks(staffMemberId: string): Observable<StaffPreEmploymentChecksResponse> {
+    return this.http.get<StaffPreEmploymentChecksResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/pre-employment-checks`,
+    );
+  }
+
+  updatePreEmploymentChecks(
+    staffMemberId: string,
+    payload: StaffPreEmploymentChecksUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/pre-employment-checks`,
       payload,
     );
   }

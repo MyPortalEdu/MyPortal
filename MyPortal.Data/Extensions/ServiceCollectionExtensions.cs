@@ -70,6 +70,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffOriginRepository, StaffOriginRepository>();
         services.AddScoped<IStaffDestinationRepository, StaffDestinationRepository>();
         services.AddScoped<IContractTypeRepository, ContractTypeRepository>();
+        // Pre-employment checks (Single Central Record) repositories.
+        services.AddScoped<IStaffPreEmploymentChecksRepository, StaffPreEmploymentChecksRepository>();
+        services.AddScoped<IDbsCheckRepository, DbsCheckRepository>();
+        services.AddScoped<IDbsCheckTypeRepository, DbsCheckTypeRepository>();
+        services.AddScoped<IRightToWorkCheckRepository, RightToWorkCheckRepository>();
+        services.AddScoped<IRightToWorkDocumentTypeRepository, RightToWorkDocumentTypeRepository>();
+        services.AddScoped<IStaffReferenceRepository, StaffReferenceRepository>();
+        services.AddScoped<IReferenceTypeRepository, ReferenceTypeRepository>();
+        services.AddScoped<IReferenceStatusRepository, ReferenceStatusRepository>();
+        services.AddScoped<IStaffOverseasCheckRepository, StaffOverseasCheckRepository>();
         services.AddScoped<IStaffRoleRepository, StaffRoleRepository>();
         services.AddScoped<IServiceTermRepository, ServiceTermRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();

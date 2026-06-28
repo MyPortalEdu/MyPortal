@@ -32,6 +32,7 @@ import {
   provideTranslocoScope,
 } from '@jsverse/transloco';
 
+import { GenderSelect } from '../../../../../shared/components/gender-select/gender-select';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { StaffMembersDataService } from '../../../../../shared/services/staff-members-data.service';
 import { StaffBasicDetailsUpsertRequest } from '../../../../../shared/types/staff-basic-details';
@@ -62,6 +63,7 @@ import { PersonMatchResponse } from '../../../../../shared/types/person-match';
     DatePicker,
     Dialog,
     InputText,
+    GenderSelect,
     ProgressSpinner,
     TranslocoDirective,
   ],

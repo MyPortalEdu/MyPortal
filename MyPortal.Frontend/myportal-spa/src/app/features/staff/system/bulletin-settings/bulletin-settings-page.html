@@ -62,14 +62,16 @@
             </div>
             <div class="flex items-center gap-1 shrink-0">
               <p-button
-                [label]="t('categories.edit')"
+                [label]="bp.isMobile() ? '' : t('categories.edit')"
+                [ariaLabel]="t('categories.edit')"
                 icon="fa-solid fa-pen-to-square"
                 severity="secondary"
                 [text]="true"
                 (click)="openEditCategory(c)">
               </p-button>
               <p-button
-                [label]="t('categories.delete')"
+                [label]="bp.isMobile() ? '' : t('categories.delete')"
+                [ariaLabel]="t('categories.delete')"
                 icon="fa-solid fa-trash-can"
                 severity="danger"
                 [text]="true"
@@ -124,7 +126,8 @@
               <span class="text-xs text-muted-color font-mono">{{ g.code }}</span>
             </div>
             <p-button
-              [label]="t('audiences.remove')"
+              [label]="bp.isMobile() ? '' : t('audiences.remove')"
+              [ariaLabel]="t('audiences.remove')"
               icon="fa-solid fa-xmark"
               severity="danger"
               [text]="true"

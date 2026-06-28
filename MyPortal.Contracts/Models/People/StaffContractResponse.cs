@@ -14,7 +14,6 @@ public class StaffContractResponse
     public Guid? PayScaleId { get; set; }
     public Guid? PayScalePointId { get; set; }
     public string PostTitle { get; set; } = null!;
-    public string? SpinePoint { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public decimal Fte { get; set; }

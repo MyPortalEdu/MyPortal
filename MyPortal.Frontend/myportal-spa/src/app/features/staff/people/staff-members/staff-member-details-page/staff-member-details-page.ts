@@ -76,6 +76,14 @@ import {
   StaffEmploymentDetailsUpsertRequest,
   StaffEmploymentUpsertItem,
 } from '../../../../../shared/types/staff-employment-details';
+import {
+  DbsCheckUpsertItem,
+  RightToWorkCheckUpsertItem,
+  StaffOverseasCheckUpsertItem,
+  StaffPreEmploymentChecksResponse,
+  StaffPreEmploymentChecksUpsertRequest,
+  StaffReferenceUpsertItem,
+} from '../../../../../shared/types/staff-pre-employment-checks';
 
 type BasicFormSnapshot = {
   code: string;
@@ -171,6 +179,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       if (a.key === 'equalityDetails') return { ...a, enabled: this.canViewEquality() };
       if (a.key === 'professionalDetails') return { ...a, enabled: this.canViewProfessional() };
       if (a.key === 'employmentDetails') return { ...a, enabled: this.canViewEmployment() };
+      if (a.key === 'preEmploymentChecks') return { ...a, enabled: this.canViewPreEmployment() };
       return a;
     }),
   );
@@ -277,6 +286,68 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly niNumber = signal<string | null>(null);
   protected readonly employments = signal<StaffEmploymentUpsertItem[]>([]);
   private readonly employmentSnapshot = signal<string>('');
+
+  // Pre-Employment Checks (SCR) panel. Lazy-loaded the first time the area is
+  // opened (403s without All-scope view, so we don't fetch eagerly).
+  protected readonly loadingPreEmployment = signal(false);
+  protected readonly preEmployment = signal<StaffPreEmploymentChecksResponse | null>(null);
+  private preEmploymentLoaded = false;
+
+  // Summary SCR flag dates (held as Date for the pickers; serialised on save).
+  protected readonly identityCheckedDate = signal<Date | null>(null);
+  protected readonly prohibitionFromTeachingCheckedDate = signal<Date | null>(null);
+  protected readonly prohibitionFromManagementCheckedDate = signal<Date | null>(null);
+  protected readonly childcareDisqualificationCheckedDate = signal<Date | null>(null);
+  protected readonly medicalFitnessCheckedDate = signal<Date | null>(null);
+  protected readonly qualificationsVerifiedDate = signal<Date | null>(null);
+  protected readonly preEmploymentNotes = signal<string | null>(null);
+
+  // Record lists (dates kept as ISO strings, bound via toDate() like contracts).
+  protected readonly dbsChecks = signal<DbsCheckUpsertItem[]>([]);
+  protected readonly rightToWorkChecks = signal<RightToWorkCheckUpsertItem[]>([]);
+  protected readonly references = signal<StaffReferenceUpsertItem[]>([]);
+  protected readonly overseasChecks = signal<StaffOverseasCheckUpsertItem[]>([]);
+  private readonly preEmploymentSnapshot = signal<string>('');
+
+  // Option lists for the pickers.
+  protected readonly dbsCheckTypes = computed(() => this.preEmployment()?.dbsCheckTypes ?? []);
+  protected readonly rightToWorkDocumentTypes = computed(
+    () => this.preEmployment()?.rightToWorkDocumentTypes ?? [],
+  );
+  protected readonly referenceTypes = computed(() => this.preEmployment()?.referenceTypes ?? []);
+  protected readonly referenceStatuses = computed(() => this.preEmployment()?.referenceStatuses ?? []);
+  protected readonly countries = computed(() => this.preEmployment()?.countries ?? []);
+
+  // The summary SCR flags rendered as a uniform date-field grid. Each entry pairs an
+  // i18n key with a get/set over its signal so the template can loop rather than repeat.
+  protected readonly summaryFlags: { key: string; get: () => Date | null; set: (v: Date | null) => void }[] = [
+    { key: 'identityChecked', get: () => this.identityCheckedDate(), set: v => this.identityCheckedDate.set(v) },
+    {
+      key: 'prohibitionTeaching',
+      get: () => this.prohibitionFromTeachingCheckedDate(),
+      set: v => this.prohibitionFromTeachingCheckedDate.set(v),
+    },
+    {
+      key: 'prohibitionManagement',
+      get: () => this.prohibitionFromManagementCheckedDate(),
+      set: v => this.prohibitionFromManagementCheckedDate.set(v),
+    },
+    {
+      key: 'childcareDisqualification',
+      get: () => this.childcareDisqualificationCheckedDate(),
+      set: v => this.childcareDisqualificationCheckedDate.set(v),
+    },
+    {
+      key: 'medicalFitness',
+      get: () => this.medicalFitnessCheckedDate(),
+      set: v => this.medicalFitnessCheckedDate.set(v),
+    },
+    {
+      key: 'qualificationsVerified',
+      get: () => this.qualificationsVerifiedDate(),
+      set: v => this.qualificationsVerifiedDate.set(v),
+    },
+  ];
 
   // Option lists travel with the employment payload so the editor is self-contained.
   protected readonly leavingReasons = computed(() => this.employment()?.leavingReasons ?? []);
@@ -416,6 +487,20 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     this.heldPerms().has(Permissions.Staff.EditAllStaffEmploymentDetails),
   );
 
+  // Pre-employment checks are safeguarding/HR — All-scope only, no self or
+  // line-manager view (references are confidential).
+  protected readonly canViewPreEmployment = computed(() => {
+    const perms = this.heldPerms();
+    return (
+      perms.has(Permissions.Staff.ViewAllStaffPreEmploymentChecks) ||
+      perms.has(Permissions.Staff.EditAllStaffPreEmploymentChecks)
+    );
+  });
+
+  protected readonly canEditPreEmployment = computed(() =>
+    this.heldPerms().has(Permissions.Staff.EditAllStaffPreEmploymentChecks),
+  );
+
   // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
   // Other editable areas have their own gate.
   protected readonly canEditActiveArea = computed(() => {
@@ -424,6 +509,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area === 'equalityDetails') return this.canEditEquality();
     if (area === 'professionalDetails') return this.canEditProfessional();
     if (area === 'employmentDetails') return this.canEditEmployment();
+    if (area === 'preEmploymentChecks') return this.canEditPreEmployment();
     return false;
   });
 
@@ -484,6 +570,19 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     ),
   );
 
+  // Each DBS row needs a type, certificate number and issue date; each
+  // right-to-work row a document type and check date; each reference a referee
+  // name; each overseas check a country.
+  private readonly preEmploymentValid = computed(
+    () =>
+      this.dbsChecks().every(
+        d => !!d.dbsCheckTypeId && d.certificateNumber.trim().length > 0 && !!d.issueDate,
+      ) &&
+      this.rightToWorkChecks().every(r => !!r.documentTypeId && !!r.checkDate) &&
+      this.references().every(r => r.refereeName.trim().length > 0) &&
+      this.overseasChecks().every(o => !!o.nationalityId),
+  );
+
   protected readonly isValid = computed(() => {
     switch (this.activeArea()) {
       case 'contactDetails':
@@ -495,6 +594,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.professionalValid();
       case 'employmentDetails':
         return this.employmentValid();
+      case 'preEmploymentChecks':
+        return this.preEmploymentValid();
       default:
         return this.basicValid();
     }
@@ -561,6 +662,29 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     () => this.employment() != null && this.employmentSnapshot() !== this.employmentForm(),
   );
 
+  // Serialised pre-employment edit state for the dirty check. Flag dates normalised
+  // to ISO so a Date instance vs string doesn't read as a change.
+  private readonly preEmploymentForm = computed(() =>
+    JSON.stringify({
+      identityCheckedDate: this.identityCheckedDate()?.toISOString() ?? null,
+      prohibitionFromTeachingCheckedDate: this.prohibitionFromTeachingCheckedDate()?.toISOString() ?? null,
+      prohibitionFromManagementCheckedDate: this.prohibitionFromManagementCheckedDate()?.toISOString() ?? null,
+      childcareDisqualificationCheckedDate:
+        this.childcareDisqualificationCheckedDate()?.toISOString() ?? null,
+      medicalFitnessCheckedDate: this.medicalFitnessCheckedDate()?.toISOString() ?? null,
+      qualificationsVerifiedDate: this.qualificationsVerifiedDate()?.toISOString() ?? null,
+      notes: this.preEmploymentNotes(),
+      dbsChecks: this.dbsChecks(),
+      rightToWorkChecks: this.rightToWorkChecks(),
+      references: this.references(),
+      overseasChecks: this.overseasChecks(),
+    }),
+  );
+
+  private readonly preEmploymentDirty = computed(
+    () => this.preEmployment() != null && this.preEmploymentSnapshot() !== this.preEmploymentForm(),
+  );
+
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
 
   private readonly currentForm = computed<BasicFormSnapshot>(() => ({
@@ -597,6 +721,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.professionalDirty();
       case 'employmentDetails':
         return this.employmentDirty();
+      case 'preEmploymentChecks':
+        return this.preEmploymentDirty();
       default:
         return this.basicDirty();
     }
@@ -713,6 +839,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area.key === 'equalityDetails') this.loadEquality();
     if (area.key === 'professionalDetails') this.loadProfessional();
     if (area.key === 'employmentDetails') this.loadEmployment();
+    if (area.key === 'preEmploymentChecks') this.loadPreEmployment();
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -787,6 +914,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       case 'employmentDetails':
         this.applyEmployment(this.employment());
         break;
+      case 'preEmploymentChecks':
+        this.applyPreEmployment(this.preEmployment());
+        break;
       default:
         this.applyToForm(this.current());
     }
@@ -802,6 +932,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       await this.saveProfessional();
     } else if (this.activeArea() === 'employmentDetails') {
       await this.saveEmployment();
+    } else if (this.activeArea() === 'preEmploymentChecks') {
+      await this.savePreEmployment();
     } else {
       await this.saveBasic();
     }
@@ -1112,7 +1244,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
           payScaleId: c.payScaleId ?? null,
           payScalePointId: c.payScalePointId ?? null,
           postTitle: c.postTitle.trim(),
-          spinePoint: this.normalise(c.spinePoint),
           startDate: c.startDate,
           endDate: c.endDate ?? null,
           fte: c.fte,
@@ -1163,7 +1294,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
           payScaleId: c.payScaleId ?? null,
           payScalePointId: c.payScalePointId ?? null,
           postTitle: c.postTitle,
-          spinePoint: c.spinePoint ?? null,
           startDate: c.startDate,
           endDate: c.endDate ?? null,
           fte: c.fte,
@@ -1276,7 +1406,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
                   payScaleId: null,
                   payScalePointId: null,
                   postTitle: '',
-                  spinePoint: null,
                   startDate: row.startDate,
                   endDate: null,
                   fte: 1,
@@ -1422,6 +1551,257 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   // Whole-pound GBP for the statutory-salary hint.
   protected formatMoney(value: number): string {
     return '£' + Math.round(value).toLocaleString('en-GB');
+  }
+
+  // ─── Pre-Employment Checks (SCR) ─────────────────────────────────────────────
+
+  private loadPreEmployment(): void {
+    if (this.preEmploymentLoaded) return;
+    this.preEmploymentLoaded = true;
+    this.loadingPreEmployment.set(true);
+    this.data.getPreEmploymentChecks(this.staffMemberId()).subscribe({
+      next: row => {
+        this.preEmployment.set(row);
+        this.applyPreEmployment(row);
+        this.loadingPreEmployment.set(false);
+      },
+      error: err => {
+        this.loadingPreEmployment.set(false);
+        this.preEmploymentLoaded = false;
+        this.notify.apiError(err, this.transloco.translate('staff-members.loadPreEmploymentError'));
+      },
+    });
+  }
+
+  private async savePreEmployment(): Promise<void> {
+    if (!this.canEditPreEmployment() || !this.preEmploymentValid() || this.saving()) return;
+    this.saving.set(true);
+
+    const payload: StaffPreEmploymentChecksUpsertRequest = {
+      identityCheckedDate: this.identityCheckedDate()?.toISOString() ?? null,
+      prohibitionFromTeachingCheckedDate: this.prohibitionFromTeachingCheckedDate()?.toISOString() ?? null,
+      prohibitionFromManagementCheckedDate: this.prohibitionFromManagementCheckedDate()?.toISOString() ?? null,
+      childcareDisqualificationCheckedDate:
+        this.childcareDisqualificationCheckedDate()?.toISOString() ?? null,
+      medicalFitnessCheckedDate: this.medicalFitnessCheckedDate()?.toISOString() ?? null,
+      qualificationsVerifiedDate: this.qualificationsVerifiedDate()?.toISOString() ?? null,
+      notes: this.normalise(this.preEmploymentNotes()),
+      dbsChecks: this.dbsChecks().map(d => ({
+        id: d.id ?? null,
+        dbsCheckTypeId: d.dbsCheckTypeId,
+        certificateNumber: d.certificateNumber.trim(),
+        issueDate: d.issueDate,
+        expiryDate: d.expiryDate ?? null,
+        updateServiceEnrolled: d.updateServiceEnrolled,
+        lastUpdateServiceCheck: d.lastUpdateServiceCheck ?? null,
+        notes: this.normalise(d.notes),
+      })),
+      rightToWorkChecks: this.rightToWorkChecks().map(r => ({
+        id: r.id ?? null,
+        documentTypeId: r.documentTypeId,
+        documentNumber: this.normalise(r.documentNumber),
+        checkDate: r.checkDate,
+        documentExpiryDate: r.documentExpiryDate ?? null,
+        followUpDate: r.followUpDate ?? null,
+        notes: this.normalise(r.notes),
+      })),
+      references: this.references().map(r => ({
+        id: r.id ?? null,
+        referenceTypeId: r.referenceTypeId ?? null,
+        referenceStatusId: r.referenceStatusId ?? null,
+        refereeName: r.refereeName.trim(),
+        refereeOrganisation: this.normalise(r.refereeOrganisation),
+        refereeEmail: this.normalise(r.refereeEmail),
+        requestedDate: r.requestedDate ?? null,
+        receivedDate: r.receivedDate ?? null,
+        notes: this.normalise(r.notes),
+      })),
+      overseasChecks: this.overseasChecks().map(o => ({
+        id: o.id ?? null,
+        nationalityId: o.nationalityId,
+        checkedDate: o.checkedDate ?? null,
+        isClear: o.isClear,
+        notes: this.normalise(o.notes),
+      })),
+    };
+
+    try {
+      await firstValueFrom(this.data.updatePreEmploymentChecks(this.staffMemberId(), payload));
+      this.notify.success(this.transloco.translate('staff-members.savedPreEmploymentToast'));
+      this.editing.set(false);
+      // Refetch so server-assigned ids (new rows) become the baseline.
+      this.preEmploymentLoaded = false;
+      this.loadPreEmployment();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.savePreEmploymentError'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private applyPreEmployment(row: StaffPreEmploymentChecksResponse | null): void {
+    this.identityCheckedDate.set(this.toDate(row?.identityCheckedDate));
+    this.prohibitionFromTeachingCheckedDate.set(this.toDate(row?.prohibitionFromTeachingCheckedDate));
+    this.prohibitionFromManagementCheckedDate.set(this.toDate(row?.prohibitionFromManagementCheckedDate));
+    this.childcareDisqualificationCheckedDate.set(this.toDate(row?.childcareDisqualificationCheckedDate));
+    this.medicalFitnessCheckedDate.set(this.toDate(row?.medicalFitnessCheckedDate));
+    this.qualificationsVerifiedDate.set(this.toDate(row?.qualificationsVerifiedDate));
+    this.preEmploymentNotes.set(row?.notes ?? null);
+    this.dbsChecks.set(
+      (row?.dbsChecks ?? []).map(d => ({
+        id: d.id,
+        dbsCheckTypeId: d.dbsCheckTypeId,
+        certificateNumber: d.certificateNumber,
+        issueDate: d.issueDate,
+        expiryDate: d.expiryDate ?? null,
+        updateServiceEnrolled: d.updateServiceEnrolled,
+        lastUpdateServiceCheck: d.lastUpdateServiceCheck ?? null,
+        notes: d.notes ?? null,
+      })),
+    );
+    this.rightToWorkChecks.set(
+      (row?.rightToWorkChecks ?? []).map(r => ({
+        id: r.id,
+        documentTypeId: r.documentTypeId,
+        documentNumber: r.documentNumber ?? null,
+        checkDate: r.checkDate,
+        documentExpiryDate: r.documentExpiryDate ?? null,
+        followUpDate: r.followUpDate ?? null,
+        notes: r.notes ?? null,
+      })),
+    );
+    this.references.set(
+      (row?.references ?? []).map(r => ({
+        id: r.id,
+        referenceTypeId: r.referenceTypeId ?? null,
+        referenceStatusId: r.referenceStatusId ?? null,
+        refereeName: r.refereeName,
+        refereeOrganisation: r.refereeOrganisation ?? null,
+        refereeEmail: r.refereeEmail ?? null,
+        requestedDate: r.requestedDate ?? null,
+        receivedDate: r.receivedDate ?? null,
+        notes: r.notes ?? null,
+      })),
+    );
+    this.overseasChecks.set(
+      (row?.overseasChecks ?? []).map(o => ({
+        id: o.id,
+        nationalityId: o.nationalityId,
+        checkedDate: o.checkedDate ?? null,
+        isClear: o.isClear,
+        notes: o.notes ?? null,
+      })),
+    );
+    this.preEmploymentSnapshot.set(this.preEmploymentForm());
+  }
+
+  // DBS list
+  protected addDbsCheck(): void {
+    this.dbsChecks.update(rows => [
+      ...rows,
+      {
+        id: null,
+        dbsCheckTypeId: null,
+        certificateNumber: '',
+        issueDate: null,
+        expiryDate: null,
+        updateServiceEnrolled: false,
+        lastUpdateServiceCheck: null,
+        notes: null,
+      },
+    ]);
+  }
+
+  protected removeDbsCheck(index: number): void {
+    this.dbsChecks.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchDbsCheck<K extends keyof DbsCheckUpsertItem>(
+    index: number,
+    key: K,
+    value: DbsCheckUpsertItem[K],
+  ): void {
+    this.dbsChecks.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+  }
+
+  // Right-to-work list
+  protected addRightToWork(): void {
+    this.rightToWorkChecks.update(rows => [
+      ...rows,
+      {
+        id: null,
+        documentTypeId: null,
+        documentNumber: null,
+        checkDate: null,
+        documentExpiryDate: null,
+        followUpDate: null,
+        notes: null,
+      },
+    ]);
+  }
+
+  protected removeRightToWork(index: number): void {
+    this.rightToWorkChecks.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchRightToWork<K extends keyof RightToWorkCheckUpsertItem>(
+    index: number,
+    key: K,
+    value: RightToWorkCheckUpsertItem[K],
+  ): void {
+    this.rightToWorkChecks.update(rows =>
+      rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    );
+  }
+
+  // References list
+  protected addReference(): void {
+    this.references.update(rows => [
+      ...rows,
+      {
+        id: null,
+        referenceTypeId: null,
+        referenceStatusId: null,
+        refereeName: '',
+        refereeOrganisation: null,
+        refereeEmail: null,
+        requestedDate: null,
+        receivedDate: null,
+        notes: null,
+      },
+    ]);
+  }
+
+  protected removeReference(index: number): void {
+    this.references.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchReference<K extends keyof StaffReferenceUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffReferenceUpsertItem[K],
+  ): void {
+    this.references.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+  }
+
+  // Overseas checks list
+  protected addOverseasCheck(): void {
+    this.overseasChecks.update(rows => [
+      ...rows,
+      { id: null, nationalityId: null, checkedDate: null, isClear: false, notes: null },
+    ]);
+  }
+
+  protected removeOverseasCheck(index: number): void {
+    this.overseasChecks.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchOverseasCheck<K extends keyof StaffOverseasCheckUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffOverseasCheckUpsertItem[K],
+  ): void {
+    this.overseasChecks.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
   // p-datepicker binds Date; the model carries ISO strings. Cached so the same string always

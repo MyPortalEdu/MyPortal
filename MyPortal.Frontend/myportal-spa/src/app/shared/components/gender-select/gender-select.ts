@@ -31,7 +31,9 @@ import { GENDER_CODES } from '../../constants/gender';
       optionValue="value"
       [placeholder]="placeholder() ?? defaultPlaceholder()"
       [ngModel]="value()"
-      (ngModelChange)="value.set($event)"></p-select>
+      (ngModelChange)="value.set($event)"
+      appendTo="body"
+      styleClass="w-full"></p-select>
   `,
 })
 export class GenderSelect {

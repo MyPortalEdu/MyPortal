@@ -29,7 +29,7 @@ public class StaffContractRepository : EntityRepository<StaffContract>, IStaffCo
         // zeroing the created/audit columns; soft-deleted rows are excluded.
         const string sql =
             "SELECT [Id], [StaffEmploymentId], [ContractTypeId], [StaffRoleId], [ServiceTermId], " +
-            "[DepartmentId], [PayScaleId], [PayScalePointId], [PostTitle], [SpinePoint], [StartDate], " +
+            "[DepartmentId], [PayScaleId], [PayScalePointId], [PostTitle], [StartDate], " +
             "[EndDate], [Fte], [HoursPerWeek], [WeeksPerYear], [AnnualSalary], [IsAgencySupply], " +
             "[SafeguardedSalary], [DailyRate], [IsDeleted], [CreatedById], [CreatedByIpAddress], " +
             "[CreatedAt], [LastModifiedById], [LastModifiedByIpAddress], [LastModifiedAt], [Version] " +

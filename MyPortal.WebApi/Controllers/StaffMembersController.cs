@@ -24,12 +24,13 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     private readonly IStaffEqualityService _staffEqualityService;
     private readonly IStaffProfessionalService _staffProfessionalService;
     private readonly IStaffEmploymentService _staffEmploymentService;
+    private readonly IStaffPreEmploymentService _staffPreEmploymentService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
         IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
         IStaffProfessionalService staffProfessionalService, IStaffEmploymentService staffEmploymentService,
-        IStaffAttachmentsService staffAttachmentsService)
+        IStaffPreEmploymentService staffPreEmploymentService, IStaffAttachmentsService staffAttachmentsService)
         : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
@@ -38,6 +39,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         _staffEqualityService = staffEqualityService;
         _staffProfessionalService = staffProfessionalService;
         _staffEmploymentService = staffEmploymentService;
+        _staffPreEmploymentService = staffPreEmploymentService;
     }
 
     /// <summary>Get the staff profile header.</summary>
@@ -177,6 +179,31 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         [FromBody] StaffEmploymentDetailsUpsertRequest model)
     {
         await _staffEmploymentService.UpdateEmploymentDetailsAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the pre-employment checks area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/pre-employment-checks")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffPreEmploymentChecksResponse), 200)]
+    public async Task<IActionResult> GetPreEmploymentChecksAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffPreEmploymentService.GetPreEmploymentChecksAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the pre-employment checks area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new pre-employment-checks payload.</param>
+    [HttpPut("{staffMemberId:guid}/pre-employment-checks")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdatePreEmploymentChecksAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffPreEmploymentChecksUpsertRequest model)
+    {
+        await _staffPreEmploymentService.UpdatePreEmploymentChecksAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 

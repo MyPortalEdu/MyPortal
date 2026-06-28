@@ -85,7 +85,7 @@
         }
       </div>
     } @else {
-      <p-table [value]="rows()" styleClass="p-datatable-sm">
+      <p-table [value]="rows()" [scrollable]="true" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr>
             <th>{{ t('documents.columns.name') }}</th>
@@ -190,7 +190,7 @@
     [modal]="true"
     [draggable]="false"
     [resizable]="false"
-    [style]="{ width: '24rem' }"
+    [style]="{ width: 'min(24rem, 94vw)' }"
     [header]="nameDialogMode() === 'new' ? t('documents.newFolder.header') : t('documents.rename.header')">
     <div class="flex flex-col gap-1">
       <label class="text-sm font-medium" for="dirName">
@@ -225,7 +225,7 @@
     [modal]="true"
     [draggable]="false"
     [resizable]="false"
-    [style]="{ width: '26rem' }"
+    [style]="{ width: 'min(26rem, 94vw)' }"
     [header]="t('documents.move.header', { name: moveTargetName() })">
     <p class="text-sm text-muted-color mb-2">{{ t('documents.move.hint') }}</p>
     @if (moveTree().length) {
@@ -277,7 +277,7 @@
     [modal]="true"
     [draggable]="false"
     [resizable]="false"
-    [style]="{ width: '32rem' }"
+    [style]="{ width: 'min(32rem, 94vw)' }"
     [header]="t('documents.upload.header')">
     @if (hasTypes()) {
       <div class="flex flex-col gap-1 mb-3">
@@ -353,7 +353,7 @@
     [modal]="true"
     [draggable]="false"
     [resizable]="false"
-    [style]="{ width: '24rem' }"
+    [style]="{ width: 'min(24rem, 94vw)' }"
     [header]="t('documents.changeType.header', { name: typeTargetName() })">
     <div class="flex flex-col gap-1">
       <label class="text-sm font-medium" for="changeType">

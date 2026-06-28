@@ -29,7 +29,7 @@
        chip is filled, completed chips show a check, and upcoming chips are
        muted. Click-to-jump is intentionally disabled — the wizard validates
        step-by-step, so users have to walk through in order. -->
-  <ol class="list-none m-0 p-0 flex items-center gap-2 text-sm">
+  <ol class="list-none m-0 p-0 flex flex-wrap items-center gap-2 text-sm">
     @for (key of stepKeys; track key; let i = $index) {
       <li class="flex items-center gap-2"
           [class.opacity-60]="i > currentStep()">
@@ -46,7 +46,11 @@
             {{ i + 1 }}
           }
         </span>
-        <span [class.font-semibold]="i === currentStep()">
+        <!-- On mobile only the current step keeps its label (space is tight);
+             every step shows its label from sm up. -->
+        <span class="sm:inline"
+              [class.hidden]="i !== currentStep()"
+              [class.font-semibold]="i === currentStep()">
           {{ t('steps.' + key) }}
         </span>
         @if (i < stepKeys.length - 1) {

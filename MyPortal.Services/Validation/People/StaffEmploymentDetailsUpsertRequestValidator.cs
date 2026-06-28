@@ -42,9 +42,6 @@ public class StaffEmploymentDetailsUpsertRequestValidator
                     .NotEmpty().WithMessage("A post title is required.")
                     .MaximumLength(256).WithMessage("The post title must not exceed 256 characters.");
 
-                contract.RuleFor(c => c.SpinePoint)
-                    .MaximumLength(20).WithMessage("The spine point must not exceed 20 characters.");
-
                 contract.RuleFor(c => c.StartDate)
                     .NotEmpty().WithMessage("A contract start date is required.");
 
