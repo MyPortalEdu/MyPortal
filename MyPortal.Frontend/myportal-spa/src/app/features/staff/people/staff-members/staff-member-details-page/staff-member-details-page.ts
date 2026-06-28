@@ -90,6 +90,14 @@ import {
   StaffAbsencesResponse,
   StaffAbsencesUpsertRequest,
 } from '../../../../../shared/types/staff-absences';
+import {
+  PerformanceReviewUpsertItem,
+  StaffObjectiveUpsertItem,
+  StaffObservationUpsertItem,
+  StaffPerformanceResponse,
+  StaffPerformanceUpsertRequest,
+  StaffTrainingRecordUpsertItem,
+} from '../../../../../shared/types/staff-performance';
 
 type BasicFormSnapshot = {
   code: string;
@@ -189,6 +197,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       if (a.key === 'preEmploymentChecks') return { ...a, enabled: this.canViewPreEmployment() };
       if (a.key === 'absences') return { ...a, enabled: this.canViewAbsences() };
       if (a.key === 'timetable') return { ...a, enabled: this.canViewTimetable() };
+      if (a.key === 'performanceDetails') return { ...a, enabled: this.canViewPerformance() };
       return a;
     }),
   );
@@ -340,6 +349,37 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   // Option lists travel with the absence payload so the editor is self-contained.
   protected readonly absenceTypes = computed(() => this.absences()?.absenceTypes ?? []);
   protected readonly illnessTypes = computed(() => this.absences()?.illnessTypes ?? []);
+
+  // Performance (appraisal) panel. Lazy-loaded the first time the area is opened
+  // (403s without manager/HR scope, so we don't fetch eagerly).
+  protected readonly loadingPerformance = signal(false);
+  protected readonly performance = signal<StaffPerformanceResponse | null>(null);
+  private performanceLoaded = false;
+
+  // Record lists (item dates kept as ISO strings, bound via toDate()).
+  protected readonly reviews = signal<PerformanceReviewUpsertItem[]>([]);
+  protected readonly objectives = signal<StaffObjectiveUpsertItem[]>([]);
+  protected readonly observations = signal<StaffObservationUpsertItem[]>([]);
+  protected readonly trainingRecords = signal<StaffTrainingRecordUpsertItem[]>([]);
+  private readonly performanceSnapshot = signal<string>('');
+
+  // Option lists travel with the performance payload so the editor is self-contained.
+  protected readonly reviewStatuses = computed(() => this.performance()?.reviewStatuses ?? []);
+  protected readonly objectiveStatuses = computed(() => this.performance()?.objectiveStatuses ?? []);
+  protected readonly objectiveCategories = computed(() => this.performance()?.objectiveCategories ?? []);
+  protected readonly observationOutcomes = computed(() => this.performance()?.outcomes ?? []);
+  // All staff, backing both the reviewer and observer pickers.
+  protected readonly staff = computed(() => this.performance()?.staff ?? []);
+  protected readonly trainingCourses = computed(() => this.performance()?.trainingCourses ?? []);
+  protected readonly trainingStatuses = computed(() => this.performance()?.trainingStatuses ?? []);
+
+  // Persisted review cycles as options for linking an objective. Only saved reviews (with a
+  // cycle name) appear — a brand-new review must be saved before objectives can reference it.
+  protected readonly reviewOptions = computed(() =>
+    (this.performance()?.reviews ?? [])
+      .filter(r => !!r.cycleName)
+      .map(r => ({ id: r.id, description: r.cycleName as string })),
+  );
 
   // The summary SCR flags rendered as a uniform date-field grid. Each entry pairs an
   // i18n key with a get/set over its signal so the template can loop rather than repeat.
@@ -576,6 +616,34 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
+  // Performance: line-manager (Managed) or HR (All) — no self scope (staff don't see
+  // their own appraisal data here). An edit grant implies view.
+  protected readonly canViewPerformance = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (
+      perms.has(Permissions.Staff.ViewAllStaffPerformanceDetails) ||
+      perms.has(Permissions.Staff.EditAllStaffPerformanceDetails)
+    )
+      return true;
+    if (
+      rel === 'LineManaged' &&
+      (perms.has(Permissions.Staff.ViewManagedStaffPerformanceDetails) ||
+        perms.has(Permissions.Staff.EditManagedStaffPerformanceDetails))
+    )
+      return true;
+    return false;
+  });
+
+  protected readonly canEditPerformance = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (perms.has(Permissions.Staff.EditAllStaffPerformanceDetails)) return true;
+    if (rel === 'LineManaged' && perms.has(Permissions.Staff.EditManagedStaffPerformanceDetails))
+      return true;
+    return false;
+  });
+
   // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
   // Other editable areas have their own gate.
   protected readonly canEditActiveArea = computed(() => {
@@ -586,6 +654,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area === 'employmentDetails') return this.canEditEmployment();
     if (area === 'preEmploymentChecks') return this.canEditPreEmployment();
     if (area === 'absences') return this.canEditAbsences();
+    if (area === 'performanceDetails') return this.canEditPerformance();
     return false;
   });
 
@@ -666,6 +735,15 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     ),
   );
 
+  // Each objective needs a title; each observation a date, observer and outcome; each
+  // training record a course and status.
+  private readonly performanceValid = computed(
+    () =>
+      this.objectives().every(o => o.title.trim().length > 0) &&
+      this.observations().every(o => !!o.date && !!o.observerId && !!o.outcomeId) &&
+      this.trainingRecords().every(t => !!t.trainingCourseId && !!t.statusId),
+  );
+
   protected readonly isValid = computed(() => {
     switch (this.activeArea()) {
       case 'contactDetails':
@@ -681,6 +759,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.preEmploymentValid();
       case 'absences':
         return this.absencesValid();
+      case 'performanceDetails':
+        return this.performanceValid();
       default:
         return this.basicValid();
     }
@@ -779,6 +859,20 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     () => this.absences() != null && this.absencesSnapshot() !== this.absencesForm(),
   );
 
+  // Serialised performance edit state for the dirty check.
+  private readonly performanceForm = computed(() =>
+    JSON.stringify({
+      reviews: this.reviews(),
+      objectives: this.objectives(),
+      observations: this.observations(),
+      trainingRecords: this.trainingRecords(),
+    }),
+  );
+
+  private readonly performanceDirty = computed(
+    () => this.performance() != null && this.performanceSnapshot() !== this.performanceForm(),
+  );
+
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
 
   private readonly currentForm = computed<BasicFormSnapshot>(() => ({
@@ -819,6 +913,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.preEmploymentDirty();
       case 'absences':
         return this.absencesDirty();
+      case 'performanceDetails':
+        return this.performanceDirty();
       default:
         return this.basicDirty();
     }
@@ -937,6 +1033,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area.key === 'employmentDetails') this.loadEmployment();
     if (area.key === 'preEmploymentChecks') this.loadPreEmployment();
     if (area.key === 'absences') this.loadAbsences();
+    if (area.key === 'performanceDetails') this.loadPerformance();
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -1017,6 +1114,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       case 'absences':
         this.applyAbsences(this.absences());
         break;
+      case 'performanceDetails':
+        this.applyPerformance(this.performance());
+        break;
       default:
         this.applyToForm(this.current());
     }
@@ -1036,6 +1136,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       await this.savePreEmployment();
     } else if (this.activeArea() === 'absences') {
       await this.saveAbsences();
+    } else if (this.activeArea() === 'performanceDetails') {
+      await this.savePerformance();
     } else {
       await this.saveBasic();
     }
@@ -2006,6 +2108,261 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     const ms = end.getTime() - start.getTime();
     if (ms < 0) return null;
     return Math.round(ms / 86_400_000) + 1;
+  }
+
+  // ─── Performance (appraisal) ─────────────────────────────────────────────────
+
+  private loadPerformance(): void {
+    if (this.performanceLoaded) return;
+    this.performanceLoaded = true;
+    this.loadingPerformance.set(true);
+    this.data.getPerformance(this.staffMemberId()).subscribe({
+      next: row => {
+        this.performance.set(row);
+        this.applyPerformance(row);
+        this.loadingPerformance.set(false);
+      },
+      error: err => {
+        this.loadingPerformance.set(false);
+        this.performanceLoaded = false;
+        this.notify.apiError(err, this.transloco.translate('staff-members.loadPerformanceError'));
+      },
+    });
+  }
+
+  private async savePerformance(): Promise<void> {
+    if (!this.canEditPerformance() || !this.performanceValid() || this.saving()) return;
+    this.saving.set(true);
+
+    const payload: StaffPerformanceUpsertRequest = {
+      reviews: this.reviews().map(r => ({
+        id: r.id ?? null,
+        cycleName: this.normalise(r.cycleName),
+        reviewerId: r.reviewerId ?? null,
+        statusId: r.statusId ?? null,
+        reviewDate: r.reviewDate ?? null,
+        nextReviewDate: r.nextReviewDate ?? null,
+        overallRatingId: r.overallRatingId ?? null,
+        summary: this.normalise(r.summary),
+      })),
+      objectives: this.objectives().map(o => ({
+        id: o.id ?? null,
+        reviewId: o.reviewId ?? null,
+        categoryId: o.categoryId ?? null,
+        title: o.title.trim(),
+        description: this.normalise(o.description),
+        successCriteria: this.normalise(o.successCriteria),
+        dueDate: o.dueDate ?? null,
+        statusId: o.statusId ?? null,
+        progressNotes: this.normalise(o.progressNotes),
+      })),
+      observations: this.observations().map(o => ({
+        id: o.id ?? null,
+        date: o.date,
+        observerId: o.observerId,
+        outcomeId: o.outcomeId,
+        focus: this.normalise(o.focus),
+        subjectObserved: this.normalise(o.subjectObserved),
+        strengths: this.normalise(o.strengths),
+        areasForDevelopment: this.normalise(o.areasForDevelopment),
+        notes: this.normalise(o.notes),
+      })),
+      trainingRecords: this.trainingRecords().map(t => ({
+        id: t.id ?? null,
+        trainingCourseId: t.trainingCourseId,
+        statusId: t.statusId,
+        completedDate: t.completedDate ?? null,
+        expiryDate: t.expiryDate ?? null,
+        provider: this.normalise(t.provider),
+        hours: t.hours ?? null,
+        certificateReference: this.normalise(t.certificateReference),
+      })),
+    };
+
+    try {
+      await firstValueFrom(this.data.updatePerformance(this.staffMemberId(), payload));
+      this.notify.success(this.transloco.translate('staff-members.savedPerformanceToast'));
+      this.editing.set(false);
+      // Refetch so server-assigned ids (new rows) become the baseline.
+      this.performanceLoaded = false;
+      this.loadPerformance();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.savePerformanceError'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private applyPerformance(row: StaffPerformanceResponse | null): void {
+    this.reviews.set(
+      (row?.reviews ?? []).map(r => ({
+        id: r.id,
+        cycleName: r.cycleName ?? null,
+        reviewerId: r.reviewerId ?? null,
+        statusId: r.statusId ?? null,
+        reviewDate: r.reviewDate ?? null,
+        nextReviewDate: r.nextReviewDate ?? null,
+        overallRatingId: r.overallRatingId ?? null,
+        summary: r.summary ?? null,
+      })),
+    );
+    this.objectives.set(
+      (row?.objectives ?? []).map(o => ({
+        id: o.id,
+        reviewId: o.reviewId ?? null,
+        categoryId: o.categoryId ?? null,
+        title: o.title,
+        description: o.description ?? null,
+        successCriteria: o.successCriteria ?? null,
+        dueDate: o.dueDate ?? null,
+        statusId: o.statusId ?? null,
+        progressNotes: o.progressNotes ?? null,
+      })),
+    );
+    this.observations.set(
+      (row?.observations ?? []).map(o => ({
+        id: o.id,
+        date: o.date,
+        observerId: o.observerId,
+        outcomeId: o.outcomeId,
+        focus: o.focus ?? null,
+        subjectObserved: o.subjectObserved ?? null,
+        strengths: o.strengths ?? null,
+        areasForDevelopment: o.areasForDevelopment ?? null,
+        notes: o.notes ?? null,
+      })),
+    );
+    this.trainingRecords.set(
+      (row?.trainingRecords ?? []).map(t => ({
+        id: t.id,
+        trainingCourseId: t.trainingCourseId,
+        statusId: t.statusId,
+        completedDate: t.completedDate ?? null,
+        expiryDate: t.expiryDate ?? null,
+        provider: t.provider ?? null,
+        hours: t.hours ?? null,
+        certificateReference: t.certificateReference ?? null,
+      })),
+    );
+    this.performanceSnapshot.set(this.performanceForm());
+  }
+
+  // Reviews list
+  protected addReview(): void {
+    this.reviews.update(rows => [
+      ...rows,
+      {
+        id: null,
+        cycleName: null,
+        reviewerId: null,
+        statusId: null,
+        reviewDate: null,
+        nextReviewDate: null,
+        overallRatingId: null,
+        summary: null,
+      },
+    ]);
+  }
+
+  protected removeReview(index: number): void {
+    this.reviews.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchReview<K extends keyof PerformanceReviewUpsertItem>(
+    index: number,
+    key: K,
+    value: PerformanceReviewUpsertItem[K],
+  ): void {
+    this.reviews.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+  }
+
+  // Objectives list
+  protected addObjective(): void {
+    this.objectives.update(rows => [
+      ...rows,
+      {
+        id: null,
+        reviewId: null,
+        categoryId: null,
+        title: '',
+        description: null,
+        successCriteria: null,
+        dueDate: null,
+        statusId: null,
+        progressNotes: null,
+      },
+    ]);
+  }
+
+  protected removeObjective(index: number): void {
+    this.objectives.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchObjective<K extends keyof StaffObjectiveUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffObjectiveUpsertItem[K],
+  ): void {
+    this.objectives.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+  }
+
+  // Observations list
+  protected addObservation(): void {
+    this.observations.update(rows => [
+      ...rows,
+      {
+        id: null,
+        date: null,
+        observerId: null,
+        outcomeId: null,
+        focus: null,
+        subjectObserved: null,
+        strengths: null,
+        areasForDevelopment: null,
+        notes: null,
+      },
+    ]);
+  }
+
+  protected removeObservation(index: number): void {
+    this.observations.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchObservation<K extends keyof StaffObservationUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffObservationUpsertItem[K],
+  ): void {
+    this.observations.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+  }
+
+  // Training records list
+  protected addTrainingRecord(): void {
+    this.trainingRecords.update(rows => [
+      ...rows,
+      {
+        id: null,
+        trainingCourseId: null,
+        statusId: null,
+        completedDate: null,
+        expiryDate: null,
+        provider: null,
+        hours: null,
+        certificateReference: null,
+      },
+    ]);
+  }
+
+  protected removeTrainingRecord(index: number): void {
+    this.trainingRecords.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchTrainingRecord<K extends keyof StaffTrainingRecordUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffTrainingRecordUpsertItem[K],
+  ): void {
+    this.trainingRecords.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
   // p-datepicker binds Date; the model carries ISO strings. Cached so the same string always

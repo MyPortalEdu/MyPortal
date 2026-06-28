@@ -34,6 +34,10 @@ import {
 } from '../types/staff-absences';
 import { StaffCalendarResponse } from '../types/staff-timetable';
 import {
+  StaffPerformanceResponse,
+  StaffPerformanceUpsertRequest,
+} from '../types/staff-performance';
+import {
   AddressListResponse,
   AddressMatchResponse,
   PersonAddressUpdateRequest,
@@ -180,6 +184,22 @@ export class StaffMembersDataService {
   getMyTimetable(from: string, to: string): Observable<StaffCalendarResponse> {
     const params = new HttpParams().set('from', from).set('to', to);
     return this.http.get<StaffCalendarResponse>('/api/v1/me/timetable', { params });
+  }
+
+  getPerformance(staffMemberId: string): Observable<StaffPerformanceResponse> {
+    return this.http.get<StaffPerformanceResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/performance`,
+    );
+  }
+
+  updatePerformance(
+    staffMemberId: string,
+    payload: StaffPerformanceUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/performance`,
+      payload,
+    );
   }
 
   getAbsences(staffMemberId: string): Observable<StaffAbsencesResponse> {

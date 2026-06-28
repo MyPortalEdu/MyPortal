@@ -1,4 +1,5 @@
 using System.Data;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces.Base;
@@ -38,6 +39,13 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
     /// Used to resolve the current user's own staff record for line-management checks.
     /// </summary>
     Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// All active staff members as {id, name} options for a picker (e.g. selecting an observer),
+    /// ordered by name. Id is the StaffMember id.
+    /// </summary>
+    Task<IEnumerable<LookupResponse>> GetStaffLookupAsync(CancellationToken cancellationToken,
         IDbTransaction? transaction = null);
 
     /// <summary>

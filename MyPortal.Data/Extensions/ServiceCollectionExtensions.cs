@@ -86,6 +86,17 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffIllnessTypeRepository, StaffIllnessTypeRepository>();
         // Timetable (read-only calendar aggregation).
         services.AddScoped<IStaffCalendarRepository, StaffCalendarRepository>();
+        // Performance (appraisal).
+        services.AddScoped<IPerformanceReviewRepository, PerformanceReviewRepository>();
+        services.AddScoped<IReviewStatusRepository, ReviewStatusRepository>();
+        services.AddScoped<IStaffObjectiveRepository, StaffObjectiveRepository>();
+        services.AddScoped<IObjectiveStatusRepository, ObjectiveStatusRepository>();
+        services.AddScoped<IObjectiveCategoryRepository, ObjectiveCategoryRepository>();
+        services.AddScoped<IObservationRepository, ObservationRepository>();
+        services.AddScoped<IObservationOutcomeRepository, ObservationOutcomeRepository>();
+        services.AddScoped<ITrainingCertificateRepository, TrainingCertificateRepository>();
+        services.AddScoped<ITrainingCourseRepository, TrainingCourseRepository>();
+        services.AddScoped<ITrainingCertificateStatusRepository, TrainingCertificateStatusRepository>();
         services.AddScoped<IStaffRoleRepository, StaffRoleRepository>();
         services.AddScoped<IServiceTermRepository, ServiceTermRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();

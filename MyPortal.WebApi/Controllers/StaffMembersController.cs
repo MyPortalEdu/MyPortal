@@ -27,13 +27,15 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     private readonly IStaffPreEmploymentService _staffPreEmploymentService;
     private readonly IStaffAbsenceService _staffAbsenceService;
     private readonly IStaffTimetableService _staffTimetableService;
+    private readonly IStaffPerformanceService _staffPerformanceService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
         IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
         IStaffProfessionalService staffProfessionalService, IStaffEmploymentService staffEmploymentService,
         IStaffPreEmploymentService staffPreEmploymentService, IStaffAbsenceService staffAbsenceService,
-        IStaffTimetableService staffTimetableService, IStaffAttachmentsService staffAttachmentsService)
+        IStaffTimetableService staffTimetableService, IStaffPerformanceService staffPerformanceService,
+        IStaffAttachmentsService staffAttachmentsService)
         : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
@@ -45,6 +47,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         _staffPreEmploymentService = staffPreEmploymentService;
         _staffAbsenceService = staffAbsenceService;
         _staffTimetableService = staffTimetableService;
+        _staffPerformanceService = staffPerformanceService;
     }
 
     /// <summary>Get the staff profile header.</summary>
@@ -234,6 +237,31 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         [FromBody] StaffAbsencesUpsertRequest model)
     {
         await _staffAbsenceService.UpdateAbsencesAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the performance (appraisal) area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/performance")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffPerformanceResponse), 200)]
+    public async Task<IActionResult> GetPerformanceAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffPerformanceService.GetPerformanceAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the performance (appraisal) area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new performance payload.</param>
+    [HttpPut("{staffMemberId:guid}/performance")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdatePerformanceAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffPerformanceUpsertRequest model)
+    {
+        await _staffPerformanceService.UpdatePerformanceAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 

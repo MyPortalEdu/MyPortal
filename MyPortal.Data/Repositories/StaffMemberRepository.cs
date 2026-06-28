@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
@@ -91,6 +92,34 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
                 cancellationToken: cancellationToken);
 
             return await conn.ExecuteScalarAsync<Guid?>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<IEnumerable<LookupResponse>> GetStaffLookupAsync(CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
+    {
+        // {id, name} for every active staff member. Name composed via the shared person-name
+        // function (format 3 = First [Middle] Last, preferred names on).
+        const string sql =
+            "SELECT sm.[Id] AS Id, nm.[Name] AS Description " +
+            "FROM [dbo].[StaffMembers] sm " +
+            "OUTER APPLY [dbo].[fn_person_get_name](sm.[PersonId], 3, 1, 0) AS nm " +
+            "WHERE sm.[IsDeleted] = 0 ORDER BY nm.[Name];";
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, null, transaction, cancellationToken: cancellationToken);
+
+            return await conn.QueryAsync<LookupResponse>(command);
         }
         finally
         {
