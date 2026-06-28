@@ -80,6 +80,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReferenceTypeRepository, ReferenceTypeRepository>();
         services.AddScoped<IReferenceStatusRepository, ReferenceStatusRepository>();
         services.AddScoped<IStaffOverseasCheckRepository, StaffOverseasCheckRepository>();
+        // Absences & leave.
+        services.AddScoped<IStaffAbsenceRepository, StaffAbsenceRepository>();
+        services.AddScoped<IStaffAbsenceTypeRepository, StaffAbsenceTypeRepository>();
+        services.AddScoped<IStaffIllnessTypeRepository, StaffIllnessTypeRepository>();
         services.AddScoped<IStaffRoleRepository, StaffRoleRepository>();
         services.AddScoped<IServiceTermRepository, ServiceTermRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();

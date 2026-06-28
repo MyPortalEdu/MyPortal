@@ -23,6 +23,9 @@
   "loadPreEmploymentError": "Couldn't load pre-employment checks",
   "savePreEmploymentError": "Couldn't save pre-employment checks",
   "savedPreEmploymentToast": "Pre-employment checks saved",
+  "loadAbsencesError": "Couldn't load absences",
+  "saveAbsencesError": "Couldn't save absences",
+  "savedAbsencesToast": "Absences saved",
   "createError": "Couldn't create staff member",
   "createdToast": "Staff member created",
   "create": {
@@ -234,6 +237,22 @@
     "isClear": "Came back clear",
     "clear": "Clear",
     "notClear": "Not clear"
+  },
+  "absences": {
+    "hint": "Recorded absence and leave — sickness, parental, compassionate and other time away. Confidential records are visible to HR only.",
+    "none": "No absences recorded.",
+    "absence": "Absence",
+    "add": "Add absence",
+    "remove": "Remove absence",
+    "type": "Absence type",
+    "illnessType": "Illness / injury type",
+    "startDate": "From",
+    "endDate": "To",
+    "day": "day",
+    "days": "days",
+    "notes": "Notes",
+    "confidential": "Confidential",
+    "markConfidential": "Mark as confidential (HR only)"
   },
   "details": {
     "pageTitle": "Staff Details",

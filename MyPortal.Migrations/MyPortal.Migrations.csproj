@@ -256,6 +256,8 @@
     <EmbeddedResource Include="Sql\Updates\20260628000000_drop_staff_contract_spine_point.sql" />
     <None Remove="Sql\Updates\20260628000100_add_pre_employment_checks.sql" />
     <EmbeddedResource Include="Sql\Updates\20260628000100_add_pre_employment_checks.sql" />
+    <None Remove="Sql\Updates\20260628000200_seed_staff_illness_types.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260628000200_seed_staff_illness_types.sql" />
     <None Remove="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_phone_number_get_by_person_id.sql" />

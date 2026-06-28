@@ -25,12 +25,14 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     private readonly IStaffProfessionalService _staffProfessionalService;
     private readonly IStaffEmploymentService _staffEmploymentService;
     private readonly IStaffPreEmploymentService _staffPreEmploymentService;
+    private readonly IStaffAbsenceService _staffAbsenceService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
         IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
         IStaffProfessionalService staffProfessionalService, IStaffEmploymentService staffEmploymentService,
-        IStaffPreEmploymentService staffPreEmploymentService, IStaffAttachmentsService staffAttachmentsService)
+        IStaffPreEmploymentService staffPreEmploymentService, IStaffAbsenceService staffAbsenceService,
+        IStaffAttachmentsService staffAttachmentsService)
         : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
@@ -40,6 +42,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         _staffProfessionalService = staffProfessionalService;
         _staffEmploymentService = staffEmploymentService;
         _staffPreEmploymentService = staffPreEmploymentService;
+        _staffAbsenceService = staffAbsenceService;
     }
 
     /// <summary>Get the staff profile header.</summary>
@@ -204,6 +207,31 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         [FromBody] StaffPreEmploymentChecksUpsertRequest model)
     {
         await _staffPreEmploymentService.UpdatePreEmploymentChecksAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the absences &amp; leave area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/absences")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffAbsencesResponse), 200)]
+    public async Task<IActionResult> GetAbsencesAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffAbsenceService.GetAbsencesAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the absences &amp; leave area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new absences payload.</param>
+    [HttpPut("{staffMemberId:guid}/absences")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateAbsencesAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffAbsencesUpsertRequest model)
+    {
+        await _staffAbsenceService.UpdateAbsencesAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 

@@ -84,6 +84,11 @@ import {
   StaffPreEmploymentChecksUpsertRequest,
   StaffReferenceUpsertItem,
 } from '../../../../../shared/types/staff-pre-employment-checks';
+import {
+  StaffAbsenceUpsertItem,
+  StaffAbsencesResponse,
+  StaffAbsencesUpsertRequest,
+} from '../../../../../shared/types/staff-absences';
 
 type BasicFormSnapshot = {
   code: string;
@@ -180,6 +185,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       if (a.key === 'professionalDetails') return { ...a, enabled: this.canViewProfessional() };
       if (a.key === 'employmentDetails') return { ...a, enabled: this.canViewEmployment() };
       if (a.key === 'preEmploymentChecks') return { ...a, enabled: this.canViewPreEmployment() };
+      if (a.key === 'absences') return { ...a, enabled: this.canViewAbsences() };
       return a;
     }),
   );
@@ -317,6 +323,20 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly referenceTypes = computed(() => this.preEmployment()?.referenceTypes ?? []);
   protected readonly referenceStatuses = computed(() => this.preEmployment()?.referenceStatuses ?? []);
   protected readonly countries = computed(() => this.preEmployment()?.countries ?? []);
+
+  // Absences & Leave panel. Lazy-loaded the first time the area is opened (it 403s
+  // for viewers without any absence scope, so we don't fetch eagerly).
+  protected readonly loadingAbsences = signal(false);
+  protected readonly absences = signal<StaffAbsencesResponse | null>(null);
+  private absencesLoaded = false;
+
+  // Editable absence rows (dates kept as ISO strings, bound via toDate()).
+  protected readonly absenceRows = signal<StaffAbsenceUpsertItem[]>([]);
+  private readonly absencesSnapshot = signal<string>('');
+
+  // Option lists travel with the absence payload so the editor is self-contained.
+  protected readonly absenceTypes = computed(() => this.absences()?.absenceTypes ?? []);
+  protected readonly illnessTypes = computed(() => this.absences()?.illnessTypes ?? []);
 
   // The summary SCR flags rendered as a uniform date-field grid. Each entry pairs an
   // i18n key with a get/set over its signal so the template can loop rather than repeat.
@@ -501,6 +521,43 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     this.heldPerms().has(Permissions.Staff.EditAllStaffPreEmploymentChecks),
   );
 
+  // Absences are relationship-scoped: HR (All) sees everyone, a line manager sees
+  // their reports (Managed), and the person sees their own (Own). An edit grant
+  // implies view.
+  protected readonly canViewAbsences = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (
+      perms.has(Permissions.Staff.ViewAllStaffAbsences) ||
+      perms.has(Permissions.Staff.EditAllStaffAbsences)
+    )
+      return true;
+    if (
+      rel === 'LineManaged' &&
+      (perms.has(Permissions.Staff.ViewManagedStaffAbsences) ||
+        perms.has(Permissions.Staff.EditManagedStaffAbsences))
+    )
+      return true;
+    if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffAbsences)) return true;
+    return false;
+  });
+
+  // Absence edit: HR (All) or the line manager (Managed) — no self-edit (the record
+  // is HR/manager-owned).
+  protected readonly canEditAbsences = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (perms.has(Permissions.Staff.EditAllStaffAbsences)) return true;
+    if (rel === 'LineManaged' && perms.has(Permissions.Staff.EditManagedStaffAbsences)) return true;
+    return false;
+  });
+
+  // Only HR (All scope) may mark an absence confidential; a line manager never sees
+  // or sets the flag, so the toggle only renders for them.
+  protected readonly canManageConfidential = computed(() =>
+    this.heldPerms().has(Permissions.Staff.EditAllStaffAbsences),
+  );
+
   // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
   // Other editable areas have their own gate.
   protected readonly canEditActiveArea = computed(() => {
@@ -510,6 +567,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area === 'professionalDetails') return this.canEditProfessional();
     if (area === 'employmentDetails') return this.canEditEmployment();
     if (area === 'preEmploymentChecks') return this.canEditPreEmployment();
+    if (area === 'absences') return this.canEditAbsences();
     return false;
   });
 
@@ -583,6 +641,13 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       this.overseasChecks().every(o => !!o.nationalityId),
   );
 
+  // Each absence row needs a type, a start date and an end date no earlier than it.
+  private readonly absencesValid = computed(() =>
+    this.absenceRows().every(
+      a => !!a.absenceTypeId && !!a.startDate && !!a.endDate && a.endDate >= a.startDate,
+    ),
+  );
+
   protected readonly isValid = computed(() => {
     switch (this.activeArea()) {
       case 'contactDetails':
@@ -596,6 +661,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.employmentValid();
       case 'preEmploymentChecks':
         return this.preEmploymentValid();
+      case 'absences':
+        return this.absencesValid();
       default:
         return this.basicValid();
     }
@@ -685,6 +752,15 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     () => this.preEmployment() != null && this.preEmploymentSnapshot() !== this.preEmploymentForm(),
   );
 
+  // Serialised absence edit state for the dirty check.
+  private readonly absencesForm = computed(() =>
+    JSON.stringify({ absences: this.absenceRows() }),
+  );
+
+  private readonly absencesDirty = computed(
+    () => this.absences() != null && this.absencesSnapshot() !== this.absencesForm(),
+  );
+
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
 
   private readonly currentForm = computed<BasicFormSnapshot>(() => ({
@@ -723,6 +799,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.employmentDirty();
       case 'preEmploymentChecks':
         return this.preEmploymentDirty();
+      case 'absences':
+        return this.absencesDirty();
       default:
         return this.basicDirty();
     }
@@ -840,6 +918,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area.key === 'professionalDetails') this.loadProfessional();
     if (area.key === 'employmentDetails') this.loadEmployment();
     if (area.key === 'preEmploymentChecks') this.loadPreEmployment();
+    if (area.key === 'absences') this.loadAbsences();
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -917,6 +996,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       case 'preEmploymentChecks':
         this.applyPreEmployment(this.preEmployment());
         break;
+      case 'absences':
+        this.applyAbsences(this.absences());
+        break;
       default:
         this.applyToForm(this.current());
     }
@@ -934,6 +1016,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       await this.saveEmployment();
     } else if (this.activeArea() === 'preEmploymentChecks') {
       await this.savePreEmployment();
+    } else if (this.activeArea() === 'absences') {
+      await this.saveAbsences();
     } else {
       await this.saveBasic();
     }
@@ -1802,6 +1886,108 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     value: StaffOverseasCheckUpsertItem[K],
   ): void {
     this.overseasChecks.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+  }
+
+  // ─── Absences & Leave ────────────────────────────────────────────────────────
+
+  private loadAbsences(): void {
+    if (this.absencesLoaded) return;
+    this.absencesLoaded = true;
+    this.loadingAbsences.set(true);
+    this.data.getAbsences(this.staffMemberId()).subscribe({
+      next: row => {
+        this.absences.set(row);
+        this.applyAbsences(row);
+        this.loadingAbsences.set(false);
+      },
+      error: err => {
+        this.loadingAbsences.set(false);
+        this.absencesLoaded = false;
+        this.notify.apiError(err, this.transloco.translate('staff-members.loadAbsencesError'));
+      },
+    });
+  }
+
+  private async saveAbsences(): Promise<void> {
+    if (!this.canEditAbsences() || !this.absencesValid() || this.saving()) return;
+    this.saving.set(true);
+
+    const payload: StaffAbsencesUpsertRequest = {
+      absences: this.absenceRows().map(a => ({
+        id: a.id ?? null,
+        absenceTypeId: a.absenceTypeId,
+        illnessTypeId: a.illnessTypeId ?? null,
+        startDate: a.startDate,
+        endDate: a.endDate,
+        isConfidential: a.isConfidential,
+        notes: this.normalise(a.notes),
+      })),
+    };
+
+    try {
+      await firstValueFrom(this.data.updateAbsences(this.staffMemberId(), payload));
+      this.notify.success(this.transloco.translate('staff-members.savedAbsencesToast'));
+      this.editing.set(false);
+      // Refetch so server-assigned ids (new rows) become the baseline.
+      this.absencesLoaded = false;
+      this.loadAbsences();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.saveAbsencesError'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private applyAbsences(row: StaffAbsencesResponse | null): void {
+    this.absenceRows.set(
+      (row?.absences ?? []).map(a => ({
+        id: a.id,
+        absenceTypeId: a.absenceTypeId,
+        illnessTypeId: a.illnessTypeId ?? null,
+        startDate: a.startDate,
+        endDate: a.endDate,
+        isConfidential: a.isConfidential,
+        notes: a.notes ?? null,
+      })),
+    );
+    this.absencesSnapshot.set(this.absencesForm());
+  }
+
+  protected addAbsence(): void {
+    this.absenceRows.update(rows => [
+      ...rows,
+      {
+        id: null,
+        absenceTypeId: null,
+        illnessTypeId: null,
+        startDate: null,
+        endDate: null,
+        isConfidential: false,
+        notes: null,
+      },
+    ]);
+  }
+
+  protected removeAbsence(index: number): void {
+    this.absenceRows.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchAbsence<K extends keyof StaffAbsenceUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffAbsenceUpsertItem[K],
+  ): void {
+    this.absenceRows.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+  }
+
+  // Whole days inclusive of both ends — the simple span a school cares about.
+  protected absenceDays(a: StaffAbsenceUpsertItem): number | null {
+    if (!a.startDate || !a.endDate) return null;
+    const start = new Date(a.startDate);
+    const end = new Date(a.endDate);
+    const ms = end.getTime() - start.getTime();
+    if (ms < 0) return null;
+    return Math.round(ms / 86_400_000) + 1;
   }
 
   // p-datepicker binds Date; the model carries ISO strings. Cached so the same string always
