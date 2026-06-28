@@ -20,6 +20,21 @@ export interface SchoolDetailsResponse {
   intakeTypeId: string;
   headTeacherId?: string | null;
   headTeacherFullName?: string | null;
+  ukprn?: string | null;
+  payZoneId?: string | null;
+  payZoneName?: string | null;
+  lowestAge?: number | null;
+  highestAge?: number | null;
+  netCapacity?: number | null;
+  netCapacityAssessmentDate?: string | null;
+  isSpecialSchool: boolean;
+  specialSchoolOrganisationId?: string | null;
+  specialSchoolOrganisationName?: string | null;
+  specialSchoolTypeId?: string | null;
+  specialSchoolTypeName?: string | null;
+  maxBoarders?: number | null;
+  telephone?: string | null;
+  email?: string | null;
   isLocal: boolean;
 }
 
@@ -36,6 +51,18 @@ export interface SchoolUpsertRequest {
   governanceTypeId: string;
   intakeTypeId: string;
   headTeacherId?: string | null;
+  ukprn?: string | null;
+  payZoneId?: string | null;
+  lowestAge?: number | null;
+  highestAge?: number | null;
+  netCapacity?: number | null;
+  netCapacityAssessmentDate?: string | null;
+  isSpecialSchool: boolean;
+  specialSchoolOrganisationId?: string | null;
+  specialSchoolTypeId?: string | null;
+  maxBoarders?: number | null;
+  telephone?: string | null;
+  email?: string | null;
 }
 
 export interface LocalAuthoritySummaryResponse {

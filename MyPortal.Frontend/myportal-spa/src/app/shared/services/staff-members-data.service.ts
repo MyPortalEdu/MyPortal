@@ -21,6 +21,10 @@ import {
   StaffProfessionalDetailsUpsertRequest,
 } from '../types/staff-professional-details';
 import {
+  StaffEmploymentDetailsResponse,
+  StaffEmploymentDetailsUpsertRequest,
+} from '../types/staff-employment-details';
+import {
   AddressListResponse,
   AddressMatchResponse,
   PersonAddressUpdateRequest,
@@ -112,6 +116,22 @@ export class StaffMembersDataService {
   ): Observable<IdResponse> {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/professional-details`,
+      payload,
+    );
+  }
+
+  getEmploymentDetails(staffMemberId: string): Observable<StaffEmploymentDetailsResponse> {
+    return this.http.get<StaffEmploymentDetailsResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/employment-details`,
+    );
+  }
+
+  updateEmploymentDetails(
+    staffMemberId: string,
+    payload: StaffEmploymentDetailsUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/employment-details`,
       payload,
     );
   }

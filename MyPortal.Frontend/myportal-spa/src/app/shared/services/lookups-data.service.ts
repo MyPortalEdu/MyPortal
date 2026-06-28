@@ -18,6 +18,9 @@ export class LookupsDataService {
   private intakeTypes$?: Observable<LookupResponse[]>;
   private schoolPhases$?: Observable<LookupResponse[]>;
   private schoolTypes$?: Observable<LookupResponse[]>;
+  private payZones$?: Observable<LookupResponse[]>;
+  private specialSchoolOrganisations$?: Observable<LookupResponse[]>;
+  private specialSchoolTypes$?: Observable<LookupResponse[]>;
 
   agencyTypes(): Observable<LookupResponse[]> {
     return this.agencyTypes$ ??= this.http
@@ -49,11 +52,32 @@ export class LookupsDataService {
       .pipe(shareReplay(1));
   }
 
+  payZones(): Observable<LookupResponse[]> {
+    return this.payZones$ ??= this.http
+      .get<LookupResponse[]>('/api/v1/payzones')
+      .pipe(shareReplay(1));
+  }
+
+  specialSchoolOrganisations(): Observable<LookupResponse[]> {
+    return this.specialSchoolOrganisations$ ??= this.http
+      .get<LookupResponse[]>('/api/v1/specialschoolorganisations')
+      .pipe(shareReplay(1));
+  }
+
+  specialSchoolTypes(): Observable<LookupResponse[]> {
+    return this.specialSchoolTypes$ ??= this.http
+      .get<LookupResponse[]>('/api/v1/specialschooltypes')
+      .pipe(shareReplay(1));
+  }
+
   invalidate(): void {
     this.agencyTypes$ = undefined;
     this.governanceTypes$ = undefined;
     this.intakeTypes$ = undefined;
     this.schoolPhases$ = undefined;
     this.schoolTypes$ = undefined;
+    this.payZones$ = undefined;
+    this.specialSchoolOrganisations$ = undefined;
+    this.specialSchoolTypes$ = undefined;
   }
 }

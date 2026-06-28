@@ -15,6 +15,7 @@ import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { DatePicker } from 'primeng/datepicker';
 import { InputText } from 'primeng/inputtext';
+import { InputNumber } from 'primeng/inputnumber';
 import { Menu } from 'primeng/menu';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { Tag } from 'primeng/tag';
@@ -68,6 +69,13 @@ import {
   StaffProfessionalDetailsUpsertRequest,
   StaffQualificationUpsertItem,
 } from '../../../../../shared/types/staff-professional-details';
+import {
+  PayScalePointResponse,
+  StaffContractUpsertItem,
+  StaffEmploymentDetailsResponse,
+  StaffEmploymentDetailsUpsertRequest,
+  StaffEmploymentUpsertItem,
+} from '../../../../../shared/types/staff-employment-details';
 
 type BasicFormSnapshot = {
   code: string;
@@ -126,6 +134,7 @@ const AREAS: AreaTab[] = [
     Card,
     DatePicker,
     InputText,
+    InputNumber,
     Menu,
     ProgressSpinner,
     Tag,
@@ -161,6 +170,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     AREAS.map(a => {
       if (a.key === 'equalityDetails') return { ...a, enabled: this.canViewEquality() };
       if (a.key === 'professionalDetails') return { ...a, enabled: this.canViewProfessional() };
+      if (a.key === 'employmentDetails') return { ...a, enabled: this.canViewEmployment() };
       return a;
     }),
   );
@@ -247,13 +257,57 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     get: () => boolean;
     set: (value: boolean) => void;
   }[] = [
-    { key: 'isTeachingStaff', get: () => this.isTeachingStaff(), set: v => this.isTeachingStaff.set(v) },
-    { key: 'hasQts', get: () => this.hasQts(), set: v => this.hasQts.set(v) },
+    { key: 'isTeachingStaff', get: () => this.isTeachingStaff(), set: v => this.onIsTeachingStaff(v) },
+    { key: 'hasQts', get: () => this.hasQts(), set: v => this.onHasQts(v) },
     { key: 'hasHlta', get: () => this.hasHlta(), set: v => this.hasHlta.set(v) },
     { key: 'hasQtls', get: () => this.hasQtls(), set: v => this.hasQtls.set(v) },
     { key: 'hasEyts', get: () => this.hasEyts(), set: v => this.hasEyts.set(v) },
     { key: 'isSeniorLeadership', get: () => this.isSeniorLeadership(), set: v => this.isSeniorLeadership.set(v) },
   ];
+
+  // Employment Details panel. Lazy-loaded the first time the area is opened
+  // (it 403s for viewers without employment view scope, so we don't fetch eagerly).
+  protected readonly loadingEmployment = signal(false);
+  protected readonly employment = signal<StaffEmploymentDetailsResponse | null>(null);
+  private employmentLoaded = false;
+
+  protected readonly bankName = signal<string | null>(null);
+  protected readonly bankAccount = signal<string | null>(null);
+  protected readonly bankSortCode = signal<string | null>(null);
+  protected readonly niNumber = signal<string | null>(null);
+  protected readonly employments = signal<StaffEmploymentUpsertItem[]>([]);
+  private readonly employmentSnapshot = signal<string>('');
+
+  // Option lists travel with the employment payload so the editor is self-contained.
+  protected readonly leavingReasons = computed(() => this.employment()?.leavingReasons ?? []);
+  protected readonly origins = computed(() => this.employment()?.origins ?? []);
+  protected readonly destinations = computed(() => this.employment()?.destinations ?? []);
+  protected readonly contractTypes = computed(() => this.employment()?.contractTypes ?? []);
+  protected readonly staffRoles = computed(() => this.employment()?.staffRoles ?? []);
+  protected readonly serviceTerms = computed(() => this.employment()?.serviceTerms ?? []);
+  protected readonly departments = computed(() => this.employment()?.departments ?? []);
+  protected readonly payScales = computed(() => this.employment()?.payScales ?? []);
+  protected readonly payScalePoints = computed(() => this.employment()?.payScalePoints ?? []);
+  protected readonly payZoneName = computed(() => this.employment()?.payZoneName ?? null);
+
+  // Spine points grouped by pay scale, rebuilt only when the catalogue changes. Reading from
+  // this (rather than filtering in the template) keeps the option-array reference stable across
+  // change-detection cycles — a fresh array each tick makes p-select churn its list (NG0956).
+  private static readonly NO_POINTS: PayScalePointResponse[] = [];
+  private readonly payScalePointsByScale = computed(() => {
+    const map = new Map<string, PayScalePointResponse[]>();
+    for (const point of this.payScalePoints()) {
+      const list = map.get(point.payScaleId);
+      if (list) list.push(point);
+      else map.set(point.payScaleId, [point]);
+    }
+    return map;
+  });
+
+  // ISO-string → Date cache so date bindings hand p-datepicker a stable reference each cycle.
+  // Without this, toDate() allocates a new Date every tick, which the datepicker treats as a
+  // changed model — re-writing on every cycle and locking the page up.
+  private readonly dateCache = new Map<string, Date>();
 
   // Form-field signals for the basic-details panel. Mirror the upsert request.
   protected readonly code = signal('');
@@ -344,6 +398,24 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
+  // Employment is the "crown jewels": HR (All) or self (view-own) — no line-manager scope.
+  protected readonly canViewEmployment = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (
+      perms.has(Permissions.Staff.ViewAllStaffEmploymentDetails) ||
+      perms.has(Permissions.Staff.EditAllStaffEmploymentDetails)
+    )
+      return true;
+    if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffEmploymentDetails)) return true;
+    return false;
+  });
+
+  // Employment edit is HR-only — no self/managed edit.
+  protected readonly canEditEmployment = computed(() =>
+    this.heldPerms().has(Permissions.Staff.EditAllStaffEmploymentDetails),
+  );
+
   // Contact methods live under the BasicDetails permission domain, so the same gate covers them.
   // Other editable areas have their own gate.
   protected readonly canEditActiveArea = computed(() => {
@@ -351,6 +423,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area === 'basicDetails' || area === 'contactDetails') return this.canEditBasic();
     if (area === 'equalityDetails') return this.canEditEquality();
     if (area === 'professionalDetails') return this.canEditProfessional();
+    if (area === 'employmentDetails') return this.canEditEmployment();
     return false;
   });
 
@@ -393,6 +466,24 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return this.qualifications().every(q => q.title.trim().length > 0);
   });
 
+  // Each spell needs a start date; each contract needs a type, post title, a valid
+  // FTE (0–1) and a start date.
+  private readonly employmentValid = computed(() =>
+    this.employments().every(
+      e =>
+        !!e.startDate &&
+        e.contracts.every(
+          c =>
+            !!c.contractTypeId &&
+            c.postTitle.trim().length > 0 &&
+            !!c.startDate &&
+            c.fte != null &&
+            c.fte >= 0 &&
+            c.fte <= 1,
+        ),
+    ),
+  );
+
   protected readonly isValid = computed(() => {
     switch (this.activeArea()) {
       case 'contactDetails':
@@ -402,6 +493,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return true;
       case 'professionalDetails':
         return this.professionalValid();
+      case 'employmentDetails':
+        return this.employmentValid();
       default:
         return this.basicValid();
     }
@@ -453,6 +546,21 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     () => this.professional() != null && this.professionalSnapshot() !== this.professionalForm(),
   );
 
+  // Serialised employment edit state for the dirty check.
+  private readonly employmentForm = computed(() =>
+    JSON.stringify({
+      bankName: this.bankName(),
+      bankAccount: this.bankAccount(),
+      bankSortCode: this.bankSortCode(),
+      niNumber: this.niNumber(),
+      employments: this.employments(),
+    }),
+  );
+
+  private readonly employmentDirty = computed(
+    () => this.employment() != null && this.employmentSnapshot() !== this.employmentForm(),
+  );
+
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
 
   private readonly currentForm = computed<BasicFormSnapshot>(() => ({
@@ -487,6 +595,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         return this.equalityDirty();
       case 'professionalDetails':
         return this.professionalDirty();
+      case 'employmentDetails':
+        return this.employmentDirty();
       default:
         return this.basicDirty();
     }
@@ -602,6 +712,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (area.key === 'documents') this.loadDocumentTypes();
     if (area.key === 'equalityDetails') this.loadEquality();
     if (area.key === 'professionalDetails') this.loadProfessional();
+    if (area.key === 'employmentDetails') this.loadEmployment();
     if (this.isDirty()) {
       // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
@@ -673,6 +784,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       case 'professionalDetails':
         this.applyProfessional(this.professional());
         break;
+      case 'employmentDetails':
+        this.applyEmployment(this.employment());
+        break;
       default:
         this.applyToForm(this.current());
     }
@@ -686,6 +800,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       await this.saveEquality();
     } else if (this.activeArea() === 'professionalDetails') {
       await this.saveProfessional();
+    } else if (this.activeArea() === 'employmentDetails') {
+      await this.saveEmployment();
     } else {
       await this.saveBasic();
     }
@@ -950,6 +1066,374 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     this.qualifications.update(rows =>
       rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
     );
+  }
+
+  private loadEmployment(): void {
+    if (this.employmentLoaded) return;
+    this.employmentLoaded = true;
+    this.loadingEmployment.set(true);
+    this.data.getEmploymentDetails(this.staffMemberId()).subscribe({
+      next: row => {
+        this.employment.set(row);
+        this.applyEmployment(row);
+        this.loadingEmployment.set(false);
+      },
+      error: err => {
+        this.loadingEmployment.set(false);
+        this.employmentLoaded = false;
+        this.notify.apiError(err, this.transloco.translate('staff-members.loadEmploymentError'));
+      },
+    });
+  }
+
+  private async saveEmployment(): Promise<void> {
+    if (!this.canEditEmployment() || !this.employmentValid() || this.saving()) return;
+    this.saving.set(true);
+
+    const payload: StaffEmploymentDetailsUpsertRequest = {
+      bankName: this.normalise(this.bankName()),
+      bankAccount: this.normalise(this.bankAccount()),
+      bankSortCode: this.normalise(this.bankSortCode()),
+      niNumber: this.normalise(this.niNumber()),
+      employments: this.employments().map(e => ({
+        id: e.id ?? null,
+        startDate: e.startDate,
+        endDate: e.endDate ?? null,
+        leavingReasonId: e.leavingReasonId ?? null,
+        originId: e.originId ?? null,
+        destinationId: e.destinationId ?? null,
+        notes: this.normalise(e.notes),
+        contracts: e.contracts.map(c => ({
+          id: c.id ?? null,
+          contractTypeId: c.contractTypeId,
+          staffRoleId: c.staffRoleId ?? null,
+          serviceTermId: c.serviceTermId ?? null,
+          departmentId: c.departmentId ?? null,
+          payScaleId: c.payScaleId ?? null,
+          payScalePointId: c.payScalePointId ?? null,
+          postTitle: c.postTitle.trim(),
+          spinePoint: this.normalise(c.spinePoint),
+          startDate: c.startDate,
+          endDate: c.endDate ?? null,
+          fte: c.fte,
+          hoursPerWeek: c.hoursPerWeek ?? null,
+          weeksPerYear: c.weeksPerYear ?? null,
+          annualSalary: c.annualSalary ?? null,
+          isAgencySupply: c.isAgencySupply,
+          safeguardedSalary: c.safeguardedSalary,
+          dailyRate: c.dailyRate,
+        })),
+      })),
+    };
+
+    try {
+      await firstValueFrom(this.data.updateEmploymentDetails(this.staffMemberId(), payload));
+      this.notify.success(this.transloco.translate('staff-members.savedEmploymentToast'));
+      this.editing.set(false);
+      // Refetch so server-assigned ids (new rows) become the baseline.
+      this.employmentLoaded = false;
+      this.loadEmployment();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.saveEmploymentError'));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  private applyEmployment(row: StaffEmploymentDetailsResponse | null): void {
+    this.bankName.set(row?.bankName ?? null);
+    this.bankAccount.set(row?.bankAccount ?? null);
+    this.bankSortCode.set(row?.bankSortCode ?? null);
+    this.niNumber.set(row?.niNumber ?? null);
+    this.employments.set(
+      (row?.employments ?? []).map(e => ({
+        id: e.id,
+        startDate: e.startDate,
+        endDate: e.endDate ?? null,
+        leavingReasonId: e.leavingReasonId ?? null,
+        originId: e.originId ?? null,
+        destinationId: e.destinationId ?? null,
+        notes: e.notes ?? null,
+        contracts: (e.contracts ?? []).map(c => ({
+          id: c.id,
+          contractTypeId: c.contractTypeId,
+          staffRoleId: c.staffRoleId ?? null,
+          serviceTermId: c.serviceTermId ?? null,
+          departmentId: c.departmentId ?? null,
+          payScaleId: c.payScaleId ?? null,
+          payScalePointId: c.payScalePointId ?? null,
+          postTitle: c.postTitle,
+          spinePoint: c.spinePoint ?? null,
+          startDate: c.startDate,
+          endDate: c.endDate ?? null,
+          fte: c.fte,
+          hoursPerWeek: c.hoursPerWeek ?? null,
+          weeksPerYear: c.weeksPerYear ?? null,
+          annualSalary: c.annualSalary ?? null,
+          isAgencySupply: c.isAgencySupply,
+          safeguardedSalary: c.safeguardedSalary,
+          dailyRate: c.dailyRate,
+        })),
+      })),
+    );
+    this.employmentSnapshot.set(this.employmentForm());
+  }
+
+  // Employment spells grid. A new spell has no id (the server inserts it).
+  protected addEmployment(): void {
+    this.employments.update(rows => [
+      ...rows,
+      {
+        id: null,
+        startDate: null,
+        endDate: null,
+        leavingReasonId: null,
+        originId: null,
+        destinationId: null,
+        notes: null,
+        contracts: [],
+      },
+    ]);
+  }
+
+  protected removeEmployment(index: number): void {
+    this.employments.update(rows => rows.filter((_, i) => i !== index));
+  }
+
+  protected patchEmployment<K extends keyof StaffEmploymentUpsertItem>(
+    index: number,
+    key: K,
+    value: StaffEmploymentUpsertItem[K],
+  ): void {
+    this.employments.update(rows =>
+      rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    );
+  }
+
+  // End date drives "has this person left?": clearing it makes the spell current again, so the
+  // leaving reason and destination (which only apply to leavers) are dropped to stay consistent.
+  protected onEmploymentEndDate(index: number, value: Date | null): void {
+    const iso = value ? value.toISOString() : null;
+    this.employments.update(rows =>
+      rows.map((row, i) => {
+        if (i !== index) return row;
+        if (iso) return { ...row, endDate: iso };
+        return { ...row, endDate: null, leavingReasonId: null, destinationId: null };
+      }),
+    );
+  }
+
+  // Disability detail (type + free text) only applies once a disability is declared;
+  // clearing the declaration discards those values so nothing stale is saved.
+  protected onHasDisability(value: boolean): void {
+    this.hasDisability.set(value);
+    if (!value) {
+      this.disabilityIds.set([]);
+      this.disabilityDetails.set(null);
+    }
+  }
+
+  // Route to QTS and award date are meaningless without QTS; clear them when the
+  // QTS flag is turned off so the hidden fields don't persist stale data.
+  protected onHasQts(value: boolean): void {
+    this.hasQts.set(value);
+    if (!value) {
+      this.qtsRouteId.set(null);
+      this.qtsAwardedDate.set(null);
+    }
+  }
+
+  // "Teaching staff" means qualified/unqualified teachers — not teaching assistants,
+  // who are support staff even as HLTAs. QTS and statutory induction only apply to
+  // teachers, so clear and hide those fields when the teaching-staff flag is off.
+  protected onIsTeachingStaff(value: boolean): void {
+    this.isTeachingStaff.set(value);
+    if (!value) {
+      this.teacherReferenceNumber.set(null);
+      this.onHasQts(false);
+      this.inductionStatusId.set(null);
+      this.inductionStartDate.set(null);
+      this.inductionCompletedDate.set(null);
+    }
+  }
+
+  // Contracts sub-grid, nested under a spell. New contracts default to full-time (FTE 1)
+  // and inherit the spell's start date as a sensible starting point.
+  protected addContract(employmentIndex: number): void {
+    this.employments.update(rows =>
+      rows.map((row, i) =>
+        i === employmentIndex
+          ? {
+              ...row,
+              contracts: [
+                ...row.contracts,
+                {
+                  id: null,
+                  contractTypeId: null,
+                  staffRoleId: null,
+                  serviceTermId: null,
+                  departmentId: null,
+                  payScaleId: null,
+                  payScalePointId: null,
+                  postTitle: '',
+                  spinePoint: null,
+                  startDate: row.startDate,
+                  endDate: null,
+                  fte: 1,
+                  hoursPerWeek: null,
+                  weeksPerYear: null,
+                  annualSalary: null,
+                  isAgencySupply: false,
+                  safeguardedSalary: false,
+                  dailyRate: false,
+                },
+              ],
+            }
+          : row,
+      ),
+    );
+  }
+
+  protected removeContract(employmentIndex: number, contractIndex: number): void {
+    this.employments.update(rows =>
+      rows.map((row, i) =>
+        i === employmentIndex
+          ? { ...row, contracts: row.contracts.filter((_, j) => j !== contractIndex) }
+          : row,
+      ),
+    );
+  }
+
+  protected patchContract<K extends keyof StaffContractUpsertItem>(
+    employmentIndex: number,
+    contractIndex: number,
+    key: K,
+    value: StaffContractUpsertItem[K],
+  ): void {
+    this.employments.update(rows =>
+      rows.map((row, i) =>
+        i === employmentIndex
+          ? {
+              ...row,
+              contracts: row.contracts.map((c, j) =>
+                j === contractIndex ? { ...c, [key]: value } : c,
+              ),
+            }
+          : row,
+      ),
+    );
+  }
+
+  // Applies a transform to one contract, immutably.
+  private mutateContract(
+    employmentIndex: number,
+    contractIndex: number,
+    fn: (c: StaffContractUpsertItem) => StaffContractUpsertItem,
+  ): void {
+    this.employments.update(rows =>
+      rows.map((row, i) =>
+        i === employmentIndex
+          ? { ...row, contracts: row.contracts.map((c, j) => (j === contractIndex ? fn(c) : c)) }
+          : row,
+      ),
+    );
+  }
+
+  // Full-time statutory salary for a spine point in the school's pay zone (null if unknown).
+  protected statutoryFor(payScalePointId: string | null | undefined): number | null {
+    if (!payScalePointId) return null;
+    return this.payScalePoints().find(p => p.id === payScalePointId)?.fullTimeSalary ?? null;
+  }
+
+  // The salary that auto-fill would derive for a (spine point, FTE) pair.
+  private autoSalaryFor(payScalePointId: string | null | undefined, fte: number | null): number | null {
+    const statutory = this.statutoryFor(payScalePointId);
+    if (statutory == null || fte == null) return null;
+    return Math.round(statutory * fte * 100) / 100;
+  }
+
+  // A salary is "still automatic" if it's blank or matches what auto-fill last derived — i.e.
+  // HR hasn't typed their own figure. Manual overrides (acting-up, safeguarded) are respected.
+  private salaryIsAuto(c: StaffContractUpsertItem): boolean {
+    if (c.annualSalary == null) return true;
+    const auto = this.autoSalaryFor(c.payScalePointId, c.fte);
+    return auto != null && Math.abs(c.annualSalary - auto) < 0.5;
+  }
+
+  // Spine-point change: cascade salary unless HR has overridden it.
+  protected onContractSpinePoint(
+    employmentIndex: number,
+    contractIndex: number,
+    payScalePointId: string | null,
+  ): void {
+    this.mutateContract(employmentIndex, contractIndex, c => {
+      const auto = this.salaryIsAuto(c);
+      const next = { ...c, payScalePointId };
+      if (auto) next.annualSalary = this.autoSalaryFor(payScalePointId, c.fte);
+      return next;
+    });
+  }
+
+  // FTE change: re-pro-rata the salary unless HR has overridden it.
+  protected onContractFte(employmentIndex: number, contractIndex: number, fte: number | null): void {
+    this.mutateContract(employmentIndex, contractIndex, c => {
+      const auto = this.salaryIsAuto(c);
+      const next = { ...c, fte: fte ?? 0 };
+      if (auto) next.annualSalary = this.autoSalaryFor(c.payScalePointId, next.fte);
+      return next;
+    });
+  }
+
+  // Changing the pay scale clears the spine point (and the auto salary that came from it).
+  protected onContractPayScale(
+    employmentIndex: number,
+    contractIndex: number,
+    payScaleId: string | null,
+  ): void {
+    this.mutateContract(employmentIndex, contractIndex, c => {
+      const auto = this.salaryIsAuto(c);
+      const next = { ...c, payScaleId, payScalePointId: null };
+      if (auto) next.annualSalary = null;
+      return next;
+    });
+  }
+
+  // Spine points belonging to the chosen pay scale (cascading select source). Returns a stable
+  // array reference per scale so the bound p-select doesn't rebuild its options every cycle.
+  protected contractPayScalePoints(payScaleId: string | null | undefined): PayScalePointResponse[] {
+    if (!payScaleId) return StaffMemberDetailsPage.NO_POINTS;
+    return this.payScalePointsByScale().get(payScaleId) ?? StaffMemberDetailsPage.NO_POINTS;
+  }
+
+  // A spell is active while it has no end date, or its end date hasn't passed.
+  protected spellActive(e: StaffEmploymentUpsertItem): boolean {
+    if (!e.endDate) return true;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(e.endDate) >= today;
+  }
+
+  // Summed FTE across a spell's contracts (a quick "how full is this person" read).
+  protected spellFteTotal(e: StaffEmploymentUpsertItem): number {
+    const total = e.contracts.reduce((sum, c) => sum + (c.fte ?? 0), 0);
+    return Math.round(total * 100) / 100;
+  }
+
+  // Whole-pound GBP for the statutory-salary hint.
+  protected formatMoney(value: number): string {
+    return '£' + Math.round(value).toLocaleString('en-GB');
+  }
+
+  // p-datepicker binds Date; the model carries ISO strings. Cached so the same string always
+  // yields the same Date instance — a stable reference the datepicker won't treat as a change.
+  protected toDate(value: string | null | undefined): Date | null {
+    if (!value) return null;
+    let date = this.dateCache.get(value);
+    if (!date) {
+      date = new Date(value);
+      this.dateCache.set(value, date);
+    }
+    return date;
   }
 
   protected backToList(): void {

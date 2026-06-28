@@ -14,10 +14,15 @@ public class LookupService : BaseService, ILookupService
     private readonly IIntakeTypeRepository _intakeTypes;
     private readonly ISchoolPhaseRepository _schoolPhases;
     private readonly ISchoolTypeRepository _schoolTypes;
+    private readonly IPayZoneRepository _payZones;
+    private readonly ISpecialSchoolOrganisationRepository _specialSchoolOrganisations;
+    private readonly ISpecialSchoolTypeRepository _specialSchoolTypes;
 
     public LookupService(IAuthorizationService authorizationService, ILogger<BaseService> logger,
         IAgencyTypeRepository agencyTypes, IGovernanceTypeRepository governanceTypes,
-        IIntakeTypeRepository intakeTypes, ISchoolPhaseRepository schoolPhases, ISchoolTypeRepository schoolTypes)
+        IIntakeTypeRepository intakeTypes, ISchoolPhaseRepository schoolPhases, ISchoolTypeRepository schoolTypes,
+        IPayZoneRepository payZones, ISpecialSchoolOrganisationRepository specialSchoolOrganisations,
+        ISpecialSchoolTypeRepository specialSchoolTypes)
         : base(authorizationService, logger)
     {
         _agencyTypes = agencyTypes;
@@ -25,6 +30,9 @@ public class LookupService : BaseService, ILookupService
         _intakeTypes = intakeTypes;
         _schoolPhases = schoolPhases;
         _schoolTypes = schoolTypes;
+        _payZones = payZones;
+        _specialSchoolOrganisations = specialSchoolOrganisations;
+        _specialSchoolTypes = specialSchoolTypes;
     }
 
     public async Task<IList<LookupResponse>> GetAgencyTypesAsync(CancellationToken cancellationToken)
@@ -54,6 +62,24 @@ public class LookupService : BaseService, ILookupService
     public async Task<IList<LookupResponse>> GetSchoolTypesAsync(CancellationToken cancellationToken)
     {
         var rows = await _schoolTypes.GetListAsync(cancellationToken: cancellationToken);
+        return rows.ToOrderedLookup();
+    }
+
+    public async Task<IList<LookupResponse>> GetPayZonesAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _payZones.GetListAsync(cancellationToken: cancellationToken);
+        return rows.ToAlphabeticalLookup();
+    }
+
+    public async Task<IList<LookupResponse>> GetSpecialSchoolOrganisationsAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _specialSchoolOrganisations.GetListAsync(cancellationToken: cancellationToken);
+        return rows.ToOrderedLookup();
+    }
+
+    public async Task<IList<LookupResponse>> GetSpecialSchoolTypesAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _specialSchoolTypes.GetListAsync(cancellationToken: cancellationToken);
         return rows.ToOrderedLookup();
     }
 }

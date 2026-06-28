@@ -23,11 +23,13 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     private readonly IStaffAddressService _staffAddressService;
     private readonly IStaffEqualityService _staffEqualityService;
     private readonly IStaffProfessionalService _staffProfessionalService;
+    private readonly IStaffEmploymentService _staffEmploymentService;
 
     public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
         IStaffMemberService staffMemberService, IStaffContactService staffContactService,
         IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
-        IStaffProfessionalService staffProfessionalService, IStaffAttachmentsService staffAttachmentsService)
+        IStaffProfessionalService staffProfessionalService, IStaffEmploymentService staffEmploymentService,
+        IStaffAttachmentsService staffAttachmentsService)
         : base(problemFactory, logger, staffAttachmentsService)
     {
         _staffMemberService = staffMemberService;
@@ -35,6 +37,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         _staffAddressService = staffAddressService;
         _staffEqualityService = staffEqualityService;
         _staffProfessionalService = staffProfessionalService;
+        _staffEmploymentService = staffEmploymentService;
     }
 
     /// <summary>Get the staff profile header.</summary>
@@ -149,6 +152,31 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         [FromBody] StaffProfessionalDetailsUpsertRequest model)
     {
         await _staffProfessionalService.UpdateProfessionalDetailsAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the employment details area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/employment-details")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffEmploymentDetailsResponse), 200)]
+    public async Task<IActionResult> GetEmploymentDetailsAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await _staffEmploymentService.GetEmploymentDetailsAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the employment details area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new employment-details payload.</param>
+    [HttpPut("{staffMemberId:guid}/employment-details")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateEmploymentDetailsAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffEmploymentDetailsUpsertRequest model)
+    {
+        await _staffEmploymentService.UpdateEmploymentDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 

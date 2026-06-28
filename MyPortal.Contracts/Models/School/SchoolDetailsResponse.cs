@@ -31,5 +31,32 @@ public class SchoolDetailsResponse
     public Guid? HeadTeacherId { get; set; }
     public string? HeadTeacherFullName { get; set; }
 
+    // UK Provider Reference Number.
+    public string? Ukprn { get; set; }
+
+    // Pay zone (basis for staff statutory salaries).
+    public Guid? PayZoneId { get; set; }
+    public string? PayZoneName { get; set; }
+
+    // Statutory age range.
+    public int? LowestAge { get; set; }
+    public int? HighestAge { get; set; }
+
+    // Net capacity + assessment date.
+    public int? NetCapacity { get; set; }
+    public DateTime? NetCapacityAssessmentDate { get; set; }
+
+    // Special school facts.
+    public bool IsSpecialSchool { get; set; }
+    public Guid? SpecialSchoolOrganisationId { get; set; }
+    public string? SpecialSchoolOrganisationName { get; set; }
+    public Guid? SpecialSchoolTypeId { get; set; }
+    public string? SpecialSchoolTypeName { get; set; }
+    public int? MaxBoarders { get; set; }
+
+    // Direct establishment contact.
+    public string? Telephone { get; set; }
+    public string? Email { get; set; }
+
     public bool IsLocal { get; set; }
 }

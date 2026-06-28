@@ -12,6 +12,8 @@ import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
+import { Checkbox } from 'primeng/checkbox';
+import { DatePicker } from 'primeng/datepicker';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -48,6 +50,18 @@ type FormSnapshot = {
   governanceTypeId: string | null;
   intakeTypeId: string | null;
   headTeacherId: string | null;
+  ukprn: string | null;
+  payZoneId: string | null;
+  lowestAge: number | null;
+  highestAge: number | null;
+  netCapacity: number | null;
+  netCapacityAssessmentDate: string | null;
+  isSpecialSchool: boolean;
+  specialSchoolOrganisationId: string | null;
+  specialSchoolTypeId: string | null;
+  maxBoarders: number | null;
+  telephone: string | null;
+  email: string | null;
 };
 
 /**
@@ -69,6 +83,8 @@ type FormSnapshot = {
     InputText,
     InputNumber,
     Select,
+    Checkbox,
+    DatePicker,
     ProgressSpinner,
     PageHeader,
     LocalAuthorityPicker,
@@ -100,6 +116,9 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   readonly intakeTypes = signal<LookupResponse[]>([]);
   readonly schoolPhases = signal<LookupResponse[]>([]);
   readonly schoolTypes = signal<LookupResponse[]>([]);
+  readonly payZones = signal<LookupResponse[]>([]);
+  readonly specialSchoolOrganisations = signal<LookupResponse[]>([]);
+  readonly specialSchoolTypes = signal<LookupResponse[]>([]);
 
   // Form-field signals. Mirror SchoolUpsertRequest 1:1 so save() is a flat copy.
   readonly name = signal('');
@@ -115,6 +134,18 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   readonly intakeTypeId = signal<string | null>(null);
   readonly headTeacherId = signal<string | null>(null);
   readonly headTeacherFullName = signal<string | null>(null);
+  readonly ukprn = signal<string | null>(null);
+  readonly payZoneId = signal<string | null>(null);
+  readonly lowestAge = signal<number | null>(null);
+  readonly highestAge = signal<number | null>(null);
+  readonly netCapacity = signal<number | null>(null);
+  readonly netCapacityAssessmentDate = signal<Date | null>(null);
+  readonly isSpecialSchool = signal<boolean>(false);
+  readonly specialSchoolOrganisationId = signal<string | null>(null);
+  readonly specialSchoolTypeId = signal<string | null>(null);
+  readonly maxBoarders = signal<number | null>(null);
+  readonly telephone = signal<string | null>(null);
+  readonly email = signal<string | null>(null);
 
   readonly isValid = computed(() =>
     this.name().trim().length > 0 &&
@@ -144,6 +175,18 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     governanceTypeId: this.governanceTypeId(),
     intakeTypeId: this.intakeTypeId(),
     headTeacherId: this.headTeacherId(),
+    ukprn: this.ukprn(),
+    payZoneId: this.payZoneId(),
+    lowestAge: this.lowestAge(),
+    highestAge: this.highestAge(),
+    netCapacity: this.netCapacity(),
+    netCapacityAssessmentDate: this.netCapacityAssessmentDate()?.toISOString() ?? null,
+    isSpecialSchool: this.isSpecialSchool(),
+    specialSchoolOrganisationId: this.specialSchoolOrganisationId(),
+    specialSchoolTypeId: this.specialSchoolTypeId(),
+    maxBoarders: this.maxBoarders(),
+    telephone: this.telephone(),
+    email: this.email(),
   }));
 
   readonly isDirty = computed(() => {
@@ -175,6 +218,9 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     this.lookups.intakeTypes().subscribe(rows => this.intakeTypes.set(rows ?? []));
     this.lookups.schoolPhases().subscribe(rows => this.schoolPhases.set(rows ?? []));
     this.lookups.schoolTypes().subscribe(rows => this.schoolTypes.set(rows ?? []));
+    this.lookups.payZones().subscribe(rows => this.payZones.set(rows ?? []));
+    this.lookups.specialSchoolOrganisations().subscribe(rows => this.specialSchoolOrganisations.set(rows ?? []));
+    this.lookups.specialSchoolTypes().subscribe(rows => this.specialSchoolTypes.set(rows ?? []));
   }
 
   refresh(): void {
@@ -235,6 +281,19 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
       governanceTypeId: this.governanceTypeId()!,
       intakeTypeId: this.intakeTypeId()!,
       headTeacherId: this.headTeacherId(),
+      ukprn: this.normalise(this.ukprn()),
+      payZoneId: this.payZoneId(),
+      lowestAge: this.lowestAge(),
+      highestAge: this.highestAge(),
+      netCapacity: this.netCapacity(),
+      netCapacityAssessmentDate: this.netCapacityAssessmentDate()?.toISOString() ?? null,
+      isSpecialSchool: this.isSpecialSchool(),
+      // Special-school facts only travel when the flag is set; the server clears them otherwise.
+      specialSchoolOrganisationId: this.isSpecialSchool() ? this.specialSchoolOrganisationId() : null,
+      specialSchoolTypeId: this.isSpecialSchool() ? this.specialSchoolTypeId() : null,
+      maxBoarders: this.isSpecialSchool() ? this.maxBoarders() : null,
+      telephone: this.normalise(this.telephone()),
+      email: this.normalise(this.email()),
     };
 
     try {
@@ -266,6 +325,18 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
       this.intakeTypeId.set(null);
       this.headTeacherId.set(null);
       this.headTeacherFullName.set(null);
+      this.ukprn.set(null);
+      this.payZoneId.set(null);
+      this.lowestAge.set(null);
+      this.highestAge.set(null);
+      this.netCapacity.set(null);
+      this.netCapacityAssessmentDate.set(null);
+      this.isSpecialSchool.set(false);
+      this.specialSchoolOrganisationId.set(null);
+      this.specialSchoolTypeId.set(null);
+      this.maxBoarders.set(null);
+      this.telephone.set(null);
+      this.email.set(null);
     } else {
       this.name.set(school.name ?? '');
       this.website.set(school.website ?? null);
@@ -280,6 +351,20 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
       this.intakeTypeId.set(school.intakeTypeId ?? null);
       this.headTeacherId.set(school.headTeacherId ?? null);
       this.headTeacherFullName.set(school.headTeacherFullName ?? null);
+      this.ukprn.set(school.ukprn ?? null);
+      this.payZoneId.set(school.payZoneId ?? null);
+      this.lowestAge.set(school.lowestAge ?? null);
+      this.highestAge.set(school.highestAge ?? null);
+      this.netCapacity.set(school.netCapacity ?? null);
+      this.netCapacityAssessmentDate.set(
+        school.netCapacityAssessmentDate ? new Date(school.netCapacityAssessmentDate) : null,
+      );
+      this.isSpecialSchool.set(school.isSpecialSchool ?? false);
+      this.specialSchoolOrganisationId.set(school.specialSchoolOrganisationId ?? null);
+      this.specialSchoolTypeId.set(school.specialSchoolTypeId ?? null);
+      this.maxBoarders.set(school.maxBoarders ?? null);
+      this.telephone.set(school.telephone ?? null);
+      this.email.set(school.email ?? null);
     }
     this.snapshot.set(this.currentForm());
   }

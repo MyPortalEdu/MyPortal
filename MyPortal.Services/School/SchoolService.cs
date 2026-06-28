@@ -80,6 +80,20 @@ public class SchoolService : BaseService, ISchoolService
             school.IntakeTypeId = model.IntakeTypeId;
             school.SchoolTypeId = model.SchoolTypeId;
             school.HeadTeacherId = model.HeadTeacherId;
+            school.Ukprn = model.Ukprn;
+            school.PayZoneId = model.PayZoneId;
+            school.LowestAge = model.LowestAge;
+            school.HighestAge = model.HighestAge;
+            school.NetCapacity = model.NetCapacity;
+            school.NetCapacityAssessmentDate = model.NetCapacityAssessmentDate;
+            school.IsSpecialSchool = model.IsSpecialSchool;
+            // Special-school facts only make sense when the flag is set; clear them otherwise
+            // so toggling off doesn't leave stale data behind.
+            school.SpecialSchoolOrganisationId = model.IsSpecialSchool ? model.SpecialSchoolOrganisationId : null;
+            school.SpecialSchoolTypeId = model.IsSpecialSchool ? model.SpecialSchoolTypeId : null;
+            school.MaxBoarders = model.IsSpecialSchool ? model.MaxBoarders : null;
+            school.Telephone = model.Telephone;
+            school.Email = model.Email;
 
             await _schoolRepository.UpdateAsync(school, cancellationToken, ownedUow.Transaction);
         }, cancellationToken);
@@ -147,6 +161,18 @@ public class SchoolService : BaseService, ISchoolService
                 IntakeTypeId = model.IntakeTypeId,
                 SchoolTypeId = model.SchoolTypeId,
                 HeadTeacherId = model.HeadTeacherId,
+                Ukprn = model.Ukprn,
+                PayZoneId = model.PayZoneId,
+                LowestAge = model.LowestAge,
+                HighestAge = model.HighestAge,
+                NetCapacity = model.NetCapacity,
+                NetCapacityAssessmentDate = model.NetCapacityAssessmentDate,
+                IsSpecialSchool = model.IsSpecialSchool,
+                SpecialSchoolOrganisationId = model.IsSpecialSchool ? model.SpecialSchoolOrganisationId : null,
+                SpecialSchoolTypeId = model.IsSpecialSchool ? model.SpecialSchoolTypeId : null,
+                MaxBoarders = model.IsSpecialSchool ? model.MaxBoarders : null,
+                Telephone = model.Telephone,
+                Email = model.Email,
                 IsLocal = isLocal
             };
 
