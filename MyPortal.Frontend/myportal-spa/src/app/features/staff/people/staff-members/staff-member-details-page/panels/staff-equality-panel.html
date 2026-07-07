@@ -1,0 +1,154 @@
+<ng-container *transloco="let t">
+  @if (loading() && !equality()) {
+    <div class="flex justify-center py-10">
+      <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+    </div>
+  } @else if (equality()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.equalityDetails') }}</h3>
+    <p class="text-sm text-muted-color mb-4">{{ t('staff-members.equality.hint') }}</p>
+
+    <div class="flex flex-col gap-6">
+      <!-- Identity & background -->
+      <section>
+        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+          <i class="fa-solid fa-globe text-muted-color"></i>
+          {{ t('staff-members.equality.backgroundHeading') }}
+        </h4>
+        <div class="grid gap-4 md:grid-cols-2">
+          <!-- Ethnicity -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="ethnicity">{{ t('staff-members.equality.ethnicity') }}</label>
+            @if (editing()) {
+              <mp-lookup-select inputId="ethnicity" [options]="ethnicities()" [value]="ethnicityId()" (valueChange)="ethnicityId.set($event)"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(ethnicities(), ethnicityId()) }}</span>
+            }
+          </div>
+
+          <!-- Nationality -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="nationality">{{ t('staff-members.equality.nationality') }}</label>
+            @if (editing()) {
+              <mp-lookup-select inputId="nationality" [options]="nationalities()" [value]="nationalityId()" (valueChange)="nationalityId.set($event)"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(nationalities(), nationalityId()) }}</span>
+            }
+          </div>
+
+          <!-- First language -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="firstLanguage">{{ t('staff-members.equality.firstLanguage') }}</label>
+            @if (editing()) {
+              <mp-lookup-select inputId="firstLanguage" [options]="languages()" [value]="firstLanguageId()" (valueChange)="firstLanguageId.set($event)"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(languages(), firstLanguageId()) }}</span>
+            }
+          </div>
+
+          <!-- Religion -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="religion">{{ t('staff-members.equality.religion') }}</label>
+            @if (editing()) {
+              <mp-lookup-select inputId="religion" [options]="religions()" [value]="religionId()" (valueChange)="religionId.set($event)"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(religions(), religionId()) }}</span>
+            }
+          </div>
+
+          <!-- Sexual orientation -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="sexualOrientation">{{ t('staff-members.equality.sexualOrientation') }}</label>
+            @if (editing()) {
+              <mp-lookup-select inputId="sexualOrientation" [options]="sexualOrientations()" [value]="sexualOrientationId()" (valueChange)="sexualOrientationId.set($event)"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(sexualOrientations(), sexualOrientationId()) }}</span>
+            }
+          </div>
+
+          <!-- Gender identity -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="genderIdentity">{{ t('staff-members.equality.genderIdentity') }}</label>
+            @if (editing()) {
+              <mp-lookup-select inputId="genderIdentity" [options]="genderIdentities()" [value]="genderIdentityId()" (valueChange)="genderIdentityId.set($event)"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(genderIdentities(), genderIdentityId()) }}</span>
+            }
+          </div>
+
+          <!-- Marital status -->
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="maritalStatus">{{ t('staff-members.equality.maritalStatus') }}</label>
+            @if (editing()) {
+              <mp-lookup-select inputId="maritalStatus" [options]="maritalStatuses()" [value]="maritalStatusId()" (valueChange)="maritalStatusId.set($event)"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(maritalStatuses(), maritalStatusId()) }}</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      <!-- Disability -->
+      <section>
+        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+          <i class="fa-solid fa-wheelchair text-muted-color"></i>
+          {{ t('staff-members.equality.disabilityHeading') }}
+        </h4>
+        <div class="flex flex-col gap-4">
+          <!-- Declaration -->
+          <div class="flex flex-col gap-1">
+            @if (editing()) {
+              <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                <p-checkbox inputId="hasDisability" [binary]="true" [ngModel]="hasDisability()" (ngModelChange)="onHasDisability($event)"></p-checkbox>
+                {{ t('staff-members.equality.hasDisability') }}
+              </label>
+            } @else {
+              <label class="text-sm font-medium">{{ t('staff-members.equality.hasDisability') }}</label>
+              <span>{{ hasDisability() ? t('common.yes') : t('common.no') }}</span>
+            }
+          </div>
+
+          <!-- Disability type and details only apply once a disability is declared. -->
+          @if (hasDisability()) {
+            <!-- Disabilities multi-select -->
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium" for="disabilities">{{ t('staff-members.equality.disabilities') }}</label>
+              @if (editing()) {
+                <p-multiselect
+                  inputId="disabilities"
+                  [options]="disabilities()"
+                  optionLabel="description"
+                  optionValue="id"
+                  display="chip"
+                  [filter]="false"
+                  [showToggleAll]="false"
+                  appendTo="body"
+                  styleClass="w-full"
+                  [placeholder]="t('staff-members.equality.disabilitiesPlaceholder')"
+                  [ngModel]="disabilityIds()"
+                  (ngModelChange)="disabilityIds.set($event)"></p-multiselect>
+              } @else {
+                <span>{{ selectedLabels(disabilities(), disabilityIds()) }}</span>
+              }
+            </div>
+
+            <!-- Details -->
+            <div class="flex flex-col gap-1">
+              <label class="text-sm font-medium" for="disabilityDetails">{{ t('staff-members.equality.details') }}</label>
+              @if (editing()) {
+                <textarea
+                  pInputTextarea
+                  id="disabilityDetails"
+                  rows="3"
+                  [placeholder]="t('staff-members.equality.detailsPlaceholder')"
+                  [ngModel]="disabilityDetails() ?? ''"
+                  (ngModelChange)="disabilityDetails.set($event)"></textarea>
+              } @else {
+                <span class="whitespace-pre-wrap">{{ disabilityDetails() || '—' }}</span>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</ng-container>

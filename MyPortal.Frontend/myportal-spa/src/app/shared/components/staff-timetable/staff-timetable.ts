@@ -11,6 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { Calendar, EventInput, EventSourceFuncArg } from '@fullcalendar/core';
+import allLocales from '@fullcalendar/core/locales-all';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
@@ -139,6 +140,10 @@ export class StaffTimetable implements AfterViewInit, OnDestroy {
     this.zone.runOutsideAngular(() => {
       this.calendar = new Calendar(this.calEl.nativeElement, {
         plugins: [timeGridPlugin, dayGridPlugin, listPlugin],
+        // Follow the browser locale so date formats match the user's region
+        // (e.g. en-GB renders D/M, not FullCalendar's default American M/D).
+        locales: allLocales,
+        locale: navigator.language,
         initialView: isMobile ? 'listWeek' : 'timeGridWeek',
         firstDay: 1, // Monday
         nowIndicator: true,
