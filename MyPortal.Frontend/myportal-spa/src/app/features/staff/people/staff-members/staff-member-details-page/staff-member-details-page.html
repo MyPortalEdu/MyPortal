@@ -713,8 +713,8 @@
                         <div class="flex items-center gap-2 mb-2">
                           <span class="text-sm font-semibold">{{ t('staff-members.employment.spell') }}{{ employments().length > 1 ? ' ' + (ei + 1) : '' }}</span>
                           <p-tag
-                            [value]="spellActive(e) ? t('staff-members.employment.active') : t('staff-members.employment.ended')"
-                            [severity]="spellActive(e) ? 'success' : 'secondary'"></p-tag>
+                            [value]="t('staff-members.employment.periodStatus.' + periodStatus(e.startDate, e.endDate))"
+                            [severity]="periodSeverity(periodStatus(e.startDate, e.endDate))"></p-tag>
                           @if (e.contracts.length) {
                             <span class="text-xs text-muted-color">{{ t('staff-members.employment.fteTotal', { total: spellFteTotal(e) }) }}</span>
                           }
@@ -797,7 +797,12 @@
                             @for (c of e.contracts; track $index; let ci = $index) {
                               <div class="rounded bg-surface-50 dark:bg-surface-800 p-3">
                                 <div class="flex items-start justify-between gap-2 mb-2">
-                                  <span class="text-sm font-medium text-muted-color">{{ t('staff-members.employment.contract') }}{{ e.contracts.length > 1 ? ' ' + (ci + 1) : '' }}</span>
+                                  <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-sm font-medium text-muted-color">{{ t('staff-members.employment.contract') }}{{ e.contracts.length > 1 ? ' ' + (ci + 1) : '' }}</span>
+                                    <p-tag
+                                      [value]="t('staff-members.employment.periodStatus.' + periodStatus(c.startDate, c.endDate))"
+                                      [severity]="periodSeverity(periodStatus(c.startDate, c.endDate))"></p-tag>
+                                  </div>
                                   @if (editing()) {
                                     <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
                                       [ariaLabel]="t('staff-members.employment.removeContract')" (onClick)="removeContract(ei, ci)"></p-button>

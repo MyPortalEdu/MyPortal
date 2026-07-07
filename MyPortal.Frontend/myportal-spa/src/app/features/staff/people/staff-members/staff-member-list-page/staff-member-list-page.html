@@ -23,6 +23,7 @@
       [value]="rows()"
       (onLazyLoad)="load($event)"
       [filterDelay]="300"
+      [filters]="initialFilters"
       [globalFilterFields]="['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code']"
       dataKey="id"
       selectionMode="single"
@@ -30,7 +31,15 @@
       [scrollable]="true">
 
       <ng-template pTemplate="caption">
-        <div class="flex justify-end">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p-select
+            [options]="statusOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="statusFilter()"
+            (ngModelChange)="onStatusFilterChange($event)"
+            styleClass="w-full sm:w-44"
+            [ariaLabel]="t('staff-members.statusFilter.label')"></p-select>
           <span class="relative w-full sm:w-80">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
             <input
@@ -54,6 +63,10 @@
             {{ t('staff-members.columns.code') }}
             <p-sortIcon field="code"></p-sortIcon>
           </th>
+          <th pSortableColumn="status" style="width: 9rem">
+            {{ t('staff-members.columns.status') }}
+            <p-sortIcon field="status"></p-sortIcon>
+          </th>
         </tr>
       </ng-template>
 
@@ -71,12 +84,17 @@
             }
           </td>
           <td class="font-mono text-xs text-muted-color">{{ row.code }}</td>
+          <td>
+            <p-tag
+              [value]="t('staff-members.status.' + row.status)"
+              [severity]="statusSeverity(row.status)"></p-tag>
+          </td>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="3" class="text-center text-sm text-muted-color py-6">
+          <td colspan="4" class="text-center text-sm text-muted-color py-6">
             {{ t('staff-members.empty') }}
           </td>
         </tr>

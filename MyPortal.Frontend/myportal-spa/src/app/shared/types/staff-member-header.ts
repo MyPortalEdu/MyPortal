@@ -1,5 +1,6 @@
-// Mirrors MyPortal.Contracts.Models.People.StaffStatus.
-export type StaffStatus = 'Active' | 'Inactive';
+// Mirrors MyPortal.Contracts.Models.People.StaffStatus — lifecycle badge derived
+// server-side from the member's employment spells (Archived wins if soft-deleted).
+export type StaffStatus = 'Active' | 'Future' | 'Leaver' | 'None' | 'Archived';
 
 // Mirrors MyPortal.Contracts.Models.People.StaffRelationship — the viewer's
 // relationship to a staff member, used by the FE to compose sidebar visibility

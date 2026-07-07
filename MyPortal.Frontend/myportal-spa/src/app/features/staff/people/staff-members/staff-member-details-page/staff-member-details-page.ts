@@ -1060,8 +1060,19 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     });
   }
 
-  protected statusSeverity(): 'success' | 'secondary' {
-    return this.header()?.status === 'Active' ? 'success' : 'secondary';
+  protected statusSeverity(): 'success' | 'info' | 'warn' | 'secondary' | 'contrast' {
+    switch (this.header()?.status) {
+      case 'Active':
+        return 'success';
+      case 'Future':
+        return 'info';
+      case 'Leaver':
+        return 'warn';
+      case 'Archived':
+        return 'contrast';
+      default:
+        return 'secondary';
+    }
   }
 
   // Initials for the avatar. Use the actual first/last name rather than parsing
@@ -1739,11 +1750,33 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   // A spell is active while it has no end date, or its end date hasn't passed.
-  protected spellActive(e: StaffEmploymentUpsertItem): boolean {
-    if (!e.endDate) return true;
+  // Lifecycle of a single spell/contract from its own dates, as of today. Mirrors the
+  // server's per-period logic: not-yet-started → upcoming, ended → ended, else current.
+  // Re-derives live while editing, so the badge tracks the dates being typed.
+  protected periodStatus(
+    startDate: string | null | undefined,
+    endDate: string | null | undefined,
+  ): 'upcoming' | 'current' | 'ended' {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return new Date(e.endDate) >= today;
+
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      if (start > today) return 'upcoming';
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(0, 0, 0, 0);
+      if (end < today) return 'ended';
+    }
+
+    return 'current';
+  }
+
+  protected periodSeverity(status: 'upcoming' | 'current' | 'ended'): 'success' | 'info' | 'secondary' {
+    return status === 'current' ? 'success' : status === 'upcoming' ? 'info' : 'secondary';
   }
 
   // Summed FTE across a spell's contracts (a quick "how full is this person" read).

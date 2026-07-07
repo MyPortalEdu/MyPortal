@@ -8,6 +8,7 @@ using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Models;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.People;
@@ -81,9 +82,21 @@ public class StaffMemberService : BaseService, IStaffMemberService
             DisplayName = row.DisplayName,
             PreferredName = row.PreferredName,
             PhotoId = row.PhotoId,
-            Status = row.IsDeleted ? StaffStatus.Inactive : StaffStatus.Active,
+            Status = DeriveStatus(row),
             Relationship = relationship
         };
+    }
+
+    // Lifecycle badge, highest-precedence first: a soft-deleted record is Archived; otherwise the
+    // member is Active (has a current spell), Future (only future spells), Leaver (all spells ended),
+    // or None (no employment on record). Derived here rather than in SQL so the enum values stay in C#.
+    private static StaffStatus DeriveStatus(StaffMemberHeaderRow row)
+    {
+        if (row.IsDeleted) return StaffStatus.Archived;
+        if (row.HasCurrentEmployment) return StaffStatus.Active;
+        if (row.HasFutureEmployment) return StaffStatus.Future;
+        if (row.HasAnyEmployment) return StaffStatus.Leaver;
+        return StaffStatus.None;
     }
 
     public async Task<StaffBasicDetailsResponse> GetBasicDetailsAsync(Guid id, CancellationToken cancellationToken)

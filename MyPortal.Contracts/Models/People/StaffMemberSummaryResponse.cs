@@ -15,4 +15,10 @@ public class StaffMemberSummaryResponse
     public string LastName { get; set; } = null!;
     public string? PreferredFirstName { get; set; }
     public string? PreferredLastName { get; set; }
+
+    /// <summary>
+    /// Employment-derived lifecycle badge (never <c>Archived</c> here — soft-deleted staff are
+    /// excluded from the list). Computed in <c>GetStaffMemberSummaries.sql</c> so it sorts/filters.
+    /// </summary>
+    public StaffStatus Status { get; set; }
 }

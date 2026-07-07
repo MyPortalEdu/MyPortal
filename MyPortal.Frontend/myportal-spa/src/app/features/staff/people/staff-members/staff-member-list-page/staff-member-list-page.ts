@@ -1,9 +1,22 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { Select } from 'primeng/select';
+import { Tag } from 'primeng/tag';
+import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
+
+import { StaffStatus } from '../../../../../shared/types/staff-member-header';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
 import { HeaderAction } from '../../../../../shared/types/header-action.type';
@@ -23,7 +36,17 @@ const SEARCH_FIELDS = ['firstName', 'lastName', 'preferredFirstName', 'preferred
   selector: 'mp-staff-member-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Card, InputText, TableModule, PageHeader, StaffMemberCreateDialog, TranslocoDirective],
+  imports: [
+    Card,
+    InputText,
+    Select,
+    Tag,
+    TableModule,
+    FormsModule,
+    PageHeader,
+    StaffMemberCreateDialog,
+    TranslocoDirective,
+  ],
   providers: [provideTranslocoScope('staff-members')],
   templateUrl: './staff-member-list-page.html',
 })
@@ -40,6 +63,27 @@ export class StaffMemberListPage implements OnInit {
   protected readonly createOpen = signal(false);
 
   private readonly canCreate = signal(false);
+
+  private readonly table = viewChild<Table>('dt');
+
+  // Status filter for the grid. Defaults to Active — the common case is "who's
+  // on staff now" — but the user can switch to a single status or All to surface
+  // future starters and leavers. 'All' clears the status predicate entirely.
+  protected readonly statusFilter = signal<StaffStatus | 'All'>('Active');
+
+  // The default carried into the table's first lazy-load, so the initial page is
+  // already Active-filtered without a second round-trip.
+  protected readonly initialFilters = {
+    status: { value: 'Active' as StaffStatus, matchMode: 'equals' },
+  };
+
+  protected readonly statusOptions = computed<{ label: string; value: StaffStatus | 'All' }[]>(() => [
+    { label: this.transloco.translate('staff-members.statusFilter.all'), value: 'All' },
+    { label: this.transloco.translate('staff-members.status.Active'), value: 'Active' },
+    { label: this.transloco.translate('staff-members.status.Future'), value: 'Future' },
+    { label: this.transloco.translate('staff-members.status.Leaver'), value: 'Leaver' },
+    { label: this.transloco.translate('staff-members.status.None'), value: 'None' },
+  ]);
 
   protected readonly headerActions = computed<HeaderAction[]>(() =>
     this.canCreate()
@@ -77,6 +121,31 @@ export class StaffMemberListPage implements OnInit {
 
   openDetails(row: StaffMemberSummaryResponse): void {
     this.router.navigate(['/staff/people/staff-members', row.id]);
+  }
+
+  // Drive the table's `status` column filter from the dropdown. 'All' clears it
+  // (null value → toQueryKitParams drops the predicate); otherwise an equals
+  // match against the computed Status column. p-table.filter() triggers a reload.
+  protected onStatusFilterChange(value: StaffStatus | 'All'): void {
+    this.statusFilter.set(value);
+    this.table()?.filter(value === 'All' ? null : value, 'status', 'equals');
+  }
+
+  protected statusSeverity(
+    status: StaffStatus,
+  ): 'success' | 'info' | 'warn' | 'secondary' | 'contrast' {
+    switch (status) {
+      case 'Active':
+        return 'success';
+      case 'Future':
+        return 'info';
+      case 'Leaver':
+        return 'warn';
+      case 'Archived':
+        return 'contrast';
+      default:
+        return 'secondary';
+    }
   }
 
   // Name shown in the grid: preferred name wins over legal where set.

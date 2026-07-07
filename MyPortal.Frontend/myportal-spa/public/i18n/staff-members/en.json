@@ -51,11 +51,19 @@
     "code": "Code",
     "firstName": "First name",
     "lastName": "Last name",
-    "title": "Title"
+    "title": "Title",
+    "status": "Status"
+  },
+  "statusFilter": {
+    "label": "Filter by status",
+    "all": "All Statuses"
   },
   "status": {
     "Active": "Active",
-    "Inactive": "Inactive"
+    "Future": "Future",
+    "Leaver": "Leaver",
+    "None": "No Employment",
+    "Archived": "Archived"
   },
   "relationship": {
     "Self": "Your record",
@@ -184,8 +192,11 @@
     "statutoryHint": "Full-time statutory: {{salary}} ({{zone}})",
     "noPayZoneHint": "Set the school's pay zone (School Details) to auto-fill salary from the spine point.",
     "noRateHint": "No statutory rate on file for this spine point — enter the salary manually.",
-    "active": "Active",
-    "ended": "Ended",
+    "periodStatus": {
+      "upcoming": "Upcoming",
+      "current": "Current",
+      "ended": "Ended"
+    },
     "fteTotal": "FTE total: {{total}}"
   },
   "preEmployment": {
