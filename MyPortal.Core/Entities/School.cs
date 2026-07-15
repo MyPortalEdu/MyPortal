@@ -41,7 +41,6 @@ namespace MyPortal.Core.Entities
 
         public int? HighestAge { get; set; }
 
-        // Net capacity + the date it was assessed.
         public int? NetCapacity { get; set; }
 
         public DateTime? NetCapacityAssessmentDate { get; set; }

@@ -35,7 +35,6 @@ namespace MyPortal.Core.Entities
         public QualificationLevel? QualificationLevel { get; set; }
         public ClassOfDegree? ClassOfDegree { get; set; }
 
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

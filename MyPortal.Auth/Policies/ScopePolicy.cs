@@ -12,7 +12,6 @@ namespace MyPortal.Auth.Policies
         {
             policy.RequireAuthenticatedUser();
 
-            // Accept either cookie or bearer
             policy.AddAuthenticationSchemes(
                 IdentityConstants.ApplicationScheme,
                 OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);

@@ -312,7 +312,6 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
         Guid directoryId,
         CancellationToken ct)
     {
-        // cheap “does it exist” first (optional, depends on your SQL)
         var dir = await DirectoryService.TryGetDirectoryByIdAsync(directoryId, ct);
         
         if (dir == null)

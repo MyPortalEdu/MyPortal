@@ -7,7 +7,6 @@
          border-b border-indigo-700 dark:border-[var(--p-surface-800)]
          text-white dark:text-[var(--p-text-color)] transition-colors"
 >
-  <!-- left -->
   <div class="flex items-center gap-3">
     <button pButton type="button" class="p-button-text p-button-sm !text-white dark:!text-[var(--p-text-color)] hover:!bg-white/10 dark:hover:!bg-white/10" (click)="menuToggle.emit()" [attr.aria-label]="t('topbar.toggleNavigation')">
       <i pButtonIcon class="fa-solid fa-bars"></i>
@@ -35,7 +34,6 @@
     }
   </div>
 
-  <!-- right -->
   <div class="flex items-center gap-2 sm:gap-3">
     @if (me$ | async; as me) {
       <button pButton class="!p-0 !rounded-full w-9 h-9 !bg-transparent !border-0" (click)="userMenu.toggle($event)" [attr.aria-label]="t('topbar.userMenu')">
@@ -48,7 +46,6 @@
 
       <p-popover #userMenu styleClass="user-menu-popover">
         <div class="w-72">
-          <!-- Header -->
           <div class="flex items-center gap-3 p-4">
             <p-avatar
               shape="circle"
@@ -73,7 +70,6 @@
 
           <div class="border-t border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]"></div>
 
-          <!-- Main actions -->
           <ul class="py-1 list-none m-0 p-0">
             <li>
               <a routerLink="/portal/profile" (click)="userMenu.hide()" class="menu-row">

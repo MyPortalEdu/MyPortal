@@ -85,15 +85,12 @@ export class StaffMemberCreateDialog {
   protected readonly step = signal<'search' | 'attach'>('search');
   protected readonly saving = signal(false);
 
-  // ─── Search ──────────────────────────────────────────────────────────────────
   protected readonly searchTerm = signal('');
   protected readonly results = signal<PersonMatchResponse[]>([]);
   protected readonly searching = signal(false);
 
-  // ─── Attach (existing person) ────────────────────────────────────────────────
   protected readonly selectedPerson = signal<PersonMatchResponse | null>(null);
 
-  // ─── Create-new form (basic-details subset) ──────────────────────────────────
   protected readonly title = signal<string | null>(null);
   protected readonly firstName = signal('');
   protected readonly middleName = signal<string | null>(null);
@@ -163,8 +160,6 @@ export class StaffMemberCreateDialog {
     this.closed.emit();
   }
 
-  // ─── Picking an existing person ────────────────────────────────────────────────
-
   protected pickPerson(person: PersonMatchResponse): void {
     if (person.isStaffMember) {
       // Already staff — don't duplicate; jump to the existing profile instead.
@@ -183,8 +178,6 @@ export class StaffMemberCreateDialog {
     this.code.set('');
     this.step.set('search');
   }
-
-  // ─── Submit ──────────────────────────────────────────────────────────────────
 
   protected async attach(): Promise<void> {
     const person = this.selectedPerson();

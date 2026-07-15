@@ -14,7 +14,6 @@ namespace MyPortal.Core.Entities
         [StringLength(128)]
         public string? CycleName { get; set; }
 
-        // The reviewer / appraiser (a staff member).
         public Guid? ReviewerId { get; set; }
 
         public Guid? StatusId { get; set; }
@@ -35,7 +34,6 @@ namespace MyPortal.Core.Entities
         public ReviewStatus? Status { get; set; }
         public ObservationOutcome? OverallOutcome { get; set; }
 
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

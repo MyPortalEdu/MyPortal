@@ -79,7 +79,6 @@ export type Permission = {
   [C in keyof typeof Permissions]: (typeof Permissions)[C][keyof (typeof Permissions)[C]]
 }[keyof typeof Permissions];
 
-// Convenience: a flat readonly array if you ever need it
 export const ALL_PERMISSIONS = Object.freeze(
   Object.values(Permissions).flatMap(cat => Object.values(cat))
 ) as readonly Permission[];

@@ -8,12 +8,10 @@ public class AuthorizeCheckOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        // Check for [Authorize] on endpoint or controller
         var hasAuthorize =
             context.MethodInfo.DeclaringType?.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any() == true
             || context.MethodInfo.GetCustomAttributes(true).OfType<AuthorizeAttribute>().Any();
 
-        // If it’s explicitly anonymous, don’t require auth
         var hasAllowAnonymous =
             context.MethodInfo.DeclaringType?.GetCustomAttributes(true).OfType<AllowAnonymousAttribute>().Any() == true
             || context.MethodInfo.GetCustomAttributes(true).OfType<AllowAnonymousAttribute>().Any();

@@ -11,7 +11,6 @@
   (onHide)="onHide()"
   [showHeader]="false">
 
-  <!-- Header -->
   <div class="flex items-center justify-between p-4 border-b border-surface">
     <h3 class="text-base font-semibold m-0">
       {{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}
@@ -22,7 +21,6 @@
   </div>
 
   <div class="p-4 flex flex-col gap-4">
-    <!-- Name -->
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.name') }}</label>
       <input
@@ -37,7 +35,6 @@
         [invalid]="wasTouched('name') && nameRef.invalid" />
     </div>
 
-    <!-- Icon grid -->
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted-color">{{ t('form.icon') }}</label>
       <div class="grid grid-cols-6 sm:grid-cols-10 gap-1.5">
@@ -57,7 +54,6 @@
       </div>
     </div>
 
-    <!-- Colour swatches -->
     <div class="flex flex-col gap-1.5">
       <label class="text-xs font-medium text-muted-color">{{ t('form.colour') }}</label>
       <div class="flex flex-wrap gap-2">

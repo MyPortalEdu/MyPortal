@@ -11,7 +11,6 @@ namespace MyPortal.Core.Entities
     {
         public Guid StaffMemberId { get; set; }
 
-        // Optional link to the review cycle this objective belongs to.
         public Guid? ReviewId { get; set; }
 
         public Guid? CategoryId { get; set; }
@@ -37,7 +36,6 @@ namespace MyPortal.Core.Entities
         public ObjectiveCategory? Category { get; set; }
         public ObjectiveStatus? Status { get; set; }
 
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

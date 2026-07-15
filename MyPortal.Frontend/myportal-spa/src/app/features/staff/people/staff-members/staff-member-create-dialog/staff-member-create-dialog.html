@@ -27,7 +27,6 @@
       </button>
     </div>
 
-    <!-- ─── Search + create-new ──────────────────────────────────────────── -->
     @if (step() === 'search') {
       <div class="p-4">
         <!-- Live search. Matches surface below as you type; no matches just means
@@ -50,7 +49,6 @@
           <span class="text-xs text-muted-color">{{ t('staff-members.create.searchHint') }}</span>
         </div>
 
-        <!-- Possible matches -->
         @if (results().length > 0) {
           <div class="mt-4">
             <p class="text-sm font-medium mb-2">{{ t('staff-members.create.matchesLabel') }}</p>
@@ -84,7 +82,6 @@
             </ul>
           </div>
 
-          <!-- Divider into the create-new form -->
           <div class="flex items-center gap-3 my-4">
             <span class="flex-1 border-t border-surface"></span>
             <span class="text-xs uppercase tracking-wide text-muted-color">
@@ -98,9 +95,7 @@
           </p>
         }
 
-        <!-- Create-new form -->
         <div class="grid gap-3 md:grid-cols-2">
-          <!-- Code -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-code">
               {{ t('staff-members.fields.code') }}
@@ -110,7 +105,6 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <!-- Title -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-title">
               {{ t('staff-members.fields.title') }}
@@ -120,7 +114,6 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <!-- First name -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-firstName">
               {{ t('staff-members.fields.firstName') }}
@@ -130,7 +123,6 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <!-- Middle name -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-middleName">
               {{ t('staff-members.fields.middleName') }}
@@ -140,7 +132,6 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <!-- Last name -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-lastName">
               {{ t('staff-members.fields.lastName') }}
@@ -150,7 +141,6 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <!-- Preferred first -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-preferredFirst">
               {{ t('staff-members.fields.preferredFirstName') }}
@@ -160,7 +150,6 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <!-- Gender -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-gender">
               {{ t('staff-members.fields.gender') }}
@@ -170,7 +159,6 @@
                               (valueChange)="gender.set($event ?? '')"></mp-gender-select>
           </div>
 
-          <!-- DOB -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-dob">
               {{ t('staff-members.fields.dob') }}
@@ -200,7 +188,6 @@
       </div>
     }
 
-    <!-- ─── Attach step ──────────────────────────────────────────────────── -->
     @if (step() === 'attach') {
       <div class="p-4">
         <p class="text-sm text-muted-color mb-4">

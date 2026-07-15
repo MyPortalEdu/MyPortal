@@ -277,8 +277,6 @@ public class CpSatTimetableSolverTests
         Assert.That(tutorAtD4P4.PeriodIds.Single(), Is.EqualTo("D4P4"));
     }
 
-    // ─── PPA cap ─────────────────────────────────────────────────────────────
-
     private static TimetableInput BuildSingleClassSchool(IReadOnlyList<int> slotSizes,
         IReadOnlyList<Teacher> teachers)
     {
@@ -358,8 +356,6 @@ public class CpSatTimetableSolverTests
 
         Assert.That(result.Status, Is.EqualTo(SolveStatus.Infeasible));
     }
-
-    // ─── multi-class per group ─────────────────────────────────────────────
 
     [Test]
     public void Solve_TutorBlock_TwoGroupsTwoClassesEach_ProducesAllAssignments()

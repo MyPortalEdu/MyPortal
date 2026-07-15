@@ -8,14 +8,12 @@
     <p class="text-sm text-muted-color mb-4">{{ t('staff-members.equality.hint') }}</p>
 
     <div class="flex flex-col gap-6">
-      <!-- Identity & background -->
       <section>
         <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
           <i class="fa-solid fa-globe text-muted-color"></i>
           {{ t('staff-members.equality.backgroundHeading') }}
         </h4>
         <div class="grid gap-4 md:grid-cols-2">
-          <!-- Ethnicity -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="ethnicity">{{ t('staff-members.equality.ethnicity') }}</label>
             @if (editing()) {
@@ -25,7 +23,6 @@
             }
           </div>
 
-          <!-- Nationality -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="nationality">{{ t('staff-members.equality.nationality') }}</label>
             @if (editing()) {
@@ -35,7 +32,6 @@
             }
           </div>
 
-          <!-- First language -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="firstLanguage">{{ t('staff-members.equality.firstLanguage') }}</label>
             @if (editing()) {
@@ -45,7 +41,6 @@
             }
           </div>
 
-          <!-- Religion -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="religion">{{ t('staff-members.equality.religion') }}</label>
             @if (editing()) {
@@ -55,7 +50,6 @@
             }
           </div>
 
-          <!-- Sexual orientation -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="sexualOrientation">{{ t('staff-members.equality.sexualOrientation') }}</label>
             @if (editing()) {
@@ -65,7 +59,6 @@
             }
           </div>
 
-          <!-- Gender identity -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="genderIdentity">{{ t('staff-members.equality.genderIdentity') }}</label>
             @if (editing()) {
@@ -75,7 +68,6 @@
             }
           </div>
 
-          <!-- Marital status -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="maritalStatus">{{ t('staff-members.equality.maritalStatus') }}</label>
             @if (editing()) {
@@ -87,14 +79,12 @@
         </div>
       </section>
 
-      <!-- Disability -->
       <section>
         <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
           <i class="fa-solid fa-wheelchair text-muted-color"></i>
           {{ t('staff-members.equality.disabilityHeading') }}
         </h4>
         <div class="flex flex-col gap-4">
-          <!-- Declaration -->
           <div class="flex flex-col gap-1">
             @if (editing()) {
               <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
@@ -109,7 +99,6 @@
 
           <!-- Disability type and details only apply once a disability is declared. -->
           @if (hasDisability()) {
-            <!-- Disabilities multi-select -->
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium" for="disabilities">{{ t('staff-members.equality.disabilities') }}</label>
               @if (editing()) {
@@ -131,7 +120,6 @@
               }
             </div>
 
-            <!-- Details -->
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium" for="disabilityDetails">{{ t('staff-members.equality.details') }}</label>
               @if (editing()) {

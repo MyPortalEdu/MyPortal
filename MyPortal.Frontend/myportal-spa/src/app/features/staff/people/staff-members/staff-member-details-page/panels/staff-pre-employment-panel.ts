@@ -323,7 +323,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
     this.snapshot.set(this.form());
   }
 
-  // DBS list
   protected addDbsCheck(): void {
     this.dbsChecks.update(rows => [
       ...rows,
@@ -352,7 +351,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
     this.dbsChecks.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
-  // Right-to-work list
   protected addRightToWork(): void {
     this.rightToWorkChecks.update(rows => [
       ...rows,
@@ -382,7 +380,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
     );
   }
 
-  // References list
   protected addReference(): void {
     this.references.update(rows => [
       ...rows,
@@ -412,7 +409,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
     this.references.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
-  // Overseas checks list
   protected addOverseasCheck(): void {
     this.overseasChecks.update(rows => [
       ...rows,

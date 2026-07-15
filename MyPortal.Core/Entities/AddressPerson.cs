@@ -20,7 +20,6 @@ namespace MyPortal.Core.Entities
         public Person? Person { get; set; }
         public AddressType? AddressType { get; set; }
 
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

@@ -203,7 +203,6 @@ public class DirectoryService : BaseService, IDirectoryService
     {
         var directoriesById = flatTree.Directories.ToDictionary(d => d.Id);
 
-        // Key by non-null ParentId (Guid), ignore roots (ParentId == null)
         var directoriesByParent = flatTree.Directories
             .Where(d => d.ParentId.HasValue)
             .GroupBy(d => d.ParentId!.Value)

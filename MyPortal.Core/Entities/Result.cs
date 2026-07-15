@@ -28,7 +28,6 @@ namespace MyPortal.Core.Entities
 
         public string? ColourCode { get; set; }
 
-        // Used to add notes/comments to results
         public string? Note { get; set; }
         
         public ResultSet? ResultSet { get; set; }
@@ -37,7 +36,6 @@ namespace MyPortal.Core.Entities
         public Student? Student { get; set; }
         public Grade? Grade { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

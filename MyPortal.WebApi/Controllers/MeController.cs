@@ -6,7 +6,6 @@ using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces.People;
 using MyPortal.Services.Interfaces.System;
 using MyPortal.WebApi.Infrastructure.Attributes;
-// (UserInfoResponse / UserChangePasswordRequest live in MyPortal.Contracts.Models.System.Users)
 
 namespace MyPortal.WebApi.Controllers
 {

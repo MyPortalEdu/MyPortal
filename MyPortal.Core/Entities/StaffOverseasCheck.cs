@@ -11,12 +11,10 @@ namespace MyPortal.Core.Entities
     {
         public Guid StaffMemberId { get; set; }
 
-        // Country the check relates to — reuses the Nationalities lookup.
         public Guid NationalityId { get; set; }
 
         public DateTime? CheckedDate { get; set; }
 
-        // Whether the check came back clear / satisfactory.
         public bool IsClear { get; set; }
 
         public string? Notes { get; set; }
@@ -26,7 +24,6 @@ namespace MyPortal.Core.Entities
         public StaffMember? StaffMember { get; set; }
         public Nationality? Nationality { get; set; }
 
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

@@ -29,7 +29,6 @@ public class StaffProfessionalDetailsResponse
     // Free-text summary kept alongside the structured qualifications list.
     public string? QualificationsSummary { get; set; }
 
-    // Structured qualifications.
     public List<StaffQualificationResponse> Qualifications { get; set; } = [];
 
     // Option lists (active only).

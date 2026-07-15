@@ -8,7 +8,6 @@
     <p class="text-sm text-muted-color mb-4">{{ t('staff-members.professional.hint') }}</p>
 
     <div class="flex flex-col gap-6">
-      <!-- Teaching status -->
       <section>
         <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
           <i class="fa-solid fa-chalkboard-user text-muted-color"></i>
@@ -33,14 +32,12 @@
 
       <!-- QTS and statutory induction only apply to teachers, not support staff (incl. HLTAs). -->
       @if (isTeachingStaff()) {
-      <!-- Qualified Teacher Status -->
       <section>
         <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
           <i class="fa-solid fa-certificate text-muted-color"></i>
           {{ t('staff-members.professional.qtsHeading') }}
         </h4>
         <div class="grid gap-4 md:grid-cols-2">
-          <!-- TRN -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="trn">{{ t('staff-members.professional.trn') }}</label>
             @if (editing()) {
@@ -53,7 +50,6 @@
 
           <!-- Route and award date only apply once QTS is held. -->
           @if (hasQts()) {
-            <!-- QTS route -->
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium" for="qtsRoute">{{ t('staff-members.professional.qtsRoute') }}</label>
               @if (editing()) {
@@ -63,7 +59,6 @@
               }
             </div>
 
-            <!-- QTS awarded -->
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium" for="qtsAwarded">{{ t('staff-members.professional.qtsAwardedDate') }}</label>
               @if (editing()) {
@@ -76,14 +71,12 @@
         </div>
       </section>
 
-      <!-- Induction -->
       <section>
         <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
           <i class="fa-solid fa-seedling text-muted-color"></i>
           {{ t('staff-members.professional.inductionHeading') }}
         </h4>
         <div class="grid gap-4 md:grid-cols-2">
-          <!-- Induction status -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="inductionStatus">{{ t('staff-members.professional.inductionStatus') }}</label>
             @if (editing()) {
@@ -93,7 +86,6 @@
             }
           </div>
 
-          <!-- Induction start -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="inductionStart">{{ t('staff-members.professional.inductionStartDate') }}</label>
             @if (editing()) {
@@ -103,7 +95,6 @@
             }
           </div>
 
-          <!-- Induction completed -->
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="inductionCompleted">{{ t('staff-members.professional.inductionCompletedDate') }}</label>
             @if (editing()) {
@@ -116,14 +107,12 @@
       </section>
       }
 
-      <!-- Qualifications -->
       <section>
         <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
           <i class="fa-solid fa-graduation-cap text-muted-color"></i>
           {{ t('staff-members.professional.qualificationsHeading') }}
         </h4>
 
-        <!-- Free-text summary -->
         <div class="flex flex-col gap-1 mb-4">
           <label class="text-sm font-medium" for="qualSummary">{{ t('staff-members.professional.qualificationsSummary') }}</label>
           @if (editing()) {
@@ -135,7 +124,6 @@
           }
         </div>
 
-        <!-- Structured qualifications -->
         @if (editing()) {
           <div class="flex flex-col gap-3">
             @for (q of qualifications(); track $index) {

@@ -30,8 +30,6 @@ describe('BulletinsDataService', () => {
 
   afterEach(() => http.verify());
 
-  // ─── Bulletins ─────────────────────────────────────────────────────────────
-
   it('list() GETs /api/bulletins with page+pageSize query', () => {
     const expected: PageResult<BulletinSummaryResponse> = { items: [], totalItems: 0 };
     service.list(2, 50).subscribe(r => expect(r).toEqual(expected));
@@ -112,8 +110,6 @@ describe('BulletinsDataService', () => {
     req.flush(null);
   });
 
-  // ─── Categories ────────────────────────────────────────────────────────────
-
   it('listCategories(false) caches the active-only response across subscribers', () => {
     const categories: BulletinCategoryResponse[] = [
       { id: 'c1', name: 'A', icon: 'i', colourCode: '#000000', displayOrder: 1, active: true, isSystem: false, version: 1 },
@@ -187,8 +183,6 @@ describe('BulletinsDataService', () => {
     expect(refetch.request.method).toBe('GET');
     refetch.flush([]);
   });
-
-  // ─── Settings ──────────────────────────────────────────────────────────────
 
   it('getSettings() GETs /api/bulletins/settings', () => {
     const expected = { allowedAudienceGroups: [] } as BulletinSettingsResponse;

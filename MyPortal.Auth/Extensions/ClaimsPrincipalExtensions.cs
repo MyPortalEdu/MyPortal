@@ -13,8 +13,6 @@ public static class ClaimsPrincipalExtensions
 
             return claim.Type switch
             {
-                // OIDC Claims
-
                 OpenIddictConstants.Claims.Subject
                     => new[]
                     {
@@ -43,16 +41,12 @@ public static class ClaimsPrincipalExtensions
                         OpenIddictConstants.Destinations.IdentityToken
                     },
 
-                // Identity Claims
-
                 ClaimTypes.NameIdentifier
                     => new[]
                     {
                         OpenIddictConstants.Destinations.AccessToken,
                         OpenIddictConstants.Destinations.IdentityToken
                     },
-
-                // MyPortal Custom Claims
 
                 Constants.ClaimTypes.UserType
                     => new[]

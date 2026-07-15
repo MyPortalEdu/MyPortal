@@ -50,7 +50,6 @@ static bool IsApiRequest(HttpRequest req)
         return false;
     }
 
-    // treat JSON/XHR or /api paths as API calls
     if (req.Path.StartsWithSegments("/api") || req.Path.StartsWithSegments("/connect"))
     {
         return true;
@@ -155,7 +154,6 @@ builder.Services.AddOpenIddict()
         o.SetEndSessionEndpointUris("/connect/endsession");
         o.SetUserInfoEndpointUris("/connect/userinfo");
 
-        //o.AcceptAnonymousClients();
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowRefreshTokenFlow();
 
@@ -396,7 +394,6 @@ await AuthSeeder.RunAsync(app.Services);
 
 app.UseMiddleware<ExceptionMiddleware>();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     // Swashbuckle continues to generate the OpenAPI document at /swagger/v1/swagger.json;

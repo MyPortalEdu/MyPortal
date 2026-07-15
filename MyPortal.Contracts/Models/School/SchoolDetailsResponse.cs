@@ -10,7 +10,6 @@ public class SchoolDetailsResponse
     public string? Website { get; set; }
     public Guid AgencyTypeId { get; set; }
 
-    // School bits
     public string Urn { get; set; } = "";
     public string Uprn { get; set; } = "";
     public int EstablishmentNumber { get; set; }
@@ -42,11 +41,9 @@ public class SchoolDetailsResponse
     public int? LowestAge { get; set; }
     public int? HighestAge { get; set; }
 
-    // Net capacity + assessment date.
     public int? NetCapacity { get; set; }
     public DateTime? NetCapacityAssessmentDate { get; set; }
 
-    // Special school facts.
     public bool IsSpecialSchool { get; set; }
     public Guid? SpecialSchoolOrganisationId { get; set; }
     public string? SpecialSchoolOrganisationName { get; set; }

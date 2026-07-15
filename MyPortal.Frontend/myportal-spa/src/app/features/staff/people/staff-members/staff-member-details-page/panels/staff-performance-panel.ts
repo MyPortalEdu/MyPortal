@@ -280,7 +280,6 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
     this.snapshot.set(this.form());
   }
 
-  // Reviews list
   protected addReview(): void {
     this.reviews.update(rows => [
       ...rows,
@@ -309,7 +308,6 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
     this.reviews.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
-  // Objectives list
   protected addObjective(): void {
     this.objectives.update(rows => [
       ...rows,
@@ -339,7 +337,6 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
     this.objectives.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
-  // Observations list
   protected addObservation(): void {
     this.observations.update(rows => [
       ...rows,
@@ -369,7 +366,6 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
     this.observations.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
-  // Training records list
   protected addTrainingRecord(): void {
     this.trainingRecords.update(rows => [
       ...rows,

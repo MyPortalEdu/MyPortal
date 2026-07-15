@@ -14,7 +14,6 @@ namespace MyPortal.Core.Entities
 
         public DateTime? IdentityCheckedDate { get; set; }
 
-        // Prohibition from teaching order check.
         public DateTime? ProhibitionFromTeachingCheckedDate { get; set; }
 
         // s128 direction check (prohibition from management of an independent school).
@@ -32,7 +31,6 @@ namespace MyPortal.Core.Entities
 
         public StaffMember? StaffMember { get; set; }
 
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

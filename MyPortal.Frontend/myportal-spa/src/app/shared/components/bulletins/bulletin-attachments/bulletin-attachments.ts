@@ -91,8 +91,6 @@ export class BulletinAttachments {
     });
   }
 
-  // ─── Drop / browse handlers ────────────────────────────────────────────
-
   onDragOver(event: DragEvent): void {
     if (!this.isEditable()) return;
     event.preventDefault();
@@ -126,8 +124,6 @@ export class BulletinAttachments {
     }
   }
 
-  // ─── Public contract for the form dialog ───────────────────────────────
-
   hasStaged(): boolean {
     return this.staged().length > 0;
   }
@@ -157,8 +153,6 @@ export class BulletinAttachments {
     this.uploading.set(false);
     return true;
   }
-
-  // ─── Per-file actions ─────────────────────────────────────────────────
 
   removeStaged(index: number): void {
     this.staged.update(s => s.filter((_, i) => i !== index));
@@ -213,8 +207,6 @@ export class BulletinAttachments {
     if (contentType.includes('zip') || contentType.includes('compressed'))    return 'fa-solid fa-file-zipper';
     return 'fa-solid fa-file';
   }
-
-  // ─── Internals ────────────────────────────────────────────────────────
 
   private handleFiles(files: File[]): void {
     // Filter oversize files out client-side and toast for each. The server

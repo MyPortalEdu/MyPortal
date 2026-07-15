@@ -13,7 +13,6 @@ namespace MyPortal.Core.Entities
         public StudentGroup? StudentGroup { get; set; }
         public CurriculumYearGroup? CurriculumYearGroup { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

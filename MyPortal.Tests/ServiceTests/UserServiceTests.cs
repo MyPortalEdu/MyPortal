@@ -287,7 +287,7 @@ public class UserServiceTests
             PersonId = Guid.NewGuid(),
             Username = "student",
             UserType = UserType.Student,
-            IsEnabled = false, // turned off
+            IsEnabled = false,
             RoleIds = new List<Guid>() // no role changes
         }, CancellationToken.None);
 

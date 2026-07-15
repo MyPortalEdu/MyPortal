@@ -35,8 +35,6 @@ public class StaffMemberAccessServiceTests
         SetPermissions();
     }
 
-    // ----- relationship setup helpers -------------------------------------------------------
-
     private void AsSelf()
     {
         var personId = Guid.NewGuid();
@@ -99,8 +97,6 @@ public class StaffMemberAccessServiceTests
     private Task<bool> Can(StaffArea area, StaffAccess acceptable)
         => _service.CanAsync(_subjectId, area, acceptable, CancellationToken.None);
 
-    // ----- relationship resolution ---------------------------------------------------------
-
     [Test]
     public async Task GetRelationship_PersonLessViewer_IsUnrelated()
     {
@@ -151,7 +147,7 @@ public class StaffMemberAccessServiceTests
             Is.EqualTo(StaffRelationship.Unrelated));
     }
 
-    // ----- All scope: grants regardless of relationship ------------------------------------
+    // All scope: grants regardless of relationship.
 
     [Test]
     public async Task AllScope_GrantsToUnrelatedViewer()
@@ -171,7 +167,7 @@ public class StaffMemberAccessServiceTests
         Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewAll), Is.True);
     }
 
-    // ----- Own scope: self only ------------------------------------------------------------
+    // Own scope: self only.
 
     [Test]
     public async Task OwnScope_GrantsToSelf()
@@ -200,7 +196,7 @@ public class StaffMemberAccessServiceTests
         Assert.That(await Can(StaffArea.EmploymentDetails, StaffAccess.ViewOwn), Is.False);
     }
 
-    // ----- Managed scope: line-managed only; never self ------------------------------------
+    // Managed scope: line-managed only; never self.
 
     [Test]
     public async Task ManagedScope_GrantsToLineManagedViewer()
@@ -229,8 +225,6 @@ public class StaffMemberAccessServiceTests
 
         Assert.That(await Can(StaffArea.BasicDetails, StaffAccess.ViewManaged), Is.False);
     }
-
-    // ----- Combined ------------------------------------------------------------------------
 
     [Test]
     public async Task GrantsViaManagedBranch_WhenAcceptableIncludesAll()
@@ -266,8 +260,6 @@ public class StaffMemberAccessServiceTests
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll), Is.False);
     }
 
-    // ----- No identity / no permissions ----------------------------------------------------
-
     [Test]
     public async Task NoPersonIdentity_AllScopeStillApplies()
     {
@@ -288,8 +280,6 @@ public class StaffMemberAccessServiceTests
         _repo.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction>()),
             Times.Never, "Person-less viewer should short-circuit before any subject lookup.");
     }
-
-    // ----- RequireAsync --------------------------------------------------------------------
 
     [Test]
     public void RequireAsync_Throws_WhenDenied()
@@ -312,8 +302,6 @@ public class StaffMemberAccessServiceTests
             _service.RequireAsync(_subjectId, StaffArea.EmploymentDetails, StaffAccess.ViewAll,
                 CancellationToken.None));
     }
-
-    // ----- Misuse guard --------------------------------------------------------------------
 
     [Test]
     public void CanAsync_WithNoneFlag_Throws()

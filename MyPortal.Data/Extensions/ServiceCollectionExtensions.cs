@@ -71,7 +71,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffOriginRepository, StaffOriginRepository>();
         services.AddScoped<IStaffDestinationRepository, StaffDestinationRepository>();
         services.AddScoped<IContractTypeRepository, ContractTypeRepository>();
-        // Pre-employment checks (Single Central Record) repositories.
         services.AddScoped<IStaffPreEmploymentChecksRepository, StaffPreEmploymentChecksRepository>();
         services.AddScoped<IDbsCheckRepository, DbsCheckRepository>();
         services.AddScoped<IDbsCheckTypeRepository, DbsCheckTypeRepository>();
@@ -81,13 +80,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReferenceTypeRepository, ReferenceTypeRepository>();
         services.AddScoped<IReferenceStatusRepository, ReferenceStatusRepository>();
         services.AddScoped<IStaffOverseasCheckRepository, StaffOverseasCheckRepository>();
-        // Absences & leave.
         services.AddScoped<IStaffAbsenceRepository, StaffAbsenceRepository>();
         services.AddScoped<IStaffAbsenceTypeRepository, StaffAbsenceTypeRepository>();
         services.AddScoped<IStaffIllnessTypeRepository, StaffIllnessTypeRepository>();
-        // Timetable (read-only calendar aggregation).
         services.AddScoped<IStaffCalendarRepository, StaffCalendarRepository>();
-        // Performance (appraisal).
         services.AddScoped<IPerformanceReviewRepository, PerformanceReviewRepository>();
         services.AddScoped<IReviewStatusRepository, ReviewStatusRepository>();
         services.AddScoped<IStaffObjectiveRepository, StaffObjectiveRepository>();

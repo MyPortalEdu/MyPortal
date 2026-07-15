@@ -24,7 +24,6 @@ public class BulletinAccessPolicyTests
         _policy = new BulletinAccessPolicy(_bulletinRepository.Object);
     }
 
-    // ─── CanViewAsync ────────────────────────────────────────────────────────
     // Staff pinners and staff creators short-circuit in-memory. Everyone else
     // (including non-creator staff with view-only permission) hits the audience
     // SP via IBulletinRepository.IsVisibleToUserAsync.
@@ -84,8 +83,6 @@ public class BulletinAccessPolicyTests
         Assert.That(await _policy.CanViewAsync(bulletin, scope, CancellationToken.None), Is.EqualTo(spResult));
     }
 
-    // ─── CanEdit ─────────────────────────────────────────────────────────────
-
     [TestCase(UserType.Student)]
     [TestCase(UserType.Parent)]
     public void CanEdit_NonStaff_AlwaysDenied_EvenWithAllPermissions(UserType userType)
@@ -126,8 +123,6 @@ public class BulletinAccessPolicyTests
         var scope = MakeScope(UserType.Staff, AuthorId, canView: true, canEdit: false, canPin: false);
         Assert.That(_policy.CanEdit(bulletin, scope), Is.False);
     }
-
-    // ─── helpers ─────────────────────────────────────────────────────────────
 
     private static Bulletin MakeBulletin(Guid createdById) =>
         new()

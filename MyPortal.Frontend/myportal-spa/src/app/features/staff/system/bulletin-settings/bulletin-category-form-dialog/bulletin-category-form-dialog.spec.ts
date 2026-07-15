@@ -75,8 +75,6 @@ describe('BulletinCategoryFormDialog', () => {
     fixture.detectChanges();
   }
 
-  // ─── reset / open lifecycle ─────────────────────────────────────────────
-
   it('create mode initialises with defaults (first icon, first colour, displayOrder 100, active=true)', () => {
     open(null);
     expect(component.isEdit()).toBeFalse();
@@ -103,8 +101,6 @@ describe('BulletinCategoryFormDialog', () => {
     expect(component.colour()).toBe(CATEGORY_COLOURS[0]);
   });
 
-  // ─── isValid ────────────────────────────────────────────────────────────
-
   it('isValid is false when the name is empty or whitespace', () => {
     open(null);
     expect(component.isValid()).toBeFalse();
@@ -113,8 +109,6 @@ describe('BulletinCategoryFormDialog', () => {
     component.name.set('Notices');
     expect(component.isValid()).toBeTrue();
   });
-
-  // ─── save() ─────────────────────────────────────────────────────────────
 
   it('save() in create mode posts the trimmed payload, toasts, and emits saved', () => {
     open(null);
@@ -182,8 +176,6 @@ describe('BulletinCategoryFormDialog', () => {
     expect(notify.apiError).toHaveBeenCalled();
     expect(component.submitting()).toBeFalse();
   });
-
-  // ─── close ──────────────────────────────────────────────────────────────
 
   it('onCancel/onHide emit closed', () => {
     open(null);

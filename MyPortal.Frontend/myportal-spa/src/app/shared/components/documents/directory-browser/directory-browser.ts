@@ -132,14 +132,12 @@ export class DirectoryBrowser {
     return this.path().map((dir, i) => ({ dir, label: i === 0 ? root : dir.name }));
   });
 
-  // ── Name dialog (new folder / rename) ──────────────────────────────────
   readonly nameDialogOpen = signal(false);
   readonly nameDialogMode = signal<'new' | 'rename'>('new');
   readonly nameValue = signal('');
   private readonly renameTarget = signal<DirectoryDetailsResponse | null>(null);
   readonly nameSaving = signal(false);
 
-  // ── Move dialog ────────────────────────────────────────────────────────
   readonly moveDialogOpen = signal(false);
   readonly moveTarget = signal<Row | null>(null);
   readonly moveTree = signal<FlatDir[]>([]);
@@ -178,7 +176,6 @@ export class DirectoryBrowser {
     });
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────
   private loadRoot(base: string): void {
     this.loading.set(true);
     this.data.rootContents(base).subscribe({
@@ -220,7 +217,6 @@ export class DirectoryBrowser {
     if (cur) this.loadContents(cur);
   }
 
-  // ── Navigation ─────────────────────────────────────────────────────────
   private setPath(newPath: DirectoryDetailsResponse[]): void {
     this.backStack.update(s => [...s, this.path()]);
     this.fwdStack.set([]);
@@ -264,7 +260,6 @@ export class DirectoryBrowser {
     if (last) this.loadContents(last);
   }
 
-  // ── New folder / rename ─────────────────────────────────────────────────
   openNewFolder(): void {
     this.nameDialogMode.set('new');
     this.nameValue.set('');
@@ -305,7 +300,6 @@ export class DirectoryBrowser {
     }
   }
 
-  // ── Delete ───────────────────────────────────────────────────────────────
   async deleteFolder(dir: DirectoryDetailsResponse): Promise<void> {
     const ok = await this.confirm.danger({
       header: this.tr('deleteFolder.header'),
@@ -337,7 +331,6 @@ export class DirectoryBrowser {
     }
   }
 
-  // ── Move ─────────────────────────────────────────────────────────────────
   openMove(row: Row): void {
     this.moveTarget.set(row);
     this.moveSelectedId.set(null);
@@ -397,7 +390,6 @@ export class DirectoryBrowser {
     }
   }
 
-  // ── Change type ────────────────────────────────────────────────────────────
   readonly typeDialogOpen = signal(false);
   readonly typeTarget = signal<DocumentDetailsResponse | null>(null);
   readonly typeSelectedId = signal<string | null>(null);
@@ -433,7 +425,6 @@ export class DirectoryBrowser {
     }
   }
 
-  // ── Upload (dialog: choose type → stage files → commit) ──────────────────
   readonly uploadDialogOpen = signal(false);
   readonly stagedFiles = signal<File[]>([]);
 

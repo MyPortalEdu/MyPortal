@@ -28,8 +28,6 @@ export abstract class StaffAreaPanel {
   abstract cancel(): void;
   abstract save(): Promise<void>;
 
-  // ─── Shared helpers ──────────────────────────────────────────────────────────
-
   // p-datepicker binds Date; models carry ISO strings. Cached so the same string always yields the
   // same Date instance — a stable reference the datepicker won't treat as a change (see NG note in
   // the project memory on datepicker state).

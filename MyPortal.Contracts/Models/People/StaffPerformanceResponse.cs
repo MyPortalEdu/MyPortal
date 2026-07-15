@@ -14,7 +14,6 @@ public class StaffPerformanceResponse
     public List<StaffObservationResponse> Observations { get; set; } = [];
     public List<StaffTrainingRecordResponse> TrainingRecords { get; set; } = [];
 
-    // Option lists.
     public List<LookupResponse> ReviewStatuses { get; set; } = [];
     public List<LookupResponse> ObjectiveStatuses { get; set; } = [];
     public List<LookupResponse> ObjectiveCategories { get; set; } = [];

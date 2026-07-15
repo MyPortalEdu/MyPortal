@@ -18,7 +18,6 @@ namespace MyPortal.Core.Entities
         [StringLength(128)]
         public string? Focus { get; set; }
 
-        // The class or subject observed (free text).
         [StringLength(128)]
         public string? SubjectObserved { get; set; }
 

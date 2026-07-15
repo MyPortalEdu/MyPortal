@@ -71,13 +71,11 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
             [(StaffArea.Absences, StaffAccess.EditManaged)]            = Permissions.Staff.EditManagedStaffAbsences,
             [(StaffArea.Absences, StaffAccess.EditAll)]                = Permissions.Staff.EditAllStaffAbsences,
 
-            // Timetable
             [(StaffArea.Timetable, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffTimetable,
             [(StaffArea.Timetable, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffTimetable,
             [(StaffArea.Timetable, StaffAccess.ViewAll)]               = Permissions.Staff.ViewAllStaffTimetable,
             [(StaffArea.Timetable, StaffAccess.EditAll)]               = Permissions.Staff.EditAllStaffTimetable,
 
-            // Documents
             [(StaffArea.Documents, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffDocuments,
             [(StaffArea.Documents, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffDocuments,
             [(StaffArea.Documents, StaffAccess.ViewAll)]               = Permissions.Staff.ViewAllStaffDocuments,

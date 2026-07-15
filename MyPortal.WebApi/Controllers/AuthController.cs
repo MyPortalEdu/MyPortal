@@ -83,7 +83,6 @@ public sealed class AuthController : ControllerBase
 
         const string oidcScheme = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme;
 
-        // AUTHORIZATION CODE or REFRESH TOKEN:
         if (request.IsAuthorizationCodeGrantType() || request.IsRefreshTokenGrantType())
         {
             var result = await HttpContext.AuthenticateAsync(oidcScheme);
@@ -136,7 +135,6 @@ public sealed class AuthController : ControllerBase
         var request = HttpContext.GetOpenIddictServerRequest()
                       ?? throw new InvalidOperationException("OIDC request missing.");
 
-        // Sign out the local cookie session
         await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
 
         // Hand control back to OpenIddict to complete end-session + redirect

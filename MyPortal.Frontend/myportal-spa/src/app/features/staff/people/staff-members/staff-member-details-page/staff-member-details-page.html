@@ -10,7 +10,6 @@
       <p-progressSpinner [style]="{ width: '2.5rem', height: '2.5rem' }"></p-progressSpinner>
     </div>
   } @else if (header(); as h) {
-    <!-- Identity strip -->
     <p-card styleClass="mb-4">
       <div class="flex flex-wrap items-center gap-4">
         <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-lg font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
@@ -56,9 +55,7 @@
       </div>
     </p-card>
 
-    <!-- Sidebar + content -->
     <div class="flex flex-col gap-4 md:flex-row">
-      <!-- Section sidebar -->
       <p-card styleClass="md:w-72 md:flex-shrink-0">
         <div class="flex flex-col gap-1 text-sm">
           @for (area of areas(); track area.key) {
@@ -79,7 +76,6 @@
         </div>
       </p-card>
 
-      <!-- Active section panel -->
       <p-card class="flex-1">
         @switch (activeArea()) {
           @case ('basicDetails') {
@@ -135,16 +131,13 @@
                   }
                 </div>
 
-                <!-- Identity / Name / Personal fields -->
                 <div class="flex flex-1 flex-col gap-6">
-                <!-- Identity -->
                 <section>
                   <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
                     <i class="fa-solid fa-id-card text-muted-color"></i>
                     {{ t('staff-members.details.groups.identity') }}
                   </h4>
                   <div class="grid gap-4 md:grid-cols-2">
-                    <!-- Code -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="code">
                         {{ t('staff-members.fields.code') }}
@@ -158,14 +151,12 @@
                   </div>
                 </section>
 
-                <!-- Name -->
                 <section>
                   <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
                     <i class="fa-solid fa-user text-muted-color"></i>
                     {{ t('staff-members.details.groups.name') }}
                   </h4>
                   <div class="grid gap-4 md:grid-cols-2">
-                    <!-- Title -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="title">
                         {{ t('staff-members.fields.title') }}
@@ -177,7 +168,6 @@
                       }
                     </div>
 
-                    <!-- First name -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="firstName">
                         {{ t('staff-members.fields.firstName') }}
@@ -189,7 +179,6 @@
                       }
                     </div>
 
-                    <!-- Middle name -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="middleName">
                         {{ t('staff-members.fields.middleName') }}
@@ -201,7 +190,6 @@
                       }
                     </div>
 
-                    <!-- Last name -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="lastName">
                         {{ t('staff-members.fields.lastName') }}
@@ -213,7 +201,6 @@
                       }
                     </div>
 
-                    <!-- Preferred first -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="preferredFirst">
                         {{ t('staff-members.fields.preferredFirstName') }}
@@ -225,7 +212,6 @@
                       }
                     </div>
 
-                    <!-- Preferred last -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="preferredLast">
                         {{ t('staff-members.fields.preferredLastName') }}
@@ -239,7 +225,6 @@
                   </div>
                 </section>
 
-                <!-- Personal -->
                 <section>
                   <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
                     <i class="fa-solid fa-circle-info text-muted-color"></i>
@@ -261,7 +246,6 @@
                       }
                     </div>
 
-                    <!-- DOB -->
                     <div class="flex flex-col gap-1">
                       <label class="text-sm font-medium" for="dob">
                         {{ t('staff-members.fields.dob') }}

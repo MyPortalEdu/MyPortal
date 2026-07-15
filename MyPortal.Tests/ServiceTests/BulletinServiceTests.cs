@@ -137,8 +137,6 @@ public class BulletinServiceTests
             }
         };
 
-    // ─── GetDetailsByIdAsync ─────────────────────────────────────────────────
-
     [Test]
     public async Task GetDetailsByIdAsync_ReturnsDetails_WhenSpReturnsRow()
     {
@@ -167,8 +165,6 @@ public class BulletinServiceTests
         Assert.That(async () => await _service.GetDetailsByIdAsync(bulletinId, CancellationToken.None),
             Throws.TypeOf<NotFoundException>());
     }
-
-    // ─── CreateAsync ─────────────────────────────────────────────────────────
 
     [Test]
     public async Task CreateAsync_RequiresEdit_CreatesDirectoryBulletinAndAudiences()
@@ -250,8 +246,6 @@ public class BulletinServiceTests
         _bulletinRepository.Verify(r => r.InsertAsync(It.IsAny<Bulletin>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
-
-    // ─── UpdateAsync ─────────────────────────────────────────────────────────
 
     [Test]
     public async Task UpdateAsync_AppliesFields_AndPersistsAudiences_AndHandsExpectedVersionToRepo()
@@ -347,8 +341,6 @@ public class BulletinServiceTests
             Throws.TypeOf<ConcurrencyException>());
     }
 
-    // ─── UpdatePinAsync ──────────────────────────────────────────────────────
-
     [Test]
     public async Task UpdatePinAsync_SetsPinnedAt_AndHandsExpectedVersionToRepo()
     {
@@ -389,8 +381,6 @@ public class BulletinServiceTests
 
         Assert.That(bulletin.PinnedAt, Is.Null);
     }
-
-    // ─── AcknowledgeAsync ────────────────────────────────────────────────────
 
     [Test]
     public async Task AcknowledgeAsync_RecordsAck_WhenBulletinRequiresIt_AndIsVisible()
@@ -443,8 +433,6 @@ public class BulletinServiceTests
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
-    // ─── GetBulletinSummariesAsync ───────────────────────────────────────────
-
     [Test]
     public async Task GetBulletinSummariesAsync_BuildsScopeFromAuth_AndForwardsFilterSortPagingToRepo()
     {
@@ -476,8 +464,6 @@ public class BulletinServiceTests
         Assert.That(capturedScope.CanEdit, Is.True);
         Assert.That(capturedScope.CanPin, Is.False);
     }
-
-    // ─── CanViewDirectoryAsync ───────────────────────────────────────────────
 
     [Test]
     public async Task CanViewDirectoryAsync_ReturnsFalse_WhenBulletinNotVisibleToUser()
@@ -525,8 +511,6 @@ public class BulletinServiceTests
 
         Assert.That(result, Is.True);
     }
-
-    // ─── DeleteAsync ─────────────────────────────────────────────────────────
 
     [Test]
     public async Task DeleteAsync_DeletesBulletinAndItsDirectory()

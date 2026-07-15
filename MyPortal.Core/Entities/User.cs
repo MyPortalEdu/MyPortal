@@ -18,7 +18,6 @@ namespace MyPortal.Core.Entities
 
         public Person? Person { get; set; }
         
-        // Identity
         [StringLength(256)]
         public string? Username { get; set; }
 
@@ -54,7 +53,6 @@ namespace MyPortal.Core.Entities
 
         public int AccessFailedCount { get; set; }
         
-        // Audit
         public Guid? CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

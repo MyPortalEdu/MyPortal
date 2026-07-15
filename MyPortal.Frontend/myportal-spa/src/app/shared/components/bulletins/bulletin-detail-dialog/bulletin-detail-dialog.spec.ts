@@ -105,8 +105,6 @@ describe('BulletinDetailDialog', () => {
     fixture.detectChanges();
   });
 
-  // ─── input binding / visibility ──────────────────────────────────────────
-
   it('setting bulletinId triggers a fetch and opens the dialog', () => {
     setBulletinId('b1');
     expect(data.getById).toHaveBeenCalledWith('b1');
@@ -127,8 +125,6 @@ describe('BulletinDetailDialog', () => {
     expect(component.loading()).toBeFalse();
   });
 
-  // ─── initials ─────────────────────────────────────────────────────────────
-
   it('initials uses the first two name parts', () => {
     setBulletinId('b1');
     expect(component.initials()).toBe('AL'); // "Ada Lovelace"
@@ -145,8 +141,6 @@ describe('BulletinDetailDialog', () => {
     setBulletinId('b1');
     expect(component.initials()).toBe('');
   });
-
-  // ─── audienceSummary ─────────────────────────────────────────────────────
 
   it('audienceSummary maps known kinds and uses studentGroupName for groups', () => {
     const audiences: BulletinAudienceResponse[] = [
@@ -171,8 +165,6 @@ describe('BulletinDetailDialog', () => {
     expect(component.audienceSummary()).toBe('bulletins.audience.group');
   });
 
-  // ─── canEdit ─────────────────────────────────────────────────────────────
-  //
   // The `me` signal is private — tests poke it directly via cast rather than
   // re-stubbing MeService and re-creating the fixture for each variation.
 
@@ -213,8 +205,6 @@ describe('BulletinDetailDialog', () => {
     expect(component.canEdit()).toBeFalse();
   });
 
-  // ─── acknowledge ─────────────────────────────────────────────────────────
-
   it('acknowledge() calls the API, flips local state, and emits acknowledged', () => {
     data.getById.and.returnValue(of(makeDetail({
       requiresAcknowledgement: true, hasAcknowledged: false,
@@ -250,8 +240,6 @@ describe('BulletinDetailDialog', () => {
     expect(component.acknowledging()).toBeFalse();
   });
 
-  // ─── edit + delete ────────────────────────────────────────────────────────
-
   it('requestEdit() emits the full bulletin', () => {
     const detail = makeDetail();
     data.getById.and.returnValue(of(detail));
@@ -286,15 +274,11 @@ describe('BulletinDetailDialog', () => {
     expect(emitted).not.toHaveBeenCalled();
   });
 
-  // ─── tint ────────────────────────────────────────────────────────────────
-
   it('tint() appends 1A to 6-digit hex and returns 8-digit hex unchanged', () => {
     expect(component.tint('#6366F1')).toBe('#6366F11A');
     expect(component.tint('#6366F1FF')).toBe('#6366F1FF');
     expect(component.tint('')).toBe('');
   });
-
-  // ─── onHide ──────────────────────────────────────────────────────────────
 
   it('onHide emits closed', () => {
     const emitted = jasmine.createSpy('closed');

@@ -53,8 +53,6 @@ export class BulletinsDataService {
     return this.http.delete<void>(`/api/v1/bulletins/${bulletinId}`);
   }
 
-  // ─── Categories ──────────────────────────────────────────────────────────
-
   listCategories(includeInactive = false): Observable<BulletinCategoryResponse[]> {
     // Active-only is cached because every form-open and feed-refresh wants the
     // same set. The inactive variant skips the cache — it's for management
@@ -89,8 +87,6 @@ export class BulletinsDataService {
   invalidateCategoryCache(): void {
     this.activeCategories$ = undefined;
   }
-
-  // ─── Settings ────────────────────────────────────────────────────────────
 
   getSettings(): Observable<BulletinSettingsResponse> {
     return this.http.get<BulletinSettingsResponse>('/api/v1/bulletins/settings');

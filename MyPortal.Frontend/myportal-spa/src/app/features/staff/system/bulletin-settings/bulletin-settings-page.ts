@@ -71,8 +71,6 @@ export class BulletinSettingsPage implements OnInit {
     // its init runs in AppShell and the signal reads through transparently.
   }
 
-  // ─── Categories ────────────────────────────────────────────────────────
-
   refreshCategories(): void {
     this.categoriesLoading.set(true);
     // includeInactive=true so admins can see / re-activate stale ones from here.
@@ -125,8 +123,6 @@ export class BulletinSettingsPage implements OnInit {
         this.transloco.translate('bulletin-settings.categories.errorDelete')),
     });
   }
-
-  // ─── Audiences ─────────────────────────────────────────────────────────
 
   refreshSettings(): void {
     this.allowedGroupsLoading.set(true);

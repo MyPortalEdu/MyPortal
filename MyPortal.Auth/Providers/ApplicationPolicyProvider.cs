@@ -26,7 +26,6 @@ public sealed class ApplicationPolicyProvider : IAuthorizationPolicyProvider
         if (string.IsNullOrWhiteSpace(policyName))
             return _fallback.GetPolicyAsync(policyName);
 
-        // cache any custom policy by name
         if (_cache.TryGetValue(policyName, out var cached))
             return Task.FromResult<AuthorizationPolicy?>(cached);
 

@@ -5,7 +5,6 @@
       <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
     </div>
 
-    <!-- Year banner -->
     @if (yearName(); as name) {
       <div class="rounded-lg bg-[var(--p-primary-50)] border border-[var(--p-primary-200)] p-4 flex items-center gap-4">
         <i class="fa-solid fa-calendar-days text-primary text-2xl"></i>
@@ -22,7 +21,6 @@
       </div>
     }
 
-    <!-- Terms -->
     <section class="flex flex-col gap-2">
       <h4 class="text-sm font-semibold m-0">{{ t('termsTitle') }}</h4>
       @if (model().academicTerms.length === 0) {
@@ -41,7 +39,6 @@
       }
     </section>
 
-    <!-- Periods -->
     <section class="flex flex-col gap-2">
       <h4 class="text-sm font-semibold m-0">{{ t('periodsTitle') }}</h4>
       @if (isCopyingPeriods()) {
@@ -71,7 +68,6 @@
       }
     </section>
 
-    <!-- Holidays -->
     <section class="flex flex-col gap-2">
       <h4 class="text-sm font-semibold m-0">{{ t('holidaysTitle') }}</h4>
       @if (model().schoolHolidays.length === 0) {
@@ -93,7 +89,6 @@
       }
     </section>
 
-    <!-- Pastoral structure -->
     <section class="flex flex-col gap-2">
       <h4 class="text-sm font-semibold m-0">{{ t('pastoralTitle') }}</h4>
       @if (copyPastoralSourceName(); as source) {

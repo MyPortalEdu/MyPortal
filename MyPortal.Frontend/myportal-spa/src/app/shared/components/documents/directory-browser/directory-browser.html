@@ -1,5 +1,4 @@
 <ng-container *transloco="let t">
-  <!-- Toolbar -->
   <div class="flex items-center gap-2 flex-wrap mb-3">
     <div class="flex items-center gap-1">
       <p-button
@@ -28,7 +27,6 @@
         (onClick)="up()"></p-button>
     </div>
 
-    <!-- Breadcrumb -->
     <nav class="flex items-center gap-1 flex-wrap text-sm min-w-0 flex-1">
       @for (crumb of crumbs(); track crumb.dir.id; let last = $last; let i = $index) {
         @if (last) {
@@ -61,7 +59,6 @@
 
   <input #fileInput type="file" multiple class="hidden" (change)="onFileInputChange($event)" />
 
-  <!-- Contents (drop target when editable) -->
   <div
     class="rounded border transition-colors"
     [class.border-surface-200]="!dragOver()"
@@ -99,7 +96,6 @@
         </ng-template>
         <ng-template pTemplate="body" let-row>
           <tr>
-            <!-- Name -->
             <td class="min-w-0">
               @if (row.kind === 'dir') {
                 <button type="button" class="flex items-center gap-2 min-w-0 text-left hover:text-primary" (click)="openFolder(row.dir)">
@@ -113,21 +109,17 @@
                 </div>
               }
             </td>
-            <!-- Type -->
             @if (hasTypes()) {
               <td class="text-sm text-muted-color">
                 {{ row.kind === 'file' ? typeLabel(row.doc) : '—' }}
               </td>
             }
-            <!-- Size -->
             <td class="text-sm text-muted-color">
               {{ row.kind === 'file' ? formatFileSize(row.doc.sizeBytes) : '—' }}
             </td>
-            <!-- Modified -->
             <td class="text-sm text-muted-color">
               {{ row.kind === 'file' ? (row.doc.lastModifiedAt | date: 'mediumDate') : '—' }}
             </td>
-            <!-- Actions -->
             <td>
               <div class="flex items-center justify-end gap-1">
                 @if (row.kind === 'file') {
@@ -183,7 +175,6 @@
     }
   </div>
 
-  <!-- New folder / rename dialog -->
   <p-dialog
     [visible]="nameDialogOpen()"
     (visibleChange)="nameDialogOpen.set($event)"
@@ -218,7 +209,6 @@
     </div>
   </p-dialog>
 
-  <!-- Move dialog -->
   <p-dialog
     [visible]="moveDialogOpen()"
     (visibleChange)="moveDialogOpen.set($event)"
@@ -270,7 +260,6 @@
     </div>
   </p-dialog>
 
-  <!-- Upload dialog -->
   <p-dialog
     [visible]="uploadDialogOpen()"
     (visibleChange)="uploadDialogOpen.set($event)"
@@ -294,7 +283,6 @@
       </div>
     }
 
-    <!-- Drop zone / browse -->
     <button
       type="button"
       class="w-full rounded border-2 border-dashed px-4 py-8 text-center text-sm transition-colors hover:border-primary"
@@ -346,7 +334,6 @@
     </div>
   </p-dialog>
 
-  <!-- Change type dialog -->
   <p-dialog
     [visible]="typeDialogOpen()"
     (visibleChange)="typeDialogOpen.set($event)"

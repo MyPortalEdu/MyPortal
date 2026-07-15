@@ -17,7 +17,6 @@ public class StaffPreEmploymentChecksResponse
     public DateTime? QualificationsVerifiedDate { get; set; }
     public string? Notes { get; set; }
 
-    // Record lists.
     public List<DbsCheckResponse> DbsChecks { get; set; } = [];
     public List<RightToWorkCheckResponse> RightToWorkChecks { get; set; } = [];
     public List<StaffReferenceResponse> References { get; set; } = [];

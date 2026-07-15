@@ -149,8 +149,6 @@ public sealed class TimetablesController : BaseApiController
         return NoContent();
     }
 
-    // ─── pins ─────────────────────────────────────────────────────────────
-
     /// <summary>List the pins on a timetable.</summary>
     /// <remarks>Pins stay fixed across solver runs.</remarks>
     /// <param name="timetableId">The id of the timetable.</param>

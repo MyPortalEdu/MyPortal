@@ -92,8 +92,6 @@ describe('BulletinsFeed', () => {
     fixture.detectChanges(); // triggers ngOnInit → refresh()
   });
 
-  // ─── refresh() / ngOnInit ────────────────────────────────────────────────
-
   it('refresh() loads bulletins and categories and clears the loading flag', () => {
     const items = [makeSummary({ id: 'a' }), makeSummary({ id: 'b' })];
     data.list.and.returnValue(of({ items, totalItems: 2 }));
@@ -112,8 +110,6 @@ describe('BulletinsFeed', () => {
     expect(component.loading()).toBeFalse();
   });
 
-  // ─── newCount ────────────────────────────────────────────────────────────
-
   it('newCount counts only bulletins that require ack and have not been acknowledged', () => {
     data.list.and.returnValue(of({
       items: [
@@ -129,8 +125,6 @@ describe('BulletinsFeed', () => {
 
     expect(component.newCount()).toBe(2);
   });
-
-  // ─── orderedBulletins / filteredBulletins ───────────────────────────────
 
   it('orders pinned bulletins ahead of unpinned, then by createdAt descending', () => {
     data.list.and.returnValue(of({
@@ -169,8 +163,6 @@ describe('BulletinsFeed', () => {
     expect(component.filteredBulletins().length).toBe(3);
   });
 
-  // ─── canPost (gate on the "+ New" button) ────────────────────────────────
-  //
   // `me` is private — poke it directly so we don't have to recreate the
   // fixture per variation. Server still enforces; this is just so non-editors
   // don't see a button that would 403.
@@ -197,8 +189,6 @@ describe('BulletinsFeed', () => {
     );
     expect(component.canPost()).toBeFalse();
   });
-
-  // ─── dialog state ────────────────────────────────────────────────────────
 
   it('openNew() clears any stale edit state before opening the form', () => {
     component.editingBulletin.set({ id: 'stale' } as BulletinDetailsResponse);
@@ -227,8 +217,6 @@ describe('BulletinsFeed', () => {
     expect(component.editingBulletin()).toBe(bulletin);
     expect(component.formOpen()).toBeTrue();
   });
-
-  // ─── onAcknowledged ──────────────────────────────────────────────────────
 
   it('onAcknowledged() flips hasAcknowledged for the currently-open bulletin in local state', () => {
     data.list.and.returnValue(of({
@@ -262,8 +250,6 @@ describe('BulletinsFeed', () => {
     expect(component.bulletins()[0].hasAcknowledged).toBeFalse();
   });
 
-  // ─── delete flow ─────────────────────────────────────────────────────────
-
   it('onDeleteRequested() deletes, closes detail, toasts, and refreshes', () => {
     component.detailId.set('b1');
 
@@ -287,8 +273,6 @@ describe('BulletinsFeed', () => {
     // No second refresh on error.
     expect(data.list).toHaveBeenCalledTimes(1);
   });
-
-  // ─── tint ────────────────────────────────────────────────────────────────
 
   it('tint() appends the alpha suffix only when the value is a 6-digit hex', () => {
     expect(component.tint('#6366F1')).toBe('#6366F122');

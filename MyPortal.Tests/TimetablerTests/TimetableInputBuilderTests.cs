@@ -14,8 +14,6 @@ public class TimetableInputBuilderTests
     [SetUp]
     public void Setup() => _builder = new TimetableInputBuilder();
 
-    // ─── period derivation ──────────────────────────────────────────────────
-
     [Test]
     public void Build_OrdersPeriodsByDayThenStartTime_AndAssignsOrderInDay()
     {
@@ -62,8 +60,6 @@ public class TimetableInputBuilderTests
         Assert.That(result.Periods[2].NoDoubleAfter, Is.True,  "Last period of day always NoDoubleAfter.");
     }
 
-    // ─── teachers / rooms ───────────────────────────────────────────────────
-
     [Test]
     public void Build_Teachers_OnlyIncludesTeachingStaff_WithSubjectsAndPpa()
     {
@@ -103,8 +99,6 @@ public class TimetableInputBuilderTests
         Assert.That(lab.SubjectIds, Does.Contain(scienceSubject.ToString()));
     }
 
-    // ─── blocks / slot sizes ────────────────────────────────────────────────
-
     [Test]
     public void Build_BlockSlotSizes_DerivedFromGroupSessionsTimesSessionTypeLength()
     {
@@ -128,8 +122,6 @@ public class TimetableInputBuilderTests
 
         Assert.That(result.Blocks.Single().SlotSizes, Is.EqualTo(new[] { 1, 1, 1, 2 }));
     }
-
-    // ─── pins ───────────────────────────────────────────────────────────────
 
     [Test]
     public void Build_Pins_CarryAllOptionalFields()
@@ -164,8 +156,6 @@ public class TimetableInputBuilderTests
         Assert.That(pin.StartPeriodId, Is.EqualTo(periodId.ToString()));
     }
 
-    // ─── validation ─────────────────────────────────────────────────────────
-
     [Test]
     public void Build_Throws_WhenSubjectHasNoQualifiedTeacher()
     {
@@ -184,8 +174,6 @@ public class TimetableInputBuilderTests
         Assert.Throws<InvalidOperationException>(() => _builder.Build(fx.ToSources()));
     }
 
-    // ─── end-to-end smoke ───────────────────────────────────────────────────
-
     [Test]
     public void Build_OutputFeedsSolverToFeasibleSolution()
     {
@@ -200,8 +188,6 @@ public class TimetableInputBuilderTests
             MyPortal.Timetabler.Models.SolveStatus.Optimal));
         Assert.That(result.Assignments, Is.Not.Empty);
     }
-
-    // ─── fixture builders ───────────────────────────────────────────────────
 
     private static AttendancePeriod Period(string name, int cycleDay, string start, string end) =>
         new()

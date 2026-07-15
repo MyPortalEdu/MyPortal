@@ -79,8 +79,6 @@ public class DocumentServiceTests
             SizeBytes = sizeBytes
         };
 
-    // ─── CreateAsync ─────────────────────────────────────────────────
-
     [Test]
     public async Task CreateAsync_HappyPath_HashesAndSavesAndInserts()
     {
@@ -175,8 +173,6 @@ public class DocumentServiceTests
         Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
             Throws.TypeOf<InvalidOperationException>().With.Message.Contains("exceeds maximum size"));
     }
-
-    // ─── UpdateAsync ─────────────────────────────────────────────────
 
     [Test]
     public async Task UpdateAsync_NoNewContent_UpdatesMetadataOnly()
@@ -315,8 +311,6 @@ public class DocumentServiceTests
         Assert.That(async () => await _service.UpdateAsync(docId, model, CancellationToken.None),
             Throws.TypeOf<ForbiddenException>());
     }
-
-    // ─── DeleteAsync ─────────────────────────────────────────────────
 
     [Test]
     public async Task DeleteAsync_SoftDelete_DoesNotTouchStorage()

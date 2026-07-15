@@ -104,8 +104,6 @@ describe('BulletinAttachments', () => {
     fixture.detectChanges();
   }
 
-  // ─── stage mode ─────────────────────────────────────────────────────────
-
   it('stage mode does NOT call listContents on init', () => {
     setMode('stage');
     expect(data.listContents).not.toHaveBeenCalled();
@@ -152,8 +150,6 @@ describe('BulletinAttachments', () => {
     expect(notify.apiError).toHaveBeenCalled();
   });
 
-  // ─── edit mode ──────────────────────────────────────────────────────────
-
   it('edit mode loads existing documents on init and appends successful uploads', async () => {
     data.listContents.and.returnValue(of({
       directory: { id: 'd1', name: 'root', parentId: null },
@@ -197,8 +193,6 @@ describe('BulletinAttachments', () => {
     expect(data.upload).toHaveBeenCalledTimes(1);
   });
 
-  // ─── delete ─────────────────────────────────────────────────────────────
-
   it('deleteDocument prompts to confirm and removes the doc on success', async () => {
     confirm.danger.and.resolveTo(true);
     setMode('edit', 'b1', 'd1');
@@ -221,8 +215,6 @@ describe('BulletinAttachments', () => {
     expect(data.delete).not.toHaveBeenCalled();
     expect(component.documents().length).toBe(1);
   });
-
-  // ─── mode-change behaviour ──────────────────────────────────────────────
 
   it('switching to stage mode clears any previously-loaded server documents', () => {
     setMode('edit', 'b1', 'd1');
@@ -256,8 +248,6 @@ describe('BulletinAttachments', () => {
     expect(component.isStage()).toBeTrue();
     expect(component.isEditable()).toBeTrue();
   });
-
-  // ─── downloadUrl / formatSize / iconFor ─────────────────────────────────
 
   it('downloadUrl falls back to "#" when no bulletinId is set', () => {
     setMode('stage');
