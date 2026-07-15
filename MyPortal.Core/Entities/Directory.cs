@@ -7,7 +7,7 @@ using QueryKit.Repositories.Attributes;
 namespace MyPortal.Core.Entities
 {
     [Table("Directories")]
-    public class Directory : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
+    public class Directory : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity, ISystemEntity
     {
         public Guid? ParentId { get; set; }
 
@@ -18,6 +18,8 @@ namespace MyPortal.Core.Entities
         public bool IsPrivate { get; set; }
 
         public DirectoryUploadPolicy UploadPolicy { get; set; }
+
+        public bool IsSystem { get; set; }
 
         // Soft-delete so a directory delete keeps the row (recoverable) and doesn't trip the
         // Documents.DirectoryId FK against documents that were already soft-deleted inside it.

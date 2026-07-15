@@ -392,6 +392,10 @@ var app = builder.Build();
 
 await AuthSeeder.RunAsync(app.Services);
 
+// Migrations run out-of-band (MyPortal.Migrations is a separate exe), so fail fast here rather
+// than at first use if this database predates a seed the code references by well-known id.
+await SystemSeedVerifier.RunAsync(app.Services);
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
