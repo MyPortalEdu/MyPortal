@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Net.Http.Headers;
 using MyPortal.Auth.Attributes;
+using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.People;
@@ -87,6 +89,57 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         [FromBody] StaffBasicDetailsUpsertRequest model)
     {
         await _staffMemberService.UpdateBasicDetailsAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Add or replace the staff member's photo. The image is resized server-side.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="file">The uploaded image (multipart form field <c>file</c>).</param>
+    [HttpPut("{staffMemberId:guid}/photo")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> SetPhotoAsync([FromRoute] Guid staffMemberId, IFormFile? file)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequestProblem("No file was uploaded.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        await _staffMemberService.SetPhotoAsync(staffMemberId, stream, file.ContentType, file.FileName,
+            CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Stream the staff member's photo. 404 if none.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/photo")]
+    [UserType(UserType.Staff)]
+    public async Task<IActionResult> GetPhotoAsync([FromRoute] Guid staffMemberId)
+    {
+        var content = await _staffMemberService.GetPhotoAsync(staffMemberId, CancellationToken);
+
+        var typedHeaders = Response.GetTypedHeaders();
+        if (!string.IsNullOrWhiteSpace(content.Details.Hash))
+        {
+            typedHeaders.ETag = new EntityTagHeaderValue($"\"{content.Details.Hash}\"");
+        }
+        typedHeaders.LastModified = content.Details.LastModifiedAt;
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+        var safeContentType = SafeContentTypes.Sanitize(content.Details.ContentType);
+        return File(content.Content, safeContentType, content.Details.FileName,
+            enableRangeProcessing: content.Content.CanSeek);
+    }
+
+    /// <summary>Remove the staff member's photo.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpDelete("{staffMemberId:guid}/photo")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> DeletePhotoAsync([FromRoute] Guid staffMemberId)
+    {
+        await _staffMemberService.DeletePhotoAsync(staffMemberId, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 

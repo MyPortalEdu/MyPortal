@@ -5,6 +5,7 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models.Documents;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
@@ -26,6 +27,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
     private readonly IPersonRepository _personRepository;
     private readonly IStaffMemberAccessService _accessService;
     private readonly IPersonService _personService;
+    private readonly IPhotoService _photoService;
     private readonly IValidationService _validationService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
@@ -35,7 +37,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
 
     public StaffMemberService(IAuthorizationService authorizationService, ILogger<StaffMemberService> logger,
         IStaffMemberRepository staffMemberRepository, IPersonRepository personRepository,
-        IStaffMemberAccessService accessService, IPersonService personService,
+        IStaffMemberAccessService accessService, IPersonService personService, IPhotoService photoService,
         IValidationService validationService, IUnitOfWorkFactory unitOfWorkFactory)
         : base(authorizationService, logger)
     {
@@ -43,6 +45,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
         _personRepository = personRepository;
         _accessService = accessService;
         _personService = personService;
+        _photoService = photoService;
         _validationService = validationService;
         _unitOfWorkFactory = unitOfWorkFactory;
     }
@@ -150,6 +153,40 @@ public class StaffMemberService : BaseService, IStaffMemberService
             await _personService.UpdateBasicBioAsync(staffMember.PersonId, bio, cancellationToken, ownedUow);
             await _staffMemberRepository.UpdateAsync(staffMember, cancellationToken, ownedUow.Transaction);
         }, cancellationToken);
+    }
+
+    public async Task SetPhotoAsync(Guid id, Stream image, string contentType, string fileName,
+        CancellationToken cancellationToken)
+    {
+        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+            StaffAccess.EditManaged | StaffAccess.EditAll, cancellationToken);
+
+        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken)
+                          ?? throw new NotFoundException("Staff member not found.");
+
+        await _photoService.SetPhotoAsync(staffMember.PersonId, image, contentType, fileName, cancellationToken);
+    }
+
+    public async Task<DocumentContentResponse> GetPhotoAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+            StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
+
+        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken)
+                          ?? throw new NotFoundException("Staff member not found.");
+
+        return await _photoService.GetPhotoContentAsync(staffMember.PersonId, cancellationToken);
+    }
+
+    public async Task DeletePhotoAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+            StaffAccess.EditManaged | StaffAccess.EditAll, cancellationToken);
+
+        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken)
+                          ?? throw new NotFoundException("Staff member not found.");
+
+        await _photoService.DeletePhotoAsync(staffMember.PersonId, cancellationToken);
     }
 
     public async Task<Guid> CreateAsync(StaffBasicDetailsUpsertRequest model, CancellationToken cancellationToken)

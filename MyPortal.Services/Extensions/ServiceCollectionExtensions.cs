@@ -67,6 +67,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILocalAuthorityService, LocalAuthorityService>();
         services.AddScoped<ILookupService, LookupService>();
         services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<IPersonContactService, PersonContactService>();
         services.AddScoped<IPersonAddressService, PersonAddressService>();
         services.AddScoped<IPersonEqualityService, PersonEqualityService>();

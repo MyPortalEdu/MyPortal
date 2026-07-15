@@ -21,6 +21,10 @@ import { ProgressSpinner } from 'primeng/progressspinner';
 import { Tag } from 'primeng/tag';
 import { firstValueFrom } from 'rxjs';
 import {
+  MAX_ATTACHMENT_BYTES,
+  MAX_ATTACHMENT_LABEL,
+} from '../../../../../shared/types/document';
+import {
   TranslocoDirective,
   TranslocoService,
   provideTranslocoScope,
@@ -556,6 +560,68 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected relationshipLabel(rel: StaffRelationship): string {
     return this.transloco.translate(`staff-members.relationship.${rel}`);
+  }
+
+  // Photo (part of basic details, shown in the identity strip + a record card). True while an
+  // upload/remove is in flight.
+  protected readonly photoUploading = signal(false);
+
+  // Same-origin, cookie-authed <img src>; photoId doubles as the cache-buster.
+  protected photoSrc(photoId: string): string {
+    return this.data.photoUrl(this.staffMemberId(), photoId);
+  }
+
+  protected async onPhotoSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // let the same file be re-selected after an error
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.notify.error(this.transloco.translate('staff-members.photo.invalidType'));
+      return;
+    }
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      this.notify.error(
+        this.transloco.translate('staff-members.photo.tooLarge', { size: MAX_ATTACHMENT_LABEL }),
+      );
+      return;
+    }
+
+    this.photoUploading.set(true);
+    try {
+      await firstValueFrom(this.data.uploadPhoto(this.staffMemberId(), file));
+      this.notify.success(this.transloco.translate('staff-members.photo.savedToast'));
+      // Refresh header + basic so the new photoId (cache-buster) flows to the avatar and card.
+      this.loadHeader();
+      this.loadBasic();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.photo.saveError'));
+    } finally {
+      this.photoUploading.set(false);
+    }
+  }
+
+  protected async removePhoto(): Promise<void> {
+    const ok = await this.confirm.confirm({
+      header: this.transloco.translate('staff-members.photo.removeHeader'),
+      message: this.transloco.translate('staff-members.photo.removeConfirm'),
+      acceptLabel: this.transloco.translate('staff-members.photo.remove'),
+      acceptSeverity: 'danger',
+    });
+    if (!ok) return;
+
+    this.photoUploading.set(true);
+    try {
+      await firstValueFrom(this.data.deletePhoto(this.staffMemberId()));
+      this.notify.success(this.transloco.translate('staff-members.photo.removedToast'));
+      this.loadHeader();
+      this.loadBasic();
+    } catch (err) {
+      this.notify.apiError(err, this.transloco.translate('staff-members.photo.removeError'));
+    } finally {
+      this.photoUploading.set(false);
+    }
   }
 
   protected startEdit(): void {

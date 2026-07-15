@@ -50,6 +50,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISchoolTypeRepository, SchoolTypeRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IPersonRepository, PersonRepository>();
+        services.AddScoped<IPhotoRepository, PhotoRepository>();
         services.AddScoped<IEthnicityRepository, EthnicityRepository>();
         services.AddScoped<INationalityRepository, NationalityRepository>();
         services.AddScoped<ILanguageRepository, LanguageRepository>();

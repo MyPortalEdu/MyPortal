@@ -10,6 +10,10 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+    <!-- Headless Linux/container native binaries for SkiaSharp. NoDependencies = no libfontconfig
+         needed (we only decode/resize/encode raster images, never render text). -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
   </ItemGroup>
 
   <ItemGroup>

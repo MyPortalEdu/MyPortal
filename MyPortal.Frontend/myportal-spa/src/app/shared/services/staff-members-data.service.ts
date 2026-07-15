@@ -48,6 +48,7 @@ import {
   StaffMemberCreateForPersonRequest,
 } from '../types/person-match';
 import { QueryKitParams } from '../utils/primeng-querykit';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class StaffMembersDataService {
@@ -83,6 +84,23 @@ export class StaffMembersDataService {
       `/api/v1/staffmembers/${staffMemberId}/basic-details`,
       payload,
     );
+  }
+
+  // Same-origin, cookie-authed URL for an <img src> — bypasses HttpClient, so it mirrors the
+  // api-base rewrite off environment.apiUrl. `photoId` busts the browser cache when the photo is
+  // replaced or removed (each new photo mints a fresh id; null → the caller shows initials instead).
+  photoUrl(staffMemberId: string, photoId: string): string {
+    return `${environment.apiUrl}/v1/staffmembers/${staffMemberId}/photo?v=${photoId}`;
+  }
+
+  uploadPhoto(staffMemberId: string, file: File): Observable<IdResponse> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return this.http.put<IdResponse>(`/api/v1/staffmembers/${staffMemberId}/photo`, form);
+  }
+
+  deletePhoto(staffMemberId: string): Observable<IdResponse> {
+    return this.http.delete<IdResponse>(`/api/v1/staffmembers/${staffMemberId}/photo`);
   }
 
   getContactDetails(staffMemberId: string): Observable<StaffContactDetailsResponse> {

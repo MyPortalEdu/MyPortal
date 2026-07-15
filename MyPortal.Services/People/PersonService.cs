@@ -31,14 +31,16 @@ public class PersonService : BaseService, IPersonService
 {
     private readonly IPersonRepository _personRepository;
     private readonly IDirectoryService _directoryService;
+    private readonly IPhotoService _photoService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
 
     public PersonService(IAuthorizationService authorizationService, ILogger<PersonService> logger,
-        IPersonRepository personRepository, IDirectoryService directoryService,
+        IPersonRepository personRepository, IDirectoryService directoryService, IPhotoService photoService,
         IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
     {
         _personRepository = personRepository;
         _directoryService = directoryService;
+        _photoService = photoService;
         _unitOfWorkFactory = unitOfWorkFactory;
     }
 
@@ -129,6 +131,14 @@ public class PersonService : BaseService, IPersonService
             await _personRepository.DeleteAsync(id, cancellationToken, softDelete: false, ownedUow.Transaction);
 
             await _directoryService.DeleteAsync(person.DirectoryId, cancellationToken, ownedUow, softDelete: false);
+
+            // The photo document lives in the system Photos directory, outside this person's
+            // directory subtree, so the cascade above doesn't reach it — purge it explicitly. Safe
+            // now the person row (and its PhotoId FK) is gone.
+            if (person.PhotoId is not null)
+            {
+                await _photoService.PurgePhotoAsync(person.PhotoId.Value, cancellationToken, ownedUow);
+            }
         }, cancellationToken);
     }
 }

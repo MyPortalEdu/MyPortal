@@ -344,5 +344,18 @@
     "preferredLastName": "Preferred last name",
     "gender": "Gender",
     "dob": "Date of birth"
+  },
+  "photo": {
+    "add": "Add photo",
+    "replace": "Replace photo",
+    "remove": "Remove",
+    "invalidType": "That file isn't an image. Please choose a JPG, PNG, or similar.",
+    "tooLarge": "That image is too large (max {{size}}).",
+    "savedToast": "Photo updated",
+    "removedToast": "Photo removed",
+    "saveError": "Couldn't upload the photo",
+    "removeError": "Couldn't remove the photo",
+    "removeHeader": "Remove Photo",
+    "removeConfirm": "Remove this staff member's photo?"
   }
 }

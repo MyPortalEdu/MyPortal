@@ -1,4 +1,5 @@
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models.Documents;
 using MyPortal.Contracts.Models.People;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
@@ -24,6 +25,18 @@ public interface IStaffMemberService
     /// code only. Gated via the resolver.</summary>
     Task UpdateBasicDetailsAsync(Guid id, StaffBasicDetailsUpsertRequest model,
         CancellationToken cancellationToken);
+
+    /// <summary>Adds or replaces the staff member's photo (part of basic details). Gated on
+    /// basic-details edit access. The image is resized before storage.</summary>
+    Task SetPhotoAsync(Guid id, Stream image, string contentType, string fileName,
+        CancellationToken cancellationToken);
+
+    /// <summary>Opens the staff member's photo for streaming; the caller disposes the content.
+    /// Gated on basic-details view access. 404 if the member has no photo.</summary>
+    Task<DocumentContentResponse> GetPhotoAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Removes the staff member's photo. Gated on basic-details edit access.</summary>
+    Task DeletePhotoAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
     /// Creates Person + StaffMember in one transaction with basic details only — the joiner
