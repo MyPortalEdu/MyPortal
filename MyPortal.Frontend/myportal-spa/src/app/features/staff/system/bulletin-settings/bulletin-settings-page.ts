@@ -14,6 +14,7 @@ import { PageHeader } from '../../../../shared/components/page-header/page-heade
 import { StudentGroupPicker } from '../../../../shared/components/pickers/student-group-picker/student-group-picker';
 import { BulletinCategoryFormDialog } from './bulletin-category-form-dialog/bulletin-category-form-dialog';
 import { BulletinsDataService } from '../../../../shared/services/bulletins-data.service';
+import { BreakpointService } from '../../../../shared/services/breakpoint-service';
 import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SelectedAcademicYearService } from '../../../../core/services/selected-academic-year-service';
@@ -43,6 +44,7 @@ export class BulletinSettingsPage implements OnInit {
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
+  protected readonly bp = inject(BreakpointService);
   private readonly selectedYear = inject(SelectedAcademicYearService);
 
   // Mirrors the user's selected AY (defaults to calendar-current via the
@@ -68,8 +70,6 @@ export class BulletinSettingsPage implements OnInit {
     // academicYearId is now driven directly by SelectedAcademicYearService —
     // its init runs in AppShell and the signal reads through transparently.
   }
-
-  // ─── Categories ────────────────────────────────────────────────────────
 
   refreshCategories(): void {
     this.categoriesLoading.set(true);
@@ -123,8 +123,6 @@ export class BulletinSettingsPage implements OnInit {
         this.transloco.translate('bulletin-settings.categories.errorDelete')),
     });
   }
-
-  // ─── Audiences ─────────────────────────────────────────────────────────
 
   refreshSettings(): void {
     this.allowedGroupsLoading.set(true);

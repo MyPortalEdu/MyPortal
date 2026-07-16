@@ -38,8 +38,6 @@ public class TimetableInputBuilder
         return new TimetableInput(periods, teachers, rooms, bands, blocks, pins);
     }
 
-    // --- periods -------------------------------------------------------------------------
-
     private static List<PeriodSlot> BuildPeriods(IReadOnlyList<AttendancePeriod> entities)
     {
         if (entities.Count == 0) throw new InvalidOperationException("No attendance periods supplied.");
@@ -67,8 +65,6 @@ public class TimetableInputBuilder
         }
         return result;
     }
-
-    // --- teachers / rooms ----------------------------------------------------------------
 
     private static List<SolverTeacher> BuildTeachers(TimetableInputSources sources)
     {
@@ -99,8 +95,6 @@ public class TimetableInputBuilder
                 subjectsByRoom.TryGetValue(r.Id, out var subj) ? subj : Array.Empty<string>()))
             .ToList();
     }
-
-    // --- blocks --------------------------------------------------------------------------
 
     private static (List<Block> Blocks, Dictionary<string, string> ClassSubjects)
         BuildBlocks(TimetableInputSources sources)
@@ -192,8 +186,6 @@ public class TimetableInputBuilder
 
         return (blocks, classSubjects);
     }
-
-    // --- bands / pins --------------------------------------------------------------------
 
     private static List<Band> BuildBands(TimetableInputSources sources)
     {

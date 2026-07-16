@@ -10,10 +10,7 @@ using MyPortal.Services.Interfaces.School;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Endpoints for school-level metadata. Single-tenant deployments have one local
-/// school; the "local" endpoints return that.
-/// </summary>
+/// <summary>School metadata endpoints.</summary>
 public class SchoolsController : BaseApiController
 {
     private readonly ISchoolService _schoolService;
@@ -24,15 +21,8 @@ public class SchoolsController : BaseApiController
         _schoolService = schoolService;
     }
 
-    /// <summary>Get the local school's name as a plain string.</summary>
-    /// <remarks>
-    /// Used by the SPA shell for the title bar and the login page header, and
-    /// by the iOS app's first-run school-setup screen to confirm the URL the
-    /// user entered points at a MyPortal instance. Anonymous-friendly so the
-    /// iOS flow can validate the URL before sign-in — the school's display
-    /// name isn't sensitive. Returns an empty string (not 404) if no school
-    /// has been configured yet, so the UI can render without a special case.
-    /// </remarks>
+    /// <summary>Get the local school's name.</summary>
+    /// <remarks>Returns an empty string if no school has been configured yet.</remarks>
     [HttpGet("local/name")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(string), 200)]
@@ -43,6 +33,9 @@ public class SchoolsController : BaseApiController
         return Ok(school?.Name ?? "");
     }
 
+    /// <summary>
+    /// Get the local school's details.'
+    /// </summary>
     [HttpGet("local/details")]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.ViewAgencies)]
@@ -55,6 +48,10 @@ public class SchoolsController : BaseApiController
         return school != null ? Ok(school) : NoContent();
     }
 
+    /// <summary>
+    /// Save the local school's details.
+    /// </summary>
+    /// <param name="model">The request model containing the local school's new details.</param>
     [HttpPost("local/details")]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.EditAgencies)]

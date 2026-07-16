@@ -6,9 +6,8 @@
     (click)="open($event)">
   </p-button>
 
-  <!-- See StudentGroupPicker for the dismissable=false reasoning: lets the
-       column-filter menus (which render in body-attached overlays) coexist
-       with the popover without each click closing the picker. -->
+  <!-- dismissable=false so the column-filter match-mode menus (Contains / Starts with / etc.)
+       can be clicked without their outside-click bubbling up and closing the popover. -->
   <p-popover #op [style]="{ width: 'min(40rem, 92vw)' }" [dismissable]="false">
     <div class="flex flex-col gap-3 p-2">
       <div class="flex items-center justify-end">
@@ -37,19 +36,24 @@
 
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="leaCode" style="width: 8rem">
+            <th pSortableColumn="leaCode" style="width: 10rem">
               {{ t('common.localAuthorityPicker.leaCode') }}
               <p-sortIcon field="leaCode"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="numeric" field="leaCode" display="menu"></p-columnFilter>
-              </span>
             </th>
             <th pSortableColumn="name">
               {{ t('common.localAuthorityPicker.name') }}
               <p-sortIcon field="name"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="name" display="menu"></p-columnFilter>
-              </span>
+            </th>
+          </tr>
+          <tr>
+            <th>
+              <!-- text+contains rather than numeric+equals so users can find e.g. all 8** codes
+                   by typing "8". The field IS numeric on the wire but QueryKit happily filters
+                   it as a string via LIKE — no BE change needed. -->
+              <p-columnFilter type="text" field="leaCode" matchMode="contains" display="row"></p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter type="text" field="name" matchMode="contains" display="row"></p-columnFilter>
             </th>
           </tr>
         </ng-template>

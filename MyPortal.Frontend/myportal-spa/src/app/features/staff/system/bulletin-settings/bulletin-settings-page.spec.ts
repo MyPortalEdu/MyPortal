@@ -65,8 +65,6 @@ describe('BulletinSettingsPage', () => {
     fixture.detectChanges(); // triggers ngOnInit
   });
 
-  // ─── init ────────────────────────────────────────────────────────────────
-
   it('ngOnInit loads categories (including inactive), settings, and current academic year', () => {
     expect(data.listCategories).toHaveBeenCalledWith(true);
     expect(data.getSettings).toHaveBeenCalled();
@@ -78,8 +76,6 @@ describe('BulletinSettingsPage', () => {
   it('excludeIds reflects current allowlist (used by the picker to hide already-added rows)', () => {
     expect(component.excludeIds()).toEqual(['g1']);
   });
-
-  // ─── categories ─────────────────────────────────────────────────────────
 
   it('openNewCategory clears editing state then opens the form', () => {
     component.editingCategory.set(categories[0]);
@@ -127,8 +123,6 @@ describe('BulletinSettingsPage', () => {
 
     expect(notify.apiError).toHaveBeenCalled();
   });
-
-  // ─── audiences ──────────────────────────────────────────────────────────
 
   it('onGroupsPicked merges new ids onto the existing allowlist and posts the union', () => {
     const picks: StudentGroupSummaryResponse[] = [

@@ -14,11 +14,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Manage houses within an academic year — the cross-year-group affiliation that
-/// students belong to for events, points, and competitions. Houses run alongside
-/// year groups in the pastoral structure.
-/// </summary>
+/// <summary>House endpoints.</summary>
 public sealed class HousesController : BaseApiController
 {
     private readonly IHouseService _houseService;
@@ -30,10 +26,7 @@ public sealed class HousesController : BaseApiController
     }
 
     /// <summary>Page through house summaries for an academic year.</summary>
-    /// <remarks>
-    /// Supports server-side filtering, sorting, and paging. Page size is clamped
-    /// server-side (default 25, max 100).
-    /// </remarks>
+    /// <remarks>Supports server-side filtering, sorting, and paging. Page size is clamped.</remarks>
     /// <param name="academicYearId">The academic year to scope the results to.</param>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>

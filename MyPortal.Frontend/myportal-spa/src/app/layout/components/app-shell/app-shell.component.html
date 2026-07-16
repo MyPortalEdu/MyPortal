@@ -1,7 +1,5 @@
-<!-- Topbar -->
 <mp-topbar (menuToggle)="toggleSidebar()"></mp-topbar>
 
-<!-- MOBILE: Drawer with sidebar -->
 <p-drawer
   [visible]="!isDesktop() && sidebarOpen()"
   (onHide)="closeSidebar()"
@@ -9,21 +7,18 @@
   [modal]="true"
   [closable]="false"
 >
-<!-- Headless content -->
 <ng-template #headless>
   <ng-container *transloco="let t">
   <div class="flex h-full flex-col
                 bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-900)]
                 text-[var(--p-text-color)]">
 
-    <!-- your custom header -->
     <div class="flex items-center justify-between px-4 py-3
                   border-b border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]">
       <span class="font-semibold text-lg">{{ t('topbar.appName') }}</span>
       <button pButton class="p-button-text p-button-sm" icon="fa-solid fa-xmark" (click)="closeSidebar()" [attr.aria-label]="t('common.close')"></button>
     </div>
 
-    <!-- scrollable nav -->
     <div class="flex-1 overflow-auto">
       <mp-sidebar></mp-sidebar>
     </div>
@@ -33,7 +28,6 @@
 </p-drawer>
 
 
-<!-- DESKTOP: sidebar + main content -->
 <div class="flex min-h-[calc(100dvh-3.5rem)] overflow-hidden">
   <!-- static sidebar; collapses to an icon-only rail on desktop -->
   <aside
@@ -49,7 +43,6 @@
   </aside>
 
 
-  <!-- main area -->
   <main
     class="flex-1 overflow-auto bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-800)] text-[var(--p-text-color)] p-4 lg:p-6 transition-colors"
   >

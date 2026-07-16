@@ -18,6 +18,7 @@ import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@js
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
 import { HeaderAction } from '../../../../../shared/types/header-action.type';
 import { AcademicYearsDataService } from '../../../../../shared/services/academic-years-data.service';
+import { BreakpointService } from '../../../../../shared/services/breakpoint-service';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { AcademicYearService } from '../../../../../core/services/academic-year-service';
@@ -51,6 +52,7 @@ export class AcademicYearListPage implements OnInit {
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
+  protected readonly bp = inject(BreakpointService);
 
   readonly years = signal<AcademicYearSummary[]>([]);
   readonly loading = signal(false);

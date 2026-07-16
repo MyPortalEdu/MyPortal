@@ -28,16 +28,12 @@ public class DateRange
         End = end;
     }
 
-    // --- Overlap/Adjacency ---
-
     public bool Overlaps(DateRange other, bool includeAdjacent = false) =>
         (Start < other.End && End > other.Start) ||
         (includeAdjacent && IsAdjacentTo(other));
 
     public bool IsAdjacentTo(DateRange other) =>
         End == other.Start || Start == other.End;
-
-    // --- Mutation ---
 
     /// <summary>Expands this range to also cover <paramref name="other"/>.</summary>
     public void Merge(DateRange other)
@@ -65,8 +61,6 @@ public class DateRange
         End = End.Add(amount);
     }
 
-    // --- Coalescing ---
-
     /// <summary>
     /// Attempts to coalesce this range with <paramref name="other"/>.
     /// Returns <c>false</c> when the two ranges are not adjacent.
@@ -86,11 +80,7 @@ public class DateRange
         return true;
     }
 
-    // --- Enumeration ---
-
     public IEnumerable<DateTime> GetAllDates() => Start.GetAllInstancesUntil(End);
-
-    // --- Conversion ---
 
     public (DateTime Start, DateTime End) ToTuple() => (Start, End);
 

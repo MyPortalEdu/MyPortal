@@ -209,8 +209,6 @@ public class TimetableMaterialisationServiceTests
         Assert.That(_capturedSessions[0].EndDate, Is.EqualTo(end));
     }
 
-    // ─── PPA allocation ─────────────────────────────────────────────────────
-
     private static StaffMember Teacher(Guid id, int ppa) => new()
     {
         Id = id, Code = $"T{id:N}".Substring(0, 4), IsTeachingStaff = true, PpaPeriodsPerWeek = ppa,

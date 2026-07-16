@@ -144,7 +144,6 @@ public class ExceptionMiddleware : IMiddleware
     {
         if (context.Response.HasStarted) return;
 
-        // Enrich with trace id
         problem.Extensions["traceId"] = context.TraceIdentifier;
 
         context.Response.StatusCode = problem.Status ?? StatusCodes.Status500InternalServerError;

@@ -20,6 +20,7 @@ WITH RecursiveDirectories AS (
     FROM dbo.Directories D
     WHERE
         Id = @directoryId
+      AND IsDeleted = 0
       AND (@isStaff = 1 OR IsPrivate = 0)
     UNION ALL
     -- Children: only traverse from rows already included,
@@ -34,7 +35,8 @@ WITH RecursiveDirectories AS (
         dbo.Directories d
             INNER JOIN RecursiveDirectories rd ON d.ParentId = rd.Id
     WHERE
-        (@isStaff = 1 OR d.IsPrivate = 0)
+        d.IsDeleted = 0
+      AND (@isStaff = 1 OR d.IsPrivate = 0)
 )
 SELECT
     dir.Id,

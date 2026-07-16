@@ -13,7 +13,7 @@ export class SchoolsDataService {
    * Returns null when no school has been configured yet (the API replies 204).
    */
   getLocalDetails(): Observable<SchoolDetailsResponse | null> {
-    return this.http.get<SchoolDetailsResponse | null>('/api/schools/local/details', {
+    return this.http.get<SchoolDetailsResponse | null>('/api/v1/schools/local/details', {
       observe: 'body',
     });
   }
@@ -22,6 +22,6 @@ export class SchoolsDataService {
     // The backend returns a Guid (the school id) — wrap as IdResponse for
     // FE ergonomics. JSON-encoded Guid is a bare quoted string, but ASP.NET's
     // Ok(value) wraps to the body verbatim and Angular will parse it as JSON.
-    return this.http.post<IdResponse>('/api/schools/local/details', model);
+    return this.http.post<IdResponse>('/api/v1/schools/local/details', model);
   }
 }

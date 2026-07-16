@@ -6,7 +6,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("Roles")]
-    public class Role : Entity, ISystemEntity
+    public class Role : Entity
     {
         public string? Description { get; set; }
         public bool IsSystem { get; set; }

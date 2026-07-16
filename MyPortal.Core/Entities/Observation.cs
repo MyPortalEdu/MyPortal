@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Core.Entities
@@ -12,6 +13,17 @@ namespace MyPortal.Core.Entities
         public Guid ObserverId { get; set; }
 
         public Guid OutcomeId { get; set; }
+
+        // The lesson focus / theme of the observation (e.g. questioning, differentiation).
+        [StringLength(128)]
+        public string? Focus { get; set; }
+
+        [StringLength(128)]
+        public string? SubjectObserved { get; set; }
+
+        public string? Strengths { get; set; }
+
+        public string? AreasForDevelopment { get; set; }
 
         public string? Notes { get; set; }
 

@@ -40,13 +40,13 @@
   <!-- Matches the bulletins-feed widget's section styling (bg/radius/shadow/
        padding/gap) so the two dashboard cards read as a consistent pair.
        Extract to a shared class if a third widget joins them. -->
-  <section class="flex-1 flex flex-col bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 gap-3">
+  <section class="flex-1 min-w-0 flex flex-col bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 gap-3">
     <div class="flex items-center gap-3">
       <i class="fa-regular fa-calendar text-primary text-xl"></i>
       <h3 class="text-base font-semibold m-0">{{ t('pages.home.timetable') }}</h3>
     </div>
-    <div class="text-sm text-muted-color">{{ t('pages.home.timetablePlaceholder') }}</div>
+    <mp-staff-timetable [self]="true"></mp-staff-timetable>
   </section>
-  <mp-bulletins-feed class="flex-1"></mp-bulletins-feed>
+  <mp-bulletins-feed class="flex-1 min-w-0"></mp-bulletins-feed>
 </div>
 </ng-container>

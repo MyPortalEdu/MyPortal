@@ -36,7 +36,17 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
         var p = new { schoolId };
         var result =
             await conn.ExecuteStoredProcedureAsync<SchoolDetailsResponse>(sql, p, cancellationToken: cancellationToken);
-        
+
         return result.FirstOrDefault();
+    }
+
+    public async Task<Guid?> GetLocalSchoolPayZoneIdAsync(CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+
+        const string sql = "SELECT TOP 1 [PayZoneId] FROM [dbo].[Schools] WHERE [IsLocal] = 1;";
+        var command = new CommandDefinition(sql, cancellationToken: cancellationToken);
+
+        return await conn.QuerySingleOrDefaultAsync<Guid?>(command);
     }
 }

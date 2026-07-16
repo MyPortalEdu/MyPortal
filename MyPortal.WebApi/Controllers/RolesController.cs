@@ -13,10 +13,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Manage application roles and the permissions assigned to them. Role membership
-/// for an individual user is managed via the user endpoints, not here.
-/// </summary>
+/// <summary>Role management endpoints.</summary>
 public sealed class RolesController : BaseApiController
 {
     private readonly IRoleService _roleService;
@@ -27,7 +24,7 @@ public sealed class RolesController : BaseApiController
         _roleService = roleService;
     }
 
-    /// <summary>Get the full details of a role, including its assigned permissions.</summary>
+    /// <summary>Get a role, including its permissions.</summary>
     /// <param name="roleId">The id of the role.</param>
     [HttpGet("{roleId:guid}")]
     [UserType(UserType.Staff)]
@@ -46,10 +43,7 @@ public sealed class RolesController : BaseApiController
     }
 
     /// <summary>Page through role summaries.</summary>
-    /// <remarks>
-    /// Supports server-side filtering, sorting, and paging. Page size is clamped
-    /// server-side (default 25, max 100).
-    /// </remarks>
+    /// <remarks>Supports server-side filtering, sorting, and paging. Page size is clamped.</remarks>
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewRoles)]
@@ -64,7 +58,7 @@ public sealed class RolesController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Create a new role with an initial permission set.</summary>
+    /// <summary>Create a role with an initial permission set.</summary>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -77,12 +71,8 @@ public sealed class RolesController : BaseApiController
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
 
-    /// <summary>Update a role's name and/or its permission set.</summary>
-    /// <remarks>
-    /// Permission changes propagate to all users in the role within the security
-    /// stamp validation interval (5 min) — affected users may need to re-fetch
-    /// their session before changes take effect on subsequent requests.
-    /// </remarks>
+    /// <summary>Update a role's name and/or permission set.</summary>
+    /// <remarks>Permission changes propagate after the security-stamp validation interval.</remarks>
     /// <param name="roleId">The id of the role to update.</param>
     /// <param name="model">The updated name and permissions.</param>
     [HttpPut("{roleId:guid}")]
@@ -98,11 +88,7 @@ public sealed class RolesController : BaseApiController
     }
 
     /// <summary>Delete a role.</summary>
-    /// <remarks>
-    /// System roles (e.g. <c>System Administrator</c>) cannot be deleted. Users
-    /// assigned to the role are not deleted; they simply lose the role's
-    /// permissions.
-    /// </remarks>
+    /// <remarks>System roles cannot be deleted.</remarks>
     /// <param name="roleId">The id of the role to delete.</param>
     [HttpDelete("{roleId:guid}")]
     [UserType(UserType.Staff)]

@@ -1,0 +1,81 @@
+{
+  "rootLabel": "Documents",
+  "empty": "This folder is empty.",
+  "loadError": "Couldn't load this folder",
+  "dropHint": "Drag files here or use Upload (max {{ limit }})",
+  "toolbar": {
+    "back": "Back",
+    "forward": "Forward",
+    "up": "Up one level",
+    "newFolder": "New Folder",
+    "upload": "Upload"
+  },
+  "upload": {
+    "header": "Upload Files",
+    "typeLabel": "Document type",
+    "submit": "Upload {{ count }}"
+  },
+  "columns": {
+    "name": "Name",
+    "type": "Type",
+    "size": "Size",
+    "modified": "Modified"
+  },
+  "actions": {
+    "download": "Download",
+    "rename": "Rename",
+    "move": "Move",
+    "changeType": "Change type",
+    "delete": "Delete"
+  },
+  "newFolder": {
+    "header": "New Folder",
+    "nameLabel": "Folder name",
+    "namePlaceholder": "e.g. Contracts",
+    "submit": "Create"
+  },
+  "rename": {
+    "header": "Rename Folder",
+    "nameLabel": "Folder name",
+    "submit": "Save"
+  },
+  "move": {
+    "header": "Move “{{ name }}”",
+    "hint": "Choose a destination folder.",
+    "submit": "Move here",
+    "noTargets": "No other folders to move to.",
+    "currentLocation": "Current location"
+  },
+  "deleteFolder": {
+    "header": "Delete folder?",
+    "confirm": "Delete “{{ name }}” and everything inside it? This can be restored by an administrator."
+  },
+  "deleteFile": {
+    "header": "Delete file?",
+    "confirm": "Delete “{{ name }}”? This can be restored by an administrator."
+  },
+  "changeType": {
+    "header": "Change type — {{ name }}",
+    "label": "Document type",
+    "submit": "Save"
+  },
+  "toast": {
+    "folderCreated": "Folder created",
+    "folderRenamed": "Folder renamed",
+    "folderDeleted": "Folder deleted",
+    "fileDeleted": "File deleted",
+    "moved": "Moved",
+    "uploaded": "{{ name }} uploaded",
+    "typeChanged": "Type updated"
+  },
+  "error": {
+    "createFolder": "Couldn't create the folder",
+    "renameFolder": "Couldn't rename the folder",
+    "deleteFolder": "Couldn't delete the folder",
+    "deleteFile": "Couldn't delete the file",
+    "move": "Couldn't move the item",
+    "changeType": "Couldn't change the type",
+    "upload": "Couldn't upload {{ name }}",
+    "tooLarge": "{{ name }} is larger than {{ limit }}"
+  }
+}

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Core.Entities
 {
@@ -14,6 +15,10 @@ namespace MyPortal.Core.Entities
         public string? QualAccrNumber { get; set; }
 
         public string? ElementCode { get; set; }
+
+        // Subject discount code — stops double-counting in performance measures.
+        [StringLength(10)]
+        public string? DiscountCode { get; set; }
 
         public ExamAssessment? Assessment { get; set; }
         public SubjectCode? QcaCode { get; set; }

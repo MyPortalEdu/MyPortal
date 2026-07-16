@@ -27,7 +27,6 @@ namespace MyPortal.Core.Entities
 
         public LogNoteType? LogNoteType { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

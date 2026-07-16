@@ -72,7 +72,7 @@ describe('BulletinAttachments', () => {
       of(makeDoc({ id: `doc-${f.name}`, fileName: f.name })),
     );
     data.delete.and.returnValue(of(void 0));
-    data.downloadUrl.and.callFake((b, d) => `/api/bulletins/${b}/attachments/documents/${d}/download`);
+    data.downloadUrl.and.callFake((b, d) => `/api/v1/bulletins/${b}/attachments/documents/${d}/download`);
 
     const translocoStub = {
       translate: (key: string) => key,
@@ -103,8 +103,6 @@ describe('BulletinAttachments', () => {
     fixture.componentRef.setInput('directoryId', directoryId);
     fixture.detectChanges();
   }
-
-  // ─── stage mode ─────────────────────────────────────────────────────────
 
   it('stage mode does NOT call listContents on init', () => {
     setMode('stage');
@@ -152,8 +150,6 @@ describe('BulletinAttachments', () => {
     expect(notify.apiError).toHaveBeenCalled();
   });
 
-  // ─── edit mode ──────────────────────────────────────────────────────────
-
   it('edit mode loads existing documents on init and appends successful uploads', async () => {
     data.listContents.and.returnValue(of({
       directory: { id: 'd1', name: 'root', parentId: null },
@@ -197,8 +193,6 @@ describe('BulletinAttachments', () => {
     expect(data.upload).toHaveBeenCalledTimes(1);
   });
 
-  // ─── delete ─────────────────────────────────────────────────────────────
-
   it('deleteDocument prompts to confirm and removes the doc on success', async () => {
     confirm.danger.and.resolveTo(true);
     setMode('edit', 'b1', 'd1');
@@ -221,8 +215,6 @@ describe('BulletinAttachments', () => {
     expect(data.delete).not.toHaveBeenCalled();
     expect(component.documents().length).toBe(1);
   });
-
-  // ─── mode-change behaviour ──────────────────────────────────────────────
 
   it('switching to stage mode clears any previously-loaded server documents', () => {
     setMode('edit', 'b1', 'd1');
@@ -257,8 +249,6 @@ describe('BulletinAttachments', () => {
     expect(component.isEditable()).toBeTrue();
   });
 
-  // ─── downloadUrl / formatSize / iconFor ─────────────────────────────────
-
   it('downloadUrl falls back to "#" when no bulletinId is set', () => {
     setMode('stage');
     expect(component.downloadUrl(makeDoc())).toBe('#');
@@ -268,7 +258,7 @@ describe('BulletinAttachments', () => {
     setMode('view', 'b1', 'd1');
     const url = component.downloadUrl(makeDoc({ id: 'doc-42' }));
     expect(data.downloadUrl).toHaveBeenCalledWith('b1', 'doc-42');
-    expect(url).toBe('/api/bulletins/b1/attachments/documents/doc-42/download');
+    expect(url).toBe('/api/v1/bulletins/b1/attachments/documents/doc-42/download');
   });
 
   it('formatSize scales bytes into B / KB / MB / GB', () => {

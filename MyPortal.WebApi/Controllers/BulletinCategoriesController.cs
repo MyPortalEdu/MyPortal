@@ -11,11 +11,7 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Manage the bulletin category taxonomy (name, icon, colour). Categories are
-/// user-managed — defaults are seeded but can be renamed, recoloured, deactivated,
-/// or replaced.
-/// </summary>
+/// <summary>Bulletin category endpoints.</summary>
 public sealed class BulletinCategoriesController : BaseApiController
 {
     private readonly IBulletinCategoryService _service;
@@ -48,8 +44,8 @@ public sealed class BulletinCategoriesController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Create a new bulletin category.</summary>
-    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>.</remarks>
+    /// <summary>Create a bulletin category.</summary>
+    /// <remarks>Admin-tier; gated on <c>System.BulletinSettings</c>.</remarks>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -62,7 +58,7 @@ public sealed class BulletinCategoriesController : BaseApiController
     }
 
     /// <summary>Update a bulletin category.</summary>
-    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>. Uses optimistic concurrency on <c>ExpectedVersion</c>.</remarks>
+    /// <remarks>Admin-tier; gated on <c>System.BulletinSettings</c>. Uses optimistic concurrency.</remarks>
     [HttpPut("{categoryId:guid}")]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -76,7 +72,7 @@ public sealed class BulletinCategoriesController : BaseApiController
     }
 
     /// <summary>Delete a bulletin category.</summary>
-    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>. Fails if any bulletin still references the category.</remarks>
+    /// <remarks>Admin-tier; gated on <c>System.BulletinSettings</c>. Fails if the category is still in use.</remarks>
     [HttpDelete("{categoryId:guid}")]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAll, Permissions.SystemAdmin.BulletinSettings)]

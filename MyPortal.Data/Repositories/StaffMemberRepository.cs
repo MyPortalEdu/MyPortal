@@ -1,0 +1,180 @@
+using System.Data;
+using Dapper;
+using MyPortal.Auth.Interfaces;
+using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models;
+using MyPortal.Contracts.Models.People;
+using MyPortal.Core.Entities;
+using MyPortal.Data.Interfaces;
+using MyPortal.Data.Models;
+using MyPortal.Data.Repositories.Base;
+using MyPortal.Data.Utilities;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Paging;
+using QueryKit.Repositories.Sorting;
+
+namespace MyPortal.Data.Repositories;
+
+public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMemberRepository
+{
+    public StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
+        factory, authorizationService)
+    {
+    }
+
+    public async Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
+        SortOptions? sort = null, PageOptions? paging = null,
+        CancellationToken cancellationToken = default)
+    {
+        var sql = SqlResourceLoader.Load("People.GetStaffMemberSummaries.sql");
+
+        return await GetListPagedAsync<StaffMemberSummaryResponse>(sql, null, filter, sort, paging, false,
+            cancellationToken);
+    }
+
+    public async Task<StaffMemberHeaderRow?> GetHeaderByIdAsync(Guid staffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var p = new { staffMemberId };
+
+            var command = new CommandDefinition("[dbo].[usp_staff_member_get_header_by_id]", p, transaction,
+                commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+            return await conn.QueryFirstOrDefaultAsync<StaffMemberHeaderRow>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<StaffBasicDetailsResponse?> GetBasicDetailsByIdAsync(Guid staffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var p = new { staffMemberId };
+
+            var command = new CommandDefinition("[dbo].[usp_staff_member_get_basic_details_by_id]", p, transaction,
+                commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+            return await conn.QueryFirstOrDefaultAsync<StaffBasicDetailsResponse>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
+    {
+        const string sql =
+            "SELECT TOP 1 [Id] FROM [dbo].[StaffMembers] WHERE [PersonId] = @personId AND [IsDeleted] = 0;";
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, new { personId }, transaction,
+                cancellationToken: cancellationToken);
+
+            return await conn.ExecuteScalarAsync<Guid?>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<IEnumerable<LookupResponse>> GetStaffLookupAsync(CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
+    {
+        // {id, name} for every active staff member. Name composed via the shared person-name
+        // function (format 3 = First [Middle] Last, preferred names on).
+        const string sql =
+            "SELECT sm.[Id] AS Id, nm.[Name] AS Description " +
+            "FROM [dbo].[StaffMembers] sm " +
+            "OUTER APPLY [dbo].[fn_person_get_name](sm.[PersonId], 3, 1, 0) AS nm " +
+            "WHERE sm.[IsDeleted] = 0 ORDER BY nm.[Name];";
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, null, transaction, cancellationToken: cancellationToken);
+
+            return await conn.QueryAsync<LookupResponse>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<IReadOnlyList<PersonMatchResponse>> SearchPeopleForStaffCreateAsync(string like,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var sql = SqlResourceLoader.Load("People.SearchPeopleForStaffCreate.sql");
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, new { like }, transaction,
+                cancellationToken: cancellationToken);
+
+            var rows = await conn.QueryAsync<PersonMatchResponse>(command);
+
+            return rows.AsList();
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<bool> IsManagedByAsync(Guid subjectStaffMemberId, Guid managerStaffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var p = new { subjectStaffMemberId, managerStaffMemberId };
+
+            var command = new CommandDefinition("[dbo].[usp_staff_member_is_managed_by]", p, transaction,
+                commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+            return await conn.ExecuteScalarAsync<bool>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+}

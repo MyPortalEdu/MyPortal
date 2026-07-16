@@ -13,7 +13,6 @@ public class ApplicationUser : IdentityUser<Guid>
     
     public bool IsSystem { get; set; }
     
-    // Audit
     public Guid? CreatedById { get; set; }
     public string CreatedByIpAddress { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

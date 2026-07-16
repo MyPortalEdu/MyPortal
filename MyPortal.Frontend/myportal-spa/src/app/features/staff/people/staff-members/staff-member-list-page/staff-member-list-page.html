@@ -1,0 +1,104 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('staff-members.title')"
+    icon="fa-solid fa-id-badge"
+    [actions]="headerActions()"
+  ></mp-page-header>
+
+  <mp-staff-member-create-dialog
+    [open]="createOpen()"
+    (closed)="onCreateClosed()"
+    (created)="onCreated($event)"
+    (openExisting)="onOpenExisting($event)"
+  ></mp-staff-member-create-dialog>
+
+  <p-card>
+    <p-table
+      #dt
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="25"
+      [totalRecords]="totalRecords()"
+      [loading]="loading()"
+      [value]="rows()"
+      (onLazyLoad)="load($event)"
+      [filterDelay]="300"
+      [filters]="initialFilters"
+      [globalFilterFields]="['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code']"
+      dataKey="id"
+      selectionMode="single"
+      (onRowSelect)="openDetails($any($event).data)"
+      [scrollable]="true">
+
+      <ng-template pTemplate="caption">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p-select
+            [options]="statusOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="statusFilter()"
+            (ngModelChange)="onStatusFilterChange($event)"
+            styleClass="w-full sm:w-44"
+            [ariaLabel]="t('staff-members.statusFilter.label')"></p-select>
+          <span class="relative w-full sm:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
+            <input
+              pInputText
+              type="text"
+              class="w-full pl-9"
+              [placeholder]="t('staff-members.searchPlaceholder')"
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 4rem"></th>
+          <th pSortableColumn="lastName">
+            {{ t('staff-members.columns.name') }}
+            <p-sortIcon field="lastName"></p-sortIcon>
+          </th>
+          <th pSortableColumn="code" style="width: 12rem">
+            {{ t('staff-members.columns.code') }}
+            <p-sortIcon field="code"></p-sortIcon>
+          </th>
+          <th pSortableColumn="status" style="width: 9rem">
+            {{ t('staff-members.columns.status') }}
+            <p-sortIcon field="status"></p-sortIcon>
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr [pSelectableRow]="row" class="cursor-pointer">
+          <td>
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
+              {{ initials(row) }}
+            </div>
+          </td>
+          <td>
+            <div class="font-medium">{{ displayName(row) }}</div>
+            @if (legalName(row); as legal) {
+              <div class="text-xs text-muted-color">{{ legal }}</div>
+            }
+          </td>
+          <td class="font-mono text-xs text-muted-color">{{ row.code }}</td>
+          <td>
+            <p-tag
+              [value]="t('staff-members.status.' + row.status)"
+              [severity]="statusSeverity(row.status)"></p-tag>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="text-center text-sm text-muted-color py-6">
+            {{ t('staff-members.empty') }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</ng-container>

@@ -6,6 +6,8 @@
     (click)="open($event)">
   </p-button>
 
+  <!-- dismissable=false so the column-filter match-mode menus (Contains / Starts with / etc.)
+       can be clicked without their outside-click bubbling up and closing the popover. -->
   <p-popover #op [style]="{ width: 'min(48rem, 92vw)' }" [dismissable]="false">
     <div class="flex flex-col gap-3 p-2">
       <div class="flex items-center justify-end">
@@ -34,26 +36,28 @@
 
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="code" style="width: 8rem">
+            <th pSortableColumn="code" style="width: 10rem">
               {{ t('common.staffMemberPicker.code') }}
               <p-sortIcon field="code"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="code" display="menu"></p-columnFilter>
-              </span>
             </th>
             <th pSortableColumn="firstName">
               {{ t('common.staffMemberPicker.firstName') }}
               <p-sortIcon field="firstName"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="firstName" display="menu"></p-columnFilter>
-              </span>
             </th>
             <th pSortableColumn="lastName">
               {{ t('common.staffMemberPicker.lastName') }}
               <p-sortIcon field="lastName"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="lastName" display="menu"></p-columnFilter>
-              </span>
+            </th>
+          </tr>
+          <tr>
+            <th>
+              <p-columnFilter type="text" field="code" matchMode="contains" display="row"></p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter type="text" field="firstName" matchMode="contains" display="row"></p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter type="text" field="lastName" matchMode="contains" display="row"></p-columnFilter>
             </th>
           </tr>
         </ng-template>

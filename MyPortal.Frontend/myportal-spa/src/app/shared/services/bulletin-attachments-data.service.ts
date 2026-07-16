@@ -21,7 +21,7 @@ export class BulletinAttachmentsDataService {
 
   listContents(bulletinId: string, directoryId: string): Observable<DirectoryContentsResponse> {
     return this.http.get<DirectoryContentsResponse>(
-      `/api/bulletins/${bulletinId}/attachments/directories/${directoryId}/contents`,
+      `/api/v1/bulletins/${bulletinId}/attachments/directories/${directoryId}/contents`,
     );
   }
 
@@ -36,14 +36,14 @@ export class BulletinAttachmentsDataService {
     form.append('File', file, file.name);
 
     return this.http.post<DocumentDetailsResponse>(
-      `/api/bulletins/${bulletinId}/attachments/documents`,
+      `/api/v1/bulletins/${bulletinId}/attachments/documents`,
       form,
     );
   }
 
   delete(bulletinId: string, documentId: string): Observable<void> {
     return this.http.delete<void>(
-      `/api/bulletins/${bulletinId}/attachments/documents/${documentId}`,
+      `/api/v1/bulletins/${bulletinId}/attachments/documents/${documentId}`,
     );
   }
 
@@ -51,6 +51,6 @@ export class BulletinAttachmentsDataService {
    *  same-origin cookie auth (or whatever the user's session is); no fetch
    *  needed because the API returns Content-Disposition: attachment.  */
   downloadUrl(bulletinId: string, documentId: string): string {
-    return `/api/bulletins/${bulletinId}/attachments/documents/${documentId}/download`;
+    return `/api/v1/bulletins/${bulletinId}/attachments/documents/${documentId}/download`;
   }
 }

@@ -23,6 +23,6 @@ export class StudentGroupsDataService {
     if (params.filter) httpParams = httpParams.set('filter', params.filter);
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
-    return this.http.get<PageResult<StudentGroupSummaryResponse>>('/api/studentgroups', { params: httpParams });
+    return this.http.get<PageResult<StudentGroupSummaryResponse>>('/api/v1/studentgroups', { params: httpParams });
   }
 }

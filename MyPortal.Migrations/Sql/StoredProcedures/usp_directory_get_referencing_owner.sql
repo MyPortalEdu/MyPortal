@@ -13,6 +13,12 @@ GO
 -- OwnerType is the entity-class name as a string, kept here rather than as an
 -- enum so adding a new IDirectoryEntity owner is a one-line UNION ALL addition
 -- with no schema change.
+--
+-- NB: Document is intentionally NOT listed. A Document's DirectoryId is a
+-- containment FK ("the folder this file lives in"), not a root-ownership FK, so
+-- documents are contents the recursive delete handles — not owners that block a
+-- directory delete. Listing it here made every non-empty folder undeletable
+-- ("this directory belongs to a Document").
 CREATE OR ALTER PROCEDURE [dbo].[usp_directory_get_referencing_owner]
     @directoryId UNIQUEIDENTIFIER
 AS
@@ -26,8 +32,6 @@ BEGIN
         SELECT 'Agency'       AS OwnerType, Id AS OwnerId FROM dbo.Agencies      WHERE DirectoryId = @directoryId
         UNION ALL
         SELECT 'Class'        AS OwnerType, Id AS OwnerId FROM dbo.Classes       WHERE DirectoryId = @directoryId
-        UNION ALL
-        SELECT 'Document'     AS OwnerType, Id AS OwnerId FROM dbo.Documents     WHERE DirectoryId = @directoryId
         UNION ALL
         SELECT 'HomeworkItem' AS OwnerType, Id AS OwnerId FROM dbo.HomeworkItems WHERE DirectoryId = @directoryId
         UNION ALL

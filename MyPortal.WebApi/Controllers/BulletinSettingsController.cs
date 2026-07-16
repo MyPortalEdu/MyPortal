@@ -10,12 +10,11 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Manage school-wide bulletin settings, currently the allowlist of student
-/// groups that may be picked as a bulletin audience. Read access is granted
-/// alongside View permission; mutating requires the bulletin settings permission.
-/// </summary>
+/// <summary>Bulletin settings endpoints.</summary>
+// Explicit Route overrides BaseApiController's "api/[controller]" pair.
+// Mirrors the dual-route pattern on the base: versioned canonical, unversioned alias.
 [Route("api/bulletins/settings")]
+[Route("api/v{version:apiVersion}/bulletins/settings")]
 public sealed class BulletinSettingsController : BaseApiController
 {
     private readonly IBulletinSettingsService _service;
@@ -37,8 +36,8 @@ public sealed class BulletinSettingsController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Replace the allowlist of bulletin-audience-pickable student groups.</summary>
-    /// <remarks>Admin-tier — gated on <c>System.BulletinSettings</c>.</remarks>
+    /// <summary>Replace the bulletin audience allowlist.</summary>
+    /// <remarks>Admin-tier; gated on <c>System.BulletinSettings</c>.</remarks>
     [HttpPut]
     [ValidateModel]
     [UserType(UserType.Staff)]

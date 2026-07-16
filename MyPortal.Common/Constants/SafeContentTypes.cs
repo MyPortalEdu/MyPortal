@@ -20,12 +20,10 @@ public static class SafeContentTypes
         "image/bmp",
         "image/tiff",
 
-        // Documents
         "application/pdf",
         "text/plain",
         "text/csv",
 
-        // Microsoft Office
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.ms-excel",
@@ -33,7 +31,6 @@ public static class SafeContentTypes
         "application/vnd.ms-powerpoint",
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 
-        // Archives
         "application/zip",
         "application/x-zip-compressed"
     };

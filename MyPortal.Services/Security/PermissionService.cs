@@ -34,24 +34,32 @@ public class PermissionService : IPermissionService
 
     public async Task<bool> HasAnyPermissionsAsync(string[] permissions, CancellationToken ct = default)
     {
-        if (_user.UserId is null) return false;
-        
-        if (!await IsCurrentUserEnabledAsync(ct)) return false;
-
-        var roles = await _user.GetRolesAsync(ct);
-        var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
-        return perms.Any(x => permissions.Contains(x, StringComparer.OrdinalIgnoreCase));
+        var perms = await GetCurrentUserPermissionsAsync(ct);
+        return permissions.Any(perms.Contains);
     }
 
     public async Task<bool> HasAllPermissionsAsync(string[] permissions, CancellationToken ct = default)
     {
-        if (_user.UserId is null) return false;
-        
-        if (!await IsCurrentUserEnabledAsync(ct)) return false;
+        var perms = await GetCurrentUserPermissionsAsync(ct);
+        return permissions.All(perms.Contains);
+    }
+
+    private static readonly IReadOnlySet<string> NoPermissions =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    public async Task<IReadOnlySet<string>> GetCurrentUserPermissionsAsync(CancellationToken ct = default)
+    {
+        // Short-circuits before the enabled check (which dereferences UserId) keep the
+        // unauthenticated path from touching the status cache or provider.
+        if (_user.UserId is null) return NoPermissions;
+
+        if (!await IsCurrentUserEnabledAsync(ct)) return NoPermissions;
 
         var roles = await _user.GetRolesAsync(ct);
         var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
-        return permissions.All(x => perms.Contains(x, StringComparer.OrdinalIgnoreCase));
+
+        // Case-insensitive set so callers get O(1), comparer-correct membership tests.
+        return new HashSet<string>(perms, StringComparer.OrdinalIgnoreCase);
     }
 
     private Task<bool> IsCurrentUserEnabledAsync(CancellationToken ct)

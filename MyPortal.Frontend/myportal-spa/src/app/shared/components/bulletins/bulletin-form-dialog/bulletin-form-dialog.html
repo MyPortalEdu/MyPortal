@@ -11,7 +11,6 @@
   (onHide)="onHide()"
   [showHeader]="false">
 
-  <!-- Header -->
   <div class="flex items-center justify-between p-4 border-b border-surface">
     <div class="flex items-center gap-2">
       <i class="fa-regular fa-bell text-primary"></i>
@@ -23,7 +22,6 @@
   </div>
 
   <div class="p-4 flex flex-col gap-3">
-    <!-- Title -->
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.titleLabel') }}</label>
       <input
@@ -38,7 +36,6 @@
         [invalid]="wasTouched('title') && titleRef.invalid" />
     </div>
 
-    <!-- Category + Pin -->
     <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
       <div class="flex flex-col gap-1">
         <label class="text-xs font-medium text-muted-color">{{ t('form.category') }}</label>
@@ -114,7 +111,6 @@
       <span class="text-xs text-muted-color leading-snug">{{ t('form.expiresHint') }}</span>
     </div>
 
-    <!-- Body -->
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.bodyLabel') }}</label>
       <textarea

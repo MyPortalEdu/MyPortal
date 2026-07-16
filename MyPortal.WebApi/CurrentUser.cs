@@ -29,6 +29,16 @@ public class CurrentUser : ICurrentUser
         }
     }
 
+    public Guid? PersonId
+    {
+        get
+        {
+            return Guid.TryParse(Principal?.FindFirstValue(Auth.Constants.ClaimTypes.PersonId), out var personId)
+                ? personId
+                : null;
+        }
+    }
+
     public UserType UserType
     {
         get

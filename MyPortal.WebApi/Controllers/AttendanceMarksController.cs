@@ -10,11 +10,7 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Bulk read/write of attendance marks across a (student group, date range) grid —
-/// the reception/admin "edit any cell" view. For single-period registers see
-/// <see cref="RegistersController"/>.
-/// </summary>
+/// <summary>Bulk attendance-mark endpoints.</summary>
 public sealed class AttendanceMarksController : BaseApiController
 {
     private readonly IAttendanceMarkService _attendanceMarkService;
@@ -26,13 +22,8 @@ public sealed class AttendanceMarksController : BaseApiController
         _attendanceMarkService = attendanceMarkService;
     }
 
-    /// <summary>Get the attendance grid for a student group across a date range.</summary>
-    /// <remarks>
-    /// Returns the full (student × period × week) matrix for the group between
-    /// <paramref name="from"/> and <paramref name="to"/>, including any blank cells.
-    /// Range is bounded server-side; very wide ranges may be rejected to protect
-    /// the database.
-    /// </remarks>
+    /// <summary>Get attendance marks for a group across a date range.</summary>
+    /// <remarks>Returns the full student-by-period matrix, including blank cells.</remarks>
     /// <param name="studentGroupId">The student group whose marks to fetch.</param>
     /// <param name="from">Start of the range (inclusive, local date).</param>
     /// <param name="to">End of the range (inclusive, local date).</param>
@@ -47,14 +38,8 @@ public sealed class AttendanceMarksController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Apply a batch of attendance mark edits in one go.</summary>
-    /// <remarks>
-    /// Each entry is keyed by (StudentId, AttendanceWeekId, AttendancePeriodId). A
-    /// null <c>AttendanceCodeId</c> on an entry signals "delete the existing mark
-    /// for that cell" so corrections can clear an entry rather than overwrite it.
-    /// Requires <c>Attendance.EditAttendanceMarksBulk</c> — narrower than the regular
-    /// register edit permission since this lets the caller mutate any cell.
-    /// </remarks>
+    /// <summary>Apply a batch of attendance-mark edits.</summary>
+    /// <remarks>A null <c>AttendanceCodeId</c> clears the mark for that cell.</remarks>
     [HttpPut("bulk")]
     [ValidateModel]
     [UserType(UserType.Staff)]

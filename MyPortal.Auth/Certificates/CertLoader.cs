@@ -7,7 +7,6 @@ namespace MyPortal.Auth.Certificates
     {
         public static X509Certificate2 Load(CertificateOptions.CertRef r)
         {
-            // Prefer Store if configured; else PFX.
             if (r.Store is { Thumbprint: { Length: > 0 } })
                 return LoadFromStore(r.Store);
             if (r.Pfx is { Path: { Length: > 0 } })
