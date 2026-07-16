@@ -1,0 +1,128 @@
+<ng-container *transloco="let t; prefix: 'roles'">
+  <p-dialog
+    [visible]="visible()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [dismissableMask]="false"
+    [closeOnEscape]="!isDirty()"
+    [style]="{ width: 'min(44rem, 94vw)' }"
+    styleClass="mp-flush-dialog"
+    [showHeader]="false"
+    (onHide)="onHide()">
+
+    <div class="flex items-center justify-between p-4 border-b border-surface">
+      <h3 class="text-base font-semibold m-0">{{ dialogTitle() }}</h3>
+      <button type="button" class="mp-icon-button" (click)="onCancel()" [attr.aria-label]="'common.close' | transloco">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="p-4 flex flex-col gap-4">
+      @if (readOnly()) {
+        <div class="flex items-start gap-2 p-3 rounded-lg bg-emphasis text-sm text-muted-color">
+          <i class="fa-solid fa-lock mt-0.5"></i>
+          <span>{{ t('form.systemReadonly') }}</span>
+        </div>
+      }
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-color">{{ t('form.name') }}</label>
+        <input
+          pInputText
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          (blur)="markTouched('name')"
+          name="name"
+          #nameRef="ngModel"
+          required
+          [placeholder]="t('form.namePlaceholder')"
+          [disabled]="nameLocked()"
+          [invalid]="wasTouched('name') && nameRef.invalid" />
+        @if (nameLocked() && !readOnly()) {
+          <small class="text-muted-color">{{ t('form.defaultNameLocked') }}</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-color">{{ t('form.description') }}</label>
+        <textarea
+          pTextarea
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+          name="description"
+          rows="2"
+          [autoResize]="true"
+          [disabled]="readOnly()"></textarea>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-color">{{ t('form.audience') }}</label>
+        @if (isEdit()) {
+          <div><p-tag [value]="audienceLabel()"></p-tag></div>
+        } @else {
+          <p-select
+            [ngModel]="userType()"
+            (ngModelChange)="onAudienceChange($event)"
+            [options]="audienceOptions()"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"></p-select>
+          <small class="text-muted-color">{{ t('form.audienceHint') }}</small>
+        }
+      </div>
+
+      <div class="flex flex-col gap-2 pt-2 border-t border-surface">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-sm font-semibold">{{ t('form.permissions') }}</span>
+          <span class="text-xs text-muted-color">{{ t('form.permissionsHint') }}</span>
+        </div>
+
+        @if (loading()) {
+          <div class="flex flex-col gap-2">
+            @for (i of [1, 2, 3, 4]; track i) {
+              <p-skeleton height="1.75rem"></p-skeleton>
+            }
+          </div>
+        } @else if (groupedPermissions().length === 0) {
+          <div class="text-sm text-muted-color italic py-2">{{ t('form.noPermissions') }}</div>
+        } @else {
+          <div class="flex flex-col gap-4">
+            @for (group of groupedPermissions(); track group.area) {
+              <div class="flex flex-col gap-2">
+                <h4 class="text-xs font-semibold uppercase tracking-wide text-muted-color m-0">{{ group.area }}</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  @for (perm of group.permissions; track perm.id) {
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <p-checkbox
+                        [binary]="true"
+                        [ngModel]="isSelected(perm.id)"
+                        (ngModelChange)="togglePermission(perm.id, $event)"
+                        [name]="perm.id"
+                        [disabled]="readOnly()"></p-checkbox>
+                      <span class="text-sm">{{ perm.friendlyName }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+      @if (readOnly()) {
+        <p-button [label]="'common.close' | transloco" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
+      } @else {
+        <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
+        <p-button
+          [label]="isEdit() ? t('form.save') : t('form.create')"
+          icon="fa-solid fa-check"
+          [disabled]="!isValid() || !isDirty() || loading()"
+          [loading]="submitting()"
+          (click)="save()"></p-button>
+      }
+    </div>
+  </p-dialog>
+</ng-container>

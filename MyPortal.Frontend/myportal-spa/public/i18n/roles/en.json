@@ -1,0 +1,50 @@
+{
+  "title": "Roles",
+  "loadError": "Couldn't load roles",
+  "deleteError": "Couldn't delete role",
+  "deleteConfirm": "Delete the role \"{{ name }}\"? Users in this role lose its permissions.",
+  "deletedToast": "Role deleted",
+  "edit": "Edit",
+  "delete": "Delete",
+  "empty": "No roles yet. Use the New button to create one.",
+  "protectedHint": "Built-in roles can't be deleted.",
+  "columns": {
+    "name": "Name",
+    "audience": "Portal",
+    "type": "Type",
+    "description": "Description"
+  },
+  "audience": {
+    "staff": "Staff",
+    "student": "Student",
+    "parent": "Parent"
+  },
+  "type": {
+    "system": "System",
+    "default": "Built-in",
+    "custom": "Custom"
+  },
+  "form": {
+    "titleCreate": "New Role",
+    "titleEdit": "Edit Role",
+    "titleView": "Role",
+    "name": "Name",
+    "namePlaceholder": "e.g. Head of Department",
+    "description": "Description",
+    "audience": "Portal",
+    "audienceHint": "Which portal this role belongs to. Fixed once the role is created.",
+    "permissions": "Permissions",
+    "permissionsHint": "Choose what this role can do.",
+    "noPermissions": "No permissions are available for this portal yet.",
+    "systemReadonly": "This is a system role. It has every permission and can't be edited.",
+    "defaultNameLocked": "Built-in roles can't be renamed, but you can change their permissions.",
+    "loading": "Loading role…",
+    "create": "Create",
+    "save": "Save Changes",
+    "createdToast": "Role created",
+    "updatedToast": "Role updated",
+    "errorCreate": "Couldn't create role",
+    "errorUpdate": "Couldn't update role",
+    "errorLoad": "Couldn't load role"
+  }
+}

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
+using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
@@ -63,11 +64,13 @@ public class PermissionService : IPermissionService
         }, ct);
     }
 
-    public async Task<IList<PermissionResponse>> GetAllPermissionsAsync(CancellationToken cancellationToken)
+    public async Task<IList<PermissionResponse>> GetAllPermissionsAsync(UserType? userType, CancellationToken cancellationToken)
     {
         var perms = await _permissionRepository.GetListAsync(cancellationToken: cancellationToken);
 
-        return perms.Select(MapPermissionToDto).ToList();
+        var filtered = userType.HasValue ? perms.Where(p => p.UserType == userType.Value) : perms;
+
+        return filtered.Select(MapPermissionToDto).ToList();
     }
 
     public PermissionResponse MapPermissionToDto(Permission permission)
@@ -77,7 +80,8 @@ public class PermissionService : IPermissionService
             Id = permission.Id,
             Name = permission.Name,
             FriendlyName = permission.FriendlyName,
-            Area = permission.Area
+            Area = permission.Area,
+            UserType = permission.UserType
         };
     }
 }

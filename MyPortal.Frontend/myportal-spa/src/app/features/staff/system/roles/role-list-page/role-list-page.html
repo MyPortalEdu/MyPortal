@@ -1,0 +1,68 @@
+<ng-container *transloco="let t; prefix: 'roles'">
+  <mp-page-header [title]="t('title')" icon="fa-solid fa-user-shield" [actions]="headerActions()"></mp-page-header>
+
+  <p-card>
+    @if (loading()) {
+      <div class="flex flex-col gap-2">
+        @for (i of skeletonRows; track i) {
+          <p-skeleton height="2.5rem"></p-skeleton>
+        }
+      </div>
+    } @else if (roles().length === 0) {
+      <div class="py-12 text-center text-muted-color border border-dashed border-surface rounded-lg">
+        {{ t('empty') }}
+      </div>
+    } @else {
+      <p-table [value]="roles()" dataKey="id" [scrollable]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ t('columns.name') }}</th>
+            <th style="width: 9rem">{{ t('columns.audience') }}</th>
+            <th style="width: 9rem">{{ t('columns.type') }}</th>
+            <th>{{ t('columns.description') }}</th>
+            <th style="width: 12rem"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-role>
+          <tr>
+            <td class="font-medium">{{ role.name }}</td>
+            <td>
+              <p-tag [value]="audienceLabel(role.userType)" [severity]="audienceSeverity(role.userType)"></p-tag>
+            </td>
+            <td>
+              <p-tag [value]="typeLabel(role)" [severity]="typeSeverity(role)"></p-tag>
+            </td>
+            <td class="text-muted-color">{{ role.description }}</td>
+            <td>
+              <div class="flex items-center justify-end gap-1">
+                <p-button
+                  [label]="t('edit')"
+                  icon="fa-solid fa-pen-to-square"
+                  severity="secondary"
+                  size="small"
+                  [text]="true"
+                  (click)="openEdit(role)"></p-button>
+                <span [pTooltip]="canDelete(role) ? '' : t('protectedHint')" tooltipPosition="top">
+                  <p-button
+                    [label]="t('delete')"
+                    icon="fa-solid fa-trash-can"
+                    severity="danger"
+                    size="small"
+                    [text]="true"
+                    [disabled]="!canDelete(role)"
+                    (click)="deleteRole(role)"></p-button>
+                </span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </p-card>
+
+  <mp-role-form-dialog
+    [visible]="dialogOpen()"
+    [editRoleId]="editRoleId()"
+    (closed)="closeDialog()"
+    (saved)="onSaved()"></mp-role-form-dialog>
+</ng-container>

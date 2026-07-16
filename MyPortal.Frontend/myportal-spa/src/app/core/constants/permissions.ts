@@ -5,6 +5,8 @@ export const Permissions = {
   SystemAdmin: {
     ViewUsers:           'System.ViewUsers',
     EditUsers:           'System.EditUsers',
+    ViewRoles:           'System.ViewRoles',
+    EditRoles:           'System.EditRoles',
     ViewGroups:          'System.ViewGroups',
     EditGroups:          'System.EditGroups',
     BulletinSettings:    'System.BulletinSettings'

@@ -83,6 +83,7 @@
   "nav": {
     "system": "System",
     "users": "Users",
+    "roles": "Roles",
     "bulletinSettings": "Bulletin Settings",
     "school": "School",
     "schoolDetails": "School Details",

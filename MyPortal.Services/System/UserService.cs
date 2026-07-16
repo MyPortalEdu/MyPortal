@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
+using MyPortal.Common.Constants;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Core.Entities;
@@ -149,7 +153,7 @@ public class UserService : BaseService, IUserService
             return result;
         }
 
-        await UpdateUserRoles(newUser, model.RoleIds);
+        await UpdateUserRoles(newUser, WithDefaultRole(model.UserType, model.RoleIds));
 
         tx.Complete();
 
@@ -185,7 +189,7 @@ public class UserService : BaseService, IUserService
 
         using var tx = CreateTransactionScope();
 
-        var rolesChanged = await UpdateUserRoles(user, model.RoleIds);
+        var rolesChanged = await UpdateUserRoles(user, WithDefaultRole(model.UserType, model.RoleIds));
 
         IdentityResult result;
         // Rotate the security stamp on any privilege-relevant change. Without this, an active
@@ -231,6 +235,25 @@ public class UserService : BaseService, IUserService
         return result;
     }
 
+    // Student and Parent users always carry their portal's default role. Adds it to the requested set
+    // if missing; a no-op for staff (and if it's already present).
+    private static IList<Guid> WithDefaultRole(UserType userType, IList<Guid> roleIds)
+    {
+        Guid? defaultRoleId = userType switch
+        {
+            UserType.Student => SystemRoles.StudentRoleId,
+            UserType.Parent => SystemRoles.ParentRoleId,
+            _ => null
+        };
+
+        if (defaultRoleId is null || roleIds.Contains(defaultRoleId.Value))
+        {
+            return roleIds;
+        }
+
+        return roleIds.Append(defaultRoleId.Value).ToList();
+    }
+
     private async Task<bool> UpdateUserRoles(ApplicationUser user, IList<Guid> roleIds)
     {
         var changesMade = false;
@@ -246,6 +269,15 @@ public class UserService : BaseService, IUserService
             if (role == null)
             {
                 throw new NotFoundException("Role not found.");
+            }
+
+            if (role.UserType != user.UserType)
+            {
+                throw new ValidationException(new[]
+                {
+                    new ValidationFailure(nameof(UserUpsertRequest.RoleIds),
+                        $"Role '{role.Name}' belongs to the {role.UserType} portal and cannot be assigned to a {user.UserType} user.")
+                });
             }
 
             if (string.IsNullOrWhiteSpace(role.Name))

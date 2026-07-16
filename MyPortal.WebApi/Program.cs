@@ -344,6 +344,10 @@ builder.Services.AddTransient<ExceptionMiddleware>();
 
 var app = builder.Build();
 
+// Verify seeded rows exist before AuthSeeder runs — it depends on the System Administrator role, so a
+// behind-on-migrations database should fail fast with a clear message rather than deep in the seeder.
+await SystemSeedVerifier.RunAsync(app.Services);
+
 await AuthSeeder.RunAsync(app.Services);
 
 app.UseMiddleware<ExceptionMiddleware>();

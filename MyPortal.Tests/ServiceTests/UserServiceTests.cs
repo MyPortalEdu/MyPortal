@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
+using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Permissions;
@@ -242,7 +244,7 @@ public class UserServiceTests
             .Returns(Task.CompletedTask);
 
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = "Admin" };
+        var role = new ApplicationRole { Id = roleId, Name = "Admin", UserType = UserType.Staff };
 
         _userManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), "pw"))
             .ReturnsAsync(IdentityResult.Success);
@@ -276,7 +278,7 @@ public class UserServiceTests
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
-        var user = new ApplicationUser { Id = id, IsEnabled = true };
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Staff };
 
         _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(Array.Empty<string>());
@@ -286,7 +288,7 @@ public class UserServiceTests
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
-            UserType = UserType.Student,
+            UserType = UserType.Staff,
             IsEnabled = false, // turned off
             RoleIds = new List<Guid>() // no role changes
         }, CancellationToken.None);
@@ -304,10 +306,10 @@ public class UserServiceTests
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
-        var user = new ApplicationUser { Id = id, IsEnabled = true };
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Staff };
 
         var newRoleId = Guid.NewGuid();
-        var newRole = new ApplicationRole { Id = newRoleId, Name = "NewRole" };
+        var newRole = new ApplicationRole { Id = newRoleId, Name = "NewRole", UserType = UserType.Staff };
 
         _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
 
@@ -323,7 +325,7 @@ public class UserServiceTests
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
-            UserType = UserType.Student,
+            UserType = UserType.Staff,
             IsEnabled = true,
             RoleIds = new List<Guid> { newRoleId }
         }, CancellationToken.None);
@@ -341,10 +343,10 @@ public class UserServiceTests
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
-        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Student };
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Staff };
 
         var roleId = Guid.NewGuid();
-        var role = new ApplicationRole { Id = roleId, Name = "Same" };
+        var role = new ApplicationRole { Id = roleId, Name = "Same", UserType = UserType.Staff };
 
         _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(new[] { "Same" });
@@ -359,7 +361,7 @@ public class UserServiceTests
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
-            UserType = UserType.Student, // unchanged
+            UserType = UserType.Staff, // unchanged
             IsEnabled = true, // unchanged
             RoleIds = new List<Guid> { roleId } // same set as before
         }, CancellationToken.None);
@@ -379,10 +381,10 @@ public class UserServiceTests
             .Returns(Task.CompletedTask);
 
         var id = Guid.NewGuid();
-        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Student };
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Staff };
         var roleId = Guid.NewGuid();
 
-        var emptyRole = new ApplicationRole { Id = roleId, Name = "   " }; // whitespace
+        var emptyRole = new ApplicationRole { Id = roleId, Name = "   ", UserType = UserType.Staff }; // whitespace
 
         _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(Array.Empty<string>());
@@ -396,7 +398,7 @@ public class UserServiceTests
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
-            UserType = UserType.Student,
+            UserType = UserType.Staff,
             IsEnabled = true,
             RoleIds = new List<Guid> { roleId }
         }, CancellationToken.None);
@@ -416,7 +418,7 @@ public class UserServiceTests
         var id = Guid.NewGuid();
         var missingRoleId = Guid.NewGuid();
 
-        var user = new ApplicationUser { Id = id, IsEnabled = true };
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Staff };
 
         _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(Array.Empty<string>());
@@ -427,7 +429,7 @@ public class UserServiceTests
         {
             Username = "student",
             PersonId = Guid.NewGuid(),
-            UserType = UserType.Student,
+            UserType = UserType.Staff,
             IsEnabled = true,
             RoleIds = new List<Guid> { missingRoleId }
         };
@@ -448,5 +450,56 @@ public class UserServiceTests
 
         Assert.That(async () => await _userService.DeleteAsync(Guid.NewGuid(), CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("User not found."));
+    }
+
+    [Test]
+    public async Task CreateAsync_AutoAssigns_DefaultRole_ForStudentUser()
+    {
+        _authorizationService
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var studentRole = new ApplicationRole
+        {
+            Id = SystemRoles.StudentRoleId, Name = "Student", UserType = UserType.Student
+        };
+
+        _userManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), "pw")).ReturnsAsync(IdentityResult.Success);
+        _roleManager.Setup(r => r.FindByIdAsync(SystemRoles.StudentRoleId.ToString())).ReturnsAsync(studentRole);
+        _userManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(Array.Empty<string>());
+        _userManager.Setup(m => m.AddToRoleAsync(It.IsAny<ApplicationUser>(), "Student")).ReturnsAsync(IdentityResult.Success);
+        _userManager.Setup(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+
+        // No roles requested, yet the student still ends up with the Student role.
+        var result = await _userService.CreateAsync(new UserUpsertRequest
+        {
+            Username = "pupil", Email = "p@test.com", Password = "pw", IsEnabled = true,
+            UserType = UserType.Student, RoleIds = new List<Guid>()
+        }, CancellationToken.None);
+
+        Assert.That(result.Succeeded, Is.True);
+        _userManager.Verify(m => m.AddToRoleAsync(It.IsAny<ApplicationUser>(), "Student"), Times.Once);
+    }
+
+    [Test]
+    public void CreateAsync_Rejects_StaffRole_ForStudentUser()
+    {
+        _authorizationService
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var staffRoleId = Guid.NewGuid();
+        var staffRole = new ApplicationRole { Id = staffRoleId, Name = "Teacher", UserType = UserType.Staff };
+
+        _userManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), "pw")).ReturnsAsync(IdentityResult.Success);
+        _roleManager.Setup(r => r.FindByIdAsync(staffRoleId.ToString())).ReturnsAsync(staffRole);
+        _userManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(Array.Empty<string>());
+
+        Assert.That(async () => await _userService.CreateAsync(new UserUpsertRequest
+        {
+            Username = "pupil", Email = "p@test.com", Password = "pw", IsEnabled = true,
+            UserType = UserType.Student, RoleIds = new List<Guid> { staffRoleId }
+        }, CancellationToken.None), Throws.TypeOf<ValidationException>());
     }
 }

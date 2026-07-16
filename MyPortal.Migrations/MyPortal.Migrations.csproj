@@ -196,6 +196,10 @@
     <EmbeddedResource Include="Sql\Updates\20260514000000_add_agency_permissions.sql" />
     <None Remove="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
     <EmbeddedResource Include="Sql\Updates\20260515000000_add_attendance_period_is_lesson.sql" />
+    <None Remove="Sql\Updates\20260717000000_add_role_permission_audience.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260717000000_add_role_permission_audience.sql" />
+    <None Remove="Sql\Updates\20260717000100_seed_default_roles.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260717000100_seed_default_roles.sql" />
   </ItemGroup>
 
   <ItemGroup>

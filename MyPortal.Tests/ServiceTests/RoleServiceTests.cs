@@ -1,8 +1,10 @@
 using System.Data;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
 using MyPortal.Auth.Constants;
+using MyPortal.Common.Enums;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Exceptions;
@@ -13,6 +15,8 @@ using MyPortal.Services.System;
 using MyPortal.Tests.Mocks;
 using Task = System.Threading.Tasks.Task;
 using MyPortal.Data.Interfaces;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Tests.ServiceTests;
 
@@ -23,6 +27,7 @@ public class RoleServiceTests
     private Mock<ILogger<RoleService>> _logger;
     private Mock<IRoleRepository> _roleRepository;
     private Mock<IRolePermissionRepository> _rolePermissionRepository;
+    private Mock<IPermissionRepository> _permissionRepository;
     private Mock<IRolePermissionCache> _rolePermissionCache;
     private Mock<RoleManager<ApplicationRole>> _roleManager;
     private Mock<IValidationService> _validationService;
@@ -36,6 +41,7 @@ public class RoleServiceTests
         _logger = new Mock<ILogger<RoleService>>(MockBehavior.Loose);
         _roleRepository = new Mock<IRoleRepository>(MockBehavior.Strict);
         _rolePermissionRepository = new Mock<IRolePermissionRepository>(MockBehavior.Strict);
+        _permissionRepository = new Mock<IPermissionRepository>(MockBehavior.Strict);
         _rolePermissionCache = new Mock<IRolePermissionCache>(MockBehavior.Loose);
         _roleManager = IdentityMocks.MockRoleManager<ApplicationRole>();
         _validationService = new Mock<IValidationService>(MockBehavior.Strict);
@@ -48,11 +54,19 @@ public class RoleServiceTests
             .Setup(v => v.ValidateAsync(It.IsAny<RoleUpsertRequest>()))
             .Returns(Task.CompletedTask);
 
+        // Default: no permissions known, so the audience check is a no-op. Tests that exercise the
+        // audience guard override this with specific permissions.
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>());
+
         _roleService = new RoleService(
             _authorizationService.Object,
             _logger.Object,
             _roleRepository.Object,
             _rolePermissionRepository.Object,
+            _permissionRepository.Object,
             _rolePermissionCache.Object,
             _roleManager.Object,
             _validationService.Object
@@ -63,10 +77,13 @@ public class RoleServiceTests
     public async Task GetDetailsByIdAsync_RequiresViewRoles_ThenReturnsDetails()
     {
         var id = Guid.NewGuid();
+        var permId = Guid.NewGuid();
         var dto = new RoleDetailsResponse { Id = id, Name = "Some role" };
 
         _roleRepository.Setup(r => r.GetDetailsByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(dto);
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission> { new() { Id = Guid.NewGuid(), RoleId = id, PermissionId = permId } });
 
         var result = await _roleService.GetDetailsByIdAsync(id, CancellationToken.None);
 
@@ -74,6 +91,7 @@ public class RoleServiceTests
             a => a.RequirePermissionAsync(Permissions.SystemAdmin.ViewRoles, It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.That(result, Is.SameAs(dto));
+        Assert.That(result!.PermissionIds, Is.EquivalentTo(new[] { permId }));
     }
 
     [Test]
@@ -266,5 +284,64 @@ public class RoleServiceTests
 
         Assert.That(async () => await _roleService.DeleteAsync(roleId, CancellationToken.None),
             Throws.TypeOf<SystemEntityException>());
+    }
+
+    [Test]
+    public void UpdateAsync_Throws_WhenRenamingDefaultRole()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Student", IsDefault = true, UserType = UserType.Student };
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+
+        Assert.That(async () => await _roleService.UpdateAsync(roleId,
+                new RoleUpsertRequest { Name = "Pupils", UserType = UserType.Student }, CancellationToken.None),
+            Throws.TypeOf<SystemEntityException>());
+    }
+
+    [Test]
+    public async Task UpdateAsync_AllowsDescriptionAndPermissionEdit_OnDefaultRole()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Student", IsDefault = true, UserType = UserType.Student };
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+        _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission>());
+
+        var result = await _roleService.UpdateAsync(roleId, new RoleUpsertRequest
+        {
+            Name = "Student", // unchanged — allowed
+            Description = "Updated description",
+            UserType = UserType.Student,
+            PermissionIds = new List<Guid>()
+        }, CancellationToken.None);
+
+        Assert.That(result.Succeeded, Is.True);
+        _roleManager.Verify(m => m.UpdateAsync(role), Times.Once);
+    }
+
+    [Test]
+    public void UpdateAsync_Rejects_PermissionOfWrongAudience()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Student", IsDefault = true, UserType = UserType.Student };
+        var staffPermId = Guid.NewGuid();
+
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+        _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = staffPermId, Name = "X", FriendlyName = "X", Area = "A", UserType = UserType.Staff }
+            });
+
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest
+        {
+            Name = "Student",
+            UserType = UserType.Student,
+            PermissionIds = new List<Guid> { staffPermId }
+        }, CancellationToken.None), Throws.TypeOf<ValidationException>());
     }
 }

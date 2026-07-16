@@ -26,8 +26,8 @@ public class SqlRoleStore : IRoleStore<ApplicationRole>
         role.NormalizedName     = Normalize(role.Name);
 
         const string sql = @"
-INSERT INTO dbo.Roles (Id, Name, NormalizedName, ConcurrencyStamp, Description, IsSystem)
-VALUES (@Id, @Name, @NormalizedName, @ConcurrencyStamp, @Description, @IsSystem);";
+INSERT INTO dbo.Roles (Id, Name, NormalizedName, ConcurrencyStamp, Description, IsSystem, UserType, IsDefault)
+VALUES (@Id, @Name, @NormalizedName, @ConcurrencyStamp, @Description, @IsSystem, @UserType, @IsDefault);";
 
         using var connection = _connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql, role, cancellationToken: cancellationToken));
@@ -44,6 +44,8 @@ VALUES (@Id, @Name, @NormalizedName, @ConcurrencyStamp, @Description, @IsSystem)
         var newConcurrencyStamp = Guid.NewGuid().ToString("N");
         var newNormalizedName = Normalize(role.Name);
 
+        // UserType and IsDefault are create/seed-time only and deliberately omitted here — a role's
+        // audience and its protected-default status never change through an update.
         const string sql = @"
 UPDATE dbo.Roles SET
   Name=@Name,
