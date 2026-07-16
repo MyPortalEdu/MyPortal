@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserType } from '../../core/types/user-type';
-import { PageResult } from '../types/bulletin';
+import { PageResult, IdResponse } from '../types/bulletin';
 import {
   RoleSummaryResponse,
   RoleDetailsResponse,
@@ -24,8 +24,8 @@ export class RolesDataService {
     return this.http.get<RoleDetailsResponse>(`/api/roles/${id}`);
   }
 
-  create(model: RoleUpsertRequest): Observable<void> {
-    return this.http.post<void>('/api/roles', model);
+  create(model: RoleUpsertRequest): Observable<IdResponse> {
+    return this.http.post<IdResponse>('/api/roles', model);
   }
 
   update(id: string, model: RoleUpsertRequest): Observable<void> {

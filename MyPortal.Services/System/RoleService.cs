@@ -68,7 +68,7 @@ namespace MyPortal.Services.System
             return result;
         }
 
-        public async Task<IdentityResult> CreateAsync(RoleUpsertRequest model, CancellationToken cancellationToken)
+        public async Task<(IdentityResult Result, Guid RoleId)> CreateAsync(RoleUpsertRequest model, CancellationToken cancellationToken)
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
@@ -90,14 +90,14 @@ namespace MyPortal.Services.System
 
             if (!result.Succeeded)
             {
-                return result;
+                return (result, Guid.Empty);
             }
 
             await UpdateRolePermissionsAsync(role, model.PermissionIds, cancellationToken);
 
             tx.Complete();
 
-            return result;
+            return (result, role.Id);
         }
 
         public async Task<IdentityResult> UpdateAsync(Guid roleId, RoleUpsertRequest model, CancellationToken cancellationToken)

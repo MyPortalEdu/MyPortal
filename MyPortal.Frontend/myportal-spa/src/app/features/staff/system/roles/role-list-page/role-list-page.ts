@@ -12,6 +12,7 @@ import { TableModule } from 'primeng/table';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
+import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
@@ -21,7 +22,7 @@ import { ConfirmationDialog } from '../../../../../core/services/confirmation.se
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoleSummaryResponse } from '../../../../../shared/types/role';
 import { UserType } from '../../../../../core/types/user-type';
-import { RoleFormDialog } from '../role-form-dialog/role-form-dialog';
+import { RoleCreateDialog } from '../role-create-dialog/role-create-dialog';
 
 type AudienceSeverity = 'info' | 'success' | 'warn' | 'secondary';
 type TypeSeverity = 'danger' | 'info' | 'secondary';
@@ -30,7 +31,7 @@ type TypeSeverity = 'danger' | 'info' | 'secondary';
   selector: 'mp-role-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Card, TableModule, Skeleton, Tag, Tooltip, PageHeader, RoleFormDialog, TranslocoDirective],
+  imports: [Button, Card, TableModule, Skeleton, Tag, Tooltip, PageHeader, RoleCreateDialog, TranslocoDirective],
   providers: [provideTranslocoScope('roles')],
   templateUrl: './role-list-page.html',
 })
@@ -39,12 +40,11 @@ export class RoleListPage implements OnInit {
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
+  private readonly router = inject(Router);
 
   readonly roles = signal<RoleSummaryResponse[]>([]);
   readonly loading = signal(false);
-  readonly dialogOpen = signal(false);
-  // Non-null when the dialog is editing an existing role; null = create.
-  readonly editRoleId = signal<string | null>(null);
+  readonly createOpen = signal(false);
 
   readonly skeletonRows = [1, 2, 3, 4, 5];
 
@@ -76,24 +76,21 @@ export class RoleListPage implements OnInit {
   }
 
   openCreate(): void {
-    this.editRoleId.set(null);
-    this.dialogOpen.set(true);
+    this.createOpen.set(true);
   }
 
   openEdit(role: RoleSummaryResponse): void {
-    this.editRoleId.set(role.id);
-    this.dialogOpen.set(true);
+    void this.router.navigate(['/staff/system/roles', role.id]);
   }
 
-  closeDialog(): void {
-    this.dialogOpen.set(false);
-    this.editRoleId.set(null);
+  closeCreate(): void {
+    this.createOpen.set(false);
   }
 
-  onSaved(): void {
-    this.dialogOpen.set(false);
-    this.editRoleId.set(null);
-    this.refresh();
+  onCreated(id: string): void {
+    this.createOpen.set(false);
+    // Straight into the new role's editor to assign permissions.
+    void this.router.navigate(['/staff/system/roles', id]);
   }
 
   // Both IsSystem and IsDefault roles are protected from deletion (see RoleService).

@@ -1,0 +1,41 @@
+<ng-template #nodeTpl let-node let-depth="depth">
+  <div class="flex items-center gap-2 py-1" [style.padding-left.rem]="depth * 1.25">
+    @if (isLeaf(node)) {
+      <span class="inline-block w-5"></span>
+    } @else {
+      <button
+        type="button"
+        class="w-5 h-5 flex items-center justify-center text-xs text-muted-color hover:text-color"
+        (click)="toggleCollapse(node)"
+        [attr.aria-label]="isCollapsed(node) ? 'Expand' : 'Collapse'">
+        <i class="fa-solid" [class.fa-chevron-right]="isCollapsed(node)" [class.fa-chevron-down]="!isCollapsed(node)"></i>
+      </button>
+    }
+
+    <label class="flex items-center gap-2 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        class="w-4 h-4 accent-indigo-600 cursor-pointer"
+        [checked]="isChecked(node)"
+        [indeterminate]="isIndeterminate(node)"
+        [disabled]="disabled()"
+        (change)="onToggle(node, $event)" />
+      <span [class.font-medium]="!isLeaf(node)" [class.text-sm]="isLeaf(node)">
+        @if (node.icon) {
+          <i class="fa-solid {{ node.icon }} mr-1.5 text-muted-color"></i>
+        }
+        {{ node.label }}
+      </span>
+    </label>
+  </div>
+
+  @if (!isLeaf(node) && !isCollapsed(node)) {
+    @for (child of node.children; track child.key) {
+      <ng-container *ngTemplateOutlet="nodeTpl; context: { $implicit: child, depth: depth + 1 }"></ng-container>
+    }
+  }
+</ng-template>
+
+@for (node of nodes(); track node.key) {
+  <ng-container *ngTemplateOutlet="nodeTpl; context: { $implicit: node, depth: 0 }"></ng-container>
+}

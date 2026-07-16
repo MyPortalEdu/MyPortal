@@ -30,6 +30,7 @@
     "titleView": "Role",
     "name": "Name",
     "namePlaceholder": "e.g. Head of Department",
+    "createHint": "You'll choose this role's permissions on the next screen.",
     "description": "Description",
     "audience": "Portal",
     "audienceHint": "Which portal this role belongs to. Fixed once the role is created.",

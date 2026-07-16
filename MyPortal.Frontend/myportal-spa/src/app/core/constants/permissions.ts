@@ -59,7 +59,6 @@ export const Permissions = {
     ViewOwnStaffTimetable:               'Staff.ViewOwnStaffTimetable',
     ViewManagedStaffTimetable:           'Staff.ViewManagedStaffTimetable',
     ViewAllStaffTimetable:               'Staff.ViewAllStaffTimetable',
-    EditAllStaffTimetable:               'Staff.EditAllStaffTimetable',
 
     ViewOwnStaffDocuments:               'Staff.ViewOwnStaffDocuments',
     ViewManagedStaffDocuments:           'Staff.ViewManagedStaffDocuments',

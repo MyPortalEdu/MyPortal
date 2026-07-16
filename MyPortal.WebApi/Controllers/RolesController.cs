@@ -4,6 +4,7 @@ using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Services.Interfaces.System;
 using MyPortal.WebApi.Infrastructure.Attributes;
@@ -63,12 +64,12 @@ public sealed class RolesController : BaseApiController
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
-    [ProducesResponseType(204)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateRoleAsync([FromBody] RoleUpsertRequest model)
     {
-        var result = await _roleService.CreateAsync(model, CancellationToken);
+        var (result, roleId) = await _roleService.CreateAsync(model, CancellationToken);
 
-        return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
+        return !result.Succeeded ? IdentityResultProblem(result) : Ok(new IdResponse { Id = roleId });
     }
 
     /// <summary>Update a role's name and/or permission set.</summary>

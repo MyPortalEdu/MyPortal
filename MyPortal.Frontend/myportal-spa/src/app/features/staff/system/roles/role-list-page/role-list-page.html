@@ -60,9 +60,8 @@
     }
   </p-card>
 
-  <mp-role-form-dialog
-    [visible]="dialogOpen()"
-    [editRoleId]="editRoleId()"
-    (closed)="closeDialog()"
-    (saved)="onSaved()"></mp-role-form-dialog>
+  <mp-role-create-dialog
+    [visible]="createOpen()"
+    (closed)="closeCreate()"
+    (created)="onCreated($event)"></mp-role-create-dialog>
 </ng-container>

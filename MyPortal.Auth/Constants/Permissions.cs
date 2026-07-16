@@ -203,11 +203,11 @@ public static class Permissions
         public const string EditManagedStaffAbsences            = "Staff.EditManagedStaffAbsences";
         public const string EditAllStaffAbsences                = "Staff.EditAllStaffAbsences";
 
-        // Timetable. Editing is a central scheduling action — All only.
+        // Timetable is view-only on a staff profile — editing is a whole-school scheduling action
+        // (Timetable.EditTimetables), never per staff member.
         public const string ViewOwnStaffTimetable               = "Staff.ViewOwnStaffTimetable";
         public const string ViewManagedStaffTimetable           = "Staff.ViewManagedStaffTimetable";
         public const string ViewAllStaffTimetable               = "Staff.ViewAllStaffTimetable";
-        public const string EditAllStaffTimetable               = "Staff.EditAllStaffTimetable";
 
         // Documents.
         public const string ViewOwnStaffDocuments               = "Staff.ViewOwnStaffDocuments";

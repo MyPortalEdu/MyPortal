@@ -5,6 +5,7 @@ import { canDeactivateGuard } from '../../core/guards/can-deactivate.guard';
 import { Home } from './home/home';
 import { UserListPage } from './system/users/user-list-page/user-list-page';
 import { RoleListPage } from './system/roles/role-list-page/role-list-page';
+import { RoleDetailsPage } from './system/roles/role-details-page/role-details-page';
 import { BulletinSettingsPage } from './system/bulletin-settings/bulletin-settings-page';
 import { SchoolDetailsPage } from './school/school-details/school-details-page';
 import { AcademicYearListPage } from './curriculum/academic-years/academic-year-list-page/academic-year-list-page';
@@ -41,6 +42,16 @@ export const STAFF_ROUTES: Routes = [
         data: {
           permissionsAny: [Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles],
           breadcrumb: 'Roles'
+        }
+      },
+      {
+        path: 'system/roles/:id',
+        component: RoleDetailsPage,
+        canActivate: [AuthGuard],
+        canDeactivate: [canDeactivateGuard],
+        data: {
+          permissionsAny: [Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles],
+          breadcrumb: 'Role'
         }
       },
       {

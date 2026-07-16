@@ -76,6 +76,8 @@
     <EmbeddedResource Include="Sql\Updates\20251101000100_add_user_management_permissions.sql" />
     <None Remove="Sql\StoredProcedures\usp_role_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_role_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_role_permission_get_by_role_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_role_permission_get_by_role_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_document_get_tree_by_directory_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_document_get_tree_by_directory_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_directory_get_tree_by_id.sql" />
@@ -282,6 +284,10 @@
     <EmbeddedResource Include="Sql\Updates\20260717000000_add_role_permission_audience.sql" />
     <None Remove="Sql\Updates\20260717000100_seed_default_roles.sql" />
     <EmbeddedResource Include="Sql\Updates\20260717000100_seed_default_roles.sql" />
+    <None Remove="Sql\Updates\20260717000200_remove_edit_staff_timetable_permission.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260717000200_remove_edit_staff_timetable_permission.sql" />
+    <None Remove="Sql\Updates\20260717000300_seed_default_role_permissions.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260717000300_seed_default_role_permissions.sql" />
   </ItemGroup>
 
   <ItemGroup>

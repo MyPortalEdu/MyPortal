@@ -116,7 +116,8 @@ public class RoleServiceTests
 
         var result = await _roleService.CreateAsync(model, CancellationToken.None);
 
-        Assert.That(result.Succeeded, Is.True);
+        Assert.That(result.Result.Succeeded, Is.True);
+        Assert.That(result.RoleId, Is.Not.EqualTo(Guid.Empty));
         _validationService.Verify(v => v.ValidateAsync(model), Times.Once);
         _roleManager.Verify(m => m.CreateAsync(
             It.Is<ApplicationRole>(r => r.Name == "Custom Role" && r.Description == "desc" && !r.IsSystem)),
@@ -142,7 +143,7 @@ public class RoleServiceTests
 
         var result = await _roleService.CreateAsync(model, CancellationToken.None);
 
-        Assert.That(result.Succeeded, Is.False);
+        Assert.That(result.Result.Succeeded, Is.False);
         _rolePermissionRepository.Verify(r => r.GetByRoleIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _rolePermissionRepository.Verify(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()),

@@ -74,7 +74,6 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
             [(StaffArea.Timetable, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffTimetable,
             [(StaffArea.Timetable, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffTimetable,
             [(StaffArea.Timetable, StaffAccess.ViewAll)]               = Permissions.Staff.ViewAllStaffTimetable,
-            [(StaffArea.Timetable, StaffAccess.EditAll)]               = Permissions.Staff.EditAllStaffTimetable,
 
             [(StaffArea.Documents, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffDocuments,
             [(StaffArea.Documents, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffDocuments,

@@ -318,11 +318,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly canViewTimetable = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
-    if (
-      perms.has(Permissions.Staff.ViewAllStaffTimetable) ||
-      perms.has(Permissions.Staff.EditAllStaffTimetable)
-    )
-      return true;
+    if (perms.has(Permissions.Staff.ViewAllStaffTimetable)) return true;
     if (rel === 'LineManaged' && perms.has(Permissions.Staff.ViewManagedStaffTimetable)) return true;
     if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffTimetable)) return true;
     return false;

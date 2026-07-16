@@ -1,0 +1,88 @@
+<ng-container *transloco="let t; prefix: 'roles'">
+  <mp-page-header
+    [title]="loading() ? t('form.loading') : (name() || t('form.titleView'))"
+    icon="fa-solid fa-user-shield"></mp-page-header>
+
+  <p-card>
+    @if (loading()) {
+      <div class="flex flex-col gap-3">
+        @for (i of skeletonRows; track i) {
+          <p-skeleton height="2rem"></p-skeleton>
+        }
+      </div>
+    } @else if (notFound()) {
+      <div class="py-12 text-center text-muted-color">{{ t('form.errorLoad') }}</div>
+    } @else {
+      <div class="flex flex-col gap-4 max-w-3xl">
+        @if (readOnly()) {
+          <div class="flex items-start gap-2 p-3 rounded-lg bg-emphasis text-sm text-muted-color">
+            <i class="fa-solid fa-lock mt-0.5"></i>
+            <span>{{ t('form.systemReadonly') }}</span>
+          </div>
+        }
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-muted-color">{{ t('form.name') }}</label>
+          <input pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" [disabled]="nameLocked()" />
+          @if (nameLocked() && !readOnly()) {
+            <small class="text-muted-color">{{ t('form.defaultNameLocked') }}</small>
+          }
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-muted-color">{{ t('form.description') }}</label>
+          <textarea
+            pTextarea
+            [ngModel]="description()"
+            (ngModelChange)="description.set($event)"
+            rows="2"
+            [autoResize]="true"
+            [disabled]="readOnly()"></textarea>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-muted-color">{{ t('form.audience') }}</label>
+          <div><p-tag [value]="audienceLabel()"></p-tag></div>
+        </div>
+
+        <div class="flex flex-col gap-2 pt-2 border-t border-surface">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-semibold">{{ t('form.permissions') }}</span>
+            <span class="text-xs text-muted-color">{{ t('form.permissionsHint') }}</span>
+          </div>
+
+          @if (treeNodes().length === 0) {
+            <div class="text-sm text-muted-color italic py-2">{{ t('form.noPermissions') }}</div>
+          } @else {
+            <div class="border border-surface rounded-lg p-2 max-h-[28rem] overflow-auto">
+              <mp-permission-tree
+                [nodes]="treeNodes()"
+                [selectedIds]="selectedPermissionIds()"
+                [disabled]="readOnly()"
+                (toggle)="onToggle($event)"></mp-permission-tree>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </p-card>
+
+  @if (!loading() && !notFound()) {
+    <div class="flex items-center justify-between gap-2 mt-4">
+      <p-button
+        [label]="'common.back' | transloco"
+        icon="fa-solid fa-arrow-left"
+        severity="secondary"
+        [text]="true"
+        (click)="goBack()"></p-button>
+      @if (!readOnly()) {
+        <p-button
+          [label]="t('form.save')"
+          icon="fa-solid fa-check"
+          [disabled]="!isValid() || !isDirty()"
+          [loading]="saving()"
+          (click)="save()"></p-button>
+      }
+    </div>
+  }
+</ng-container>
