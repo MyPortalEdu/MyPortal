@@ -86,7 +86,6 @@ public class DbUpdateService : IDbUpdateService
     {
         const string baseNamespace = "MyPortal.Migrations.Sql.Updates";
 
-        // find scripts
         var resourceNames = _assembly
             .GetManifestResourceNames()
             .Where(n => n.StartsWith(baseNamespace + ".", StringComparison.Ordinal) &&
@@ -118,7 +117,6 @@ public class DbUpdateService : IDbUpdateService
                 continue;
             }
 
-            // Guard: updates should not contain DB-level statements
             if (IsDbLevelScript(scriptText))
             {
                 throw new InvalidOperationException(
@@ -137,7 +135,6 @@ public class DbUpdateService : IDbUpdateService
             await using var tx = await conn.BeginTransactionAsync(ct);
             try
             {
-                // optional: set options helpful for DDL/DML
                 await ExecAsync(conn, (SqlTransaction)tx,
                     "SET XACT_ABORT ON; SET QUOTED_IDENTIFIER ON; SET ANSI_NULLS ON;", ct);
 
@@ -253,7 +250,6 @@ VALUES (@name, @ms, @hash, @success, @err);";
         {
             var alters = new[]
             {
-                //$"ALTER DATABASE [{db}] SET RECOVERY SIMPLE;",
                 $"ALTER DATABASE [{db}] SET READ_COMMITTED_SNAPSHOT ON;",
                 $"ALTER DATABASE [{db}] SET ALLOW_SNAPSHOT_ISOLATION ON;",
                 $"ALTER DATABASE [{db}] SET AUTO_CLOSE OFF;",
@@ -292,7 +288,7 @@ VALUES (@name, @ms, @hash, @success, @err);";
 
         _log.LogInformation("Database '{Db}' not found. Creating…", GetDatabaseName());
 
-        await CreateDatabaseAsync(ct); // your existing helper
+        await CreateDatabaseAsync(ct);
 
         _log.LogInformation("Database '{Db}' created", GetDatabaseName());
         return true; // <-- created now

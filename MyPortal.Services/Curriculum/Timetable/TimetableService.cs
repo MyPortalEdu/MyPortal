@@ -229,8 +229,6 @@ public class TimetableService : BaseService, ITimetableService
         Logger.LogInformation("Pin removed: {pinId} from timetable {timetableId}", pinId, timetableId);
     }
 
-    // --- mapping ----------------------------------------------------------------------
-
     private static TimetableSummaryResponse ToSummary(Core.Entities.Timetable t) => new()
     {
         Id = t.Id, AcademicYearId = t.AcademicYearId, Name = t.Name,

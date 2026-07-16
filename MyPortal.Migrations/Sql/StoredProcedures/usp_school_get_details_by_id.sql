@@ -29,6 +29,21 @@ SELECT
     [S].[IntakeTypeId],
     [IT].[Description] AS [IntakeType],
     [HT].[Name] AS [HeadTeacherFullName],
+    [S].[Ukprn],
+    [S].[PayZoneId],
+    [PZ].[Description] AS [PayZoneName],
+    [S].[LowestAge],
+    [S].[HighestAge],
+    [S].[NetCapacity],
+    [S].[NetCapacityAssessmentDate],
+    [S].[IsSpecialSchool],
+    [S].[SpecialSchoolOrganisationId],
+    [SSO].[Description] AS [SpecialSchoolOrganisationName],
+    [S].[SpecialSchoolTypeId],
+    [SST].[Description] AS [SpecialSchoolTypeName],
+    [S].[MaxBoarders],
+    [S].[Telephone],
+    [S].[Email],
     [S].[IsLocal]
 
 FROM [dbo].[Schools] [S]
@@ -39,6 +54,9 @@ FROM [dbo].[Schools] [S]
     INNER JOIN [dbo].[SchoolTypes] [ST] ON [S].[SchoolTypeId] = [ST].[Id]
     INNER JOIN [dbo].[GovernanceTypes] [GT] ON [S].[GovernanceTypeId] = [GT].[Id]
     INNER JOIN [dbo].[IntakeTypes] [IT] ON [S].[IntakeTypeId] = [IT].[Id]
+    LEFT JOIN [dbo].[PayZones] [PZ] ON [S].[PayZoneId] = [PZ].[Id]
+    LEFT JOIN [dbo].[SpecialSchoolOrganisations] [SSO] ON [S].[SpecialSchoolOrganisationId] = [SSO].[Id]
+    LEFT JOIN [dbo].[SpecialSchoolTypes] [SST] ON [S].[SpecialSchoolTypeId] = [SST].[Id]
     CROSS APPLY [dbo].[fn_person_get_name]([S].[HeadTeacherId], 2, 0 ,1) HT
 
 WHERE [S].[Id] = @schoolId

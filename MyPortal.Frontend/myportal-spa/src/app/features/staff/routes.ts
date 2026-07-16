@@ -7,6 +7,8 @@ import { UserListPage } from './system/users/user-list-page/user-list-page';
 import { BulletinSettingsPage } from './system/bulletin-settings/bulletin-settings-page';
 import { SchoolDetailsPage } from './school/school-details/school-details-page';
 import { AcademicYearListPage } from './curriculum/academic-years/academic-year-list-page/academic-year-list-page';
+import { StaffMemberListPage } from './people/staff-members/staff-member-list-page/staff-member-list-page';
+import { StaffMemberDetailsPage } from './people/staff-members/staff-member-details-page/staff-member-details-page';
 import { Permissions } from '../../core/constants/permissions';
 export const STAFF_ROUTES: Routes = [
   {
@@ -57,6 +59,33 @@ export const STAFF_ROUTES: Routes = [
         data: {
           permissionsAny: [Permissions.Curriculum.EditAcademicYears],
           breadcrumb: 'Academic Years'
+        }
+      },
+      {
+        path: 'people/staff-members',
+        component: StaffMemberListPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffBasicDetails],
+          breadcrumb: 'Staff'
+        }
+      },
+      {
+        path: 'people/staff-members/:id',
+        component: StaffMemberDetailsPage,
+        canActivate: [AuthGuard],
+        canDeactivate: [canDeactivateGuard],
+        // Coarse gate — any plausible view-basic scope. The service does the real
+        // per-(viewer, subject) check via IStaffMemberAccessService.
+        data: {
+          permissionsAny: [
+            Permissions.Staff.ViewOwnStaffBasicDetails,
+            Permissions.Staff.ViewManagedStaffBasicDetails,
+            Permissions.Staff.ViewAllStaffBasicDetails,
+            Permissions.Staff.EditManagedStaffBasicDetails,
+            Permissions.Staff.EditAllStaffBasicDetails
+          ],
+          breadcrumb: 'Staff profile'
         }
       }
     ]

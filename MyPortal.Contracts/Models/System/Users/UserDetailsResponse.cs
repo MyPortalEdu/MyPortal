@@ -23,7 +23,6 @@ public class UserDetailsResponse
 
     public string? PersonFullName { get; set; }
         
-    // Identity
     public string? Username { get; set; }
     
     public string? Email { get; set; }

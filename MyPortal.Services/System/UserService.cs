@@ -170,6 +170,11 @@ public class UserService : BaseService, IUserService
             throw new NotFoundException("User not found.");
         }
 
+        if (user.IsSystem)
+        {
+            throw new SystemEntityException("System users cannot be modified.");
+        }
+
         bool userDisabled = user.IsEnabled && !model.IsEnabled;
         bool userTypeChanged = user.UserType != model.UserType;
 
@@ -219,6 +224,11 @@ public class UserService : BaseService, IUserService
         if (user == null)
         {
             throw new NotFoundException("User not found.");
+        }
+
+        if (user.IsSystem)
+        {
+            throw new SystemEntityException("System users cannot be deleted.");
         }
 
         var result = await _userManager.DeleteAsync(user);

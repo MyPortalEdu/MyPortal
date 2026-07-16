@@ -127,8 +127,6 @@ describe('BulletinFormDialog', () => {
     fixture.detectChanges();
   }
 
-  // ─── open lifecycle ──────────────────────────────────────────────────────
-
   it('loads me, categories, and allowed groups on open', () => {
     open();
     expect(me$.me).toHaveBeenCalled();
@@ -173,8 +171,6 @@ describe('BulletinFormDialog', () => {
     expect(component.isSelected('sg-g-x')).toBeTrue();
   });
 
-  // ─── audienceChoices ────────────────────────────────────────────────────
-
   it('audienceChoices surfaces groups from the existing bulletin even when not in the allowlist', () => {
     // Admin removed the group from the allowlist after the bulletin was created;
     // we still need to render it so the editor can untick it.
@@ -200,8 +196,6 @@ describe('BulletinFormDialog', () => {
     expect(groupKeys).toEqual(['sg-g-allowed']);
   });
 
-  // ─── isValid ─────────────────────────────────────────────────────────────
-
   it('isValid is false when title is blank, detail is blank, no category, or no audience', () => {
     open();
     expect(component.isValid()).toBeFalse(); // title and detail blank
@@ -225,8 +219,6 @@ describe('BulletinFormDialog', () => {
     component.toggleAudience('all-pupils');
     expect(component.isSelected('all-pupils')).toBeFalse();
   });
-
-  // ─── publish() ───────────────────────────────────────────────────────────
 
   it('publish() in create mode posts the trimmed payload and emits saved on success', () => {
     open();
@@ -316,8 +308,6 @@ describe('BulletinFormDialog', () => {
     expect(component.submitting()).toBeFalse();
   });
 
-  // ─── attachment-aware create path ────────────────────────────────────────
-
   it('publish() with staged attachments fetches the new bulletin and uploads against its directoryId', async () => {
     open();
     component.title.set('T'); component.detail.set('D');
@@ -354,8 +344,6 @@ describe('BulletinFormDialog', () => {
     expect(notify.success).toHaveBeenCalled();
     expect(component.submitting()).toBeFalse();
   });
-
-  // ─── close ───────────────────────────────────────────────────────────────
 
   it('onCancel/onHide emit closed', () => {
     open();

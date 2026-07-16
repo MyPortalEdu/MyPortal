@@ -17,6 +17,7 @@ SELECT
     D.[UploadPolicy]
 FROM [Directories] [D]
 WHERE D.[Id] = @directoryId
+  AND D.[IsDeleted] = 0
   AND (@isStaff = 1 OR D.[IsPrivate] = 0)
 
 END;

@@ -30,7 +30,6 @@ namespace MyPortal.Core.Entities
         public Person? AssignedTo { get; set; }
         public TaskType? Type { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

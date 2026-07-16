@@ -643,8 +643,6 @@ public class CpSatTimetableSolver : ITimetableSolver
         return new TimetableOutput(solveStatus, assignments, $"CpSolverStatus={status}");
     }
 
-    // ─── shared helpers ───────────────────────────────────────────────────────────────────
-
     private static string? Validate(TimetableInput input)
     {
         if (input.Periods.Count == 0)   return "No periods supplied.";

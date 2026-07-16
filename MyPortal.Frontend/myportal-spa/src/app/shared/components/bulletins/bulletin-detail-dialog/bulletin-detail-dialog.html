@@ -12,7 +12,6 @@
   [showHeader]="false">
 
   @if (bulletin(); as b) {
-    <!-- Top bar: category badge + close -->
     <div class="flex items-center justify-between p-4 border-b border-surface">
       <span
         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
@@ -27,10 +26,8 @@
     </div>
 
     <div class="p-4 flex flex-col gap-3">
-      <!-- Title -->
       <h2 class="text-lg font-bold leading-snug m-0">{{ b.title }}</h2>
 
-      <!-- Author chip -->
       <div class="flex items-center gap-2 text-xs">
         <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/15 text-primary text-[0.6875rem] font-bold">
           {{ initials() }}
@@ -43,14 +40,12 @@
       <!-- Body. Plain text for now; renderer is a follow-up. -->
       <div class="whitespace-pre-wrap text-sm leading-relaxed">{{ b.detail }}</div>
 
-      <!-- Attachments (read-only download list). -->
       <mp-bulletin-attachments
         mode="view"
         [bulletinId]="b.id"
         [directoryId]="b.directoryId">
       </mp-bulletin-attachments>
 
-      <!-- Audience summary -->
       <div class="pt-3 border-t border-surface">
         <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-color mb-1">{{ t('detail.sentTo') }}</div>
         <div class="flex items-center gap-2 text-xs">

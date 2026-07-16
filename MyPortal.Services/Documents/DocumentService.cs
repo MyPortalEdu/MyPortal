@@ -302,7 +302,6 @@ public class DocumentService : BaseService, IDocumentService
         }
 
         // The caller is responsible for disposing the returned stream
-        // We use try-catch to ensure proper disposal if an exception occurs after opening the stream
         Stream? content = null;
         try
         {

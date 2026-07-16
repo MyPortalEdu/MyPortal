@@ -53,7 +53,8 @@
                  [pTooltip]="!canMutate(year) ? mutateBlockReason(year) : ''"
                  tooltipPosition="left">
               <p-button
-                [label]="t('edit')"
+                [label]="bp.isMobile() ? '' : t('edit')"
+                [ariaLabel]="t('edit')"
                 icon="fa-solid fa-pen-to-square"
                 severity="secondary"
                 size="small"
@@ -62,7 +63,8 @@
                 (click)="openEdit(year)">
               </p-button>
               <p-button
-                [label]="t('delete')"
+                [label]="bp.isMobile() ? '' : t('delete')"
+                [ariaLabel]="t('delete')"
                 icon="fa-solid fa-trash-can"
                 severity="danger"
                 size="small"

@@ -11,7 +11,6 @@ namespace MyPortal.Core.Entities
 
         public Guid DiscountId { get; set; }
 
-        // Apply the discount to the cart total
         public bool IsAppliedToCart { get; set; }
 
         // How many of this product in the basket should the discount apply to

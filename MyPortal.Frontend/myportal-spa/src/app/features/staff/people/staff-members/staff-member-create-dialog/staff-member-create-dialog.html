@@ -1,0 +1,247 @@
+<ng-container *transloco="let t">
+  <p-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closeOnEscape]="!saving()"
+    [style]="{ width: 'min(40rem, 92vw)' }"
+    styleClass="mp-flush-dialog"
+    [showHeader]="false">
+
+    <!-- Header. Inlined (not pTemplate-projected) because PrimeNG 20 stopped
+         honouring pTemplate-based slot projection on p-dialog — same reason the
+         footer is inlined below. Mirrors bulletin-form-dialog. -->
+    <div class="flex items-center justify-between p-4 border-b border-surface">
+      <h3 class="text-base font-semibold m-0">
+        @if (step() === 'attach') {
+          {{ t('staff-members.create.attachHeader') }}
+        } @else {
+          {{ t('staff-members.create.header') }}
+        }
+      </h3>
+      <button type="button" class="mp-icon-button" (click)="onClose()"
+              [disabled]="saving()" [attr.aria-label]="t('common.cancel')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    @if (step() === 'search') {
+      <div class="p-4">
+        <!-- Live search. Matches surface below as you type; no matches just means
+             nothing to reuse, so the create form below stays ready. -->
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="create-search">
+            {{ t('staff-members.create.searchLabel') }}
+          </label>
+          <span class="relative">
+            <input pInputText id="create-search" class="w-full"
+                   [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+                   [placeholder]="t('staff-members.create.searchPlaceholder')"
+                   autocomplete="off" />
+            @if (searching()) {
+              <p-progressSpinner
+                styleClass="!w-5 !h-5 absolute right-3 top-1/2 -translate-y-1/2"
+                strokeWidth="6"></p-progressSpinner>
+            }
+          </span>
+          <span class="text-xs text-muted-color">{{ t('staff-members.create.searchHint') }}</span>
+        </div>
+
+        @if (results().length > 0) {
+          <div class="mt-4">
+            <p class="text-sm font-medium mb-2">{{ t('staff-members.create.matchesLabel') }}</p>
+            <ul class="flex flex-col divide-y divide-surface border border-surface rounded-lg overflow-hidden">
+              @for (p of results(); track p.personId) {
+                <li>
+                  <button type="button"
+                          class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-emphasis"
+                          (click)="pickPerson(p)">
+                    <span class="flex flex-col">
+                      <span class="text-sm font-medium">{{ fullName(p) }}</span>
+                      @if (p.dob) {
+                        <span class="text-xs text-muted-color">
+                          {{ t('staff-members.fields.dob') }}: {{ p.dob | date: 'dd/MM/yyyy' }}
+                        </span>
+                      }
+                    </span>
+                    @if (p.isStaffMember) {
+                      <span class="flex items-center gap-2 whitespace-nowrap">
+                        <span class="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
+                          {{ t('staff-members.create.alreadyStaff') }}
+                        </span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-muted-color text-xs"></i>
+                      </span>
+                    } @else {
+                      <i class="fa-solid fa-chevron-right text-muted-color text-xs"></i>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div class="flex items-center gap-3 my-4">
+            <span class="flex-1 border-t border-surface"></span>
+            <span class="text-xs uppercase tracking-wide text-muted-color">
+              {{ t('staff-members.create.orCreateNew') }}
+            </span>
+            <span class="flex-1 border-t border-surface"></span>
+          </div>
+        } @else {
+          <p class="text-sm text-muted-color mt-4 mb-3">
+            {{ t('staff-members.create.hint') }}
+          </p>
+        }
+
+        <div class="grid gap-3 md:grid-cols-2">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-code">
+              {{ t('staff-members.fields.code') }}
+            </label>
+            <input pInputText id="create-code"
+                   [ngModel]="code()" (ngModelChange)="code.set($event)"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-title">
+              {{ t('staff-members.fields.title') }}
+            </label>
+            <input pInputText id="create-title"
+                   [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-firstName">
+              {{ t('staff-members.fields.firstName') }}
+            </label>
+            <input pInputText id="create-firstName"
+                   [ngModel]="firstName()" (ngModelChange)="firstName.set($event)"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-middleName">
+              {{ t('staff-members.fields.middleName') }}
+            </label>
+            <input pInputText id="create-middleName"
+                   [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-lastName">
+              {{ t('staff-members.fields.lastName') }}
+            </label>
+            <input pInputText id="create-lastName"
+                   [ngModel]="lastName()" (ngModelChange)="lastName.set($event)"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-preferredFirst">
+              {{ t('staff-members.fields.preferredFirstName') }}
+            </label>
+            <input pInputText id="create-preferredFirst"
+                   [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-gender">
+              {{ t('staff-members.fields.gender') }}
+            </label>
+            <mp-gender-select inputId="create-gender"
+                              [value]="gender()"
+                              (valueChange)="gender.set($event ?? '')"></mp-gender-select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-dob">
+              {{ t('staff-members.fields.dob') }}
+            </label>
+            <p-datepicker id="create-dob"
+                          [ngModel]="dob()" (ngModelChange)="dob.set($event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+        <p-button
+          [label]="t('common.cancel')"
+          icon="fa-solid fa-xmark"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="saving()"
+          (onClick)="onClose()"></p-button>
+        <p-button
+          [label]="t('staff-members.create.submit')"
+          icon="fa-solid fa-plus"
+          severity="primary"
+          [disabled]="!newPersonValid() || saving()"
+          [loading]="saving()"
+          (onClick)="save()"></p-button>
+      </div>
+    }
+
+    @if (step() === 'attach') {
+      <div class="p-4">
+        <p class="text-sm text-muted-color mb-4">
+          {{ t('staff-members.create.attachHint') }}
+        </p>
+
+        @if (selectedPerson(); as person) {
+          <div class="flex items-center gap-3 p-3 mb-4 border border-surface rounded-lg bg-emphasis">
+            <i class="fa-solid fa-user text-muted-color"></i>
+            <span class="flex flex-col">
+              <span class="text-sm font-medium">{{ fullName(person) }}</span>
+              @if (person.dob) {
+                <span class="text-xs text-muted-color">
+                  {{ t('staff-members.fields.dob') }}: {{ person.dob | date: 'dd/MM/yyyy' }}
+                </span>
+              }
+            </span>
+          </div>
+        }
+
+        <div class="flex flex-col gap-1 max-w-[18rem]">
+          <label class="text-sm font-medium" for="attach-code">
+            {{ t('staff-members.fields.code') }}
+          </label>
+          <input pInputText id="attach-code"
+                 [ngModel]="code()" (ngModelChange)="code.set($event)"
+                 (keydown.enter)="attach()" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+        <p-button
+          [label]="t('common.back')"
+          icon="fa-solid fa-arrow-left"
+          severity="secondary"
+          [text]="true"
+          [disabled]="saving()"
+          (onClick)="backToSearch()"></p-button>
+        <div class="flex items-center gap-2">
+          <p-button
+            [label]="t('common.cancel')"
+            severity="secondary"
+            [outlined]="true"
+            [disabled]="saving()"
+            (onClick)="onClose()"></p-button>
+          <p-button
+            [label]="t('staff-members.create.attachSubmit')"
+            icon="fa-solid fa-plus"
+            severity="primary"
+            [disabled]="!attachValid() || saving()"
+            [loading]="saving()"
+            (onClick)="attach()"></p-button>
+        </div>
+      </div>
+    }
+  </p-dialog>
+</ng-container>

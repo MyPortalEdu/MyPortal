@@ -7,15 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Sql\People\GetPersonSummaries.sql" />
     <None Remove="Sql\People\GetStaffMemberSummaries.sql" />
+    <None Remove="Sql\People\SearchPeopleForStaffCreate.sql" />
     <None Remove="Sql\System\Roles\GetRoleSummaries.sql" />
     <None Remove="Sql\System\Users\GetUserSummaries.sql" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Sql\People\GetPersonSummaries.sql" />
     <EmbeddedResource Include="Sql\People\GetStaffMemberSummaries.sql" />
+    <EmbeddedResource Include="Sql\People\SearchPeopleForStaffCreate.sql" />
     <EmbeddedResource Include="Sql\System\Roles\GetRoleSummaries.sql" />
     <EmbeddedResource Include="Sql\System\Users\GetUserSummaries.sql" />
     <None Remove="Sql\Bulletins\GetBulletinSummaries.sql" />

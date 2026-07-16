@@ -1,0 +1,78 @@
+<ng-container *transloco="let t">
+  <div class="flex flex-col gap-3">
+    @if (loading() && !addresses().length) {
+      <div class="flex justify-center py-4">
+        <p-progressSpinner [style]="{ width: '1.5rem', height: '1.5rem' }"></p-progressSpinner>
+      </div>
+    } @else {
+      @if (addresses().length) {
+        <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
+          @for (address of addresses(); track address.addressPersonId) {
+            <div class="flex items-center gap-3 py-2">
+              <span class="w-20 shrink-0 text-xs text-muted-color">{{ typeName(address.typeId) }}</span>
+              <span class="flex-1 min-w-0 font-medium">
+                {{ formatAddress(address) }}
+                @if (address.sharedCount > 1) {
+                  <p-tag
+                    class="ml-2 align-middle"
+                    [value]="t('common.contact.address.sharedBy', { count: address.sharedCount })"
+                    severity="info"></p-tag>
+                }
+              </span>
+              @if (address.isMain) {
+                <i class="fa-solid fa-star text-amber-400" [title]="t('common.contact.main')" [attr.aria-label]="t('common.contact.main')"></i>
+              }
+              <mp-copy-button [value]="formatAddress(address)"></mp-copy-button>
+              <a
+                class="mp-icon-button shrink-0"
+                [href]="mapHref(address)"
+                target="_blank"
+                rel="noopener"
+                [title]="t('common.contact.address.map')"
+                [attr.aria-label]="t('common.contact.address.map')">
+                <i class="fa-solid fa-location-dot text-sm"></i>
+              </a>
+              @if (canEdit()) {
+                <div class="flex items-center gap-1 shrink-0">
+                  <p-button
+                    icon="fa-solid fa-pen"
+                    [text]="true"
+                    severity="secondary"
+                    [ariaLabel]="t('common.edit')"
+                    (onClick)="openEdit(address)"></p-button>
+                  <p-button
+                    icon="fa-solid fa-trash"
+                    [text]="true"
+                    severity="danger"
+                    [ariaLabel]="t('common.delete')"
+                    (onClick)="remove(address)"></p-button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <span class="text-sm text-muted-color">{{ t('common.contact.address.none') }}</span>
+      }
+
+      @if (canEdit()) {
+        <div>
+          <p-button
+            [label]="t('common.contact.address.add')"
+            icon="fa-solid fa-plus"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="openAdd()"></p-button>
+        </div>
+      }
+    }
+  </div>
+
+  <mp-address-form-dialog
+    [open]="dialogOpen()"
+    [staffMemberId]="staffMemberId()"
+    [addressTypes]="addressTypes()"
+    [editTarget]="editTarget()"
+    (closed)="onDialogClosed()"
+    (saved)="onSaved()"></mp-address-form-dialog>
+</ng-container>

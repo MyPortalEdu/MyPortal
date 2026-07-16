@@ -16,7 +16,7 @@ export class LocalAuthoritiesDataService {
     if (params.filter) httpParams = httpParams.set('filter', params.filter);
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
-    return this.http.get<PageResult<LocalAuthoritySummaryResponse>>('/api/localauthorities', {
+    return this.http.get<PageResult<LocalAuthoritySummaryResponse>>('/api/v1/localauthorities', {
       params: httpParams,
     });
   }

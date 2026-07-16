@@ -62,8 +62,6 @@ public class AttendanceCodeServiceTests
             IsSystem = false
         };
 
-    // ─── GetActiveAsync ──────────────────────────────────────────────────────
-
     [Test]
     public async Task GetActiveAsync_MapsEntitiesToResponses_AndIncludesRestricted()
     {
@@ -95,8 +93,6 @@ public class AttendanceCodeServiceTests
         _attendanceCodeRepository.Verify(r => r.GetActiveAsync(It.IsAny<CancellationToken>()),
             Times.Never);
     }
-
-    // ─── EnsureCodesAreUsableAsync ───────────────────────────────────────────
 
     [Test]
     public async Task EnsureCodesAreUsableAsync_NoOpsOnEmptyInput()
@@ -133,7 +129,7 @@ public class AttendanceCodeServiceTests
 
         _attendanceCodeRepository.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<AttendanceCode>());  // repo returned no rows for the requested ids
+            .ReturnsAsync(new List<AttendanceCode>());
 
         var ex = Assert.ThrowsAsync<NotFoundException>(() =>
             _service.EnsureCodesAreUsableAsync(new[] { unknown }, CancellationToken.None));

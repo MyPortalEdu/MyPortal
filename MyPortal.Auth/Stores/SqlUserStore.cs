@@ -20,9 +20,6 @@ public class SqlUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<Appl
 
     public void Dispose() { /* nothing to dispose */ }
 
-    // -------------------------------------------------------
-    // Create / Update / Delete
-    // -------------------------------------------------------
     public async Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -131,9 +128,6 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
         return IdentityResult.Success;
     }
 
-    // -------------------------------------------------------
-    // Finders
-    // -------------------------------------------------------
     public async Task<ApplicationUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -167,9 +161,6 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
             new CommandDefinition(sql, new { NormalizedEmail = normalizedEmail }, cancellationToken: cancellationToken));
     }
 
-    // -------------------------------------------------------
-    // Identity trivial getters/setters
-    // -------------------------------------------------------
     public Task<string> GetUserIdAsync(ApplicationUser user, CancellationToken cancellationToken)
         => Task.FromResult(user.Id.ToString());
 
@@ -191,7 +182,6 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
         return Task.CompletedTask;
     }
 
-    // email
     public Task SetEmailAsync(ApplicationUser user, string? email, CancellationToken cancellationToken)
     {
         user.Email = email;
@@ -219,7 +209,6 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
         return Task.CompletedTask;
     }
 
-    // password
     public Task SetPasswordHashAsync(ApplicationUser user, string? passwordHash, CancellationToken cancellationToken)
     {
         user.PasswordHash = passwordHash;
@@ -232,7 +221,6 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
     public Task<bool> HasPasswordAsync(ApplicationUser user, CancellationToken cancellationToken)
         => Task.FromResult(!string.IsNullOrEmpty(user.PasswordHash));
 
-    // security stamp
     public Task SetSecurityStampAsync(ApplicationUser user, string securityStamp, CancellationToken cancellationToken)
     {
         user.SecurityStamp = securityStamp;
@@ -242,9 +230,6 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
     public Task<string?> GetSecurityStampAsync(ApplicationUser user, CancellationToken cancellationToken)
         => Task.FromResult(user.SecurityStamp);
 
-    // -------------------------------------------------------
-    // Roles
-    // -------------------------------------------------------
     public async Task AddToRoleAsync(ApplicationUser user, string roleName, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -322,9 +307,6 @@ WHERE r.NormalizedName = @NormalizedRoleName;";
         return users.ToList();
     }
 
-    // -------------------------------------------------------
-    // Claims
-    // -------------------------------------------------------
     public async Task<IList<Claim>> GetClaimsAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -421,10 +403,8 @@ WHERE c.ClaimType = @Type AND c.ClaimValue = @Value;";
         return users.ToList();
     }
 
-    // -------------------------------------------------------
     // Lockout — all in-memory mutations; UpdateAsync persists LockoutEnd /
     // LockoutEnabled / AccessFailedCount columns already.
-    // -------------------------------------------------------
     public Task<DateTimeOffset?> GetLockoutEndDateAsync(ApplicationUser user, CancellationToken cancellationToken)
         => Task.FromResult(user.LockoutEnd);
 
@@ -458,9 +438,6 @@ WHERE c.ClaimType = @Type AND c.ClaimValue = @Value;";
         return Task.CompletedTask;
     }
 
-    // -------------------------------------------------------
-    // helper
-    // -------------------------------------------------------
     private async Task<Guid?> GetRoleIdByNameAsync(string roleName, CancellationToken cancellationToken)
     {
         const string sql = "SELECT Id FROM dbo.Roles WHERE NormalizedName=@NormalizedRoleName;";

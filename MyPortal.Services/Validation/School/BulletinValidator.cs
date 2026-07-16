@@ -29,7 +29,6 @@ public class BulletinValidator : AbstractValidator<BulletinUpsertRequest>
         RuleFor(x => x.Audiences)
             .NotEmpty().WithMessage("At least one audience is required.");
 
-        // Each audience entry: StudentGroupId required iff kind = StudentGroup.
         RuleForEach(x => x.Audiences).ChildRules(child =>
         {
             child.RuleFor(a => a)

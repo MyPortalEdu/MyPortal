@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Core.Entities
@@ -10,6 +11,19 @@ namespace MyPortal.Core.Entities
         public Guid StaffMemberId { get; set; }
 
         public Guid TrainingCertificateStatusId { get; set; }
+
+        public DateTime? CompletedDate { get; set; }
+
+        public DateTime? ExpiryDate { get; set; }
+
+        [StringLength(128)]
+        public string? Provider { get; set; }
+
+        // CPD hours / points.
+        public decimal? Hours { get; set; }
+
+        [StringLength(64)]
+        public string? CertificateReference { get; set; }
 
         public StaffMember? StaffMember { get; set; }
         public TrainingCourse? TrainingCourse { get; set; }

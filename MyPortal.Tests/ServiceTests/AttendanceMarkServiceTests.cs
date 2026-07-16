@@ -77,8 +77,6 @@ public class AttendanceMarkServiceTests
             AttendanceCodeId = codeId
         };
 
-    // ─── GetBulkAsync ────────────────────────────────────────────────────────
-
     [Test]
     public async Task GetBulkAsync_ReturnsRepoResult_WhenScopeResolves()
     {
@@ -137,8 +135,6 @@ public class AttendanceMarkServiceTests
         _attendanceMarkRepository.Verify(r => r.GetBulkAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(),
             It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
     }
-
-    // ─── SubmitBulkAsync ─────────────────────────────────────────────────────
 
     [Test]
     public async Task SubmitBulkAsync_ForwardsScopeAndMarksToRepo_AfterValidation()

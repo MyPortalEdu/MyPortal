@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MyPortal.Auth\MyPortal.Auth.csproj" />
+    <ProjectReference Include="..\MyPortal.Migrations\MyPortal.Migrations.csproj" />
     <ProjectReference Include="..\MyPortal.Services\MyPortal.Services.csproj" />
     <ProjectReference Include="..\MyPortal.Timetabler\MyPortal.Timetabler.csproj" />
   </ItemGroup>

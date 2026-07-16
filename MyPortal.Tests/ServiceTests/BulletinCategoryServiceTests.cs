@@ -78,8 +78,6 @@ public class BulletinCategoryServiceTests
             .ReturnsAsync(new PageResult<BulletinCategory> { Items = list, TotalItems = list.Count });
     }
 
-    // ─── GetAllAsync ────────────────────────────────────────────────────────
-
     [Test]
     public async Task GetAllAsync_DefaultIncludeInactiveFalse_FiltersInactive_AndSortsByDisplayOrderThenName()
     {
@@ -126,8 +124,6 @@ public class BulletinCategoryServiceTests
             It.IsAny<bool>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 
-    // ─── GetByIdAsync ───────────────────────────────────────────────────────
-
     [Test]
     public async Task GetByIdAsync_ReturnsMappedCategory_WhenFound()
     {
@@ -155,8 +151,6 @@ public class BulletinCategoryServiceTests
         Assert.That(async () => await _service.GetByIdAsync(Guid.NewGuid(), CancellationToken.None),
             Throws.TypeOf<NotFoundException>());
     }
-
-    // ─── CreateAsync ────────────────────────────────────────────────────────
 
     [Test]
     public async Task CreateAsync_RequiresBulletinSettingsPermission_AndInsertsCategoryWithIsSystemFalse()
@@ -198,8 +192,6 @@ public class BulletinCategoryServiceTests
         _repository.Verify(r => r.InsertAsync(It.IsAny<BulletinCategory>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
-
-    // ─── UpdateAsync ────────────────────────────────────────────────────────
 
     [Test]
     public async Task UpdateAsync_AppliesFields_AndHandsExpectedVersionToRepo()
@@ -248,8 +240,6 @@ public class BulletinCategoryServiceTests
         _repository.Verify(r => r.UpdateAsync(It.IsAny<BulletinCategory>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
-
-    // ─── DeleteAsync ────────────────────────────────────────────────────────
 
     [Test]
     public async Task DeleteAsync_RequiresBulletinSettingsPermission_AndDeletes()

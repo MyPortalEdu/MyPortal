@@ -8,14 +8,11 @@ namespace MyPortal.Tests.FileStorageTests
         [Test]
         public void GenerateKey_ShouldReturnExpectedKeyFormat()
         {
-            // Arrange
             var generator = new DefaultStorageKeyGenerator();
             var fileName = "document.pdf";
 
-            // Act
             var result = generator.Generate(fileName);
 
-            // Assert
             var now = DateTime.UtcNow;
 
             Assert.That(result, Does.StartWith($"{now.Year:0000}/{now.Month:00}"));
