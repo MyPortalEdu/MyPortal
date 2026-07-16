@@ -264,6 +264,8 @@
     <EmbeddedResource Include="Sql\Updates\20260707000000_person_photo_support.sql" />
     <None Remove="Sql\Updates\20260715000000_directory_is_system.sql" />
     <EmbeddedResource Include="Sql\Updates\20260715000000_directory_is_system.sql" />
+    <None Remove="Sql\Updates\20260716000000_fix_lookup_is_system_flags.sql" />
+    <EmbeddedResource Include="Sql\Updates\20260716000000_fix_lookup_is_system_flags.sql" />
     <None Remove="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_email_address_get_by_person_id.sql" />
     <None Remove="Sql\StoredProcedures\usp_phone_number_get_by_person_id.sql" />

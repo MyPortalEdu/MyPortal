@@ -816,15 +816,15 @@ GO
 -- StaffAbsenceTypes (9 rows) -------------------------------------------
 MERGE INTO [dbo].[StaffAbsenceTypes] AS Target
     USING (VALUES
-    (N'E8DFB22A-EA4F-48B3-A787-CE8B341BB23B', N'Maternity /Paternity leave', N'MAT', 0, 0, 1),
-    (N'D22DD788-FF55-3A56-CBC1-1AB0FF5DC797', N'Other paid authorised absence, e.g. compassionate leave', N'OTH', 800, 0, 1),
-    (N'39C8159E-763F-46EF-0CB5-57C6E62C0B16', N'Pregnancy related absence', N'PRG', 0, 0, 1),
-    (N'99783419-3CEC-8573-7CBA-187C00B10178', N'Paid absence for public duties', N'PUB', 0, 0, 1),
-    (N'18493EB2-0280-03C0-130F-3ACED94D1157', N'Secondment', N'SEC', 0, 0, 1),
-    (N'51EC17C4-28C0-C3DE-F0FC-C23F5F8A1918', N'Sickness', N'SIC', 0, 0, 1),
-    (N'7C4C353E-2DE1-4C6A-5862-1A97AE0CE382', N'Training', N'TRN', 0, 0, 1),
-    (N'0C729441-2D0F-E479-100B-1B66D56BFB1A', N'Unauthorised absence', N'UNA', 0, 0, 0),
-    (N'F1D3EC0A-90E6-1DFB-7506-7ACB037D20A4', N'Unpaid, authorised absence', N'UNP', 0, 0, 1)
+    (N'E8DFB22A-EA4F-48B3-A787-CE8B341BB23B', N'Maternity /Paternity leave', N'MAT', 0, 1, 1),
+    (N'D22DD788-FF55-3A56-CBC1-1AB0FF5DC797', N'Other paid authorised absence, e.g. compassionate leave', N'OTH', 800, 1, 1),
+    (N'39C8159E-763F-46EF-0CB5-57C6E62C0B16', N'Pregnancy related absence', N'PRG', 0, 1, 1),
+    (N'99783419-3CEC-8573-7CBA-187C00B10178', N'Paid absence for public duties', N'PUB', 0, 1, 1),
+    (N'18493EB2-0280-03C0-130F-3ACED94D1157', N'Secondment', N'SEC', 0, 1, 1),
+    (N'51EC17C4-28C0-C3DE-F0FC-C23F5F8A1918', N'Sickness', N'SIC', 0, 1, 1),
+    (N'7C4C353E-2DE1-4C6A-5862-1A97AE0CE382', N'Training', N'TRN', 0, 1, 1),
+    (N'0C729441-2D0F-E479-100B-1B66D56BFB1A', N'Unauthorised absence', N'UNA', 0, 1, 0),
+    (N'F1D3EC0A-90E6-1DFB-7506-7ACB037D20A4', N'Unpaid, authorised absence', N'UNP', 0, 1, 1)
     ) AS Source (Id, Description, Code, DisplayOrder, IsSystem, IsAuthorised)
     ON Target.Id = Source.Id
     WHEN NOT MATCHED THEN INSERT (Id, Description, Code, DisplayOrder, IsSystem, IsAuthorised, Active) VALUES (Id, Description, Code, DisplayOrder, IsSystem, IsAuthorised, 1)

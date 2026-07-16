@@ -1,9 +1,9 @@
 namespace MyPortal.Common.Constants;
 
 /// <summary>
-/// Well-known DiaryEventType IDs seeded by 0004_seed_uk_data.sql. Each row is keyed by
-/// <see cref="Enums.DiaryEventKind"/> and marked IsSystem=1 (except General), so these IDs
-/// are stable across deployments and not deletable through the UI.
+/// Well-known DiaryEventType IDs seeded by 20251101000300_seed_uk_data.sql. Every row is IsSystem=1
+/// (General was flagged late by 20260716000000_fix_lookup_is_system_flags.sql), so the rows are
+/// stable across deployments and not deletable through the UI.
 /// </summary>
 public static class DiaryEventTypes
 {

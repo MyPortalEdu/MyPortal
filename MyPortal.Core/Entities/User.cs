@@ -6,7 +6,7 @@ using MyPortal.Core.Interfaces;
 namespace MyPortal.Core.Entities
 {
     [Table("Users")]
-    public class User : Entity, ISystemEntity, IVersionedEntity
+    public class User : Entity, IVersionedEntity
     {
         public Guid? PersonId { get; set; }
         

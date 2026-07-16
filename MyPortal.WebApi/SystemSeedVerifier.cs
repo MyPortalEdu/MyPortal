@@ -5,10 +5,10 @@ using MyPortal.Common.Interfaces;
 namespace MyPortal.WebApi;
 
 /// <summary>
-/// Fails boot when a row referenced by well-known id (see <see cref="SystemPhotos"/>) is missing.
-/// MyPortal.Migrations is a separate executable, so an API pointed at a database that is behind on
-/// migrations is an ordinary mistake; without this the first symptom is an FK violation surfacing
-/// as a 500 at photo-upload time.
+/// Fails boot when a row the code references by well-known id is missing. MyPortal.Migrations is a
+/// separate executable, so an API pointed at a database that is behind on migrations is an ordinary
+/// mistake; without this the first symptom is an FK violation surfacing as a 500 at the point of use
+/// (e.g. photo upload, or school creation).
 /// </summary>
 public static class SystemSeedVerifier
 {
@@ -18,7 +18,11 @@ public static class SystemSeedVerifier
         ("Directories", SystemPhotos.DirectoryId,
             "the system Photos directory (seeded by 20260707000000_person_photo_support.sql)"),
         ("DocumentTypes", SystemPhotos.PhotographDocumentTypeId,
-            "the \"Photograph\" document type (seeded by 20260707000000_person_photo_support.sql)")
+            "the \"Photograph\" document type (seeded by 20260707000000_person_photo_support.sql)"),
+        ("AgencyTypes", AgencyTypes.EducationalProvider,
+            "the Educational Provider agency type (seeded by 20251101000300_seed_uk_data.sql) — every school create references it"),
+        ("Users", SystemUsers.SentinelUserId,
+            "the system sentinel user (seeded by 20251101000050_seed_system_user.sql) — seed migrations reference it for row ownership")
     ];
 
     public static async Task RunAsync(IServiceProvider sp)

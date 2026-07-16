@@ -2443,7 +2443,7 @@ MERGE INTO [dbo].[DiaryEventTypes] AS Target
     ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F29','Teacher Training', '1', '#ff9500', 1, 9),
     ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2B','Parent Evening',   '1', '#d10486', 1, 10),
     ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2C','Public Holiday',   '1', '#9b00ff', 1, 8),
-    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2A','General',          '1', '#c9c9c9', 0, 0)
+    ('84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2A','General',          '1', '#c9c9c9', 1, 0)
     )
     AS Source (Id, Description, Active, ColourCode, System, Kind)
     ON Target.Id = Source.Id
