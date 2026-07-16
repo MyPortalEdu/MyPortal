@@ -13,7 +13,7 @@ export class SchoolService {
   getLocalName(): Observable<string | null> {
     if (!this.localName$) {
       this.localName$ = this.http
-        .get('/api/schools/local/name', { responseType: 'text' })
+        .get('/api/v1/schools/local/name', { responseType: 'text' })
         .pipe(
           map(raw => {
             if (!raw) return null;

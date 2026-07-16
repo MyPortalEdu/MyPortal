@@ -32,8 +32,6 @@ public class BulletinSettingsServiceTests
             _logger.Object);
     }
 
-    // ─── GetAsync ───────────────────────────────────────────────────────────
-
     [Test]
     public async Task GetAsync_RequiresViewBulletinsPermission_AndReturnsAllowedGroups()
     {
@@ -69,8 +67,6 @@ public class BulletinSettingsServiceTests
 
         _repository.Verify(r => r.GetAllowedAudienceGroupsAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
-
-    // ─── UpdateAsync ────────────────────────────────────────────────────────
 
     [Test]
     public async Task UpdateAsync_RequiresBulletinSettingsPermission_AndPassesIdsToRepository()

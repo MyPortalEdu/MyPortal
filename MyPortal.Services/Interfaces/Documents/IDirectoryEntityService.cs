@@ -88,6 +88,16 @@ public interface IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntit
         CancellationToken cancellationToken, bool includeDeletedDocs = true);
 
     /// <summary>
+    /// Lists the contents of the entity's <em>root</em> directory. Convenience for clients that
+    /// know the owning entity id but not its root directory id (the natural entry point for a
+    /// directory browser).
+    /// </summary>
+    /// <param name="entityId">The owning entity whose root directory contents to list.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    Task<DirectoryContentsResponse> GetRootDirectoryContentsAsync(Guid entityId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Creates a new document for the specified entity using the provided details.
     /// </summary>
     /// <param name="entityId">The unique identifier of the entity to which the document will be associated.</param>

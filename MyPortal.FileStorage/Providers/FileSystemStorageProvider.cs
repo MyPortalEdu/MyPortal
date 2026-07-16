@@ -80,7 +80,6 @@ namespace MyPortal.FileStorage.Providers
             var safeKey = storageKey.Replace('/', Path.DirectorySeparatorChar);
             var fullPath = Path.Combine(_rootPath, safeKey);
 
-            // Normalize paths to resolve any relative path components
             var normalizedFullPath = Path.GetFullPath(fullPath);
             var normalizedRootPath = Path.GetFullPath(_rootPath);
 

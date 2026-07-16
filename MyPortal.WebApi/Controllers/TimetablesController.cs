@@ -11,11 +11,7 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Manage timetables — drafts, solver runs, pins, and applying a draft to live
-/// session data. A timetable lives inside an academic year; runs are async solver
-/// jobs queued onto a background worker.
-/// </summary>
+/// <summary>Timetable endpoints.</summary>
 public sealed class TimetablesController : BaseApiController
 {
     private readonly ITimetableService _service;
@@ -28,10 +24,7 @@ public sealed class TimetablesController : BaseApiController
         _solveService = solveService;
     }
 
-    /// <summary>Create a new draft timetable for an academic year.</summary>
-    /// <remarks>
-    /// The new timetable is empty until you queue a run, or hand-edit assignments.
-    /// </remarks>
+    /// <summary>Create a new draft timetable.</summary>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -43,7 +36,7 @@ public sealed class TimetablesController : BaseApiController
         return Ok(new IdResponse { Id = id });
     }
 
-    /// <summary>List all timetables (draft and applied) within an academic year.</summary>
+    /// <summary>List timetables within an academic year.</summary>
     /// <param name="academicYearId">The academic year to scope to.</param>
     [HttpGet]
     [Permission(PermissionMode.RequireAny, Permissions.Timetable.ViewTimetables)]
@@ -54,7 +47,7 @@ public sealed class TimetablesController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Get a timetable's metadata.</summary>
+    /// <summary>Get timetable metadata.</summary>
     /// <param name="timetableId">The id of the timetable.</param>
     [HttpGet("{timetableId:guid}")]
     [Permission(PermissionMode.RequireAny, Permissions.Timetable.ViewTimetables)]
@@ -65,11 +58,8 @@ public sealed class TimetablesController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>List the assignments (period × class × room × teacher) for a timetable.</summary>
-    /// <remarks>
-    /// For draft timetables this returns the latest solver run's assignments. For
-    /// applied timetables it returns what's currently driving lessons.
-    /// </remarks>
+    /// <summary>List the assignments for a timetable.</summary>
+    /// <remarks>Draft timetables return the latest solver run; applied timetables return live data.</remarks>
     /// <param name="timetableId">The id of the timetable.</param>
     [HttpGet("{timetableId:guid}/assignments")]
     [Permission(PermissionMode.RequireAny, Permissions.Timetable.ViewTimetables)]
@@ -81,7 +71,7 @@ public sealed class TimetablesController : BaseApiController
     }
 
     /// <summary>List solver runs for a timetable.</summary>
-    /// <remarks>Each run records the queued/started/completed timestamps and solver diagnostics.</remarks>
+    /// <remarks>Each run includes queued, started, and completed timestamps plus diagnostics.</remarks>
     /// <param name="timetableId">The id of the timetable.</param>
     [HttpGet("{timetableId:guid}/runs")]
     [Permission(PermissionMode.RequireAny, Permissions.Timetable.ViewTimetables)]
@@ -92,8 +82,8 @@ public sealed class TimetablesController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Get the status and diagnostics of a single solver run.</summary>
-    /// <remarks>Poll this after queuing a run to track progress and pick up the diagnostic on completion.</remarks>
+    /// <summary>Get a single solver run.</summary>
+    /// <remarks>Poll this after queuing a run to track progress and diagnostics.</remarks>
     /// <param name="timetableId">The owning timetable (kept in the route for resource-shape consistency).</param>
     /// <param name="runId">The id of the run.</param>
     [HttpGet("{timetableId:guid}/runs/{runId:guid}")]
@@ -108,11 +98,7 @@ public sealed class TimetablesController : BaseApiController
     }
 
     /// <summary>Queue a solver run for the timetable.</summary>
-    /// <remarks>
-    /// Returns <c>202 Accepted</c> immediately with the new run's id. The
-    /// background worker picks the run up and executes the solve; clients poll
-    /// <c>GET /runs/{runId}</c> for status.
-    /// </remarks>
+    /// <remarks>Returns <c>202 Accepted</c> immediately. Poll <c>GET /runs/{runId}</c> for status.</remarks>
     /// <param name="timetableId">The id of the timetable to solve.</param>
     [HttpPost("{timetableId:guid}/runs")]
     [UserType(UserType.Staff)]
@@ -134,11 +120,8 @@ public sealed class TimetablesController : BaseApiController
         });
     }
 
-    /// <summary>Apply a draft timetable's solved assignments to live session data.</summary>
-    /// <remarks>
-    /// Replaces the existing live session data for the academic year. Cannot be
-    /// undone; the previous live data is overwritten. Use carefully.
-    /// </remarks>
+    /// <summary>Apply a draft timetable to live session data.</summary>
+    /// <remarks>Replaces the existing live session data for the academic year.</remarks>
     /// <param name="timetableId">The id of the draft timetable to apply.</param>
     /// <param name="model">Apply options (e.g. effective-from date, dry-run flag).</param>
     [HttpPost("{timetableId:guid}/apply")]
@@ -154,7 +137,7 @@ public sealed class TimetablesController : BaseApiController
     }
 
     /// <summary>Discard an unapplied draft timetable.</summary>
-    /// <remarks>Removes the timetable and any associated runs/pins. Applied timetables cannot be discarded — you'd need to apply a replacement instead.</remarks>
+    /// <remarks>Removes the timetable and any associated runs or pins.</remarks>
     /// <param name="timetableId">The id of the draft to discard.</param>
     [HttpPost("{timetableId:guid}/discard")]
     [UserType(UserType.Staff)]
@@ -166,10 +149,8 @@ public sealed class TimetablesController : BaseApiController
         return NoContent();
     }
 
-    // ─── pins ─────────────────────────────────────────────────────────────
-
-    /// <summary>List the pins (forced placements) on a timetable.</summary>
-    /// <remarks>Pins constrain the solver — pinned assignments stay fixed across runs.</remarks>
+    /// <summary>List the pins on a timetable.</summary>
+    /// <remarks>Pins stay fixed across solver runs.</remarks>
     /// <param name="timetableId">The id of the timetable.</param>
     [HttpGet("{timetableId:guid}/pins")]
     [Permission(PermissionMode.RequireAny, Permissions.Timetable.ViewTimetables)]
@@ -181,11 +162,7 @@ public sealed class TimetablesController : BaseApiController
     }
 
     /// <summary>Add a pin to a timetable.</summary>
-    /// <remarks>
-    /// Pins force a specific (class, period, room, teacher) combination. The next
-    /// solver run will respect the pin — over-constraining can make a timetable
-    /// unsolvable, in which case the run completes with diagnostic errors.
-    /// </remarks>
+    /// <remarks>Over-constraining can make a timetable unsolvable.</remarks>
     /// <param name="timetableId">The id of the timetable.</param>
     /// <param name="model">The pin to add.</param>
     [HttpPost("{timetableId:guid}/pins")]

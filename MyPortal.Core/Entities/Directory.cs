@@ -2,15 +2,16 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using MyPortal.Common.Enums;
 using MyPortal.Core.Interfaces;
+using QueryKit.Repositories.Attributes;
 
 namespace MyPortal.Core.Entities
 {
     [Table("Directories")]
-    public class Directory : Entity, IAuditableEntity, IVersionedEntity
+    public class Directory : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity, ISystemEntity
     {
         public Guid? ParentId { get; set; }
 
-        [Required, StringLength(128)] 
+        [Required, StringLength(128)]
         public string Name { get; set; } = null!;
 
         // Only visible to staff users and the owner
@@ -18,9 +19,15 @@ namespace MyPortal.Core.Entities
 
         public DirectoryUploadPolicy UploadPolicy { get; set; }
 
+        public bool IsSystem { get; set; }
+
+        // Soft-delete so a directory delete keeps the row (recoverable) and doesn't trip the
+        // Documents.DirectoryId FK against documents that were already soft-deleted inside it.
+        [SoftDelete]
+        public bool IsDeleted { get; set; }
+
         public Directory? Parent { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

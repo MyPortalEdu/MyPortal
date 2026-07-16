@@ -16,6 +16,15 @@ namespace MyPortal.Core.Entities
 
         public DateTime? EndDate { get; set; }
 
+        // Suspension length in half-day sessions (DfE suspension/exclusion return).
+        public int? SessionCount { get; set; }
+
+        // Date the pupil was reinstated following a review (distinct from EndDate).
+        public DateTime? ReinstatementDate { get; set; }
+
+        // Body that reviewed the exclusion — governing board vs IRP (CBDS CS137).
+        public Guid? ReviewCategoryId { get; set; }
+
         public string? Comments { get; set; }
 
         public bool IsDeleted { get; set; }
@@ -30,5 +39,6 @@ namespace MyPortal.Core.Entities
         public ExclusionType? ExclusionType { get; set; }
         public ExclusionReason? ExclusionReason { get; set; }
         public ExclusionAppealResult? AppealResult { get; set; }
+        public ExclusionReviewCategory? ReviewCategory { get; set; }
     }
 }

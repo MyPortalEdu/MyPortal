@@ -156,24 +156,68 @@ public static class Permissions
         // public const string EditFinanceDetails  = "Student.EditFinanceDetails";
     }
 
+    // Scoped staff-profile permissions: Staff.{Verb}{Scope}Staff{Area}, Scope ∈ {Own, Managed, All}.
+    // Areas are permission domains, not UI sections. See docs/staff-profile-access.md.
     public static class Staff
     {
-        // public const string ViewStaffBasicDetails           = "Staff.ViewStaffBasicDetails";
-        // public const string ViewStaffEmploymentDetails      = "Staff.ViewStaffEmploymentDetails";
-        // public const string EditStaffBasicDetails           = "Staff.EditStaffBasicDetails";
-        // public const string EditStaffEmploymentDetails      = "Staff.EditStaffEmploymentDetails";
-        // public const string ViewAllStaffDocuments           = "Staff.ViewAllStaffDocuments";
-        // public const string ViewManagedStaffDocuments       = "Staff.ViewManagedStaffDocuments";
-        // public const string ViewOwnStaffDocuments           = "Staff.ViewOwnStaffDocuments";
-        // public const string EditAllStaffDocuments           = "Staff.EditAllStaffDocuments";
-        // public const string EditManagedStaffDocuments       = "Staff.EditManagedStaffDocuments";
-        // public const string EditOwnStaffDocuments           = "Staff.EditOwnStaffDocuments";
-        // public const string ViewAllStaffPerformanceDetails  = "Staff.ViewAllStaffPerformanceDetails";
-        // public const string ViewManagedStaffPerformanceDetails = "Staff.ViewManagedStaffPerformanceDetails";
-        // public const string ViewOwnStaffPerformanceDetails  = "Staff.ViewOwnStaffPerformanceDetails";
-        // public const string EditAllStaffPerformanceDetails  = "Staff.EditAllStaffPerformanceDetails";
-        // public const string EditManagedStaffPerformanceDetails = "Staff.EditManagedStaffPerformanceDetails";
-        // public const string EditOwnStaffPerformanceDetails  = "Staff.EditOwnStaffPerformanceDetails";
+        // Basic details (incl. contact methods, addresses, emergency contacts). No EditOwn:
+        // legal-name/DOB changes route through HR.
+        public const string ViewOwnStaffBasicDetails            = "Staff.ViewOwnStaffBasicDetails";
+        public const string ViewManagedStaffBasicDetails        = "Staff.ViewManagedStaffBasicDetails";
+        public const string ViewAllStaffBasicDetails            = "Staff.ViewAllStaffBasicDetails";
+        public const string EditManagedStaffBasicDetails        = "Staff.EditManagedStaffBasicDetails";
+        public const string EditAllStaffBasicDetails            = "Staff.EditAllStaffBasicDetails";
+
+        // Equality & identity (ethnicity, religion, disability, NI) — GDPR special-category;
+        // no Managed scope.
+        public const string ViewOwnStaffEqualityDetails         = "Staff.ViewOwnStaffEqualityDetails";
+        public const string ViewAllStaffEqualityDetails         = "Staff.ViewAllStaffEqualityDetails";
+        public const string EditAllStaffEqualityDetails         = "Staff.EditAllStaffEqualityDetails";
+
+        // Professional (QTS, TRN, subjects, qualifications, CPD). No EditOwn — HR-verified.
+        public const string ViewOwnStaffProfessionalDetails     = "Staff.ViewOwnStaffProfessionalDetails";
+        public const string ViewManagedStaffProfessionalDetails = "Staff.ViewManagedStaffProfessionalDetails";
+        public const string ViewAllStaffProfessionalDetails     = "Staff.ViewAllStaffProfessionalDetails";
+        public const string EditManagedStaffProfessionalDetails = "Staff.EditManagedStaffProfessionalDetails";
+        public const string EditAllStaffProfessionalDetails     = "Staff.EditAllStaffProfessionalDetails";
+
+        // Employment & contract (incl. salary, bank). Crown jewels: All-only edit, no Managed view.
+        public const string ViewOwnStaffEmploymentDetails       = "Staff.ViewOwnStaffEmploymentDetails";
+        public const string ViewAllStaffEmploymentDetails       = "Staff.ViewAllStaffEmploymentDetails";
+        public const string EditAllStaffEmploymentDetails       = "Staff.EditAllStaffEmploymentDetails";
+
+        // Pre-employment checks (DBS, right to work). Safeguarding/HR; All-only.
+        public const string ViewAllStaffPreEmploymentChecks     = "Staff.ViewAllStaffPreEmploymentChecks";
+        public const string EditAllStaffPreEmploymentChecks     = "Staff.EditAllStaffPreEmploymentChecks";
+
+        // Absences & leave (health data). No EditOwn — you don't self-mark sick.
+        public const string ViewOwnStaffAbsences                = "Staff.ViewOwnStaffAbsences";
+        public const string ViewManagedStaffAbsences            = "Staff.ViewManagedStaffAbsences";
+        public const string ViewAllStaffAbsences                = "Staff.ViewAllStaffAbsences";
+        public const string EditManagedStaffAbsences            = "Staff.EditManagedStaffAbsences";
+        public const string EditAllStaffAbsences                = "Staff.EditAllStaffAbsences";
+
+        // Timetable. Editing is a central scheduling action — All only.
+        public const string ViewOwnStaffTimetable               = "Staff.ViewOwnStaffTimetable";
+        public const string ViewManagedStaffTimetable           = "Staff.ViewManagedStaffTimetable";
+        public const string ViewAllStaffTimetable               = "Staff.ViewAllStaffTimetable";
+        public const string EditAllStaffTimetable               = "Staff.EditAllStaffTimetable";
+
+        // Documents.
+        public const string ViewOwnStaffDocuments               = "Staff.ViewOwnStaffDocuments";
+        public const string ViewManagedStaffDocuments           = "Staff.ViewManagedStaffDocuments";
+        public const string ViewAllStaffDocuments               = "Staff.ViewAllStaffDocuments";
+        public const string EditOwnStaffDocuments               = "Staff.EditOwnStaffDocuments";
+        public const string EditManagedStaffDocuments           = "Staff.EditManagedStaffDocuments";
+        public const string EditAllStaffDocuments               = "Staff.EditAllStaffDocuments";
+
+        // Performance / appraisal. No Own scope.
+        public const string ViewManagedStaffPerformanceDetails  = "Staff.ViewManagedStaffPerformanceDetails";
+        public const string ViewAllStaffPerformanceDetails      = "Staff.ViewAllStaffPerformanceDetails";
+        public const string EditManagedStaffPerformanceDetails  = "Staff.EditManagedStaffPerformanceDetails";
+        public const string EditAllStaffPerformanceDetails      = "Staff.EditAllStaffPerformanceDetails";
+
+        // Not yet modelled — kept as a marker for future slices.
         // public const string ViewAllStaffTasks               = "Staff.ViewAllStaffTasks";
         // public const string ViewManagedStaffTasks           = "Staff.ViewManagedStaffTasks";
         // public const string EditAllStaffTasks               = "Staff.EditAllStaffTasks";

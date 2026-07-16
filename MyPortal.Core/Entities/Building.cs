@@ -6,7 +6,6 @@ namespace MyPortal.Core.Entities
     [Table("Buildings")]
     public class Building : LookupEntity, IAuditableEntity, IVersionedEntity
     {
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

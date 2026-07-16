@@ -31,20 +31,33 @@ const MyPortal = definePreset(Aura, {
       900: '{indigo.900}',
       950: '{indigo.950}'
     },
-    // Promote Aura's "small" form-field density to the new default so we don't
-    // litter every template with size="small" / pSize="small". Buttons inherit
-    // padding via {form.field.padding.x|y} so they pick this up automatically.
-    // The `sm` and `lg` variants still work — they're just now relative to this
-    // tighter baseline. Source of token defaults: @primeuix/themes/aura/base.
+    // MIS-grade density. Aura's defaults are consumer/marketing-scale (~36px
+    // input height, rounded corners); for a school information system where a
+    // single page can carry 30+ fields and users live in forms all day, the
+    // baseline sits closer to Linear / GitHub admin density (~30px input,
+    // sharper corners). The `sm` and `lg` variants still work — they're now
+    // relative to this tighter baseline. Source of token defaults:
+    // @primeuix/themes/aura/base.
     //
-    // Font-size is dropped to 0.875rem via `.p-component` in styles.css —
+    // Font-size is set to 0.875rem (14px) via `.p-component` in styles.css —
     // padding alone doesn't shrink the visible mass enough, and PrimeNG's
     // typings only expose fontSize on the sm/lg variants so we can't set it
-    // here.
+    // here. Card body and table cell padding tightening live in styles.css
+    // (token coverage is fragmented across those components).
     formField: {
-      paddingX: '0.625rem',     // was 0.75rem
-      paddingY: '0.375rem'      // was 0.5rem
+      paddingX: '0.5rem',       // was 0.625rem (Aura default 0.75rem)
+      paddingY: '0.25rem',      // was 0.375rem (Aura default 0.5rem) — input height ~30px
+      borderRadius: '4px'       // was Aura default ~6px — sharper, reads as data entry not CTA
+    },
+    // Containers (cards / dialogs / panels) keep slightly more rounded corners
+    // than inputs so they still feel like containers — just a touch less round
+    // than the Aura default.
+    content: {
+      borderRadius: '6px'
     }
+    // Button density is pinned via CSS variables in styles.css — the v20
+    // ButtonDesignTokens shape doesn't expose paddingX/Y/iconOnlyWidth at the
+    // typed root, so override the underlying --p-button-* vars directly.
   }
 })
 

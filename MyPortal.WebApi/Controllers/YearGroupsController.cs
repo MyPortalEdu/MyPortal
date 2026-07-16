@@ -14,11 +14,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Manage year groups within an academic year — the cohort layer of the pastoral
-/// structure (e.g. "Year 7", "Year 11"). Reg groups belong to year groups; year
-/// groups belong to academic years.
-/// </summary>
+/// <summary>Year-group endpoints.</summary>
 public sealed class YearGroupsController : BaseApiController
 {
     private readonly IYearGroupService _yearGroupService;
@@ -30,11 +26,7 @@ public sealed class YearGroupsController : BaseApiController
     }
 
     /// <summary>Page through year-group summaries for an academic year.</summary>
-    /// <remarks>
-    /// Supports server-side filtering, sorting, and paging via the standard
-    /// <c>filter</c>/<c>sort</c>/<c>page</c>/<c>pageSize</c> query parameters.
-    /// Page size is clamped server-side (default 25, max 100).
-    /// </remarks>
+    /// <remarks>Supports server-side filtering, sorting, and paging. Page size is clamped.</remarks>
     /// <param name="academicYearId">The academic year to scope the results to.</param>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>
@@ -55,7 +47,7 @@ public sealed class YearGroupsController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Get the full details of a year group by id.</summary>
+    /// <summary>Get a year group by id.</summary>
     /// <param name="yearGroupId">The id of the year group.</param>
     [HttpGet("{yearGroupId:guid}")]
     [Permission(PermissionMode.RequireAny, Permissions.School.ViewPastoralStructure)]
@@ -67,7 +59,7 @@ public sealed class YearGroupsController : BaseApiController
         return Ok(result);
     }
 
-    /// <summary>Create a new year group within an academic year.</summary>
+    /// <summary>Create a year group.</summary>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -97,9 +89,7 @@ public sealed class YearGroupsController : BaseApiController
     }
 
     /// <summary>Delete a year group.</summary>
-    /// <remarks>
-    /// Fails if the year group has dependent reg groups or supervisor assignments.
-    /// </remarks>
+    /// <remarks>Fails if the year group still has dependent records.</remarks>
     /// <param name="yearGroupId">The id of the year group to delete.</param>
     [HttpDelete("{yearGroupId:guid}")]
     [UserType(UserType.Staff)]

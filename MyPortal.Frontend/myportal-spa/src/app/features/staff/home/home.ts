@@ -4,6 +4,7 @@ import { Button } from 'primeng/button';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { BulletinsFeed } from '../../../shared/components/bulletins/bulletins-feed/bulletins-feed';
+import { StaffTimetable } from '../../../shared/components/staff-timetable/staff-timetable';
 import { MeService } from '../../../core/services/me-service';
 import { SchoolService } from '../../../core/services/school-service';
 import { AcademicYearsDataService } from '../../../shared/services/academic-years-data.service';
@@ -15,6 +16,7 @@ import { Permissions } from '../../../core/constants/permissions';
   imports: [
     PageHeader,
     BulletinsFeed,
+    StaffTimetable,
     Button,
     RouterLink,
     TranslocoDirective,

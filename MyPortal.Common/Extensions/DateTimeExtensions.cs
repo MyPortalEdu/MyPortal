@@ -5,9 +5,9 @@ using MyPortal.Common.Models;
 [assembly: InternalsVisibleTo("MyPortal.Tests")]
 namespace MyPortal.Common.Extensions
 {
-    internal static class DateTimeExtensions
+    public static class DateTimeExtensions
     {
-        internal static IEnumerable<DateTime> GetAllInstancesUntil(this DateTime startDate, DateTime endDate,
+        public static IEnumerable<DateTime> GetAllInstancesUntil(this DateTime startDate, DateTime endDate,
             DateTimeDivision division = DateTimeDivision.Day, int incrementBy = 1)
         {
             var instances = new List<DateTime>();
@@ -49,9 +49,8 @@ namespace MyPortal.Common.Extensions
 
             return instances;
         }
-
         
-        internal static DateTime GetDayOfWeek(this DateTime dateTime, DayOfWeek dayOfWeek,
+        public static DateTime GetDayOfWeek(this DateTime dateTime, DayOfWeek dayOfWeek,
             SundayPosition sundayPosition = SundayPosition.WeekEnd)
         {
             var currentDayOfWeek = (int)dateTime.DayOfWeek;
@@ -61,7 +60,7 @@ namespace MyPortal.Common.Extensions
             return dateTime.AddDays(target - currentDayOfWeek);
         }
 
-        internal static DateTime? GetNextOccurrence(this DateTime dateTime, EventFrequency frequency)
+        public static DateTime? GetNextOccurrence(this DateTime dateTime, EventFrequency frequency)
         {
             switch (frequency)
             {
@@ -84,7 +83,7 @@ namespace MyPortal.Common.Extensions
             }
         }
 
-        internal static DateTime? GetNextDailyOccurrence(this DateTime dateTime, WeeklyPattern weeklyPattern)
+        public static DateTime? GetNextDailyOccurrence(this DateTime dateTime, WeeklyPattern weeklyPattern)
         {
             DateTime currentDate = dateTime.AddDays(1);
 
@@ -101,12 +100,12 @@ namespace MyPortal.Common.Extensions
             return null;
         }
 
-        internal static bool IsWeekend(this DateTime dateTime)
+        public static bool IsWeekend(this DateTime dateTime)
         {
             return dateTime.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
         }
 
-        internal static DateTime GetEndOfDay(this DateTime dateTime)
+        public static DateTime GetEndOfDay(this DateTime dateTime)
         {
             return dateTime.Date.AddTicks(TimeSpan.TicksPerDay - 1);
         }

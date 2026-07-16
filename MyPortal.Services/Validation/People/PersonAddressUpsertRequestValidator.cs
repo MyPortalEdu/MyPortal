@@ -1,0 +1,39 @@
+using FluentValidation;
+using MyPortal.Contracts.Models.People;
+
+namespace MyPortal.Services.Validation.People;
+
+public class PersonAddressUpsertRequestValidator : AbstractValidator<PersonAddressUpsertRequest>
+{
+    public PersonAddressUpsertRequestValidator()
+    {
+        RuleFor(x => x.TypeId)
+            .NotEmpty().WithMessage("Address type is required.");
+
+        // The address fields only matter when creating a new address; linking an existing one
+        // ignores them entirely.
+        When(x => x.ExistingAddressId == null, () =>
+        {
+            RuleFor(x => x.Street)
+                .NotEmpty().WithMessage("Street is required.")
+                .MaximumLength(256);
+            RuleFor(x => x.Town)
+                .NotEmpty().WithMessage("Town is required.")
+                .MaximumLength(256);
+            RuleFor(x => x.County)
+                .NotEmpty().WithMessage("County is required.")
+                .MaximumLength(256);
+            RuleFor(x => x.Postcode)
+                .NotEmpty().WithMessage("Postcode is required.")
+                .MaximumLength(128);
+            RuleFor(x => x.Country)
+                .NotEmpty().WithMessage("Country is required.")
+                .MaximumLength(128);
+
+            RuleFor(x => x.BuildingNumber).MaximumLength(128);
+            RuleFor(x => x.BuildingName).MaximumLength(128);
+            RuleFor(x => x.Apartment).MaximumLength(128);
+            RuleFor(x => x.District).MaximumLength(256);
+        });
+    }
+}

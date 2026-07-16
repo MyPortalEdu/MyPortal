@@ -16,13 +16,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Manage school bulletins — short news items broadcast to staff, pupils, parents,
-/// or specific student groups via the audience model. Pinning is admin-only;
-/// authorship gives edit/delete on your own bulletins. Inherits attachment
-/// endpoints (directories/documents) from
-/// <see cref="BaseDirectoryEntityController{TDirectoryEntity}"/>.
-/// </summary>
+/// <summary>Bulletin endpoints.</summary>
 public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin>
 {
     private readonly IBulletinService _bulletinService;
@@ -34,13 +28,10 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
         _bulletinService = bulletinService;
     }
 
-    // Bulletins are broadcast messages with no retention requirement; the
-    // bulletin itself hard-deletes on DELETE /bulletins/{id}, so its
-    // attachments should hard-delete to match. Without this override the
-    // inherited attachment endpoint would soft-delete and leave orphan rows.
+    // Bulletins hard-delete, so their attachments should too.
     protected override bool HardDeleteDocuments => true;
 
-    /// <summary>Get the full details of a bulletin by id.</summary>
+    /// <summary>Get a bulletin by id.</summary>
     /// <param name="bulletinId">The id of the bulletin.</param>
     [HttpGet("{bulletinId:guid}")]
     [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins)]
@@ -53,12 +44,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     }
 
     /// <summary>Page through bulletin summaries.</summary>
-    /// <remarks>
-    /// The set is audience-filtered server-side: pupils see AllPupils + their student
-    /// groups, parents see AllParents + their wards' groups, staff see AllStaff
-    /// (or everything when they hold the pin permission). Page size is clamped
-    /// server-side (default 25, max 100).
-    /// </remarks>
+    /// <remarks>Audience filtering happens server-side. Page size is clamped.</remarks>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>
     /// <param name="filter">Optional QueryKit filter (Base64-encoded JSON).</param>
@@ -77,12 +63,8 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
         return Ok(result);
     }
 
-    /// <summary>Create a new bulletin.</summary>
-    /// <remarks>
-    /// Posting a pinned bulletin additionally requires the
-    /// <c>School.PinSchoolBulletins</c> permission. Audience is required
-    /// (the validator rejects an empty list).
-    /// </remarks>
+    /// <summary>Create a bulletin.</summary>
+    /// <remarks>Posting a pinned bulletin additionally requires <c>School.PinSchoolBulletins</c>.</remarks>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -95,11 +77,8 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
         return Ok(new IdResponse { Id = id });
     }
 
-    /// <summary>Update a bulletin's content/metadata.</summary>
-    /// <remarks>
-    /// Toggling the pin state additionally requires <c>School.PinSchoolBulletins</c>.
-    /// Uses optimistic concurrency on <c>ExpectedVersion</c>.
-    /// </remarks>
+    /// <summary>Update a bulletin's content and metadata.</summary>
+    /// <remarks>Toggling the pin state additionally requires <c>School.PinSchoolBulletins</c>.</remarks>
     /// <param name="bulletinId">The id of the bulletin to update.</param>
     /// <param name="model">The updated content.</param>
     [HttpPut("{bulletinId:guid}")]
@@ -116,11 +95,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     }
 
     /// <summary>Pin or unpin a bulletin.</summary>
-    /// <remarks>
-    /// Pinned bulletins sort to the top of feeds. Pinning is an admin-only
-    /// gesture independent of authorship. Uses optimistic concurrency on
-    /// <c>ExpectedVersion</c>.
-    /// </remarks>
+    /// <remarks>Uses optimistic concurrency on <c>ExpectedVersion</c>.</remarks>
     /// <param name="bulletinId">The id of the bulletin.</param>
     /// <param name="model">Pin flag and the version the caller last saw.</param>
     [HttpPut("{bulletinId:guid}/pin")]
@@ -137,10 +112,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     }
 
     /// <summary>Record the current user's acknowledgement of a bulletin.</summary>
-    /// <remarks>
-    /// Idempotent: re-acknowledging is a no-op. 404 if the bulletin is not
-    /// visible to the caller. 400 if the bulletin does not require ack.
-    /// </remarks>
+    /// <remarks>Idempotent. Returns 404 if the bulletin is not visible and 400 if it does not require acknowledgement.</remarks>
     /// <param name="bulletinId">The id of the bulletin to acknowledge.</param>
     [HttpPost("{bulletinId:guid}/acknowledge")]
     [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins)]
@@ -152,7 +124,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
         return NoContent();
     }
 
-    /// <summary>Delete a bulletin and any attachments it owns.</summary>
+    /// <summary>Delete a bulletin and its attachments.</summary>
     /// <param name="bulletinId">The id of the bulletin to delete.</param>
     [HttpDelete("{bulletinId:guid}")]
     [UserType(UserType.Staff)]

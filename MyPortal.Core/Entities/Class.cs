@@ -20,7 +20,6 @@ namespace MyPortal.Core.Entities
         public CurriculumGroup? Group { get; set; }
         public Directory? Directory { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

@@ -26,11 +26,24 @@ export interface DirectoryDetailsResponse {
   id: string;
   name: string;
   parentId?: string | null;
+  // Returned by the API; needed so rename/move can preserve them rather than
+  // resetting. isPrivate = staff-only visibility; uploadPolicy is the
+  // DirectoryUploadPolicy enum (numeric on the wire).
+  isPrivate?: boolean;
+  uploadPolicy?: number;
 }
 
 export interface DirectoryContentsResponse {
   directory: DirectoryDetailsResponse;
   directories: DirectoryDetailsResponse[];
+  documents: DocumentDetailsResponse[];
+}
+
+// Mirrors MyPortal.Contracts.Models.Documents.DirectoryTreeResponse — the
+// recursive form, used to populate the "move to…" folder picker.
+export interface DirectoryTreeResponse {
+  directory: DirectoryDetailsResponse;
+  directories: DirectoryTreeResponse[];
   documents: DocumentDetailsResponse[];
 }
 

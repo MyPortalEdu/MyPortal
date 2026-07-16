@@ -29,6 +29,10 @@ namespace MyPortal.Core.Entities
         [StringLength(256)]
         public string LastName { get; set; } = null!;
 
+        // Former / previous surname (CTF & census). Distinct from the preferred name.
+        [StringLength(256)]
+        public string? FormerSurname { get; set; }
+
         public Guid? PhotoId { get; set; }
         
         [StringLength(10)]
@@ -44,13 +48,33 @@ namespace MyPortal.Core.Entities
 
         public Guid? EthnicityId { get; set; }
 
+        public Guid? NationalityId { get; set; }
+
+        public Guid? FirstLanguageId { get; set; }
+
+        public Guid? MaritalStatusId { get; set; }
+
+        public Guid? ReligionId { get; set; }
+
+        public Guid? SexualOrientationId { get; set; }
+
+        public Guid? GenderIdentityId { get; set; }
+
+        // At-a-glance flag that the person has medical needs (detail in PersonConditions).
+        public bool HasMedicalNeeds { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public Photo? Photo { get; set; }
         public Ethnicity? Ethnicity { get; set; }
+        public Nationality? Nationality { get; set; }
+        public Language? FirstLanguage { get; set; }
+        public MaritalStatus? MaritalStatus { get; set; }
+        public Religion? Religion { get; set; }
+        public SexualOrientation? SexualOrientation { get; set; }
+        public GenderIdentity? GenderIdentity { get; set; }
         public Directory? Directory { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

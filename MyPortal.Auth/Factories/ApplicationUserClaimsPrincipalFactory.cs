@@ -17,6 +17,12 @@ namespace MyPortal.Auth.Factories
         {
             var identity = await base.GenerateClaimsAsync(user);
             identity.AddClaim(new Claim(Constants.ClaimTypes.UserType, user.UserType.ToString()));
+
+            if (user.PersonId is { } personId)
+            {
+                identity.AddClaim(new Claim(Constants.ClaimTypes.PersonId, personId.ToString()));
+            }
+
             return identity;
         }
     }

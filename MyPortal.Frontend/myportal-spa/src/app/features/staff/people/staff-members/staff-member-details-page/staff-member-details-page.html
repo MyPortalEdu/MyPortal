@@ -1,0 +1,334 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('staff-members.details.pageTitle')"
+    icon="fa-solid fa-id-badge"
+    [actions]="headerActions()"
+  ></mp-page-header>
+
+  @if (loadingHeader() && !header()) {
+    <div class="flex justify-center py-10">
+      <p-progressSpinner [style]="{ width: '2.5rem', height: '2.5rem' }"></p-progressSpinner>
+    </div>
+  } @else if (header(); as h) {
+    <p-card styleClass="mb-4">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-lg font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
+          @if (h.photoId) {
+            <img [src]="photoSrc(h.photoId)" alt="" class="h-full w-full object-cover" />
+          } @else {
+            {{ initials() }}
+          }
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-lg font-semibold">{{ h.displayName }}</span>
+            <p-tag
+              [value]="t('staff-members.status.' + h.status)"
+              [severity]="statusSeverity()"
+            ></p-tag>
+            @if (h.relationship !== 'Unrelated') {
+              <span class="text-sm text-muted-color">{{ relationshipLabel(h.relationship) }}</span>
+            }
+          </div>
+          <div class="text-sm text-muted-color font-mono">{{ h.code }}</div>
+        </div>
+        <div class="flex items-center gap-2 w-full justify-end sm:w-auto">
+          <p-button
+            [label]="t('staff-members.details.backToList')"
+            icon="fa-solid fa-arrow-left"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="backToList()"
+          ></p-button>
+          @if (canDelete()) {
+            <p-button
+              icon="fa-solid fa-ellipsis-vertical"
+              severity="secondary"
+              [outlined]="true"
+              [disabled]="deleting()"
+              [ariaLabel]="t('staff-members.delete.menu')"
+              (onClick)="staffActionsMenu.toggle($event)"
+            ></p-button>
+            <p-menu #staffActionsMenu [model]="deleteMenuItems()" [popup]="true" appendTo="body"></p-menu>
+          }
+        </div>
+      </div>
+    </p-card>
+
+    <div class="flex flex-col gap-4 md:flex-row">
+      <p-card styleClass="md:w-72 md:flex-shrink-0">
+        <div class="flex flex-col gap-1 text-sm">
+          @for (area of areas(); track area.key) {
+            <button
+              type="button"
+              class="flex items-center gap-2 rounded px-3 py-2 text-left transition-colors"
+              [class.mp-nav-item--active]="activeArea() === area.key && area.enabled"
+              [class.font-semibold]="activeArea() === area.key && area.enabled"
+              [class.text-muted-color]="!area.enabled"
+              [class.cursor-not-allowed]="!area.enabled"
+              [class.mp-nav-item--hoverable]="area.enabled && activeArea() !== area.key"
+              [disabled]="!area.enabled"
+              (click)="pickArea(area)">
+              <i [class]="area.icon + ' w-4 text-center'"></i>
+              <span class="flex-1">{{ t('staff-members.areas.' + area.key) }}</span>
+            </button>
+          }
+        </div>
+      </p-card>
+
+      <p-card class="flex-1">
+        @switch (activeArea()) {
+          @case ('basicDetails') {
+            @if (loadingBasic() && !current()) {
+              <div class="flex justify-center py-10">
+                <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+              </div>
+            } @else if (current()) {
+              <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.basicDetails') }}</h3>
+              <p class="text-sm text-muted-color mb-4">
+                {{ t('staff-members.details.basicHint') }}
+              </p>
+
+              <div class="flex flex-col gap-6 md:flex-row md:gap-8">
+                <!-- Photo record card (portrait; doubles as the add/replace/remove control) -->
+                <div class="md:w-40 md:shrink-0">
+                  <div class="relative aspect-[3/4] w-full overflow-hidden rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800">
+                    @if (current()?.photoId; as pid) {
+                      <img [src]="photoSrc(pid)" alt="" class="h-full w-full object-cover" />
+                    } @else {
+                      <div class="flex h-full w-full items-center justify-center text-muted-color">
+                        <i class="fa-solid fa-user text-5xl"></i>
+                      </div>
+                    }
+                    @if (photoUploading()) {
+                      <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+                      </div>
+                    }
+                  </div>
+                  @if (editing()) {
+                    <input #photoInput type="file" accept="image/*" class="hidden" (change)="onPhotoSelected($event)" />
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <p-button
+                        [label]="current()?.photoId ? t('staff-members.photo.replace') : t('staff-members.photo.add')"
+                        icon="fa-solid fa-camera"
+                        severity="secondary"
+                        [outlined]="true"
+                        size="small"
+                        [disabled]="photoUploading()"
+                        (onClick)="photoInput.click()"></p-button>
+                      @if (current()?.photoId) {
+                        <p-button
+                          [label]="t('staff-members.photo.remove')"
+                          icon="fa-solid fa-trash"
+                          severity="danger"
+                          [text]="true"
+                          size="small"
+                          [disabled]="photoUploading()"
+                          (onClick)="removePhoto()"></p-button>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="flex flex-1 flex-col gap-6">
+                <section>
+                  <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+                    <i class="fa-solid fa-id-card text-muted-color"></i>
+                    {{ t('staff-members.details.groups.identity') }}
+                  </h4>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="code">
+                        {{ t('staff-members.fields.code') }}
+                      </label>
+                      @if (editing()) {
+                        <input pInputText id="code" [ngModel]="code()" (ngModelChange)="code.set($event)" />
+                      } @else {
+                        <span class="font-mono">{{ code() }}</span>
+                      }
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+                    <i class="fa-solid fa-user text-muted-color"></i>
+                    {{ t('staff-members.details.groups.name') }}
+                  </h4>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="title">
+                        {{ t('staff-members.fields.title') }}
+                      </label>
+                      @if (editing()) {
+                        <input pInputText id="title" [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)" />
+                      } @else {
+                        <span>{{ title() || '—' }}</span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="firstName">
+                        {{ t('staff-members.fields.firstName') }}
+                      </label>
+                      @if (editing()) {
+                        <input pInputText id="firstName" [ngModel]="firstName()" (ngModelChange)="firstName.set($event)" />
+                      } @else {
+                        <span>{{ firstName() }}</span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="middleName">
+                        {{ t('staff-members.fields.middleName') }}
+                      </label>
+                      @if (editing()) {
+                        <input pInputText id="middleName" [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)" />
+                      } @else {
+                        <span>{{ middleName() || '—' }}</span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="lastName">
+                        {{ t('staff-members.fields.lastName') }}
+                      </label>
+                      @if (editing()) {
+                        <input pInputText id="lastName" [ngModel]="lastName()" (ngModelChange)="lastName.set($event)" />
+                      } @else {
+                        <span>{{ lastName() }}</span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="preferredFirst">
+                        {{ t('staff-members.fields.preferredFirstName') }}
+                      </label>
+                      @if (editing()) {
+                        <input pInputText id="preferredFirst" [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)" />
+                      } @else {
+                        <span>{{ preferredFirstName() || '—' }}</span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="preferredLast">
+                        {{ t('staff-members.fields.preferredLastName') }}
+                      </label>
+                      @if (editing()) {
+                        <input pInputText id="preferredLast" [ngModel]="preferredLastName() ?? ''" (ngModelChange)="preferredLastName.set($event)" />
+                      } @else {
+                        <span>{{ preferredLastName() || '—' }}</span>
+                      }
+                    </div>
+                  </div>
+                </section>
+
+                <section>
+                  <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
+                    <i class="fa-solid fa-circle-info text-muted-color"></i>
+                    {{ t('staff-members.details.groups.personal') }}
+                  </h4>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <!-- Gender — stored as a single-char code (M/F/X), shown as a friendly label -->
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="gender">
+                        {{ t('staff-members.fields.gender') }}
+                      </label>
+                      @if (editing()) {
+                        <mp-gender-select
+                          inputId="gender"
+                          [value]="gender()"
+                          (valueChange)="gender.set($event ?? '')"></mp-gender-select>
+                      } @else {
+                        <span>{{ gender() | genderLabel }}</span>
+                      }
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-sm font-medium" for="dob">
+                        {{ t('staff-members.fields.dob') }}
+                      </label>
+                      @if (editing()) {
+                        <p-datepicker id="dob" [ngModel]="dob()" (ngModelChange)="dob.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                      } @else {
+                        <span>{{ dob() ? (dob() | date:'mediumDate') : '—' }}</span>
+                      }
+                    </div>
+                  </div>
+                </section>
+                </div>
+              </div>
+            }
+          }
+          @case ('contactDetails') {
+            <mp-staff-contact-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+              [relationship]="header()?.relationship"
+            ></mp-staff-contact-panel>
+          }
+          @case ('equalityDetails') {
+            <mp-staff-equality-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+            ></mp-staff-equality-panel>
+          }
+          @case ('professionalDetails') {
+            <mp-staff-professional-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+              [relationship]="header()?.relationship"
+            ></mp-staff-professional-panel>
+          }
+          @case ('employmentDetails') {
+            <mp-staff-employment-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+            ></mp-staff-employment-panel>
+          }
+          @case ('preEmploymentChecks') {
+            <mp-staff-pre-employment-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+            ></mp-staff-pre-employment-panel>
+          }
+          @case ('absences') {
+            <mp-staff-absences-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+              [relationship]="header()?.relationship"
+            ></mp-staff-absences-panel>
+          }
+          @case ('timetable') {
+            <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.timetable') }}</h3>
+            <p class="text-sm text-muted-color mb-4">{{ t('staff-members.timetable.hint') }}</p>
+            <mp-staff-timetable [staffMemberId]="staffMemberId()"></mp-staff-timetable>
+          }
+          @case ('performanceDetails') {
+            <mp-staff-performance-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+              [relationship]="header()?.relationship"
+            ></mp-staff-performance-panel>
+          }
+          @case ('documents') {
+            <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.documents') }}</h3>
+            <p class="text-sm text-muted-color mb-4">{{ t('staff-members.details.documentsHint') }}</p>
+            <mp-directory-browser
+              [baseUrl]="documentsBaseUrl()"
+              [canEdit]="canEditDocuments()"
+              [documentTypes]="documentTypes()"
+              [defaultPrivate]="true"></mp-directory-browser>
+          }
+          @default {
+            <div class="text-sm text-muted-color text-center py-10">
+              {{ t('staff-members.details.areaComingSoon') }}
+            </div>
+          }
+        }
+      </p-card>
+    </div>
+  }
+</ng-container>

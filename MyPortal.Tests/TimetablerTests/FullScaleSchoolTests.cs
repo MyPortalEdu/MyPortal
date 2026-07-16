@@ -83,8 +83,6 @@ public class FullScaleSchoolTests
         AssertSpreadIsReasonable(input, result);
     }
 
-    // ─── builders ────────────────────────────────────────────────────────────
-
     private static TimetableInput BuildSchool()
     {
         var periods = BuildWeek();
@@ -235,8 +233,6 @@ public class FullScaleSchoolTests
 
         return (blocks, bands);
     }
-
-    // ─── invariants ──────────────────────────────────────────────────────────
 
     private static void AssertEveryBlockSlotClassAssigned(TimetableInput input, TimetableOutput result)
     {

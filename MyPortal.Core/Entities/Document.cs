@@ -8,12 +8,10 @@ namespace MyPortal.Core.Entities
     [Table("Documents")]
     public class Document : Entity, IAuditableEntity, IDirectoryEntity, ISoftDeleteEntity, IVersionedEntity
     {
-        // Classification
         public Guid TypeId { get; set; }
 
         public Guid DirectoryId { get; set; }
 
-        // Storage information
         [Required, StringLength(512)] 
         public string StorageKey { get; set; } = null!;
 
@@ -28,7 +26,6 @@ namespace MyPortal.Core.Entities
         [StringLength(128)]
         public string? Hash { get; set; }
 
-        // User provided metadata
         [Required, StringLength(128)]
         public string? Title { get; set; }
         
@@ -45,7 +42,6 @@ namespace MyPortal.Core.Entities
 
         public DocumentType? Type { get; set; }
         
-        // Audit
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

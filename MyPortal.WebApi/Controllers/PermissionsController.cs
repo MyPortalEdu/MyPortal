@@ -9,10 +9,7 @@ using MyPortal.Contracts.Models.System.Permissions;
 
 namespace MyPortal.WebApi.Controllers
 {
-    /// <summary>
-    /// Read-only catalogue of permissions defined by the application. Used by the
-    /// role-editor UI to render the permission tree when granting/revoking on a role.
-    /// </summary>
+    /// <summary>Permission catalogue endpoints.</summary>
     public sealed class PermissionsController : BaseApiController
     {
         private readonly IPermissionService _permissionService;
@@ -24,11 +21,7 @@ namespace MyPortal.WebApi.Controllers
         }
 
         /// <summary>List every permission seeded into the database.</summary>
-        /// <remarks>
-        /// Permissions are code-defined constants (see
-        /// <c>MyPortal.Auth.Constants.Permissions</c>) and are seeded into the DB on
-        /// boot. Returned grouped by area so the UI can render a tree.
-        /// </remarks>
+        /// <remarks>Returned grouped by area for tree-style UIs.</remarks>
         [HttpGet]
         [UserType(UserType.Staff)]
         [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles)]

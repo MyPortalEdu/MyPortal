@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -13,9 +14,17 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 
+// Two route templates: the versioned one is canonical and shown in the OpenAPI
+// doc; the unversioned one is a compatibility alias for existing callers (SPA,
+// iOS) — Program.cs sets AssumeDefaultVersionWhenUnspecified so requests to
+// /api/me resolve to v1 via the default-version rule. [ApiVersion("1.0")]
+// cascades to every derived controller; bump or add additional [ApiVersion]
+// attributes there when a specific endpoint ships a v2.
 [ApiController]
+[ApiVersion("1.0")]
 [Authorize(Policy = ScopePolicy.PolicyName)]
 [Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public abstract class BaseApiController : ControllerBase
 {
     private readonly ProblemDetailsFactory _problemFactory;

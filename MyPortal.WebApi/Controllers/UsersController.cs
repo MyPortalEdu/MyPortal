@@ -13,11 +13,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// System-administration endpoints for managing user accounts. The current user's
-/// own profile and password are handled via <see cref="MeController"/>; this
-/// controller is for admins managing other users.
-/// </summary>
+/// <summary>User management endpoints.</summary>
 public class UsersController : BaseApiController
 {
     private readonly IUserService _userService;
@@ -28,7 +24,7 @@ public class UsersController : BaseApiController
         _userService = userService;
     }
 
-    /// <summary>Get the full details of a user by id.</summary>
+    /// <summary>Get a user by id.</summary>
     /// <remarks>Returns 404 if no user matches.</remarks>
     /// <param name="userId">The id of the user.</param>
     [HttpGet("{userId:guid}")]
@@ -48,10 +44,7 @@ public class UsersController : BaseApiController
     }
 
     /// <summary>Page through user summaries.</summary>
-    /// <remarks>
-    /// Supports server-side filtering, sorting, and paging. Page size is clamped
-    /// server-side (default 25, max 100).
-    /// </remarks>
+    /// <remarks>Supports server-side filtering, sorting, and paging. Page size is clamped.</remarks>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>
     /// <param name="filter">Optional QueryKit filter (Base64-encoded JSON).</param>
@@ -72,11 +65,7 @@ public class UsersController : BaseApiController
     }
 
     /// <summary>Create a new user account.</summary>
-    /// <remarks>
-    /// Validation errors (duplicate username/email, password policy violations) are
-    /// returned as <c>400 Bad Request</c> with field-keyed details. Conflicts on
-    /// unique fields surface as <c>409</c>.
-    /// </remarks>
+    /// <remarks>Duplicate usernames/emails return <c>409</c>; other validation issues return <c>400</c>.</remarks>
     [HttpPost]
     [ValidateModel]
     [UserType(UserType.Staff)]
@@ -89,8 +78,8 @@ public class UsersController : BaseApiController
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
 
-    /// <summary>Update a user account's metadata (name, email, enabled flag, etc.).</summary>
-    /// <remarks>Does not change the password — use the password endpoint for that.</remarks>
+    /// <summary>Update a user's metadata.</summary>
+    /// <remarks>Does not change the password.</remarks>
     /// <param name="userId">The id of the user to update.</param>
     /// <param name="model">The updated metadata.</param>
     [HttpPut("{userId:guid}")]
@@ -105,12 +94,8 @@ public class UsersController : BaseApiController
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
 
-    /// <summary>Force-set a user's password (admin reset path).</summary>
-    /// <remarks>
-    /// Bypasses the user's existing password — used when an admin is resetting on
-    /// behalf of someone who's locked out. Updates the security stamp, kicking
-    /// any active sessions for that user within the validation interval (5 min).
-    /// </remarks>
+    /// <summary>Force-set a user's password.</summary>
+    /// <remarks>Bypasses the existing password and updates the security stamp.</remarks>
     /// <param name="userId">The id of the user.</param>
     /// <param name="model">The new password.</param>
     [HttpPut("{userId:guid}/password")]
@@ -126,10 +111,7 @@ public class UsersController : BaseApiController
     }
 
     /// <summary>Delete a user account.</summary>
-    /// <remarks>
-    /// System users (the seeded <c>admin</c>) cannot be deleted. Audit data
-    /// referencing the user is preserved by retaining the user id.
-    /// </remarks>
+    /// <remarks>System users cannot be deleted.</remarks>
     /// <param name="userId">The id of the user to delete.</param>
     [HttpDelete("{userId:guid}")]
     [UserType(UserType.Staff)]

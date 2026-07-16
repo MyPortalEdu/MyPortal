@@ -20,12 +20,14 @@ END
                   SELECT d.Id, d.ParentId
                   FROM dbo.Directories d
                   WHERE d.Id = @candidateDirectoryId
+                    AND d.IsDeleted = 0
 
                   UNION ALL
 
                   SELECT parent.Id, parent.ParentId
                   FROM dbo.Directories parent
                            INNER JOIN UpTree c ON c.ParentId = parent.Id
+                  WHERE parent.IsDeleted = 0
               )
      SELECT
          CAST(CASE WHEN EXISTS (

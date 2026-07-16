@@ -8,6 +8,8 @@ namespace MyPortal.Core.Entities
     {
         public Guid StudentId { get; set; }
 
+        // Unique Candidate Identifier — DfE/JCQ fixed-length 13 (CBDS N00180).
+        [StringLength(13)]
         public string? Uci { get; set; }
 
         [StringLength(4)] 

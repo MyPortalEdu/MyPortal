@@ -12,12 +12,7 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.WebApi.Controllers;
 
-/// <summary>
-/// Cross-subtype listing for student groups. Subtypes (Houses, YearGroups,
-/// RegGroups, CurriculumGroups, …) each have their own controller for CRUD;
-/// this controller exists so pickers (bulletin audiences, future schedulers,
-/// etc.) can browse the lot through one paged endpoint with a Kind column.
-/// </summary>
+/// <summary>Student-group listing endpoints.</summary>
 public sealed class StudentGroupsController : BaseApiController
 {
     private readonly IStudentGroupService _service;
@@ -29,13 +24,8 @@ public sealed class StudentGroupsController : BaseApiController
         _service = service;
     }
 
-    /// <summary>Page through unified student-group summaries for an academic year.</summary>
-    /// <remarks>
-    /// Server-side filter / sort / page via QueryKit. The <c>Kind</c> column
-    /// (House / YearGroup / RegGroup / CurriculumGroup / Other) is a CASE
-    /// expression in the underlying query — clients filter on it numerically
-    /// using the values from <see cref="MyPortal.Common.Enums.StudentGroupKind"/>.
-    /// </remarks>
+    /// <summary>Page through student-group summaries for an academic year.</summary>
+    /// <remarks>Includes a <c>Kind</c> column for subtype filtering.</remarks>
     /// <param name="academicYearId">The academic year to scope to.</param>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>

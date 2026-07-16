@@ -25,18 +25,15 @@ export class AuthGuard implements CanActivate, CanMatch {
   private readonly me = inject(MeService);
   private readonly router = inject(Router);
 
-  // ---- CanActivate (components)
   async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
     return this.checkAllowed(route.data as AuthData, state.url);
   }
 
-  // ---- CanMatch (lazy modules)
   async canMatch(route: Route, segments: UrlSegment[]): Promise<boolean | UrlTree> {
     const url = '/' + segments.map(s => s.path).join('/');
     return this.checkAllowed((route.data ?? {}) as AuthData, url);
   }
 
-  // ---- Core check
   private async checkAllowed(data: AuthData, returnUrl: string): Promise<boolean | UrlTree> {
     try {
       const me = await firstValueFrom(this.me.me());

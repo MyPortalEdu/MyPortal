@@ -81,8 +81,6 @@ public class RegisterServiceTests
         return new SubmitRegisterRequest { Marks = marks };
     }
 
-    // ─── GetLessonRegisterAsync ──────────────────────────────────────────────
-
     [Test]
     public async Task GetLessonRegisterAsync_ReturnsRegister_WhenRepoReturnsResult()
     {
@@ -127,8 +125,6 @@ public class RegisterServiceTests
         _registerRepository.Verify(r => r.GetLessonRegisterAsync(It.IsAny<Guid>(), It.IsAny<Guid>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
-
-    // ─── GetRegGroupRegisterAsync ────────────────────────────────────────────
 
     [Test]
     public async Task GetRegGroupRegisterAsync_ReturnsRegister_WhenRepoReturnsResult()
@@ -176,8 +172,6 @@ public class RegisterServiceTests
         _registerRepository.Verify(r => r.GetRegGroupRegisterAsync(It.IsAny<Guid>(), It.IsAny<Guid>(),
             It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
-
-    // ─── SubmitLessonRegisterAsync ───────────────────────────────────────────
 
     [Test]
     public async Task SubmitLessonRegisterAsync_ForwardsMarksToRepo_AfterValidation()
@@ -327,8 +321,6 @@ public class RegisterServiceTests
         _registerRepository.Verify(r => r.SubmitLessonRegisterAsync(It.IsAny<Guid>(), It.IsAny<Guid>(),
             It.IsAny<IReadOnlyCollection<SubmitMarkRequest>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
-
-    // ─── SubmitRegGroupRegisterAsync ─────────────────────────────────────────
 
     [Test]
     public async Task SubmitRegGroupRegisterAsync_ForwardsMarksToRepo_AfterValidation()

@@ -15,4 +15,7 @@ public interface ILookupService
     Task<IList<LookupResponse>> GetIntakeTypesAsync(CancellationToken cancellationToken);
     Task<IList<LookupResponse>> GetSchoolPhasesAsync(CancellationToken cancellationToken);
     Task<IList<LookupResponse>> GetSchoolTypesAsync(CancellationToken cancellationToken);
+    Task<IList<LookupResponse>> GetPayZonesAsync(CancellationToken cancellationToken);
+    Task<IList<LookupResponse>> GetSpecialSchoolOrganisationsAsync(CancellationToken cancellationToken);
+    Task<IList<LookupResponse>> GetSpecialSchoolTypesAsync(CancellationToken cancellationToken);
 }

@@ -287,7 +287,7 @@ public class UserServiceTests
             PersonId = Guid.NewGuid(),
             Username = "student",
             UserType = UserType.Student,
-            IsEnabled = false, // turned off
+            IsEnabled = false,
             RoleIds = new List<Guid>() // no role changes
         }, CancellationToken.None);
 
@@ -448,5 +448,41 @@ public class UserServiceTests
 
         Assert.That(async () => await _userService.DeleteAsync(Guid.NewGuid(), CancellationToken.None),
             Throws.TypeOf<NotFoundException>().With.Message.EqualTo("User not found."));
+    }
+
+    [Test]
+    public void UpdateAsync_Throws_SystemEntityException_WhenUserIsSystem()
+    {
+        _authorizationService
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var id = Guid.NewGuid();
+        var user = new ApplicationUser { Id = id, IsSystem = true };
+        _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
+
+        Assert.That(async () => await _userService.UpdateAsync(id, new UserUpsertRequest
+        {
+            Username = "x", RoleIds = new List<Guid>()
+        }, CancellationToken.None), Throws.TypeOf<SystemEntityException>());
+
+        _userManager.Verify(m => m.UpdateAsync(It.IsAny<ApplicationUser>()), Times.Never);
+    }
+
+    [Test]
+    public void DeleteAsync_Throws_SystemEntityException_WhenUserIsSystem()
+    {
+        _authorizationService
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var id = Guid.NewGuid();
+        var user = new ApplicationUser { Id = id, IsSystem = true };
+        _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
+
+        Assert.That(async () => await _userService.DeleteAsync(id, CancellationToken.None),
+            Throws.TypeOf<SystemEntityException>());
+
+        _userManager.Verify(m => m.DeleteAsync(It.IsAny<ApplicationUser>()), Times.Never);
     }
 }
