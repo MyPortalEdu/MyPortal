@@ -216,8 +216,7 @@
         .btn:focus-visible { outline: 3px solid rgba(99, 102, 241, 0.5); outline-offset: 2px; }
 
         .errors {
-            display: block;
-            margin-top: 1rem;
+            margin-bottom: 1.25rem;
             padding: 0.7rem 0.85rem;
             font-size: 0.85rem;
             color: #b91c1c;
@@ -225,7 +224,13 @@
             border: 1px solid #fecaca;
             border-radius: 0.55rem;
         }
-        .errors:empty { display: none; }
+        /* ASP.NET's validation summary renders an (empty) <ul> even when the form
+           is valid, so `:empty` alone won't hide it — key off the framework's
+           validation-summary-valid class it adds when there are no errors. */
+        .errors:empty,
+        .errors.validation-summary-valid { display: none; }
+        .errors ul { margin: 0; padding: 0; list-style: none; }
+        .errors li { margin: 0; }
 
         .form__foot {
             margin-top: 2.5rem;

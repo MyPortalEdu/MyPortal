@@ -8,6 +8,8 @@
     @Html.AntiForgeryToken()
     <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
 
+    <div asp-validation-summary="All" class="errors" role="alert"></div>
+
     <div class="field">
         <label class="field__label" asp-for="Input.Username">Username</label>
         <input class="field__input" asp-for="Input.Username" autocomplete="username" autofocus placeholder="e.g. j.smith" />
@@ -25,6 +27,4 @@
     </div>
 
     <button type="submit" class="btn">Sign in</button>
-
-    <span asp-validation-summary="All" class="errors"></span>
 </form>

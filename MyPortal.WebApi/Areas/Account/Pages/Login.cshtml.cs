@@ -42,11 +42,27 @@ public class LoginModel : PageModel
 
         var user = await _users.FindByNameAsync(Input.Username);
         if (user is null)
-        { ModelState.AddModelError(string.Empty, "Invalid credentials."); ReturnUrl = returnUrl; return Page(); }
+        {
+            // Same wording as a wrong password so we don't reveal whether the username exists.
+            ModelState.AddModelError(string.Empty, "Username or password incorrect.");
+            ReturnUrl = returnUrl;
+            return Page();
+        }
 
         var result = await _signIn.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: true);
         if (!result.Succeeded)
-        { ModelState.AddModelError(string.Empty, "Invalid credentials."); ReturnUrl = returnUrl; return Page(); }
+        {
+            // PasswordSignInAsync runs CanSignInAsync (which rejects !IsEnabled) before the
+            // password check, so a disabled account surfaces as IsNotAllowed regardless of password.
+            var message = result.IsNotAllowed
+                ? "Your account is disabled. Please speak to your school administrator."
+                : result.IsLockedOut
+                    ? "Your account is locked after too many failed attempts. Please try again later."
+                    : "Username or password incorrect.";
+            ModelState.AddModelError(string.Empty, message);
+            ReturnUrl = returnUrl;
+            return Page();
+        }
 
         // Refresh the antiforgery cookie BEFORE the redirect leaves this server.
         // In dev, ng serve doesn't proxy SPA routes (e.g. /staff) back to the API,

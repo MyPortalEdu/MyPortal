@@ -59,10 +59,28 @@ const MOBILE_MAX = 639;
   `,
   styles: [
     `
+      /* FullCalendar ships hard-coded light defaults (#fff page, #ddd borders, #f5f5f5 list hover,
+         hsl-grey neutrals), so anything left unmapped stays light in dark mode — most visibly the
+         sticky header, the more-link popover and the list view, which all paint --fc-page-bg-color.
+         Map every one to a PrimeNG *semantic* token: those flip with the theme, whereas the numbered
+         --p-surface-N ramp does NOT invert (Aura defines surface.50 as a light slate/zinc in both
+         colour schemes), so it must never be used here. */
       :host ::ng-deep .fc {
-        --fc-border-color: var(--p-surface-200);
+        --fc-page-bg-color: var(--p-content-background);
+        --fc-border-color: var(--p-content-border-color);
+        --fc-neutral-bg-color: var(--p-content-hover-background);
+        --fc-neutral-text-color: var(--p-text-muted-color);
         --fc-today-bg-color: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
         --fc-now-indicator-color: var(--p-primary-color);
+        --fc-highlight-color: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+        --fc-non-business-color: color-mix(in srgb, var(--p-text-muted-color) 8%, transparent);
+        --fc-list-event-hover-bg-color: var(--p-content-hover-background);
+        --fc-more-link-bg-color: var(--p-content-hover-background);
+        --fc-more-link-text-color: var(--p-text-color);
+        --fc-event-bg-color: var(--p-primary-color);
+        --fc-event-border-color: var(--p-primary-color);
+        --fc-event-text-color: var(--p-primary-contrast-color, #fff);
+        --fc-event-selected-overlay-color: color-mix(in srgb, var(--p-text-color) 20%, transparent);
         font-size: 0.8125rem;
       }
       :host ::ng-deep .fc .fc-toolbar.fc-header-toolbar {
@@ -84,11 +102,11 @@ const MOBILE_MAX = 639;
       /* Bind FullCalendar's button skin to the app's theme: subtle by default,
          indigo for the active view and the pressed state. */
       :host ::ng-deep .fc .fc-button-primary {
-        --fc-button-bg-color: var(--p-surface-100);
-        --fc-button-border-color: var(--p-surface-200);
+        --fc-button-bg-color: var(--p-content-background);
+        --fc-button-border-color: var(--p-content-border-color);
         --fc-button-text-color: var(--p-text-color);
-        --fc-button-hover-bg-color: var(--p-surface-200);
-        --fc-button-hover-border-color: var(--p-surface-200);
+        --fc-button-hover-bg-color: var(--p-content-hover-background);
+        --fc-button-hover-border-color: var(--p-content-border-color);
         --fc-button-active-bg-color: var(--p-primary-color);
         --fc-button-active-border-color: var(--p-primary-color);
         border-radius: var(--p-button-border-radius);
@@ -98,8 +116,8 @@ const MOBILE_MAX = 639;
         color: var(--p-primary-contrast-color, #fff);
       }
       :host ::ng-deep .fc .fc-button-primary:disabled {
-        --fc-button-bg-color: var(--p-surface-100);
-        --fc-button-border-color: var(--p-surface-200);
+        --fc-button-bg-color: var(--p-content-background);
+        --fc-button-border-color: var(--p-content-border-color);
         --fc-button-text-color: var(--p-text-muted-color);
         opacity: 1;
       }
