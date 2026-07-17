@@ -16,7 +16,6 @@ import { InputNumber } from 'primeng/inputnumber';
 import { DatePicker } from 'primeng/datepicker';
 import { Checkbox } from 'primeng/checkbox';
 import { Tag } from 'primeng/tag';
-import { ProgressSpinner } from 'primeng/progressspinner';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -28,6 +27,11 @@ import { NotificationService } from '../../../../../../core/services/notificatio
 import { Permissions } from '../../../../../../core/constants/permissions';
 import { StaffMembersDataService } from '../../../../../../shared/services/staff-members-data.service';
 import { LookupSelect } from '../../../../../../shared/components/lookup-select/lookup-select';
+import { Loading } from '../../../../../../shared/components/loading/loading';
+import { EmptyState } from '../../../../../../shared/components/empty-state/empty-state';
+import { SectionHeader } from '../../../../../../shared/components/section-header/section-header';
+import { Field } from '../../../../../../shared/components/field/field';
+import { Callout } from '../../../../../../shared/components/callout/callout';
 import {
   PayScalePointResponse,
   StaffContractUpsertItem,
@@ -55,8 +59,12 @@ import { StaffAreaPanel } from './staff-area-panel';
     DatePicker,
     Checkbox,
     Tag,
-    ProgressSpinner,
     LookupSelect,
+    Loading,
+    EmptyState,
+    SectionHeader,
+    Field,
+    Callout,
     TranslocoDirective,
   ],
   providers: [

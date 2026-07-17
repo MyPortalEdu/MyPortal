@@ -32,6 +32,7 @@ import { GENDER_CODES } from '../../constants/gender';
       [placeholder]="placeholder() ?? defaultPlaceholder()"
       [ngModel]="value()"
       (ngModelChange)="value.set($event)"
+      [invalid]="invalid()"
       appendTo="body"
       styleClass="w-full"></p-select>
   `,
@@ -47,6 +48,9 @@ export class GenderSelect {
 
   /** Optional placeholder override; defaults to "Select gender". */
   readonly placeholder = input<string>();
+
+  /** Paints the invalid state; drive it from the owning form's validity. */
+  readonly invalid = input<boolean>(false);
 
   protected readonly defaultPlaceholder = computed(() =>
     this.transloco.translate('common.gender.select'),

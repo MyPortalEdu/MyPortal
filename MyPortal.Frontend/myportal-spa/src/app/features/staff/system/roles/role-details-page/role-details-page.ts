@@ -1,22 +1,43 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Tag } from 'primeng/tag';
 import { Skeleton } from 'primeng/skeleton';
-import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
+import {
+  TranslocoDirective,
+  TranslocoPipe,
+  TranslocoService,
+  provideTranslocoScope,
+} from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
+import { Field } from '../../../../../shared/components/field/field';
+import { SectionHeader } from '../../../../../shared/components/section-header/section-header';
+import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
 import { HeaderAction } from '../../../../../shared/types/header-action.type';
 import { RolesDataService } from '../../../../../shared/services/roles-data.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
+import { MeService } from '../../../../../core/services/me-service';
+import { Permissions } from '../../../../../core/constants/permissions';
 import { CanComponentDeactivate } from '../../../../../core/guards/can-deactivate.guard';
 import { RoleUpsertRequest } from '../../../../../shared/types/role';
 import { UserType } from '../../../../../core/types/user-type';
 import { PermissionTree, PermissionTreeNode, buildPermissionTree } from '../permission-tree/permission-tree';
+import { focusFirstInvalid } from '../../../../../shared/utils/focus-first-invalid';
 
 @Component({
   selector: 'mp-role-details-page',
@@ -30,8 +51,12 @@ import { PermissionTree, PermissionTreeNode, buildPermissionTree } from '../perm
     Tag,
     Skeleton,
     PageHeader,
+    Field,
+    SectionHeader,
+    EmptyState,
     PermissionTree,
     TranslocoDirective,
+    TranslocoPipe,
   ],
   providers: [provideTranslocoScope('roles')],
   templateUrl: './role-details-page.html',
@@ -41,10 +66,17 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
   private readonly confirm = inject(ConfirmationDialog);
+  private readonly me = inject(MeService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly host = inject(ElementRef<HTMLElement>);
+
+  private readonly form = viewChild<NgForm>('f');
 
   private roleId = '';
+
+  // The route admits ViewRoles holders too, so the page decides its own mode.
+  private readonly canEditRoles = signal(false);
 
   readonly name = signal('');
   readonly description = signal('');
@@ -59,7 +91,7 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
 
   readonly skeletonRows = [1, 2, 3, 4, 5, 6];
 
-  readonly readOnly = computed(() => this.isSystem());
+  readonly readOnly = computed(() => this.isSystem() || !this.canEditRoles());
   readonly nameLocked = computed(() => this.readOnly() || this.isDefault());
   readonly isValid = computed(() => this.name().trim().length > 0);
 
@@ -95,7 +127,9 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
       {
         label: this.transloco.translate('roles.form.save'),
         icon: 'fa-solid fa-check',
-        disabled: !this.isValid() || !this.isDirty(),
+        // Only "nothing to save" disables Save; an invalid form lets the click through so save()
+        // can mark the fields touched and point at what's missing.
+        disabled: !this.isDirty(),
         loading: this.saving(),
         command: () => this.save(),
       },
@@ -103,6 +137,10 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
   });
 
   ngOnInit(): void {
+    this.me.me().subscribe(me => {
+      this.canEditRoles.set(me.permissions?.includes(Permissions.SystemAdmin.EditRoles) ?? false);
+    });
+
     this.roleId = this.route.snapshot.paramMap.get('id') ?? '';
     this.load();
   }
@@ -120,7 +158,12 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   save(): void {
-    if (this.readOnly() || !this.isValid() || this.saving() || !this.isDirty()) return;
+    if (this.readOnly() || this.saving() || !this.isDirty()) return;
+    if (!this.isValid()) {
+      this.form()?.form.markAllAsTouched();
+      focusFirstInvalid(this.host.nativeElement);
+      return;
+    }
     this.saving.set(true);
 
     const payload: RoleUpsertRequest = {
@@ -157,6 +200,14 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
       acceptLabel: this.transloco.translate('common.discard'),
       acceptSeverity: 'danger',
     });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isDirty()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 
   private load(): void {

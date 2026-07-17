@@ -17,7 +17,7 @@
       <div class="py-12 text-center text-muted-color">{{ t('form.errorLoad') }}</div>
     </p-card>
   } @else {
-    <div class="flex flex-col gap-4 max-w-3xl">
+    <form class="flex flex-col gap-4 max-w-5xl" #f="ngForm">
       @if (readOnly()) {
         <div class="flex items-start gap-2 p-3 rounded-lg bg-emphasis text-sm text-muted-color">
           <i class="fa-solid fa-lock mt-0.5"></i>
@@ -28,41 +28,60 @@
       <!-- Account -->
       <p-card>
         <div class="flex flex-col gap-4">
-          <span class="text-sm font-semibold">{{ t('form.account') }}</span>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-muted-color">{{ t('form.username') }}</label>
-              <input pInputText [ngModel]="username()" (ngModelChange)="username.set($event)" [disabled]="readOnly()" />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-muted-color">{{ t('form.email') }}</label>
-              <input pInputText [ngModel]="email()" (ngModelChange)="email.set($event)" [disabled]="readOnly()" />
-            </div>
-            <div class="flex flex-col gap-1">
-              <label class="text-xs font-medium text-muted-color">{{ t('form.userType') }}</label>
+          <mp-section-header [title]="t('form.account')" icon="fa-solid fa-id-card"></mp-section-header>
+          <div class="grid gap-4 md:grid-cols-2">
+            <mp-field
+              [label]="t('form.username')"
+              [required]="!readOnly()"
+              [error]="usernameRef.touched && usernameRef.invalid ? ('common.validation.required' | transloco) : undefined">
+              <input
+                pInputText
+                name="username"
+                [ngModel]="username()"
+                (ngModelChange)="username.set($event)"
+                [disabled]="readOnly()"
+                required
+                #usernameRef="ngModel"
+                [invalid]="usernameRef.touched && usernameRef.invalid" />
+            </mp-field>
+            <mp-field [label]="t('form.email')">
+              <input pInputText [ngModel]="email()" (ngModelChange)="email.set($event)" [disabled]="readOnly()" [ngModelOptions]="{ standalone: true }" />
+            </mp-field>
+            <mp-field [label]="t('form.userType')">
               <p-select
                 [ngModel]="userType()"
                 (ngModelChange)="onUserTypeChange($event)"
+                [ngModelOptions]="{ standalone: true }"
                 [options]="audienceOptions()"
                 optionLabel="label"
                 optionValue="value"
                 appendTo="body"
                 [disabled]="readOnly()"></p-select>
-            </div>
+            </mp-field>
             @if (isCreate()) {
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-muted-color">{{ t('form.password') }}</label>
-                <input pInputText type="password" [ngModel]="password()" (ngModelChange)="password.set($event)" autocomplete="new-password" />
-              </div>
+              <mp-field
+                [label]="t('form.password')"
+                [required]="true"
+                [error]="passwordRef.touched && passwordRef.invalid ? ('common.validation.required' | transloco) : undefined">
+                <input
+                  pInputText
+                  type="password"
+                  name="password"
+                  [ngModel]="password()"
+                  (ngModelChange)="password.set($event)"
+                  autocomplete="new-password"
+                  required
+                  #passwordRef="ngModel"
+                  [invalid]="passwordRef.touched && passwordRef.invalid" />
+              </mp-field>
             } @else {
-              <div class="flex flex-col gap-1">
-                <label class="text-xs font-medium text-muted-color">{{ t('form.created') }}</label>
+              <mp-field [label]="t('form.created')">
                 <span class="text-sm py-2">{{ createdAt() | date: 'dd/MM/yyyy' }}</span>
-              </div>
+              </mp-field>
             }
           </div>
           <label class="flex items-center gap-2 cursor-pointer">
-            <p-checkbox [binary]="true" [ngModel]="isEnabled()" (ngModelChange)="isEnabled.set($event)" [disabled]="readOnly()"></p-checkbox>
+            <p-checkbox [binary]="true" [ngModel]="isEnabled()" (ngModelChange)="isEnabled.set($event)" [ngModelOptions]="{ standalone: true }" [disabled]="readOnly()"></p-checkbox>
             <span class="text-sm">{{ t('form.enabled') }}</span>
           </label>
         </div>
@@ -71,7 +90,7 @@
       <!-- Linked person -->
       <p-card>
         <div class="flex flex-col gap-2">
-          <span class="text-sm font-semibold">{{ t('form.person') }}</span>
+          <mp-section-header [title]="t('form.person')" icon="fa-solid fa-user"></mp-section-header>
           <span class="text-xs text-muted-color">{{ t('form.personHint') }}</span>
           <div class="flex items-center gap-3">
             @if (personName()) {
@@ -91,10 +110,10 @@
       <!-- Roles -->
       <p-card>
         <div class="flex flex-col gap-2">
-          <span class="text-sm font-semibold">{{ t('form.roles') }}</span>
+          <mp-section-header [title]="t('form.roles')" icon="fa-solid fa-user-shield"></mp-section-header>
           <span class="text-xs text-muted-color">{{ t('form.rolesHint') }}</span>
           @if (audienceRoles().length === 0) {
-            <div class="text-sm text-muted-color italic py-2">{{ t('form.noRoles') }}</div>
+            <mp-empty-state [message]="t('form.noRoles')"></mp-empty-state>
           } @else {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               @for (role of audienceRoles(); track role.id) {
@@ -103,6 +122,7 @@
                     [binary]="true"
                     [ngModel]="isRoleSelected(role.id)"
                     (ngModelChange)="toggleRole(role.id, $event)"
+                    [ngModelOptions]="{ standalone: true }"
                     [disabled]="readOnly()"></p-checkbox>
                   <span class="flex flex-col">
                     <span class="text-sm">{{ role.name }}</span>
@@ -121,12 +141,10 @@
       @if (!isCreate()) {
         <p-card>
           <div class="flex flex-col gap-2">
-            <div class="flex flex-col gap-0.5">
-              <span class="text-sm font-semibold">{{ t('form.effectivePermissions') }}</span>
-              <span class="text-xs text-muted-color">{{ t('form.effectivePermissionsHint') }}</span>
-            </div>
+            <mp-section-header [title]="t('form.effectivePermissions')" icon="fa-solid fa-key"></mp-section-header>
+            <span class="text-xs text-muted-color">{{ t('form.effectivePermissionsHint') }}</span>
             @if (effectiveTreeNodes().length === 0) {
-              <div class="text-sm text-muted-color italic py-2">{{ t('form.noEffectivePermissions') }}</div>
+              <mp-empty-state [message]="t('form.noEffectivePermissions')"></mp-empty-state>
             } @else {
               <div class="border border-surface rounded-lg p-2 max-h-[24rem] overflow-auto">
                 <mp-permission-tree [nodes]="effectiveTreeNodes()" [selectedIds]="effectiveSelectedIds()" [disabled]="true"></mp-permission-tree>
@@ -135,7 +153,7 @@
           </div>
         </p-card>
       }
-    </div>
+    </form>
   }
 
   @if (!isCreate()) {

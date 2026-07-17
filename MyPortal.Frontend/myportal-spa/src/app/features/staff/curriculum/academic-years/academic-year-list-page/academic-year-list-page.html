@@ -18,11 +18,16 @@
       }
     </ul>
   } @else if (years().length === 0) {
-    <div class="text-sm text-muted-color py-8 text-center border border-dashed border-surface rounded-lg">
-      {{ t('empty') }}
-    </div>
+    <mp-empty-state icon="fa-solid fa-calendar-days" [message]="t('emptyNone')">
+      <p-button
+        [label]="t('new')"
+        icon="fa-solid fa-plus"
+        severity="primary"
+        size="small"
+        (click)="openCreateWizard()"></p-button>
+    </mp-empty-state>
   } @else {
-    <p-table [value]="years()" dataKey="id" [scrollable]="true">
+    <p-table [value]="years()" dataKey="id" selectionMode="single" [scrollable]="true">
       <ng-template pTemplate="header">
         <tr>
           <th>{{ t('columns.name') }}</th>
@@ -35,7 +40,7 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-year>
-        <tr>
+        <tr [pSelectableRow]="year" class="cursor-pointer" (click)="onRowClick($event, year)">
           <td class="font-medium">{{ year.name }}</td>
           <td>{{ year.startDate ? (year.startDate | date:'mediumDate') : '—' }}</td>
           <td>{{ year.endDate ? (year.endDate | date:'mediumDate') : '—' }}</td>
@@ -53,14 +58,13 @@
                  [pTooltip]="!canMutate(year) ? mutateBlockReason(year) : ''"
                  tooltipPosition="left">
               <p-button
-                [label]="bp.isMobile() ? '' : t('edit')"
-                [ariaLabel]="t('edit')"
-                icon="fa-solid fa-pen-to-square"
+                [label]="bp.isMobile() ? '' : (canMutate(year) ? t('edit') : t('view'))"
+                [ariaLabel]="canMutate(year) ? t('edit') : t('view')"
+                [icon]="canMutate(year) ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-eye'"
                 severity="secondary"
                 size="small"
                 [text]="true"
-                [disabled]="!canMutate(year)"
-                (click)="openEdit(year)">
+                (click)="openYear(year)">
               </p-button>
               <p-button
                 [label]="bp.isMobile() ? '' : t('delete')"
@@ -83,6 +87,8 @@
 <mp-academic-year-wizard-dialog
   [visible]="wizardOpen()"
   [editYearId]="editYearId()"
+  [readOnly]="wizardReadOnly()"
+  [readOnlyReason]="wizardReadOnlyReason()"
   (closed)="closeWizard()"
   (saved)="onWizardSaved()">
 </mp-academic-year-wizard-dialog>

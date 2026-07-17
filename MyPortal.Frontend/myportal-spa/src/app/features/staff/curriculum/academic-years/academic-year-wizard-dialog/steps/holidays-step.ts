@@ -42,6 +42,9 @@ export class AcademicYearWizardHolidaysStep {
   private readonly transloco = inject(TranslocoService);
 
   readonly model = input.required<AcademicYearUpsertRequest>();
+  // Disables every control and drops the add/remove actions — the step becomes
+  // a read-back of a year the server won't let us change.
+  readonly readOnly = input<boolean>(false);
   readonly modelChange = output<Partial<AcademicYearUpsertRequest>>();
 
   // Built once from the i18n bundle. Labels don't re-translate on a language

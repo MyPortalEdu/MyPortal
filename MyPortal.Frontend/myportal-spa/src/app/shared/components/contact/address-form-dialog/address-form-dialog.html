@@ -1,24 +1,25 @@
 <ng-container *transloco="let t">
   <p-dialog
     [visible]="open()"
-    (visibleChange)="$event ? null : onClose()"
     [modal]="true"
     [draggable]="false"
     [resizable]="false"
-    [closeOnEscape]="!saving()"
+    [dismissableMask]="false"
+    [closeOnEscape]="!isDirty()"
     [style]="{ width: 'min(44rem, 94vw)' }"
     styleClass="mp-flush-dialog"
+    (onHide)="onHide()"
     [showHeader]="false">
-    <div class="flex flex-col gap-4 p-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">
-          {{ isEdit() ? t('common.contact.address.edit') : t('common.contact.address.add') }}
-        </h2>
-        <button type="button" class="mp-icon-button" [attr.aria-label]="t('common.close')" (click)="onClose()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+    <div class="flex items-center justify-between p-4 border-b border-surface">
+      <h2 class="text-lg font-semibold m-0">
+        {{ isEdit() ? t('common.contact.address.edit') : t('common.contact.address.add') }}
+      </h2>
+      <button type="button" class="mp-icon-button" [attr.aria-label]="t('common.close')" (click)="onCancel()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
 
+    <div class="flex flex-col gap-4 p-4">
       @if (confirmShared()) {
         <!-- Warn-and-choose for a shared address -->
         <div class="flex flex-col gap-3">
@@ -82,15 +83,6 @@
             } @else if (searchTerm().trim().length >= 2 && !searching()) {
               <p class="text-sm text-muted-color">{{ t('common.contact.address.noMatches') }}</p>
             }
-
-            <div>
-              <p-button
-                [label]="t('common.contact.address.enterManually')"
-                icon="fa-solid fa-pen"
-                severity="secondary"
-                [outlined]="true"
-                (onClick)="enterManually()"></p-button>
-            </div>
           }
 
           @case ('link') {
@@ -187,24 +179,33 @@
             }
           }
         }
-
-        @if (step() !== 'search') {
-          <div class="flex justify-end gap-2">
-            <p-button
-              [label]="t('common.cancel')"
-              severity="secondary"
-              [outlined]="true"
-              [disabled]="saving()"
-              (onClick)="onClose()"></p-button>
-            <p-button
-              [label]="t('common.save')"
-              severity="primary"
-              [disabled]="!canSave()"
-              [loading]="saving()"
-              (onClick)="save()"></p-button>
-          </div>
-        }
       }
     </div>
+
+    @if (!confirmShared()) {
+      <div class="flex items-center justify-end gap-2 p-4 border-t border-surface bg-emphasis rounded-b-md">
+        <p-button
+          [label]="t('common.cancel')"
+          severity="secondary"
+          [text]="true"
+          [disabled]="saving()"
+          (onClick)="onCancel()"></p-button>
+        @if (step() === 'search') {
+          <p-button
+            [label]="t('common.contact.address.enterManually')"
+            icon="fa-solid fa-pen"
+            severity="primary"
+            (onClick)="enterManually()"></p-button>
+        } @else {
+          <p-button
+            [label]="t('common.save')"
+            icon="fa-solid fa-check"
+            severity="primary"
+            [disabled]="!canSave()"
+            [loading]="saving()"
+            (onClick)="save()"></p-button>
+        }
+      </div>
+    }
   </p-dialog>
 </ng-container>

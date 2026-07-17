@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
 import { Drawer } from 'primeng/drawer';
@@ -16,6 +18,7 @@ import { SelectedAcademicYearService } from '../../../core/services/selected-aca
 })
 export class AppShell implements OnInit, OnDestroy {
   private readonly selectedYear = inject(SelectedAcademicYearService);
+  private readonly router = inject(Router);
 
   readonly isDesktop = signal(false);
   readonly sidebarOpen = signal(false);
@@ -23,6 +26,17 @@ export class AppShell implements OnInit, OnDestroy {
 
   private mq = window.matchMedia('(min-width: 1024px)');
   private mqHandler = (e: MediaQueryListEvent) => this.setDesktop(e.matches);
+
+  constructor() {
+    // The mobile drawer is an overlay — without this it stays open on top of the
+    // page the user just navigated to.
+    this.router.events
+      .pipe(
+        filter(e => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.closeSidebar());
+  }
 
   ngOnInit() {
     this.setDesktop(this.mq.matches);

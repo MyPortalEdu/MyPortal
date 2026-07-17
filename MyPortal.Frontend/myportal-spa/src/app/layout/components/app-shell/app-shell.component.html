@@ -10,11 +10,11 @@
 <ng-template #headless>
   <ng-container *transloco="let t">
   <div class="flex h-full flex-col
-                bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-900)]
+                bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)]
                 text-[var(--p-text-color)]">
 
     <div class="flex items-center justify-between px-4 py-3
-                  border-b border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]">
+                  border-b border-[var(--p-content-border-color)]">
       <span class="font-semibold text-lg">{{ t('topbar.appName') }}</span>
       <button pButton class="p-button-text p-button-sm" icon="fa-solid fa-xmark" (click)="closeSidebar()" [attr.aria-label]="t('common.close')"></button>
     </div>
@@ -32,8 +32,8 @@
   <!-- static sidebar; collapses to an icon-only rail on desktop -->
   <aside
     class="hidden lg:flex shrink-0 flex-col overflow-hidden
-         bg-[var(--p-surface-100)] dark:bg-[var(--p-surface-900)]
-         border-r border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]
+         bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)]
+         border-r border-[var(--p-content-border-color)]
          text-[var(--p-text-color)]
          transition-[width,background-color,border-color,color] duration-200 ease-out"
     [class.w-72]="!sidebarCollapsed()"
@@ -44,7 +44,7 @@
 
 
   <main
-    class="flex-1 overflow-auto bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-800)] text-[var(--p-text-color)] p-4 lg:p-6 transition-colors"
+    class="flex-1 overflow-auto bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)] text-[var(--p-text-color)] p-4 lg:p-6 transition-colors"
   >
     <router-outlet></router-outlet>
   </main>

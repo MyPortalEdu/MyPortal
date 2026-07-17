@@ -25,7 +25,8 @@
             (ngModelChange)="onSchoolWeekLengthChange($event)"
             [min]="1"
             [max]="7"
-            [showButtons]="true">
+            [showButtons]="!readOnly()"
+            [disabled]="readOnly()">
           </p-inputNumber>
           <span class="text-xs text-muted-color">{{ t('daysPerWeekHint') }}</span>
         </div>
@@ -38,6 +39,7 @@
             [options]="cycleWeekChoices"
             optionLabel="label"
             optionValue="value"
+            [disabled]="readOnly()"
             appendTo="body">
           </p-select>
         </div>
@@ -51,6 +53,7 @@
               [options]="weekChoices()"
               optionLabel="label"
               optionValue="value"
+              [disabled]="readOnly()"
               appendTo="body">
             </p-select>
           </div>
@@ -64,13 +67,15 @@
           <h4 class="text-sm font-semibold m-0">{{ t('termsSection') }}</h4>
           <p class="text-xs text-muted-color m-0">{{ t('termsHint') }}</p>
         </div>
-        <p-button
-          icon="fa-solid fa-plus"
-          [label]="t('addTerm')"
-          size="small"
-          severity="secondary"
-          (click)="addTerm()">
-        </p-button>
+        @if (!readOnly()) {
+          <p-button
+            icon="fa-solid fa-plus"
+            [label]="t('addTerm')"
+            size="small"
+            severity="secondary"
+            (click)="addTerm()">
+          </p-button>
+        }
       </div>
 
       @if (model().academicTerms.length === 0) {
@@ -86,6 +91,7 @@
                 <input pInputText type="text"
                   [ngModel]="term.name"
                   (ngModelChange)="updateTermName(i, $event)"
+                  [disabled]="readOnly()"
                   [placeholder]="t('termNamePlaceholder')" />
               </div>
               <div class="flex flex-col gap-1">
@@ -94,6 +100,7 @@
                   [ngModel]="term.startDate"
                   (ngModelChange)="updateTermDate(i, 'startDate', $event)"
                   dateFormat="dd/mm/yy"
+                  [disabled]="readOnly()"
                   appendTo="body">
                 </p-datepicker>
               </div>
@@ -103,16 +110,19 @@
                   [ngModel]="term.endDate"
                   (ngModelChange)="updateTermDate(i, 'endDate', $event)"
                   dateFormat="dd/mm/yy"
+                  [disabled]="readOnly()"
                   appendTo="body">
                 </p-datepicker>
               </div>
-              <p-button
-                icon="fa-solid fa-trash-can"
-                severity="danger"
-                [text]="true"
-                [attr.aria-label]="t('removeTerm')"
-                (click)="removeTerm(i)">
-              </p-button>
+              @if (!readOnly()) {
+                <p-button
+                  icon="fa-solid fa-trash-can"
+                  severity="danger"
+                  [text]="true"
+                  [attr.aria-label]="t('removeTerm')"
+                  (click)="removeTerm(i)">
+                </p-button>
+              }
             </li>
           }
         </ul>

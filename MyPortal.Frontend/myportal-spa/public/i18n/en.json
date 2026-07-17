@@ -8,6 +8,7 @@
     "edit": "Edit",
     "copy": "Copy",
     "copied": "Copied",
+    "retry": "Try again",
     "remove": "Remove",
     "select": "Select…",
     "yes": "Yes",
@@ -20,6 +21,12 @@
     "new": "New",
     "discardChanges": "Discard changes?",
     "discardConfirm": "You have unsaved changes. Discard them?",
+    "validation": {
+      "required": "This field is required.",
+      "missingTitle": "Some required details are missing",
+      "missingBody": "Check the highlighted fields, then try saving again.",
+      "missingBlocked": "Save stays unavailable until the highlighted fields are filled in."
+    },
     "gender": {
       "select": "Select gender",
       "M": "Male",

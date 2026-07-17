@@ -1,6 +1,16 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
@@ -12,12 +22,17 @@ import { Skeleton } from 'primeng/skeleton';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
+import { Field } from '../../../../../shared/components/field/field';
+import { SectionHeader } from '../../../../../shared/components/section-header/section-header';
+import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
 import { HeaderAction } from '../../../../../shared/types/header-action.type';
 import { PersonPicker } from '../../../../../shared/components/pickers/person-picker/person-picker';
 import { UsersDataService } from '../../../../../shared/services/users-data.service';
 import { RolesDataService } from '../../../../../shared/services/roles-data.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
+import { MeService } from '../../../../../core/services/me-service';
+import { Permissions } from '../../../../../core/constants/permissions';
 import { CanComponentDeactivate } from '../../../../../core/guards/can-deactivate.guard';
 import { UserUpsertRequest, UserUpdateRequest, PersonSearchResponse } from '../../../../../shared/types/user';
 import { RoleSummaryResponse } from '../../../../../shared/types/role';
@@ -28,6 +43,7 @@ import {
   buildPermissionTree,
 } from '../../roles/permission-tree/permission-tree';
 import { UserSetPasswordDialog } from '../user-set-password-dialog/user-set-password-dialog';
+import { focusFirstInvalid } from '../../../../../shared/utils/focus-first-invalid';
 
 interface AudienceOption {
   label: string;
@@ -49,6 +65,9 @@ interface AudienceOption {
     Tag,
     Skeleton,
     PageHeader,
+    Field,
+    SectionHeader,
+    EmptyState,
     PersonPicker,
     PermissionTree,
     UserSetPasswordDialog,
@@ -64,8 +83,15 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
   private readonly confirm = inject(ConfirmationDialog);
+  private readonly me = inject(MeService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly host = inject(ElementRef<HTMLElement>);
+
+  private readonly form = viewChild<NgForm>('f');
+
+  // The route admits ViewUsers holders too, so the page decides its own mode.
+  private readonly canEditUsers = signal(false);
 
   readonly isCreate = signal(false);
   protected userId = '';
@@ -106,7 +132,7 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
       .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '')),
   );
 
-  readonly readOnly = computed(() => this.isSystem());
+  readonly readOnly = computed(() => this.isSystem() || !this.canEditUsers());
   readonly isValid = computed(() => {
     if (this.username().trim().length === 0) return false;
     if (this.isCreate() && this.password().trim().length === 0) return false;
@@ -145,7 +171,9 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
     actions.push({
       label: this.isCreate() ? this.transloco.translate('users.form.create') : this.transloco.translate('users.form.save'),
       icon: 'fa-solid fa-check',
-      disabled: !this.isValid() || (!this.isCreate() && !this.isDirty()),
+      // Only "nothing to save" disables Save; an invalid form lets the click through so save()
+      // can mark the fields touched and point at what's missing.
+      disabled: !this.isCreate() && !this.isDirty(),
       loading: this.saving(),
       command: () => this.save(),
     });
@@ -167,6 +195,10 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   readonly isDirty = computed(() => this.snapshot() !== null && this.snapshot() !== this.currentForm());
 
   ngOnInit(): void {
+    this.me.me().subscribe(me => {
+      this.canEditUsers.set(me.permissions?.includes(Permissions.SystemAdmin.EditUsers) ?? false);
+    });
+
     this.isCreate.set(this.route.snapshot.data['create'] === true);
     this.userId = this.route.snapshot.paramMap.get('id') ?? '';
     this.load();
@@ -205,7 +237,12 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   save(): void {
-    if (this.readOnly() || !this.isValid() || this.saving() || (!this.isCreate() && !this.isDirty())) return;
+    if (this.readOnly() || this.saving() || (!this.isCreate() && !this.isDirty())) return;
+    if (!this.isValid()) {
+      this.form()?.form.markAllAsTouched();
+      focusFirstInvalid(this.host.nativeElement);
+      return;
+    }
     this.saving.set(true);
 
     if (this.isCreate()) {
@@ -275,6 +312,14 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
       acceptLabel: this.transloco.translate('common.discard'),
       acceptSeverity: 'danger',
     });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isDirty()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 
   private load(): void {

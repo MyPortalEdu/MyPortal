@@ -6,14 +6,19 @@
       #dt
       [lazy]="true"
       [paginator]="true"
-      [rows]="25"
+      [first]="initialState.first"
+      [rows]="initialState.rows"
+      [sortField]="initialState.sortField"
+      [sortOrder]="initialState.sortOrder ?? 1"
       [totalRecords]="totalRecords()"
       [loading]="loading()"
       [value]="rows()"
       (onLazyLoad)="load($event)"
       [filterDelay]="300"
+      [filters]="initialFilters"
       [globalFilterFields]="['name', 'description']"
       dataKey="id"
+      selectionMode="single"
       [scrollable]="true">
 
       <ng-template pTemplate="caption">
@@ -23,9 +28,19 @@
             <input
               pInputText
               type="text"
-              class="w-full pl-9"
+              class="w-full pl-9 pr-9"
               [placeholder]="t('searchPlaceholder')"
-              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+              [value]="searchTerm()"
+              (input)="onSearch($any($event.target).value)" />
+            @if (searchTerm()) {
+              <button
+                type="button"
+                class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                [attr.aria-label]="t('clearSearch')"
+                (click)="clearSearch()">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            }
           </span>
         </div>
       </ng-template>
@@ -36,13 +51,15 @@
           <th style="width: 9rem">{{ t('columns.audience') }}</th>
           <th style="width: 9rem">{{ t('columns.type') }}</th>
           <th>{{ t('columns.description') }}</th>
-          <th style="width: 12rem"></th>
+          <th style="width: 7rem"></th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-role>
-        <tr>
-          <td class="font-medium">{{ role.name }}</td>
+        <tr [pSelectableRow]="role" class="cursor-pointer" (click)="onRowClick($event, role)">
+          <td>
+            <a [routerLink]="['/staff/system/roles', role.id]" class="font-medium hover:underline">{{ role.name }}</a>
+          </td>
           <td>
             <p-tag [value]="audienceLabel(role.userType)" [severity]="audienceSeverity(role.userType)"></p-tag>
           </td>
@@ -52,23 +69,18 @@
           <td class="text-muted-color">{{ role.description }}</td>
           <td>
             <div class="flex items-center justify-end gap-1">
-              <p-button
-                [label]="t('edit')"
-                icon="fa-solid fa-pen-to-square"
-                severity="secondary"
-                size="small"
-                [text]="true"
-                (click)="openEdit(role)"></p-button>
-              <span [pTooltip]="canDelete(role) ? '' : t('protectedHint')" tooltipPosition="top">
-                <p-button
-                  [label]="t('delete')"
-                  icon="fa-solid fa-trash-can"
-                  severity="danger"
-                  size="small"
-                  [text]="true"
-                  [disabled]="!canDelete(role)"
-                  (click)="deleteRole(role)"></p-button>
-              </span>
+              @if (canEdit()) {
+                <span [pTooltip]="canDelete(role) ? '' : t('protectedHint')" tooltipPosition="top">
+                  <p-button
+                    [label]="t('delete')"
+                    icon="fa-solid fa-trash-can"
+                    severity="danger"
+                    size="small"
+                    [text]="true"
+                    [disabled]="!canDelete(role)"
+                    (click)="deleteRole(role)"></p-button>
+                </span>
+              }
             </div>
           </td>
         </tr>
@@ -76,7 +88,30 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5" class="text-center text-sm text-muted-color py-6">{{ t('empty') }}</td>
+          <td [attr.colspan]="5" class="p-4">
+            @if (hasFilter()) {
+              <mp-empty-state icon="fa-solid fa-magnifying-glass" [message]="t('emptyFiltered')">
+                <p-button
+                  [label]="t('clearSearch')"
+                  icon="fa-solid fa-xmark"
+                  severity="secondary"
+                  size="small"
+                  [outlined]="true"
+                  (click)="clearSearch()"></p-button>
+              </mp-empty-state>
+            } @else {
+              <mp-empty-state icon="fa-solid fa-user-shield" [message]="t('emptyNone')">
+                @if (canEdit()) {
+                  <p-button
+                    [label]="t('new')"
+                    icon="fa-solid fa-plus"
+                    severity="primary"
+                    size="small"
+                    (click)="openCreate()"></p-button>
+                }
+              </mp-empty-state>
+            }
+          </td>
         </tr>
       </ng-template>
     </p-table>

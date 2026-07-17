@@ -7,25 +7,24 @@
   </mp-page-header>
 
   @if (loading()) {
-    <div class="flex items-center justify-center py-16" aria-busy="true">
-      <p-progressSpinner [ariaLabel]="'common.loading' | transloco" strokeWidth="3" styleClass="!w-12 !h-12"></p-progressSpinner>
-    </div>
+    <mp-loading></mp-loading>
   } @else {
     @if (!canEdit()) {
-      <div class="mb-3 px-3 py-2 rounded-md bg-surface-100 text-sm text-muted-color">
+      <div class="mb-3 max-w-5xl px-3 py-2 rounded-md bg-surface-100 text-sm text-muted-color">
         <i class="fa-solid fa-lock mr-2"></i>{{ t('readOnlyHint') }}
       </div>
     }
 
-    <form class="flex flex-col gap-4" (ngSubmit)="save()">
-      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
-        <h2 class="text-base font-semibold m-0">{{ t('sections.agency') }}</h2>
+    <!-- Detail forms cap at max-w-5xl (64rem) so a 2-col field grid reads at a sane scan width. -->
+    <form class="flex flex-col gap-4 max-w-5xl" (ngSubmit)="save()">
+      <section class="mp-surface p-4 flex flex-col gap-3">
+        <mp-section-header [title]="t('sections.agency')"></mp-section-header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.name') }}</span>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-field [label]="t('fields.name')" for="name">
             <input
               pInputText
+              id="name"
               [ngModel]="name()"
               (ngModelChange)="name.set($event)"
               [disabled]="!canEdit()"
@@ -34,29 +33,29 @@
               #nameRef="ngModel"
               [invalid]="nameRef.touched && nameRef.invalid"
               name="name"/>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.website') }}</span>
+          <mp-field [label]="t('fields.website')" for="website">
             <input
               pInputText
+              id="website"
               [ngModel]="website() ?? ''"
               (ngModelChange)="website.set($event)"
               [disabled]="!canEdit()"
               [placeholder]="t('fields.websitePlaceholder')"
               name="website"/>
-          </label>
+          </mp-field>
         </div>
       </section>
 
-      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
-        <h2 class="text-base font-semibold m-0">{{ t('sections.school') }}</h2>
+      <section class="mp-surface p-4 flex flex-col gap-3">
+        <mp-section-header [title]="t('sections.school')"></mp-section-header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.urn') }}</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <mp-field [label]="t('fields.urn')" for="urn">
             <input
               pInputText
+              id="urn"
               [ngModel]="urn()"
               (ngModelChange)="urn.set($event)"
               [disabled]="!canEdit()"
@@ -64,12 +63,12 @@
               #urnRef="ngModel"
               [invalid]="urnRef.touched && urnRef.invalid"
               name="urn"/>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.uprn') }}</span>
+          <mp-field [label]="t('fields.uprn')" for="uprn">
             <input
               pInputText
+              id="uprn"
               [ngModel]="uprn()"
               (ngModelChange)="uprn.set($event)"
               [disabled]="!canEdit()"
@@ -77,11 +76,11 @@
               #uprnRef="ngModel"
               [invalid]="uprnRef.touched && uprnRef.invalid"
               name="uprn"/>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.establishmentNumber') }}</span>
+          <mp-field [label]="t('fields.establishmentNumber')" for="establishmentNumber">
             <p-inputNumber
+              inputId="establishmentNumber"
               [ngModel]="establishmentNumber()"
               (ngModelChange)="establishmentNumber.set($event)"
               [disabled]="!canEdit()"
@@ -94,25 +93,24 @@
               [invalid]="estabRef.touched && estabRef.invalid"
               name="establishmentNumber">
             </p-inputNumber>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.ukprn') }}</span>
+          <mp-field [label]="t('fields.ukprn')" for="ukprn">
             <input
               pInputText
+              id="ukprn"
               [ngModel]="ukprn() ?? ''"
               (ngModelChange)="ukprn.set($event)"
               [disabled]="!canEdit()"
               maxlength="8"
               [placeholder]="t('fields.ukprnPlaceholder')"
               name="ukprn"/>
-          </label>
+          </mp-field>
         </div>
 
         <!-- Local authority via picker. Show the picked LA's name; null state
              reads as "Not set". The picker is hidden in read-only mode. -->
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium">{{ t('fields.localAuthority') }}</span>
+        <mp-field [label]="t('fields.localAuthority')">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-sm">
               @if (localAuthorityName(); as n) {
@@ -136,16 +134,16 @@
               }
             }
           </div>
-        </div>
+        </mp-field>
       </section>
 
-      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
-        <h2 class="text-base font-semibold m-0">{{ t('sections.classification') }}</h2>
+      <section class="mp-surface p-4 flex flex-col gap-3">
+        <mp-section-header [title]="t('sections.classification')"></mp-section-header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.schoolPhase') }}</span>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-field [label]="t('fields.schoolPhase')" for="schoolPhaseId">
             <p-select
+              inputId="schoolPhaseId"
               [options]="schoolPhases()"
               optionLabel="description"
               optionValue="id"
@@ -161,11 +159,11 @@
               [invalid]="schoolPhaseRef.touched && schoolPhaseRef.invalid"
               name="schoolPhaseId">
             </p-select>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.schoolType') }}</span>
+          <mp-field [label]="t('fields.schoolType')" for="schoolTypeId">
             <p-select
+              inputId="schoolTypeId"
               [options]="schoolTypes()"
               optionLabel="description"
               optionValue="id"
@@ -181,11 +179,11 @@
               [invalid]="schoolTypeRef.touched && schoolTypeRef.invalid"
               name="schoolTypeId">
             </p-select>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.governanceType') }}</span>
+          <mp-field [label]="t('fields.governanceType')" for="governanceTypeId">
             <p-select
+              inputId="governanceTypeId"
               [options]="governanceTypes()"
               optionLabel="description"
               optionValue="id"
@@ -201,11 +199,11 @@
               [invalid]="governanceTypeRef.touched && governanceTypeRef.invalid"
               name="governanceTypeId">
             </p-select>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.intakeType') }}</span>
+          <mp-field [label]="t('fields.intakeType')" for="intakeTypeId">
             <p-select
+              inputId="intakeTypeId"
               [options]="intakeTypes()"
               optionLabel="description"
               optionValue="id"
@@ -221,11 +219,11 @@
               [invalid]="intakeTypeRef.touched && intakeTypeRef.invalid"
               name="intakeTypeId">
             </p-select>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.payZone') }}</span>
+          <mp-field [label]="t('fields.payZone')" for="payZoneId" [hint]="t('fields.payZoneHint')">
             <p-select
+              inputId="payZoneId"
               [options]="payZones()"
               optionLabel="description"
               optionValue="id"
@@ -238,12 +236,11 @@
               [placeholder]="t('fields.payZonePlaceholder')"
               name="payZoneId">
             </p-select>
-            <span class="text-xs text-muted-color">{{ t('fields.payZoneHint') }}</span>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.lowestAge') }}</span>
+          <mp-field [label]="t('fields.lowestAge')" for="lowestAge">
             <p-inputNumber
+              inputId="lowestAge"
               [ngModel]="lowestAge()"
               (ngModelChange)="lowestAge.set($event)"
               [disabled]="!canEdit()"
@@ -253,11 +250,11 @@
               [showButtons]="false"
               name="lowestAge">
             </p-inputNumber>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.highestAge') }}</span>
+          <mp-field [label]="t('fields.highestAge')" for="highestAge">
             <p-inputNumber
+              inputId="highestAge"
               [ngModel]="highestAge()"
               (ngModelChange)="highestAge.set($event)"
               [disabled]="!canEdit()"
@@ -267,11 +264,11 @@
               [showButtons]="false"
               name="highestAge">
             </p-inputNumber>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.netCapacity') }}</span>
+          <mp-field [label]="t('fields.netCapacity')" for="netCapacity">
             <p-inputNumber
+              inputId="netCapacity"
               [ngModel]="netCapacity()"
               (ngModelChange)="netCapacity.set($event)"
               [disabled]="!canEdit()"
@@ -280,11 +277,11 @@
               [showButtons]="false"
               name="netCapacity">
             </p-inputNumber>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.netCapacityAssessmentDate') }}</span>
+          <mp-field [label]="t('fields.netCapacityAssessmentDate')" for="netCapacityAssessmentDate">
             <p-datepicker
+              inputId="netCapacityAssessmentDate"
               [ngModel]="netCapacityAssessmentDate()"
               (ngModelChange)="netCapacityAssessmentDate.set($event)"
               [disabled]="!canEdit()"
@@ -293,12 +290,12 @@
               appendTo="body"
               name="netCapacityAssessmentDate">
             </p-datepicker>
-          </label>
+          </mp-field>
         </div>
       </section>
 
-      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
-        <h2 class="text-base font-semibold m-0">{{ t('sections.specialSchool') }}</h2>
+      <section class="mp-surface p-4 flex flex-col gap-3">
+        <mp-section-header [title]="t('sections.specialSchool')"></mp-section-header>
 
         <label class="flex items-center gap-2 cursor-pointer">
           <p-checkbox
@@ -312,10 +309,10 @@
         </label>
 
         @if (isSpecialSchool()) {
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <label class="flex flex-col gap-1">
-              <span class="text-sm font-medium">{{ t('fields.specialSchoolOrganisation') }}</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <mp-field [label]="t('fields.specialSchoolOrganisation')" for="specialSchoolOrganisationId">
               <p-select
+                inputId="specialSchoolOrganisationId"
                 [options]="specialSchoolOrganisations()"
                 optionLabel="description"
                 optionValue="id"
@@ -327,11 +324,11 @@
                 [style]="{ width: '100%' }"
                 name="specialSchoolOrganisationId">
               </p-select>
-            </label>
+            </mp-field>
 
-            <label class="flex flex-col gap-1">
-              <span class="text-sm font-medium">{{ t('fields.specialSchoolType') }}</span>
+            <mp-field [label]="t('fields.specialSchoolType')" for="specialSchoolTypeId">
               <p-select
+                inputId="specialSchoolTypeId"
                 [options]="specialSchoolTypes()"
                 optionLabel="description"
                 optionValue="id"
@@ -343,11 +340,11 @@
                 [style]="{ width: '100%' }"
                 name="specialSchoolTypeId">
               </p-select>
-            </label>
+            </mp-field>
 
-            <label class="flex flex-col gap-1">
-              <span class="text-sm font-medium">{{ t('fields.maxBoarders') }}</span>
+            <mp-field [label]="t('fields.maxBoarders')" for="maxBoarders">
               <p-inputNumber
+                inputId="maxBoarders"
                 [ngModel]="maxBoarders()"
                 (ngModelChange)="maxBoarders.set($event)"
                 [disabled]="!canEdit()"
@@ -356,45 +353,44 @@
                 [showButtons]="false"
                 name="maxBoarders">
               </p-inputNumber>
-            </label>
+            </mp-field>
           </div>
         }
       </section>
 
-      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
-        <h2 class="text-base font-semibold m-0">{{ t('sections.contact') }}</h2>
+      <section class="mp-surface p-4 flex flex-col gap-3">
+        <mp-section-header [title]="t('sections.contact')"></mp-section-header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.telephone') }}</span>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-field [label]="t('fields.telephone')" for="telephone">
             <input
               pInputText
+              id="telephone"
               [ngModel]="telephone() ?? ''"
               (ngModelChange)="telephone.set($event)"
               [disabled]="!canEdit()"
               maxlength="30"
               name="telephone"/>
-          </label>
+          </mp-field>
 
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium">{{ t('fields.email') }}</span>
+          <mp-field [label]="t('fields.email')" for="email">
             <input
               pInputText
+              id="email"
               type="email"
               [ngModel]="email() ?? ''"
               (ngModelChange)="email.set($event)"
               [disabled]="!canEdit()"
               maxlength="256"
               name="email"/>
-          </label>
+          </mp-field>
         </div>
       </section>
 
-      <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
-        <h2 class="text-base font-semibold m-0">{{ t('sections.leadership') }}</h2>
+      <section class="mp-surface p-4 flex flex-col gap-3">
+        <mp-section-header [title]="t('sections.leadership')"></mp-section-header>
 
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium">{{ t('fields.headTeacher') }}</span>
+        <mp-field [label]="t('fields.headTeacher')">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-sm">
               @if (headTeacherFullName(); as n) {
@@ -418,7 +414,7 @@
               }
             }
           </div>
-        </div>
+        </mp-field>
       </section>
 
     </form>

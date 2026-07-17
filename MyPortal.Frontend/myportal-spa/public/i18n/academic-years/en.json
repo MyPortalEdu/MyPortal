@@ -5,12 +5,14 @@
   "deleteConfirm": "Delete the academic year \"{{ name }}\"? This cannot be undone.",
   "deletedToast": "Academic year deleted",
   "edit": "Edit",
+  "view": "View",
   "delete": "Delete",
   "open": "Open",
   "locked": "Locked",
   "lockedHint": "This year is locked and can't be edited or deleted.",
   "startedHint": "This year has already started and can't be edited or deleted.",
-  "empty": "No academic years yet. Use the New button to create one.",
+  "new": "New Academic Year",
+  "emptyNone": "No academic years yet.",
   "columns": {
     "name": "Name",
     "startDate": "Starts",
@@ -22,6 +24,7 @@
   "wizard": {
     "title": "New Academic Year",
     "editTitle": "Edit Academic Year",
+    "viewTitle": "Academic Year",
     "loading": "Loading academic year…",
     "back": "Back",
     "next": "Next",
@@ -33,6 +36,7 @@
     "errorCreate": "Couldn't create academic year",
     "errorUpdate": "Couldn't update academic year",
     "errorLoad": "Couldn't load academic year",
+    "readOnlyTitle": "View Only",
     "steps": {
       "setup": "Setup",
       "periods": "Attendance periods",

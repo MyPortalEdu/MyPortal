@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Button } from 'primeng/button';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
+import { Callout } from '../../../shared/components/callout/callout';
 import { BulletinsFeed } from '../../../shared/components/bulletins/bulletins-feed/bulletins-feed';
 import { StaffTimetable } from '../../../shared/components/staff-timetable/staff-timetable';
 import { MeService } from '../../../core/services/me-service';
@@ -15,6 +16,7 @@ import { Permissions } from '../../../core/constants/permissions';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     PageHeader,
+    Callout,
     BulletinsFeed,
     StaffTimetable,
     Button,

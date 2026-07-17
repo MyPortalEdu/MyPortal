@@ -14,7 +14,6 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Textarea } from 'primeng/textarea';
 import { Checkbox } from 'primeng/checkbox';
-import { ProgressSpinner } from 'primeng/progressspinner';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -27,6 +26,9 @@ import { Permissions } from '../../../../../../core/constants/permissions';
 import { StaffMembersDataService } from '../../../../../../shared/services/staff-members-data.service';
 import { StaffRelationship } from '../../../../../../shared/types/staff-member-header';
 import { LookupSelect } from '../../../../../../shared/components/lookup-select/lookup-select';
+import { Loading } from '../../../../../../shared/components/loading/loading';
+import { EmptyState } from '../../../../../../shared/components/empty-state/empty-state';
+import { Field } from '../../../../../../shared/components/field/field';
 import {
   StaffAbsenceUpsertItem,
   StaffAbsencesResponse,
@@ -50,8 +52,10 @@ import { StaffAreaPanel } from './staff-area-panel';
     DatePicker,
     Textarea,
     Checkbox,
-    ProgressSpinner,
     LookupSelect,
+    Loading,
+    EmptyState,
+    Field,
     TranslocoDirective,
   ],
   providers: [

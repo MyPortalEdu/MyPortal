@@ -5,7 +5,7 @@
 ></mp-page-header>
 
 <div class="flex flex-col gap-4">
-  <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+  <section class="mp-surface p-4 flex flex-col gap-3">
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-0.5">
         <h2 class="text-base font-semibold m-0">{{ t('categories.title') }}</h2>
@@ -31,9 +31,7 @@
         }
       </ul>
     } @else if (categories().length === 0) {
-      <div class="text-sm text-muted-color py-6 text-center border border-dashed border-surface rounded-lg">
-        {{ t('categories.empty') }}
-      </div>
+      <mp-empty-state [message]="t('categories.empty')"></mp-empty-state>
     } @else {
       <ul class="list-none m-0 p-0 flex flex-col gap-2">
         @for (c of categories(); track c.id) {
@@ -84,7 +82,7 @@
     }
   </section>
 
-  <section class="bg-[var(--p-content-background)] rounded-xl shadow-sm p-4 flex flex-col gap-3">
+  <section class="mp-surface p-4 flex flex-col gap-3">
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-0.5">
         <h2 class="text-base font-semibold m-0">{{ t('audiences.title') }}</h2>
@@ -112,9 +110,7 @@
         }
       </ul>
     } @else if (allowedGroups().length === 0) {
-      <div class="text-sm text-muted-color py-6 text-center border border-dashed border-surface rounded-lg">
-        {{ t('audiences.empty') }}
-      </div>
+      <mp-empty-state [message]="t('audiences.empty')"></mp-empty-state>
     } @else {
       <ul class="list-none m-0 p-0 flex flex-col gap-2">
         @for (g of allowedGroups(); track g.studentGroupId) {

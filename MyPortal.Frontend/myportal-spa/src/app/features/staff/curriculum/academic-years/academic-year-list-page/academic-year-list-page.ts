@@ -16,6 +16,7 @@ import { Tooltip } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
+import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
 import { HeaderAction } from '../../../../../shared/types/header-action.type';
 import { AcademicYearsDataService } from '../../../../../shared/services/academic-years-data.service';
 import { BreakpointService } from '../../../../../shared/services/breakpoint-service';
@@ -39,6 +40,7 @@ import { AcademicYearWizardDialog } from '../academic-year-wizard-dialog/academi
     Tag,
     Tooltip,
     PageHeader,
+    EmptyState,
     AcademicYearWizardDialog,
     TranslocoDirective,
   ],
@@ -61,6 +63,11 @@ export class AcademicYearListPage implements OnInit {
   // reads this on open to decide whether to fetch+prefill (edit) or start
   // blank (create).
   readonly editYearId = signal<string | null>(null);
+  // A year that can't be mutated is still viewable — the wizard is the only
+  // place terms/periods/holidays are surfaced. These carry that state (and the
+  // reason to show in the dialog's banner) into the wizard.
+  readonly wizardReadOnly = signal(false);
+  readonly wizardReadOnlyReason = signal('');
 
   readonly headerActions = computed<HeaderAction[]>(() => [
     {
@@ -91,17 +98,23 @@ export class AcademicYearListPage implements OnInit {
 
   openCreateWizard(): void {
     this.editYearId.set(null);
+    this.wizardReadOnly.set(false);
+    this.wizardReadOnlyReason.set('');
     this.wizardOpen.set(true);
   }
 
   closeWizard(): void {
     this.wizardOpen.set(false);
     this.editYearId.set(null);
+    this.wizardReadOnly.set(false);
+    this.wizardReadOnlyReason.set('');
   }
 
   onWizardSaved(): void {
     this.wizardOpen.set(false);
     this.editYearId.set(null);
+    this.wizardReadOnly.set(false);
+    this.wizardReadOnlyReason.set('');
     this.refresh();
     // Rename / date change on the selected year wouldn't otherwise reach the
     // topbar — its label is bound to the cached summary. A newly-created year
@@ -109,16 +122,24 @@ export class AcademicYearListPage implements OnInit {
     this.selectedYear.revalidate();
   }
 
-  openEdit(year: AcademicYearSummary): void {
-    if (!this.canMutate(year)) return;
+  openYear(year: AcademicYearSummary): void {
     this.editYearId.set(year.id);
+    this.wizardReadOnly.set(!this.canMutate(year));
+    this.wizardReadOnlyReason.set(this.mutateBlockReason(year));
     this.wizardOpen.set(true);
+  }
+
+  // Row click is a convenience over the row's action button; ignore clicks that
+  // started on a link or a row action so they aren't handled twice.
+  onRowClick(event: MouseEvent, year: AcademicYearSummary): void {
+    if ((event.target as HTMLElement).closest('a,button')) return;
+    this.openYear(year);
   }
 
   // Mirror of the BE rule in AcademicYearService.UpdateAcademicYear / Delete:
   // a locked year is permanently frozen, and a year that has already started
-  // (earliest term start ≤ today) is also frozen. Surface both upfront so the
-  // user doesn't click through to a guaranteed 400.
+  // (earliest term start ≤ today) is also frozen. Gates mutation only — such a
+  // year still opens read-only.
   canMutate(year: AcademicYearSummary): boolean {
     if (year.isLocked) return false;
     if (!year.startDate) return true;
