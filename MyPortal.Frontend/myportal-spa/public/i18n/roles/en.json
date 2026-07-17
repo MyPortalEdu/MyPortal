@@ -6,7 +6,8 @@
   "deletedToast": "Role deleted",
   "edit": "Edit",
   "delete": "Delete",
-  "empty": "No roles yet. Use the New button to create one.",
+  "empty": "No roles found.",
+  "searchPlaceholder": "Search roles…",
   "protectedHint": "Built-in roles can't be deleted.",
   "columns": {
     "name": "Name",
@@ -28,6 +29,7 @@
     "titleCreate": "New Role",
     "titleEdit": "Edit Role",
     "titleView": "Role",
+    "details": "Details",
     "name": "Name",
     "namePlaceholder": "e.g. Head of Department",
     "createHint": "You'll choose this role's permissions on the next screen.",

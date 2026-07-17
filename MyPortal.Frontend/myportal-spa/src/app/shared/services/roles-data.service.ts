@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UserType } from '../../core/types/user-type';
 import { PageResult, IdResponse } from '../types/bulletin';
+import { QueryKitParams } from '../utils/primeng-querykit';
 import {
   RoleSummaryResponse,
   RoleDetailsResponse,
@@ -14,10 +15,20 @@ import {
 export class RolesDataService {
   private readonly http = inject(HttpClient);
 
-  // Roles are few — fetch a single large page rather than wiring server-side paging.
-  list(): Observable<PageResult<RoleSummaryResponse>> {
+  // A single large page — for callers that need every role (e.g. the role picker's audience filter).
+  all(): Observable<PageResult<RoleSummaryResponse>> {
     const params = new HttpParams().set('page', '1').set('pageSize', '100');
     return this.http.get<PageResult<RoleSummaryResponse>>('/api/roles', { params });
+  }
+
+  // Server-paged/filtered/sorted — for the grid.
+  list(params: QueryKitParams): Observable<PageResult<RoleSummaryResponse>> {
+    let httpParams = new HttpParams()
+      .set('page', String(params.page))
+      .set('pageSize', String(params.pageSize));
+    if (params.filter) httpParams = httpParams.set('filter', params.filter);
+    if (params.sort) httpParams = httpParams.set('sort', params.sort);
+    return this.http.get<PageResult<RoleSummaryResponse>>('/api/roles', { params: httpParams });
   }
 
   getById(id: string): Observable<RoleDetailsResponse> {

@@ -1,18 +1,18 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   inject,
   signal,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
-import { TableModule } from 'primeng/table';
+import { InputText } from 'primeng/inputtext';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { Skeleton } from 'primeng/skeleton';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
-import { Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
@@ -22,31 +22,35 @@ import { ConfirmationDialog } from '../../../../../core/services/confirmation.se
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoleSummaryResponse } from '../../../../../shared/types/role';
 import { UserType } from '../../../../../core/types/user-type';
+import { toQueryKitParams } from '../../../../../shared/utils/primeng-querykit';
 import { RoleCreateDialog } from '../role-create-dialog/role-create-dialog';
 
 type AudienceSeverity = 'info' | 'success' | 'warn' | 'secondary';
 type TypeSeverity = 'danger' | 'info' | 'secondary';
 
+const SEARCH_FIELDS = ['name', 'description'];
+
 @Component({
   selector: 'mp-role-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Card, TableModule, Skeleton, Tag, Tooltip, PageHeader, RoleCreateDialog, TranslocoDirective],
+  imports: [Button, Card, InputText, TableModule, Skeleton, Tag, Tooltip, PageHeader, RoleCreateDialog, TranslocoDirective],
   providers: [provideTranslocoScope('roles')],
   templateUrl: './role-list-page.html',
 })
-export class RoleListPage implements OnInit {
+export class RoleListPage {
   private readonly data = inject(RolesDataService);
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
   private readonly router = inject(Router);
 
-  readonly roles = signal<RoleSummaryResponse[]>([]);
+  readonly rows = signal<RoleSummaryResponse[]>([]);
+  readonly totalRecords = signal(0);
   readonly loading = signal(false);
   readonly createOpen = signal(false);
 
-  readonly skeletonRows = [1, 2, 3, 4, 5];
+  private lastEvent: TableLazyLoadEvent | null = null;
 
   readonly headerActions = computed<HeaderAction[]>(() => [
     {
@@ -57,15 +61,13 @@ export class RoleListPage implements OnInit {
     },
   ]);
 
-  ngOnInit(): void {
-    this.refresh();
-  }
-
-  refresh(): void {
+  load(event: TableLazyLoadEvent): void {
+    this.lastEvent = event;
     this.loading.set(true);
-    this.data.list().subscribe({
+    this.data.list(toQueryKitParams(event, { globalFields: SEARCH_FIELDS })).subscribe({
       next: page => {
-        this.roles.set(page?.items ?? []);
+        this.rows.set(page.items ?? []);
+        this.totalRecords.set(page.totalItems ?? 0);
         this.loading.set(false);
       },
       error: err => {
@@ -73,6 +75,10 @@ export class RoleListPage implements OnInit {
         this.notify.apiError(err, this.transloco.translate('roles.loadError'));
       },
     });
+  }
+
+  reload(): void {
+    if (this.lastEvent) this.load(this.lastEvent);
   }
 
   openCreate(): void {
@@ -89,11 +95,9 @@ export class RoleListPage implements OnInit {
 
   onCreated(id: string): void {
     this.createOpen.set(false);
-    // Straight into the new role's editor to assign permissions.
     void this.router.navigate(['/staff/system/roles', id]);
   }
 
-  // Both IsSystem and IsDefault roles are protected from deletion (see RoleService).
   canDelete(role: RoleSummaryResponse): boolean {
     return !role.isSystem && !role.isDefault;
   }
@@ -138,7 +142,7 @@ export class RoleListPage implements OnInit {
     this.data.delete(role.id).subscribe({
       next: () => {
         this.notify.success(this.transloco.translate('roles.deletedToast'));
-        this.refresh();
+        this.reload();
       },
       error: err => this.notify.apiError(err, this.transloco.translate('roles.deleteError')),
     });

@@ -8,6 +8,7 @@ using MyPortal.Auth.Models;
 using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
+using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces;
@@ -46,7 +47,23 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
 
-        return await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
+        var details = await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
+
+        if (details is null)
+        {
+            return null;
+        }
+
+        details.RoleIds = await _userRepository.GetRoleIdsByUserIdAsync(userId, cancellationToken);
+
+        return details;
+    }
+
+    public async Task<IList<PermissionResponse>> GetEffectivePermissionsAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
+
+        return await _permissionRepository.GetPermissionsByUserIdAsync(userId, cancellationToken);
     }
 
     public async Task<UserInfoResponse?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
@@ -121,7 +138,7 @@ public class UserService : BaseService, IUserService
         return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.Password);
     }
 
-    public async Task<IdentityResult> CreateAsync(UserUpsertRequest model, CancellationToken cancellationToken)
+    public async Task<(IdentityResult Result, Guid UserId)> CreateAsync(UserUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
@@ -150,17 +167,17 @@ public class UserService : BaseService, IUserService
 
         if (!result.Succeeded)
         {
-            return result;
+            return (result, Guid.Empty);
         }
 
         await UpdateUserRoles(newUser, WithDefaultRole(model.UserType, model.RoleIds));
 
         tx.Complete();
 
-        return result;
+        return (result, newUser.Id);
     }
 
-    public async Task<IdentityResult> UpdateAsync(Guid userId, UserUpsertRequest model,
+    public async Task<IdentityResult> UpdateAsync(Guid userId, UserUpdateRequest model,
         CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);

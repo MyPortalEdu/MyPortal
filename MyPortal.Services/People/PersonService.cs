@@ -4,6 +4,7 @@ using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
+using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
@@ -140,5 +141,18 @@ public class PersonService : BaseService, IPersonService
                 await _photoService.PurgePhotoAsync(person.PhotoId.Value, cancellationToken, ownedUow);
             }
         }, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<PersonSearchResponse>> SearchAsync(string query, CancellationToken cancellationToken)
+    {
+        var term = query?.Trim() ?? string.Empty;
+        if (term.Length < 2)
+        {
+            return Array.Empty<PersonSearchResponse>();
+        }
+
+        // Escape LIKE wildcards ([, %, _) before wrapping in a contains pattern. '[' must go first.
+        var escaped = term.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+        return await _personRepository.SearchAsync($"%{escaped}%", cancellationToken);
     }
 }

@@ -25,10 +25,20 @@ public class UserRepository : EntityRepository<User>, IUserRepository
         
         var sql = @"[dbo].[usp_user_get_details_by_id]";
         
-        var result = await conn.ExecuteStoredProcedureAsync<UserDetailsResponse>(sql, new { userId }, 
+        var result = await conn.ExecuteStoredProcedureAsync<UserDetailsResponse>(sql, new { userId },
             cancellationToken: cancellationToken);
 
         return result.FirstOrDefault();
+    }
+
+    public async Task<IList<Guid>> GetRoleIdsByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        using var conn = _factory.Create();
+
+        var result = await conn.ExecuteStoredProcedureAsync<Guid>("[dbo].[usp_user_role_get_by_user_id]",
+            new { userId }, cancellationToken: cancellationToken);
+
+        return result.ToList();
     }
 
     public async Task<UserInfoResponse?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)

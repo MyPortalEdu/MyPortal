@@ -1,0 +1,15 @@
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[usp_user_role_get_by_user_id]
+    @userId UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+SELECT UR.[RoleId]
+FROM UserRoles [UR]
+WHERE UR.[UserId] = @userId;
+
+END;

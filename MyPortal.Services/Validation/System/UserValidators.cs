@@ -68,4 +68,37 @@ public class UserValidators
                 .NotEmpty().WithMessage("RoleId cannot be an empty GUID.");
         }
     }
+
+    // Same as the upsert validator but WITHOUT the password rule — update never carries a password.
+    public class UpdateUserDtoValidator : AbstractValidator<UserUpdateRequest>
+    {
+        public UpdateUserDtoValidator()
+        {
+            RuleFor(x => x.PersonId)
+                .Must(id => id == null || id.Value != Guid.Empty)
+                .WithMessage("PersonId cannot be an empty GUID.");
+
+            RuleFor(x => x.UserType).IsInEnum();
+
+            RuleFor(x => x.Username)
+                .NotEmpty().WithMessage("Username is required")
+                .MaximumLength(256).WithMessage("Username must not exceed 256 characters.");
+
+            RuleFor(x => x.Email)
+                .Cascade(CascadeMode.Stop)
+                .Must(e => string.IsNullOrWhiteSpace(e) || e.Length <= 256)
+                .WithMessage("Email must not exceed 256 characters.")
+                .EmailAddress()
+                .When(x => !string.IsNullOrWhiteSpace(x.Email))
+                .WithMessage("Invalid email format.");
+
+            RuleFor(x => x.RoleIds)
+                .NotNull().WithMessage("RoleIds cannot be null")
+                .Must(list => list.Count == list.Distinct().Count())
+                .WithMessage("RoleIds must be unique.");
+
+            RuleForEach(x => x.RoleIds)
+                .NotEmpty().WithMessage("RoleId cannot be an empty GUID.");
+        }
+    }
 }

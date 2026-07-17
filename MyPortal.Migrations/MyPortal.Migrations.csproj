@@ -72,6 +72,8 @@
     <EmbeddedResource Include="Sql\StoredProcedures\usp_school_get_details_local.sql" />
     <None Remove="Sql\StoredProcedures\usp_user_get_details_by_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_user_get_details_by_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_user_role_get_by_user_id.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_user_role_get_by_user_id.sql" />
     <None Remove="Sql\Updates\20251101000100_add_user_management_permissions.sql" />
     <EmbeddedResource Include="Sql\Updates\20251101000100_add_user_management_permissions.sql" />
     <None Remove="Sql\StoredProcedures\usp_role_get_details_by_id.sql" />

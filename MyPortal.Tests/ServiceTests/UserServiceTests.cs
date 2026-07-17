@@ -60,6 +60,10 @@ public class UserServiceTests
             .Setup(v => v.ValidateAsync(It.IsAny<UserUpsertRequest>()))
             .Returns(Task.CompletedTask);
 
+        _validationService
+            .Setup(v => v.ValidateAsync(It.IsAny<UserUpdateRequest>()))
+            .Returns(Task.CompletedTask);
+
         _userService = new UserService(
             _authorizationService.Object,
             _logger.Object,
@@ -76,10 +80,13 @@ public class UserServiceTests
     public async Task GetDetailsByIdAsync_RequiresPermission_ThenReturnsUserDetails()
     {
         var id = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
         var dto = new UserDetailsResponse { Id = id };
 
         _userRepository.Setup(r => r.GetDetailsByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(dto);
+        _userRepository.Setup(r => r.GetRoleIdsByUserIdAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Guid> { roleId });
 
         var result = await _userService.GetDetailsByIdAsync(id, CancellationToken.None);
 
@@ -267,7 +274,7 @@ public class UserServiceTests
             RoleIds = new List<Guid> { roleId }
         }, CancellationToken.None);
 
-        Assert.That(result.Succeeded, Is.True);
+        Assert.That(result.Result.Succeeded, Is.True);
     }
 
     [Test]
@@ -284,7 +291,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(Array.Empty<string>());
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateAsync(id, new UserUpsertRequest
+        var res = await _userService.UpdateAsync(id, new UserUpdateRequest
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -321,7 +328,7 @@ public class UserServiceTests
 
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateAsync(id, new UserUpsertRequest
+        var res = await _userService.UpdateAsync(id, new UserUpdateRequest
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -357,7 +364,7 @@ public class UserServiceTests
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
         _userManager.Setup(m => m.UpdateSecurityStampAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateAsync(id, new UserUpsertRequest()
+        var res = await _userService.UpdateAsync(id, new UserUpdateRequest()
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -394,7 +401,7 @@ public class UserServiceTests
         // No add/remove expected; since no other changes, UpdateAsync should be called
         _userManager.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
 
-        var res = await _userService.UpdateAsync(id, new UserUpsertRequest()
+        var res = await _userService.UpdateAsync(id, new UserUpdateRequest()
         {
             PersonId = Guid.NewGuid(),
             Username = "student",
@@ -425,7 +432,7 @@ public class UserServiceTests
         _roleManager.Setup(r => r.FindByIdAsync(missingRoleId.ToString()))
             .ReturnsAsync((ApplicationRole?)null);
 
-        var dto = new UserUpsertRequest()
+        var dto = new UserUpdateRequest()
         {
             Username = "student",
             PersonId = Guid.NewGuid(),
@@ -463,7 +470,7 @@ public class UserServiceTests
         var user = new ApplicationUser { Id = id, IsSystem = true };
         _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
 
-        Assert.That(async () => await _userService.UpdateAsync(id, new UserUpsertRequest
+        Assert.That(async () => await _userService.UpdateAsync(id, new UserUpdateRequest
         {
             Username = "x", RoleIds = new List<Guid>()
         }, CancellationToken.None), Throws.TypeOf<SystemEntityException>());
@@ -514,7 +521,7 @@ public class UserServiceTests
             UserType = UserType.Student, RoleIds = new List<Guid>()
         }, CancellationToken.None);
 
-        Assert.That(result.Succeeded, Is.True);
+        Assert.That(result.Result.Succeeded, Is.True);
         _userManager.Verify(m => m.AddToRoleAsync(It.IsAny<ApplicationUser>(), "Student"), Times.Once);
     }
 

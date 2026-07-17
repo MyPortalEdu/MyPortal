@@ -1,3 +1,4 @@
+using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces.Base;
 
@@ -11,4 +12,5 @@ namespace MyPortal.Data.Interfaces;
 /// </summary>
 public interface IPersonRepository : IEntityRepository<Person>
 {
+    Task<IReadOnlyList<PersonSearchResponse>> SearchAsync(string like, CancellationToken cancellationToken);
 }

@@ -22,6 +22,8 @@ SELECT
     [U].[TwoFactorEnabled],    
     [U].[LockoutEnabled]    
 FROM [dbo].[Users] [U]
-CROSS APPLY [dbo].[fn_person_get_name](U.PersonId, 3, 0, 0) AS P
+-- OUTER APPLY (not CROSS) so users with no linked Person — e.g. the admin / _system accounts with a
+-- NULL PersonId — aren't dropped. Matches GetUserSummaries.sql, which is why they show in the list.
+OUTER APPLY [dbo].[fn_person_get_name](U.PersonId, 3, 0, 0) AS P
 WHERE [U].[Id] = @userId
 END;

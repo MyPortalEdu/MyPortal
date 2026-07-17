@@ -4,6 +4,8 @@ using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
+using MyPortal.Contracts.Models;
+using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces.System;
 using MyPortal.WebApi.Infrastructure.Attributes;
@@ -43,6 +45,19 @@ public class UsersController : BaseApiController
         return Ok(result);
     }
 
+    /// <summary>Get a user's effective permissions — the union across their assigned roles.</summary>
+    /// <param name="userId">The id of the user.</param>
+    [HttpGet("{userId:guid}/permissions")]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.ViewUsers)]
+    [ProducesResponseType(typeof(IList<PermissionResponse>), 200)]
+    public async Task<IActionResult> GetUserPermissionsAsync([FromRoute] Guid userId)
+    {
+        var result = await _userService.GetEffectivePermissionsAsync(userId, CancellationToken);
+
+        return Ok(result);
+    }
+
     /// <summary>Page through user summaries.</summary>
     /// <remarks>Supports server-side filtering, sorting, and paging. Page size is clamped.</remarks>
     /// <param name="page">1-based page number.</param>
@@ -70,12 +85,12 @@ public class UsersController : BaseApiController
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
-    [ProducesResponseType(204)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateUserAsync([FromBody] UserUpsertRequest model)
     {
-        var result = await _userService.CreateAsync(model, CancellationToken);
+        var (result, userId) = await _userService.CreateAsync(model, CancellationToken);
 
-        return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
+        return !result.Succeeded ? IdentityResultProblem(result) : Ok(new IdResponse { Id = userId });
     }
 
     /// <summary>Update a user's metadata.</summary>
@@ -87,7 +102,7 @@ public class UsersController : BaseApiController
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
     [ProducesResponseType(204)]
-    public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid userId, [FromBody] UserUpsertRequest model)
+    public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid userId, [FromBody] UserUpdateRequest model)
     {
         var result = await _userService.UpdateAsync(userId, model, CancellationToken);
 

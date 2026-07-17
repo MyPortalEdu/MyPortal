@@ -1,15 +1,15 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Tag } from 'primeng/tag';
 import { Skeleton } from 'primeng/skeleton';
-import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
+import { HeaderAction } from '../../../../../shared/types/header-action.type';
 import { RolesDataService } from '../../../../../shared/services/roles-data.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
@@ -24,7 +24,6 @@ import { PermissionTree, PermissionTreeNode, buildPermissionTree } from '../perm
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    Button,
     Card,
     InputText,
     Textarea,
@@ -33,7 +32,6 @@ import { PermissionTree, PermissionTreeNode, buildPermissionTree } from '../perm
     PageHeader,
     PermissionTree,
     TranslocoDirective,
-    TranslocoPipe,
   ],
   providers: [provideTranslocoScope('roles')],
   templateUrl: './role-details-page.html',
@@ -78,6 +76,31 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
     }),
   );
   readonly isDirty = computed(() => this.snapshot() !== null && this.snapshot() !== this.currentForm());
+
+  readonly headerActions = computed<HeaderAction[]>(() => {
+    if (this.loading()) return [];
+
+    const back: HeaderAction = {
+      label: this.transloco.translate('common.back'),
+      icon: 'fa-solid fa-arrow-left',
+      severity: 'secondary',
+      text: true,
+      command: () => this.goBack(),
+    };
+
+    if (this.notFound() || this.readOnly()) return [back];
+
+    return [
+      back,
+      {
+        label: this.transloco.translate('roles.form.save'),
+        icon: 'fa-solid fa-check',
+        disabled: !this.isValid() || !this.isDirty(),
+        loading: this.saving(),
+        command: () => this.save(),
+      },
+    ];
+  });
 
   ngOnInit(): void {
     this.roleId = this.route.snapshot.paramMap.get('id') ?? '';
