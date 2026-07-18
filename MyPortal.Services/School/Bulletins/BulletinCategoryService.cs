@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -48,6 +50,8 @@ public class BulletinCategoryService(
     {
         await authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
+        await EnsureNameUniqueAsync(model.Name, excludeCategoryId: null, cancellationToken);
+
         var entity = new BulletinCategory
         {
             Id = SqlConvention.SequentialGuid(),
@@ -73,6 +77,8 @@ public class BulletinCategoryService(
         var entity = await repository.GetByIdAsync(categoryId, cancellationToken)
                      ?? throw new NotFoundException("Bulletin category not found.");
 
+        await EnsureNameUniqueAsync(model.Name, excludeCategoryId: categoryId, cancellationToken);
+
         entity.Name = model.Name;
         entity.Icon = model.Icon;
         entity.ColourCode = model.ColourCode;
@@ -92,6 +98,20 @@ public class BulletinCategoryService(
         await repository.DeleteAsync(categoryId, cancellationToken);
 
         logger.LogInformation("Bulletin category deleted: {categoryId}", categoryId);
+    }
+
+    // Category names must be unique (the DB enforces UQ_BulletinCategories_Name; this guard turns the
+    // clash into a friendly error instead of a 500). The set is tiny, so an in-memory check is fine.
+    private async Task EnsureNameUniqueAsync(string name, Guid? excludeCategoryId, CancellationToken cancellationToken)
+    {
+        var page = await repository.GetListPagedAsync(cancellationToken: cancellationToken);
+
+        if (page.Items.Any(c => c.Id != excludeCategoryId
+                                && string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ValidationException(
+                [new ValidationFailure("Name", $"A bulletin category named '{name}' already exists.")]);
+        }
     }
 
     private static BulletinCategoryResponse Map(BulletinCategory c) => new()

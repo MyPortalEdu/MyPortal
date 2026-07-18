@@ -239,6 +239,17 @@ namespace MyPortal.Services.System
             var permissions = await permissionRepository.GetListAsync(cancellationToken: cancellationToken);
             var byId = permissions.ToDictionary(p => p.Id);
 
+            // Unknown ids used to fall through the audience check and get inserted, surfacing as a raw
+            // FK error. Reject them here with a clear message instead.
+            if (permissionIds.Any(id => !byId.ContainsKey(id)))
+            {
+                throw new ValidationException(new[]
+                {
+                    new ValidationFailure(nameof(RoleUpsertRequest.PermissionIds),
+                        "One or more permissions do not exist.")
+                });
+            }
+
             var mismatch = permissionIds.Any(id => byId.TryGetValue(id, out var p) && p.UserType != role.UserType);
 
             if (mismatch)

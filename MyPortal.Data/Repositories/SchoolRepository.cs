@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Data;
+using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.School;
@@ -46,5 +47,23 @@ public class SchoolRepository(IDbConnectionFactory factory, IAuthorizationServic
             await conn.ExecuteStoredProcedureAsync<Guid?>(sql, cancellationToken: cancellationToken);
 
         return result.FirstOrDefault();
+    }
+
+    public async Task<bool> UrnExistsAsync(string urn, Guid? excludeSchoolId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var result = await conn.ExecuteStoredProcedureAsync<bool>(
+                "[dbo].[usp_school_urn_exists]",
+                new { urn, excludeSchoolId }, transaction, cancellationToken: cancellationToken);
+
+            return result.FirstOrDefault();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 }

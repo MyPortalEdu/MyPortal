@@ -118,6 +118,15 @@ public class RoleServiceTests
         _rolePermissionRepository
             .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
+        // Both requested permissions exist and match the (default) role audience.
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = permId1, Name = "P1", FriendlyName = "P1", Area = "A", UserType = UserType.Unknown },
+                new() { Id = permId2, Name = "P2", FriendlyName = "P2", Area = "A", UserType = UserType.Unknown }
+            });
 
         var result = await _roleService.CreateAsync(model, CancellationToken.None);
 
@@ -181,6 +190,15 @@ public class RoleServiceTests
         _rolePermissionRepository
             .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
             .ReturnsAsync(true);
+        // The requested permissions exist and match the role audience.
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = keptPermId, Name = "K", FriendlyName = "K", Area = "A", UserType = UserType.Unknown },
+                new() { Id = addedPermId, Name = "A", FriendlyName = "A", Area = "A", UserType = UserType.Unknown }
+            });
 
         var model = new RoleUpsertRequest
         {
@@ -417,5 +435,23 @@ public class RoleServiceTests
         _rolePermissionRepository.Verify(r => r.InsertAsync(
             It.Is<RolePermission>(rp => rp.PermissionId == permId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()),
             Times.Once);
+    }
+
+    [Test]
+    public void UpdateAsync_Throws_Validation_WhenPermissionDoesNotExist()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Teacher", UserType = UserType.Staff };
+
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+        _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
+        // Default GetListAsync returns an empty catalogue, so the requested id is unknown.
+
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest
+        {
+            Name = "Teacher",
+            UserType = UserType.Staff,
+            PermissionIds = new List<Guid> { Guid.NewGuid() }
+        }, CancellationToken.None), Throws.TypeOf<ValidationException>());
     }
 }

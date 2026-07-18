@@ -34,6 +34,7 @@ public class BulletinServiceTests
     private Mock<IDocumentService> _documentService = null!;
     private Mock<IValidationService> _validationService = null!;
     private Mock<IBulletinRepository> _bulletinRepository = null!;
+    private Mock<IBulletinCategoryRepository> _categoryRepository = null!;
     private Mock<IBulletinAcknowledgementRepository> _ackRepository = null!;
     private Mock<IAccessPolicy<Bulletin, BulletinVisibilityScope>> _accessPolicy = null!;
     private Mock<IUnitOfWorkFactory> _unitOfWorkFactory = null!;
@@ -51,6 +52,7 @@ public class BulletinServiceTests
         _documentService = new Mock<IDocumentService>(MockBehavior.Strict);
         _validationService = new Mock<IValidationService>(MockBehavior.Strict);
         _bulletinRepository = new Mock<IBulletinRepository>(MockBehavior.Strict);
+        _categoryRepository = new Mock<IBulletinCategoryRepository>(MockBehavior.Strict);
         _ackRepository = new Mock<IBulletinAcknowledgementRepository>(MockBehavior.Strict);
         _accessPolicy = new Mock<IAccessPolicy<Bulletin, BulletinVisibilityScope>>(MockBehavior.Strict);
         _unitOfWorkFactory = new Mock<IUnitOfWorkFactory>(MockBehavior.Strict);
@@ -66,6 +68,11 @@ public class BulletinServiceTests
         // Default scope: staff editor with edit permission, no pin. Tests can re-stub these.
         SetupScope(UserType.Staff, CurrentUserId, canView: true, canEdit: true, canPin: false);
 
+        // Default: the bulletin's category exists and is active, so the usability guard passes.
+        _categoryRepository
+            .Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new BulletinCategory { Id = Guid.NewGuid(), Active = true });
+
         _service = new BulletinService(
             _authorizationService.Object,
             _logger.Object,
@@ -73,6 +80,7 @@ public class BulletinServiceTests
             _documentService.Object,
             _validationService.Object,
             _bulletinRepository.Object,
+            _categoryRepository.Object,
             _ackRepository.Object,
             _accessPolicy.Object,
             _unitOfWorkFactory.Object

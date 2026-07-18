@@ -1,3 +1,6 @@
+using System.Data;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -61,6 +64,8 @@ public class SchoolService(
         await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
             var school = await GetEntityByIdAsync(id, cancellationToken);
+
+            await EnsureUrnUniqueAsync(model.Urn, excludeSchoolId: id, cancellationToken, ownedUow.Transaction);
 
             await agencyService.UpdateAsync(school.AgencyId, BuildAgencyRequest(model), cancellationToken, ownedUow);
 
@@ -137,6 +142,8 @@ public class SchoolService(
     {
         return await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
+            await EnsureUrnUniqueAsync(model.Urn, excludeSchoolId: null, cancellationToken, ownedUow.Transaction);
+
             var agencyId = await agencyService.CreateAsync(BuildAgencyRequest(model), cancellationToken, ownedUow);
 
             var schoolId = SqlConvention.SequentialGuid();
@@ -173,6 +180,18 @@ public class SchoolService(
 
             return schoolId;
         }, cancellationToken);
+    }
+
+    // A school's URN is nationally unique. The table has no unique index, so guard here and surface
+    // a friendly error. Pass excludeSchoolId on update so a school doesn't clash with itself.
+    private async Task EnsureUrnUniqueAsync(string urn, Guid? excludeSchoolId,
+        CancellationToken cancellationToken, IDbTransaction? transaction)
+    {
+        if (await schoolRepository.UrnExistsAsync(urn, excludeSchoolId, cancellationToken, transaction))
+        {
+            throw new ValidationException(
+                [new ValidationFailure("Urn", $"URN '{urn}' is already in use by another school.")]);
+        }
     }
 
     // Schools are always backed by an agency of type "Educational Provider" — the

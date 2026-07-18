@@ -1,4 +1,6 @@
 using System.Security.Authentication;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -31,6 +33,7 @@ public class BulletinService(
     IDocumentService documentService,
     IValidationService validationService,
     IBulletinRepository bulletinRepository,
+    IBulletinCategoryRepository categoryRepository,
     IBulletinAcknowledgementRepository ackRepository,
     IAccessPolicy<Bulletin, BulletinVisibilityScope> accessPolicy,
     IUnitOfWorkFactory unitOfWorkFactory)
@@ -69,6 +72,8 @@ public class BulletinService(
         }
 
         ValidateAudiences(model.Audiences);
+
+        await EnsureCategoryUsableAsync(model.CategoryId, cancellationToken);
 
         var bulletinId = SqlConvention.SequentialGuid();
 
@@ -116,6 +121,8 @@ public class BulletinService(
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditSchoolBulletins, cancellationToken);
 
         ValidateAudiences(model.Audiences);
+
+        await EnsureCategoryUsableAsync(model.CategoryId, cancellationToken);
 
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
@@ -294,6 +301,20 @@ public class BulletinService(
         }
 
         return await base.CanUploadToDirectoryAsync(entityId, directoryId, cancellationToken);
+    }
+
+    // A bulletin must hang off a category that exists and is still active — otherwise it lands in
+    // a hidden/retired category. Existence is also FK-enforced, but this yields a friendly error.
+    private async Task EnsureCategoryUsableAsync(Guid categoryId, CancellationToken cancellationToken)
+    {
+        var category = await categoryRepository.GetByIdAsync(categoryId, cancellationToken)
+                       ?? throw new NotFoundException("Bulletin category not found.");
+
+        if (!category.Active)
+        {
+            throw new ValidationException(
+                [new ValidationFailure("CategoryId", "The selected bulletin category is inactive.")]);
+        }
     }
 
     private static void ValidateAudiences(IList<BulletinAudienceRequest> audiences)
