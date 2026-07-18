@@ -1,5 +1,5 @@
-@import "@fontsource-variable/inter";
-@import "primeicons/primeicons.css";
+@import '@fontsource-variable/inter';
+@import 'primeicons/primeicons.css';
 
 /* Layer order matters for the shared `.mp-*` classes below. Putting `mp-components`
    BEFORE `tailwind-utilities` means any Tailwind utility (e.g. `bg-primary/10`,
@@ -8,31 +8,57 @@
    the chip's `border: 1px solid …` shorthand and `background: transparent` would
    beat single-property utilities in the same layer and active states wouldn't
    show their tint. */
+/* Cascade layer order: Tailwind's base reset lowest, then PrimeNG's own `primeng` layer,
+   then our `.mp-*` component classes, then Tailwind utilities highest — so a utility stacked
+   on `.mp-chip` still wins. PrimeNG registers into `primeng` via providePrimeNG (app.config.ts).
+   Split-imported (theme+preflight into tailwind-base, utilities into tailwind-utilities) to
+   preserve that ordering under Tailwind v4. */
 @layer tailwind-base, primeng, mp-components, tailwind-utilities;
 
-@layer tailwind-base {
-  @tailwind base;
-}
+@import 'tailwindcss/theme.css' layer(tailwind-base);
+@import 'tailwindcss/preflight.css' layer(tailwind-base);
+@import 'tailwindcss/utilities.css' layer(tailwind-utilities);
 
-@layer tailwind-utilities {
-  @tailwind components;
-  @tailwind utilities;
+@plugin 'tailwindcss-primeui';
+@custom-variant dark (&:where(.mp-dark, .mp-dark *));
+
+/* Tailwind v4 defaults border-color to `currentcolor`; restore v3's gray-200 default so the
+   app's border-defined surfaces don't darken. In tailwind-base, after preflight, so it wins
+   on equal (`*`) specificity. */
+@layer tailwind-base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
 html, body { height: 100%; }
 
-/* ─── Radius scale ────────────────────────────────────────────────────────
-   One disciplined ramp instead of the 4/6/8/12/14px scatter the app grew.
-   Mirrors Tailwind's `rounded`(4) / `rounded-md`(6) / `rounded-lg`(8) so
-   templates can use those utilities and land on the same values.
-     control  4px  — inputs, buttons (matches formField.borderRadius)
-     surface  6px  — cards, panels, page-header (matches content.borderRadius)
+/* ─── Design tokens ───────────────────────────────────────────────────────
+   The canonical source for the design system, exposed as Tailwind v4 theme
+   variables so they also generate utilities (`rounded-control`, `shadow-overlay`,
+   `font-sans`) and are consumable by Spartan's helm components later.
+
+   Colour tokens are deliberately NOT here yet — the palette is still driven by
+   PrimeNG's Aura preset (@primeuix/themes) during the migration. Semantic colour
+   tokens land in Phase 2 alongside Spartan, when PrimeNG's palette is replaced.
+
+   Radius ramp — one disciplined scale instead of the 4/6/8/12/14px scatter:
+     control  4px  — inputs, buttons          surface  6px  — cards, panels
      overlay  8px  — dialogs, popovers, menus (float above, read distinct)
-   Use `rounded-md` for any hand-built surface so it tracks `p-card`. */
-:root {
-  --mp-radius-control: 4px;
-  --mp-radius-surface: 6px;
-  --mp-radius-overlay: 8px;
+   Elevation — borders define surfaces; real shadow is reserved for floats. */
+@theme {
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system,
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --radius-control: 4px;
+  --radius-surface: 6px;
+  --radius-overlay: 8px;
+
+  --shadow-overlay: 0 8px 24px -6px rgb(0 0 0 / 0.18), 0 2px 6px -2px rgb(0 0 0 / 0.12);
 }
 
 /* MyPortal brand font. Aura preset doesn't set a font-family of its own, so the
@@ -198,7 +224,7 @@ body {
   .mp-surface {
     background-color: var(--p-content-background);
     border: 1px solid var(--p-content-border-color);
-    border-radius: var(--mp-radius-surface);
+    border-radius: var(--radius-surface);
   }
 
   /* Heading type scale. Four ad-hoc heading treatments (h2.text-lg.bold,
