@@ -163,4 +163,26 @@ public class StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationS
             }
         }
     }
+
+    public async Task<bool> CodeExistsAsync(string code, Guid? excludeStaffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition("[dbo].[usp_staff_member_code_exists]",
+                new { code, excludeStaffMemberId }, transaction,
+                commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
+
+            return await conn.ExecuteScalarAsync<bool>(command);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
 }

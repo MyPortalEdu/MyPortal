@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -21,6 +23,7 @@ public class TimetableService(
     ITimetableRepository repository,
     ITimetableRunRepository runRepository,
     ITimetableMaterialisationService materialisationService,
+    IAcademicYearRepository academicYearRepository,
     IValidationService validationService,
     IUnitOfWorkFactory unitOfWorkFactory)
     : BaseService(authorizationService, logger), ITimetableService
@@ -29,6 +32,11 @@ public class TimetableService(
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
+
+        if (await academicYearRepository.GetByIdAsync(model.AcademicYearId, cancellationToken) is null)
+            throw new NotFoundException("Academic year not found.");
+
+        await EnsureDraftNameUniqueAsync(model.AcademicYearId, model.Name, cancellationToken);
 
         var entity = new Core.Entities.Timetable
         {
@@ -113,6 +121,22 @@ public class TimetableService(
 
         if (model.EffectiveTo.HasValue && model.EffectiveTo.Value < model.EffectiveFrom)
             throw new ArgumentException("EffectiveTo must be on or after EffectiveFrom.");
+
+        // A draft with no solver assignments would flip to Active with an empty schedule, silently
+        // superseding a working timetable. Require a completed solve first.
+        var assignments = await repository.ListAssignmentsAsync(timetable.Id, cancellationToken);
+        if (assignments.Count == 0)
+            throw new InvalidOperationException(
+                "Cannot apply a timetable with no assignments — run the solver first.");
+
+        // Applying supersedes the current Active timetable by capping its EffectiveTo at
+        // EffectiveFrom - 1 day. An EffectiveFrom on or before the active timetable's start would
+        // invert that window, so reject it.
+        var currentActive = (await repository.ListByAcademicYearAsync(timetable.AcademicYearId, cancellationToken))
+            .FirstOrDefault(t => t.Status == TimetableStatus.Active);
+        if (currentActive?.EffectiveFrom is { } activeFrom && model.EffectiveFrom <= activeFrom)
+            throw new ArgumentException(
+                "EffectiveFrom must be after the currently-active timetable's effective date.");
 
         // Wrap the repository status flip + Session materialisation in one transaction so
         // the timetable can never be marked Active without the corresponding Sessions, or vice
@@ -214,6 +238,20 @@ public class TimetableService(
         await repository.DeletePinAsync(pinId, cancellationToken);
 
         Logger.LogInformation("Pin removed: {pinId} from timetable {timetableId}", pinId, timetableId);
+    }
+
+    // Draft names must be unique within an academic year so users can tell timetables apart. Schools
+    // have only a handful of timetables per year, so an in-memory check over the AY list is cheap.
+    private async Task EnsureDraftNameUniqueAsync(Guid academicYearId, string name,
+        CancellationToken cancellationToken)
+    {
+        var existing = await repository.ListByAcademicYearAsync(academicYearId, cancellationToken);
+
+        if (existing.Any(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ValidationException(
+                [new ValidationFailure("Name", $"A timetable named '{name}' already exists in this academic year.")]);
+        }
     }
 
     private static TimetableSummaryResponse ToSummary(Core.Entities.Timetable t) => new()

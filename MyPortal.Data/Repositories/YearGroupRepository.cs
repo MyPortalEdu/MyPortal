@@ -62,4 +62,22 @@ public class YearGroupRepository(IDbConnectionFactory factory, IAuthorizationSer
 
         return header;
     }
+
+    public async Task<Guid?> GetAcademicYearIdAsync(Guid yearGroupId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var result = await conn.ExecuteStoredProcedureAsync<Guid?>(
+                "[dbo].[usp_year_group_get_academic_year_id]",
+                new { yearGroupId }, transaction, cancellationToken: cancellationToken);
+
+            return result.FirstOrDefault();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
+    }
 }

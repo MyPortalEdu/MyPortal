@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Data;
+using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
@@ -21,6 +24,7 @@ public class RegGroupService(
     ILogger<RegGroupService> logger,
     IUnitOfWorkFactory unitOfWorkFactory,
     IRegGroupRepository regGroupRepository,
+    IYearGroupRepository yearGroupRepository,
     IStudentGroupService studentGroupService)
     : BaseService(authorizationService, logger), IRegGroupService
 {
@@ -56,6 +60,9 @@ public class RegGroupService(
         
         return await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
+            await EnsureYearGroupInAcademicYearAsync(model.YearGroupId, model.AcademicYearId,
+                cancellationToken, uow.Transaction);
+
             var studentGroupId = await studentGroupService.CreateAsync(model.AcademicYearId, ToCore(model), model.Supervisors, cancellationToken, uow);
 
             var regGroup = new RegGroup
@@ -81,9 +88,12 @@ public class RegGroupService(
         {
             var regGroup = await GetRegGroupAsync(regGroupId, cancellationToken);
 
+            await EnsureYearGroupInAcademicYearAsync(model.YearGroupId, model.AcademicYearId,
+                cancellationToken, uow.Transaction);
+
             await studentGroupService.UpdateAsync(regGroup.StudentGroupId, ToCore(model), model.Supervisors,
                 cancellationToken, uow);
-            
+
             regGroup.RoomId = model.RoomId;
             regGroup.YearGroupId = model.YearGroupId;
             
@@ -105,6 +115,26 @@ public class RegGroupService(
         }, cancellationToken);
     }
     
+    // A reg group's year group must live in the same academic year as the reg group. Without this
+    // a reg group could reference a year group from a different (e.g. prior) academic year, which
+    // the DB FK alone can't prevent.
+    private async Task EnsureYearGroupInAcademicYearAsync(Guid yearGroupId, Guid academicYearId,
+        CancellationToken cancellationToken, IDbTransaction? transaction)
+    {
+        var yearGroupAcademicYearId = await yearGroupRepository.GetAcademicYearIdAsync(yearGroupId,
+                                          cancellationToken, transaction)
+                                      ?? throw new NotFoundException("Year group not found.");
+
+        if (yearGroupAcademicYearId != academicYearId)
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure(nameof(RegGroupUpsertRequest.YearGroupId),
+                    "The selected year group belongs to a different academic year.")
+            });
+        }
+    }
+
     private async Task<RegGroup> GetRegGroupAsync(Guid id, CancellationToken cancellationToken)
     {
         return await regGroupRepository.GetByIdAsync(id, cancellationToken)

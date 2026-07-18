@@ -37,4 +37,9 @@ public interface IStudentGroupRepository : IEntityRepository<StudentGroup>
     // StudentGroup is not soft-deletable, so callers should gate hard-delete on this.
     Task<bool> HasDownstreamDataAsync(Guid studentGroupId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null);
+
+    // True if another student group in the same academic year already uses this code.
+    // Pass excludeStudentGroupId on update so a group doesn't clash with itself.
+    Task<bool> CodeExistsAsync(Guid academicYearId, string code, Guid? excludeStudentGroupId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null);
 }

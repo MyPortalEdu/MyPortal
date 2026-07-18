@@ -20,6 +20,12 @@ public class StaffEmploymentDetailsUpsertRequestValidator
         RuleFor(x => x.NiNumber)
             .MaximumLength(9).WithMessage("The National Insurance number must not exceed 9 characters.");
 
+        // Two employment spells for the same person must not overlap. An open-ended ("current")
+        // spell has no EndDate and runs to infinity, so nothing may start on or after it.
+        RuleFor(x => x.Employments)
+            .Must(EmploymentsDoNotOverlap).WithMessage("Employment periods must not overlap.")
+            .When(x => x.Employments.Count > 1);
+
         RuleForEach(x => x.Employments).ChildRules(employment =>
         {
             employment.RuleFor(e => e.StartDate)
@@ -32,6 +38,11 @@ public class StaffEmploymentDetailsUpsertRequestValidator
 
             employment.RuleFor(e => e.Notes)
                 .MaximumLength(1024).WithMessage("Notes must not exceed 1024 characters.");
+
+            // Every contract must sit within its parent employment spell.
+            employment.RuleFor(e => e)
+                .Must(ContractsWithinEmployment)
+                .WithMessage("Each contract must fall within its employment period.");
 
             employment.RuleForEach(e => e.Contracts).ChildRules(contract =>
             {
@@ -62,5 +73,48 @@ public class StaffEmploymentDetailsUpsertRequestValidator
                     .WithMessage("The annual salary cannot be negative.");
             });
         });
+    }
+
+    private static bool EmploymentsDoNotOverlap(List<StaffEmploymentUpsertItem> employments)
+    {
+        var ordered = employments.OrderBy(e => e.StartDate).ToList();
+
+        for (var i = 1; i < ordered.Count; i++)
+        {
+            var previousEnd = ordered[i - 1].EndDate ?? DateTime.MaxValue;
+
+            if (ordered[i].StartDate <= previousEnd)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool ContractsWithinEmployment(StaffEmploymentUpsertItem employment)
+    {
+        foreach (var contract in employment.Contracts)
+        {
+            if (contract.StartDate < employment.StartDate)
+            {
+                return false;
+            }
+
+            if (employment.EndDate.HasValue)
+            {
+                if (contract.StartDate > employment.EndDate.Value)
+                {
+                    return false;
+                }
+
+                if (contract.EndDate.HasValue && contract.EndDate.Value > employment.EndDate.Value)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

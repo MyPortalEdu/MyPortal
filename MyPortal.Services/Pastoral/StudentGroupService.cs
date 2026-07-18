@@ -1,4 +1,6 @@
 using System.Data;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -50,6 +52,9 @@ public class StudentGroupService(
             await EnsureAcademicYearNotLockedAsync(academicYearId, "created", cancellationToken,
                 ownedUow.Transaction);
 
+            await EnsureCodeUniqueAsync(academicYearId, core.Code, excludeStudentGroupId: null,
+                cancellationToken, ownedUow.Transaction);
+
             var studentGroup = new StudentGroup
             {
                 Id = SqlConvention.SequentialGuid(),
@@ -87,6 +92,9 @@ public class StudentGroupService(
 
             await EnsureAcademicYearNotLockedAsync(studentGroup.AcademicYearId, "edited",
                 cancellationToken, ownedUow.Transaction);
+
+            await EnsureCodeUniqueAsync(studentGroup.AcademicYearId, core.Code,
+                excludeStudentGroupId: studentGroupId, cancellationToken, ownedUow.Transaction);
 
             // StudentGroup.MainSupervisorId -> StudentGroupSupervisor.Id is a circular FK with
             // StudentGroupSupervisor.StudentGroupId -> StudentGroup.Id. Null the back-reference
@@ -171,6 +179,23 @@ public class StudentGroupService(
         }
     }
 
+    // Codes must be unique per academic year across the whole pastoral hierarchy (houses,
+    // year groups and reg groups share the StudentGroups table). The DB has no unique index,
+    // so guard here and surface a friendly error instead of a duplicate row.
+    private async Task EnsureCodeUniqueAsync(Guid academicYearId, string code, Guid? excludeStudentGroupId,
+        CancellationToken cancellationToken, IDbTransaction? transaction)
+    {
+        if (await studentGroupRepository.CodeExistsAsync(academicYearId, code, excludeStudentGroupId,
+                cancellationToken, transaction))
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure("Code",
+                    $"A group with code '{code}' already exists in this academic year.")
+            });
+        }
+    }
+
     private async Task<StudentGroup> GetOrThrowAsync(Guid studentGroupId,
         CancellationToken cancellationToken, IDbTransaction? transaction)
     {
@@ -188,6 +213,17 @@ public class StudentGroupService(
         if (supervisorModels.Count(s => s.MainSupervisor) > 1)
         {
             throw new InvalidOperationException("Only one supervisor can be flagged as the main supervisor.");
+        }
+
+        // The (StudentGroupId, SupervisorId) pair has no unique constraint, so a repeated staff
+        // member would create duplicate supervisor rows. Reject it up front.
+        if (supervisorModels.GroupBy(s => s.StaffMemberId).Any(g => g.Count() > 1))
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure("Supervisors",
+                    "A staff member cannot be added as a supervisor more than once.")
+            });
         }
 
         var existing = await studentGroupSupervisorRepository.GetByStudentGroupAsync(studentGroupId,

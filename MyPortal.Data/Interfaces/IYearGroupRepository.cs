@@ -1,3 +1,4 @@
+using System.Data;
 using MyPortal.Contracts.Models.Pastoral;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces.Base;
@@ -21,4 +22,9 @@ public interface IYearGroupRepository : IEntityRepository<YearGroup>
     // YearGroupDetailsResponse.
     Task<YearGroupDetailsResponse?> GetDetailsByIdAsync(Guid yearGroupId,
         CancellationToken cancellationToken);
+
+    // The academic year the year group belongs to (via its backing StudentGroup), or null
+    // when the year group doesn't exist.
+    Task<Guid?> GetAcademicYearIdAsync(Guid yearGroupId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null);
 }

@@ -106,6 +106,8 @@ public class AcademicYearService(
         {
             await EnsureNoOverlapAsync(excludeAcademicYearId: null, model, uow.Transaction, cancellationToken);
 
+            await EnsureCopyFromAcademicYearsExistAsync(model, uow.Transaction, cancellationToken);
+
             var academicYearId = SqlConvention.SequentialGuid();
 
             var academicYear = new AcademicYear
@@ -128,6 +130,27 @@ public class AcademicYearService(
 
             return academicYear.Id;
         }, cancellationToken);
+    }
+
+    // The copy-from ids point at existing academic years to clone periods / pastoral structure from.
+    // A stale or wrong id would otherwise silently clone nothing (leaving the new year unschedulable),
+    // so reject it up front with a clear error.
+    private async Task EnsureCopyFromAcademicYearsExistAsync(AcademicYearUpsertRequest model,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        if (model.CopyPeriodsFromAcademicYearId.HasValue
+            && await academicYearRepository.GetByIdAsync(model.CopyPeriodsFromAcademicYearId.Value,
+                cancellationToken, transaction) is null)
+        {
+            throw new NotFoundException("The academic year to copy attendance periods from was not found.");
+        }
+
+        if (model.CopyPastoralStructureFromAcademicYearId.HasValue
+            && await academicYearRepository.GetByIdAsync(model.CopyPastoralStructureFromAcademicYearId.Value,
+                cancellationToken, transaction) is null)
+        {
+            throw new NotFoundException("The academic year to copy pastoral structure from was not found.");
+        }
     }
 
     private async Task EnsureNoOverlapAsync(Guid? excludeAcademicYearId, AcademicYearUpsertRequest model,

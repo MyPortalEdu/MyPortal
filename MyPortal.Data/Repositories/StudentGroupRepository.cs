@@ -76,4 +76,23 @@ public class StudentGroupRepository(IDbConnectionFactory factory, IAuthorization
             if (owns) conn.Dispose();
         }
     }
+
+    public async Task<bool> CodeExistsAsync(Guid academicYearId, string code, Guid? excludeStudentGroupId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var result = await conn.ExecuteStoredProcedureAsync<bool>(
+                "[dbo].[usp_student_group_code_exists]",
+                new { academicYearId, code, excludeStudentGroupId }, transaction,
+                cancellationToken: cancellationToken);
+
+            return result.FirstOrDefault();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
+    }
 }

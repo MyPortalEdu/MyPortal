@@ -1,3 +1,4 @@
+using System.Data;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
@@ -137,6 +138,8 @@ public class StaffMemberService(
 
         await unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
         {
+            await EnsureCodeUniqueAsync(model.Code, excludeStaffMemberId: id, cancellationToken,
+                ownedUow.Transaction);
             await personService.UpdateBasicBioAsync(staffMember.PersonId, bio, cancellationToken, ownedUow);
             await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, ownedUow.Transaction);
         }, cancellationToken);
@@ -187,6 +190,9 @@ public class StaffMemberService(
 
         return await unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async ownedUow =>
         {
+            await EnsureCodeUniqueAsync(model.Code, excludeStaffMemberId: null, cancellationToken,
+                ownedUow.Transaction);
+
             // Person row + its directory first; the staff row hangs off the new person, both in
             // one transaction.
             var bio = new PersonBasicBio(
@@ -269,6 +275,9 @@ public class StaffMemberService(
 
         return await unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async ownedUow =>
         {
+            await EnsureCodeUniqueAsync(model.Code, excludeStaffMemberId: null, cancellationToken,
+                ownedUow.Transaction);
+
             // Only the StaffMember row is created — the Person (and its bio + directory) already
             // exists. All other staff fields stay at entity defaults, populated post-creation via
             // their area PUTs.
@@ -283,6 +292,24 @@ public class StaffMemberService(
 
             return staffMemberId;
         }, cancellationToken);
+    }
+
+    // Staff codes must be unique across the school. The DB has no unique index, so guard here and
+    // surface a friendly error. Pass excludeStaffMemberId on update so a member doesn't clash with
+    // itself. A blank code (where the schema allows it) is left to the field-level validator.
+    private async Task EnsureCodeUniqueAsync(string code, Guid? excludeStaffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return;
+        }
+
+        if (await staffMemberRepository.CodeExistsAsync(code, excludeStaffMemberId, cancellationToken, transaction))
+        {
+            throw new ValidationException(
+                [new ValidationFailure("Code", $"Staff code '{code}' is already in use.")]);
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
