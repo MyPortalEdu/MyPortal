@@ -202,7 +202,7 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     this.canEdit()
       ? [{
           label: this.transloco.translate('school-details.save'),
-          icon: 'fa-solid fa-floppy-disk',
+          icon: 'fa-solid fa-check',
           disabled: !this.isValid() || !this.isDirty(),
           loading: this.saving(),
           command: () => this.save(),

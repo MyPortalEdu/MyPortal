@@ -18,6 +18,7 @@ using QueryKit.Repositories.Sorting;
 using QueryKit.Sql;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces.System;
+using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.System;
 
@@ -26,6 +27,7 @@ public class UserService(
     ILogger<UserService> logger,
     IUserRepository userRepository,
     IPermissionRepository permissionRepository,
+    IRolePermissionRepository rolePermissionRepository,
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
     IValidationService validationService,
@@ -100,6 +102,13 @@ public class UserService(
             throw new NotFoundException("User not found.");
         }
 
+        if (user.IsSystem)
+        {
+            throw new SystemEntityException("System users' passwords cannot be reset here.");
+        }
+
+        await EnsureActorOutranksTargetAsync(userId, cancellationToken);
+
         // Reset via a generated token so the new hash replaces the old in a single store
         // operation. The previous remove-then-add could leave a user without a password if
         // the second step failed (e.g. complexity rejection).
@@ -159,7 +168,7 @@ public class UserService(
             return (result, Guid.Empty);
         }
 
-        await UpdateUserRoles(newUser, WithDefaultRole(model.UserType, model.RoleIds));
+        await UpdateUserRoles(newUser, WithDefaultRole(model.UserType, model.RoleIds), cancellationToken);
 
         tx.Complete();
 
@@ -188,6 +197,22 @@ public class UserService(
         bool userDisabled = user.IsEnabled && !model.IsEnabled;
         bool userTypeChanged = user.UserType != model.UserType;
 
+        // Self-lockout guard: an actor must not be able to lock themselves out in a single edit.
+        if (AuthorizationService.GetCurrentUserId() == userId)
+        {
+            if (userDisabled)
+            {
+                throw new ForbiddenException("You cannot disable your own account.");
+            }
+
+            if (userTypeChanged)
+            {
+                throw new ForbiddenException("You cannot change your own portal.");
+            }
+        }
+
+        await EnsureAdminNotLockedOutAsync(user, model, cancellationToken);
+
         user.PersonId = model.PersonId;
         user.IsEnabled = model.IsEnabled;
         user.UserType = model.UserType;
@@ -200,7 +225,7 @@ public class UserService(
 
         using var tx = CreateTransactionScope();
 
-        var rolesChanged = await UpdateUserRoles(user, WithDefaultRole(model.UserType, model.RoleIds));
+        var rolesChanged = await UpdateUserRoles(user, WithDefaultRole(model.UserType, model.RoleIds), cancellationToken);
 
         IdentityResult result;
         // Rotate the security stamp on any privilege-relevant change. Without this, an active
@@ -241,6 +266,13 @@ public class UserService(
             throw new SystemEntityException("System users cannot be deleted.");
         }
 
+        if (AuthorizationService.GetCurrentUserId() == userId)
+        {
+            throw new ForbiddenException("You cannot delete your own account.");
+        }
+
+        await EnsureNotLastEnabledAdminAsync(userId, cancellationToken);
+
         var result = await userManager.DeleteAsync(user);
 
         if (result.Succeeded)
@@ -270,13 +302,17 @@ public class UserService(
         return roleIds.Append(defaultRoleId.Value).ToList();
     }
 
-    private async Task<bool> UpdateUserRoles(ApplicationUser user, IList<Guid> roleIds)
+    private async Task<bool> UpdateUserRoles(ApplicationUser user, IList<Guid> roleIds, CancellationToken cancellationToken)
     {
         var changesMade = false;
 
         var currentRoleNames = await userManager.GetRolesAsync(user);
 
         var newRoleNames = new List<string>();
+
+        var actorPermissions = await AuthorizationService.GetPermissionsAsync(cancellationToken);
+        var permissionsById = (await permissionRepository.GetListAsync(cancellationToken: cancellationToken))
+            .ToDictionary(p => p.Id);
 
         foreach (var roleId in roleIds)
         {
@@ -308,6 +344,10 @@ public class UserService(
                 continue;
             }
 
+            // Only a newly-added role can escalate: verify the actor holds every permission it grants
+            // before assigning it. Removing/keeping an existing role isn't an escalation and is exempt.
+            await EnsureActorCanAssignRoleAsync(role, actorPermissions, permissionsById, cancellationToken);
+
             await userManager.AddToRoleAsync(user, role.Name);
             changesMade = true;
         }
@@ -324,5 +364,112 @@ public class UserService(
         }
 
         return changesMade;
+    }
+
+    // A staff role may only be assigned by an actor who holds every *administrative* permission it grants
+    // — otherwise a user with EditUsers could assign a high-privilege role (e.g. System Administrator) to
+    // a staff user or to themselves and escalate. Ordinary functional permissions are not gated, so
+    // provisioning works under least privilege: IT support who cannot take a register can still assign
+    // the Teacher role. Student/Parent roles are exempt (a user is only assigned roles of their portal).
+    private async Task EnsureActorCanAssignRoleAsync(ApplicationRole role, IReadOnlySet<string> actorPermissions,
+        IReadOnlyDictionary<Guid, Permission> permissionsById, CancellationToken cancellationToken)
+    {
+        if (role.UserType != UserType.Staff)
+        {
+            return;
+        }
+
+        var rolePermissions = await rolePermissionRepository.GetByRoleIdAsync(role.Id, cancellationToken);
+
+        var beyondActor = rolePermissions
+            .Where(rp => permissionsById.TryGetValue(rp.PermissionId, out var p)
+                         && Permissions.IsProtected(p.Name)
+                         && !actorPermissions.Contains(p.Name))
+            .Select(rp => permissionsById[rp.PermissionId].FriendlyName)
+            .ToList();
+
+        if (beyondActor.Count > 0)
+        {
+            throw new ForbiddenException(
+                $"You cannot assign the '{role.Name}' role because it grants administrative permissions you do not hold: {string.Join(", ", beyondActor)}.");
+        }
+    }
+
+    // Stops an admin with EditUsers from managing (e.g. resetting the password of) a user who holds
+    // *administrative* permissions the actor lacks — which would be a takeover of a more-privileged
+    // account. Scoped to administrative permissions so routine support (e.g. resetting a teacher's
+    // password) still works. Acting on yourself is always allowed (you never outrank yourself).
+    private async Task EnsureActorOutranksTargetAsync(Guid targetUserId, CancellationToken cancellationToken)
+    {
+        if (AuthorizationService.GetCurrentUserId() == targetUserId)
+        {
+            return;
+        }
+
+        var actorPermissions = await AuthorizationService.GetPermissionsAsync(cancellationToken);
+        var targetPermissions = await permissionRepository.GetPermissionsByUserIdAsync(targetUserId, cancellationToken);
+
+        if (targetPermissions.Any(p => Permissions.IsProtected(p.Name) && !actorPermissions.Contains(p.Name)))
+        {
+            throw new ForbiddenException("You cannot manage a user who holds administrative permissions beyond your own.");
+        }
+    }
+
+    // Blocks any edit that would strip the last enabled System Administrator of that status — disabling
+    // them, moving them to another portal, or removing the admin role — which would lock the school out
+    // of all system administration irrecoverably.
+    private async Task EnsureAdminNotLockedOutAsync(ApplicationUser user, UserUpdateRequest model,
+        CancellationToken cancellationToken)
+    {
+        var adminRole = await roleManager.FindByNameAsync(SystemRoles.SystemAdministratorRoleName);
+
+        if (adminRole is null)
+        {
+            return;
+        }
+
+        var admins = await userManager.GetUsersInRoleAsync(SystemRoles.SystemAdministratorRoleName);
+
+        if (!admins.Any(a => a.Id == user.Id && a.IsEnabled))
+        {
+            // Target isn't currently an enabled admin, so this edit can't remove the last one.
+            return;
+        }
+
+        var remainsEnabledAdmin = model.IsEnabled
+                                  && model.UserType == UserType.Staff
+                                  && model.RoleIds.Contains(adminRole.Id);
+
+        if (remainsEnabledAdmin || admins.Any(a => a.Id != user.Id && a.IsEnabled))
+        {
+            return;
+        }
+
+        throw new ValidationException(new[]
+        {
+            new ValidationFailure(nameof(UserUpdateRequest.RoleIds),
+                "This is the last enabled System Administrator; enable, re-assign, or promote another administrator first.")
+        });
+    }
+
+    // Delete-time counterpart to EnsureAdminNotLockedOutAsync: a delete always removes the target from
+    // the admin pool, so block it when they're the last enabled System Administrator.
+    private async Task EnsureNotLastEnabledAdminAsync(Guid targetUserId, CancellationToken cancellationToken)
+    {
+        var admins = await userManager.GetUsersInRoleAsync(SystemRoles.SystemAdministratorRoleName);
+
+        if (!admins.Any(a => a.Id == targetUserId && a.IsEnabled))
+        {
+            return;
+        }
+
+        if (!admins.Any(a => a.Id != targetUserId && a.IsEnabled))
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure(nameof(UserUpdateRequest.RoleIds),
+                    "You cannot delete the last enabled System Administrator.")
+            });
+        }
     }
 }

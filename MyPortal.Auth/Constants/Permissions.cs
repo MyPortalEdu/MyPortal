@@ -249,4 +249,13 @@ public static class Permissions
         // public const string StaffSettings      = "System.StaffSettings";
         // public const string SenSettings        = "System.SenSettings";
     }
+
+    // Administrative permissions that confer control over the access system itself (user/role/permission
+    // management and system configuration). The privilege-escalation ceiling only gates THESE: an actor
+    // may freely provision ordinary functional permissions they don't personally hold (e.g. IT support
+    // assigning "take the register" to a teacher), but may not grant or assign administrative control
+    // beyond their own. Segregation of duties for sensitive *functional* permissions (finance,
+    // safeguarding, restricted attendance codes) is a separate concern, not enforced here.
+    public static bool IsProtected(string permissionName) =>
+        permissionName.StartsWith("System.", StringComparison.OrdinalIgnoreCase);
 }

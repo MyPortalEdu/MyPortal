@@ -14,7 +14,11 @@ using MyPortal.Services.Interfaces;
 using MyPortal.Services.System;
 using MyPortal.Tests.Mocks;
 using Task = System.Threading.Tasks.Task;
+using System.Data;
+using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using QueryKit.Repositories.Filtering;
+using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Tests.ServiceTests;
 
@@ -25,6 +29,7 @@ public class UserServiceTests
     private Mock<ILogger<UserService>> _logger;
     private Mock<IUserRepository> _userRepository;
     private Mock<IPermissionRepository> _permissionRepository;
+    private Mock<IRolePermissionRepository> _rolePermissionRepository;
     private Mock<UserManager<ApplicationUser>> _userManager;
     private Mock<RoleManager<ApplicationRole>> _roleManager;
     private Mock<IValidationService> _validationService;
@@ -39,6 +44,7 @@ public class UserServiceTests
         _logger = new Mock<ILogger<UserService>>(MockBehavior.Strict);
         _userRepository = new Mock<IUserRepository>(MockBehavior.Strict);
         _permissionRepository = new Mock<IPermissionRepository>(MockBehavior.Strict);
+        _rolePermissionRepository = new Mock<IRolePermissionRepository>(MockBehavior.Strict);
         _userManager = IdentityMocks.MockUserManager<ApplicationUser>();
         _roleManager = IdentityMocks.MockRoleManager<ApplicationRole>();
         _validationService = new Mock<IValidationService>(MockBehavior.Strict);
@@ -64,11 +70,36 @@ public class UserServiceTests
             .Setup(v => v.ValidateAsync(It.IsAny<UserUpdateRequest>()))
             .Returns(Task.CompletedTask);
 
+        // Defaults for the privilege-guard paths. The actor holds no permissions and there is no admin
+        // role by default, so the ceiling/outrank/last-admin guards are no-ops. Tests that exercise a
+        // specific guard override the relevant setup.
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+
+        _permissionRepository
+            .Setup(p => p.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>());
+
+        _permissionRepository
+            .Setup(p => p.GetPermissionsByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<PermissionResponse>());
+
+        _rolePermissionRepository
+            .Setup(r => r.GetByRoleIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission>());
+
+        _roleManager
+            .Setup(r => r.FindByNameAsync(SystemRoles.SystemAdministratorRoleName))
+            .ReturnsAsync((ApplicationRole?)null);
+
         _userService = new UserService(
             _authorizationService.Object,
             _logger.Object,
             _userRepository.Object,
             _permissionRepository.Object,
+            _rolePermissionRepository.Object,
             _userManager.Object,
             _roleManager.Object,
             _validationService.Object,
@@ -544,5 +575,187 @@ public class UserServiceTests
             Username = "pupil", Email = "p@test.com", Password = "pw", IsEnabled = true,
             UserType = UserType.Student, RoleIds = new List<Guid> { staffRoleId }
         }, CancellationToken.None), Throws.TypeOf<ValidationException>());
+    }
+
+    [Test]
+    public void SetPasswordAsync_Throws_SystemEntity_WhenTargetIsSystem()
+    {
+        var user = new ApplicationUser { Id = Guid.NewGuid(), IsSystem = true };
+        _userManager.Setup(m => m.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
+
+        Assert.That(async () => await _userService.SetPasswordAsync(user.Id,
+                new UserSetPasswordRequest { Password = "X" }, CancellationToken.None),
+            Throws.TypeOf<SystemEntityException>());
+
+        _userManager.Verify(m => m.ResetPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never);
+    }
+
+    [Test]
+    public void SetPasswordAsync_Forbidden_WhenTargetOutranksActor()
+    {
+        // Default actor id (from Setup) differs from the target, so the outrank guard runs.
+        var user = new ApplicationUser { Id = Guid.NewGuid() };
+        _userManager.Setup(m => m.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
+
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System.ViewUsers" });
+
+        // Target holds an administrative permission the actor does not — resetting their password is takeover.
+        _permissionRepository
+            .Setup(p => p.GetPermissionsByUserIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new PermissionResponse { Name = "System.EditRoles", FriendlyName = "Edit Roles", Area = "System.Users" } });
+
+        Assert.That(async () => await _userService.SetPasswordAsync(user.Id,
+                new UserSetPasswordRequest { Password = "X" }, CancellationToken.None),
+            Throws.TypeOf<ForbiddenException>());
+
+        _userManager.Verify(m => m.ResetPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never);
+    }
+
+    [Test]
+    public async Task SetPasswordAsync_Allows_WhenTargetHoldsOnlyFunctionalPermissions()
+    {
+        // IT support (no functional permissions of their own) resetting a teacher's password must work:
+        // the teacher holds only functional permissions, no administrative ones beyond the actor.
+        var user = new ApplicationUser { Id = Guid.NewGuid() };
+        _userManager.Setup(m => m.FindByIdAsync(user.Id.ToString())).ReturnsAsync(user);
+        _userManager.Setup(m => m.GeneratePasswordResetTokenAsync(user)).ReturnsAsync("reset-token");
+        _userManager.Setup(m => m.ResetPasswordAsync(user, "reset-token", "X")).ReturnsAsync(IdentityResult.Success);
+
+        _permissionRepository
+            .Setup(p => p.GetPermissionsByUserIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PermissionResponse { Name = "Attendance.EditAttendanceMarks", FriendlyName = "Take Register", Area = "Attendance.Marks" }
+            });
+
+        var res = await _userService.SetPasswordAsync(user.Id,
+            new UserSetPasswordRequest { Password = "X" }, CancellationToken.None);
+
+        Assert.That(res.Succeeded, Is.True);
+    }
+
+    [Test]
+    public void DeleteAsync_Forbidden_WhenDeletingSelf()
+    {
+        var id = Guid.NewGuid();
+        _authorizationService.Setup(a => a.GetCurrentUserId()).Returns(id);
+
+        var user = new ApplicationUser { Id = id };
+        _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
+
+        Assert.That(async () => await _userService.DeleteAsync(id, CancellationToken.None),
+            Throws.TypeOf<ForbiddenException>());
+
+        _userManager.Verify(m => m.DeleteAsync(It.IsAny<ApplicationUser>()), Times.Never);
+    }
+
+    [Test]
+    public void UpdateAsync_Forbidden_WhenDisablingSelf()
+    {
+        var id = Guid.NewGuid();
+        _authorizationService.Setup(a => a.GetCurrentUserId()).Returns(id);
+
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Staff };
+        _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
+
+        Assert.That(async () => await _userService.UpdateAsync(id, new UserUpdateRequest
+        {
+            Username = "me", PersonId = Guid.NewGuid(), UserType = UserType.Staff,
+            IsEnabled = false, RoleIds = new List<Guid>()
+        }, CancellationToken.None), Throws.TypeOf<ForbiddenException>());
+
+        _userManager.Verify(m => m.UpdateAsync(It.IsAny<ApplicationUser>()), Times.Never);
+    }
+
+    [Test]
+    public void DeleteAsync_Throws_WhenTargetIsLastEnabledAdmin()
+    {
+        // Actor (default id from Setup) differs from the target, so the self-guard is bypassed and the
+        // last-admin guard is what fires.
+        var admin = new ApplicationUser { Id = Guid.NewGuid(), IsEnabled = true };
+        _userManager.Setup(m => m.FindByIdAsync(admin.Id.ToString())).ReturnsAsync(admin);
+        _userManager.Setup(m => m.GetUsersInRoleAsync(SystemRoles.SystemAdministratorRoleName))
+            .ReturnsAsync(new List<ApplicationUser> { admin });
+
+        Assert.That(async () => await _userService.DeleteAsync(admin.Id, CancellationToken.None),
+            Throws.TypeOf<ValidationException>());
+
+        _userManager.Verify(m => m.DeleteAsync(It.IsAny<ApplicationUser>()), Times.Never);
+    }
+
+    [Test]
+    public void CreateAsync_Forbidden_WhenAssigningRoleWithAdminPermissionAboveActor()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Admin", UserType = UserType.Staff };
+        var permId = Guid.NewGuid();
+
+        _userManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), "pw")).ReturnsAsync(IdentityResult.Success);
+        _userManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(Array.Empty<string>());
+        _roleManager.Setup(r => r.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System.EditUsers" });
+        _permissionRepository
+            .Setup(p => p.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = permId, Name = "System.EditRoles", FriendlyName = "Edit Roles", UserType = UserType.Staff }
+            });
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission> { new() { PermissionId = permId } });
+
+        Assert.That(async () => await _userService.CreateAsync(new UserUpsertRequest
+        {
+            Username = "staff", Email = "s@test.com", Password = "pw", IsEnabled = true,
+            UserType = UserType.Staff, PersonId = Guid.NewGuid(), RoleIds = new List<Guid> { roleId }
+        }, CancellationToken.None), Throws.TypeOf<ForbiddenException>());
+
+        _userManager.Verify(m => m.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Test]
+    public async Task CreateAsync_Allows_AssigningFunctionalRoleActorLacks()
+    {
+        // The core least-privilege case: IT support (holds only System.EditUsers, cannot take a register)
+        // provisions a teacher account whose role grants the register permission. Must succeed.
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Teacher", UserType = UserType.Staff };
+        var permId = Guid.NewGuid();
+
+        _userManager.Setup(m => m.CreateAsync(It.IsAny<ApplicationUser>(), "pw")).ReturnsAsync(IdentityResult.Success);
+        _userManager.Setup(m => m.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync(Array.Empty<string>());
+        _userManager.Setup(m => m.AddToRoleAsync(It.IsAny<ApplicationUser>(), "Teacher")).ReturnsAsync(IdentityResult.Success);
+        _userManager.Setup(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
+        _roleManager.Setup(r => r.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System.EditUsers" });
+        _permissionRepository
+            .Setup(p => p.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = permId, Name = "Attendance.EditAttendanceMarks", FriendlyName = "Take Register", UserType = UserType.Staff }
+            });
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission> { new() { PermissionId = permId } });
+
+        var result = await _userService.CreateAsync(new UserUpsertRequest
+        {
+            Username = "teacher", Email = "t@test.com", Password = "pw", IsEnabled = true,
+            UserType = UserType.Staff, PersonId = Guid.NewGuid(), RoleIds = new List<Guid> { roleId }
+        }, CancellationToken.None);
+
+        Assert.That(result.Result.Succeeded, Is.True);
+        _userManager.Verify(m => m.AddToRoleAsync(It.IsAny<ApplicationUser>(), "Teacher"), Times.Once);
     }
 }

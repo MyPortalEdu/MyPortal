@@ -50,6 +50,11 @@ public class RoleServiceTests
             .Setup(a => a.RequirePermissionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
+        // Default: actor holds no permissions. Tests that exercise the grant-ceiling guard override this.
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+
         _validationService
             .Setup(v => v.ValidateAsync(It.IsAny<RoleUpsertRequest>()))
             .Returns(Task.CompletedTask);
@@ -344,5 +349,73 @@ public class RoleServiceTests
             UserType = UserType.Student,
             PermissionIds = new List<Guid> { staffPermId }
         }, CancellationToken.None), Throws.TypeOf<ValidationException>());
+    }
+
+    [Test]
+    public void UpdateAsync_Forbidden_WhenGrantingAdminPermissionActorDoesNotHold()
+    {
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Teacher", UserType = UserType.Staff };
+        var permId = Guid.NewGuid();
+
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+        _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
+
+        // An administrative (System.*) permission the actor does not hold — granting it would escalate.
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = permId, Name = "System.EditRoles", FriendlyName = "Edit Roles", Area = "System.Users", UserType = UserType.Staff }
+            });
+
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System.ViewUsers" });
+
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest
+        {
+            Name = "Teacher",
+            UserType = UserType.Staff,
+            PermissionIds = new List<Guid> { permId }
+        }, CancellationToken.None), Throws.TypeOf<ForbiddenException>());
+    }
+
+    [Test]
+    public async Task UpdateAsync_Allows_GrantingFunctionalPermissionActorDoesNotHold()
+    {
+        // Least-privilege delegation: an admin who cannot take a register can still grant that functional
+        // permission to a role. Actor holds no permissions at all (default setup).
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Teacher", UserType = UserType.Staff };
+        var permId = Guid.NewGuid();
+
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+        _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = permId, Name = "Attendance.EditAttendanceMarks", FriendlyName = "Take Register", Area = "Attendance.Marks", UserType = UserType.Staff }
+            });
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission>());
+        _rolePermissionRepository
+            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
+
+        var result = await _roleService.UpdateAsync(roleId, new RoleUpsertRequest
+        {
+            Name = "Teacher",
+            UserType = UserType.Staff,
+            PermissionIds = new List<Guid> { permId }
+        }, CancellationToken.None);
+
+        Assert.That(result.Succeeded, Is.True);
+        _rolePermissionRepository.Verify(r => r.InsertAsync(
+            It.Is<RolePermission>(rp => rp.PermissionId == permId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()),
+            Times.Once);
     }
 }

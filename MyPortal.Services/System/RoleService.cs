@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Auth.Models;
+using MyPortal.Common.Enums;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Core.Entities;
@@ -179,6 +180,7 @@ namespace MyPortal.Services.System
         private async Task<bool> UpdateRolePermissionsAsync(ApplicationRole role, IList<Guid> permissionIds, CancellationToken cancellationToken)
         {
             await EnsurePermissionsMatchRoleAudienceAsync(role, permissionIds, cancellationToken);
+            await EnsureActorCanGrantPermissionsAsync(role, permissionIds, cancellationToken);
 
             bool changesMade = false;
 
@@ -246,6 +248,38 @@ namespace MyPortal.Services.System
                     new ValidationFailure(nameof(RoleUpsertRequest.PermissionIds),
                         $"One or more permissions do not belong to the {role.UserType} portal and cannot be assigned to this role.")
                 });
+            }
+        }
+
+        // An actor may only grant a Staff role *administrative* permissions they themselves hold —
+        // otherwise a user with EditRoles could mint a role carrying access-control power above their own
+        // and escalate by assigning it (to a staff user, or to themselves). Ordinary functional
+        // permissions are not gated, so account provisioning (e.g. granting a Teacher role its
+        // register/marks permissions) works regardless of what the actor personally holds. Student/Parent
+        // roles are exempt (cross-portal), and SysAdmin holds every permission so it is unaffected.
+        private async Task EnsureActorCanGrantPermissionsAsync(ApplicationRole role, IList<Guid> permissionIds,
+            CancellationToken cancellationToken)
+        {
+            if (role.UserType != UserType.Staff || permissionIds.Count == 0)
+            {
+                return;
+            }
+
+            var actorPermissions = await AuthorizationService.GetPermissionsAsync(cancellationToken);
+            var permissions = await permissionRepository.GetListAsync(cancellationToken: cancellationToken);
+            var byId = permissions.ToDictionary(p => p.Id);
+
+            var beyondActor = permissionIds
+                .Where(id => byId.TryGetValue(id, out var p)
+                             && Permissions.IsProtected(p.Name)
+                             && !actorPermissions.Contains(p.Name))
+                .Select(id => byId[id].FriendlyName)
+                .ToList();
+
+            if (beyondActor.Count > 0)
+            {
+                throw new ForbiddenException(
+                    $"You cannot grant administrative permissions you do not hold yourself: {string.Join(", ", beyondActor)}.");
             }
         }
     }

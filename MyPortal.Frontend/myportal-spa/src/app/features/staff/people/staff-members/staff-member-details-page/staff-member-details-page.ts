@@ -472,7 +472,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         },
         {
           label: this.transloco.translate('common.save'),
-          icon: 'fa-solid fa-floppy-disk',
+          icon: 'fa-solid fa-check',
           severity: 'primary',
           disabled: !edit.dirty || (!edit.valid && !edit.explainsInvalid),
           loading: edit.saving,
