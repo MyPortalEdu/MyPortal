@@ -1,13 +1,6 @@
 @import '@fontsource-variable/inter';
 @import 'primeicons/primeicons.css';
 
-/* Layer order matters for the shared `.mp-*` classes below. Putting `mp-components`
-   BEFORE `tailwind-utilities` means any Tailwind utility (e.g. `bg-primary/10`,
-   `border-primary/40`, `text-primary`) stacked on top of `.mp-chip` overrides the
-   chip's defaults, regardless of source order within the file. Without this split
-   the chip's `border: 1px solid …` shorthand and `background: transparent` would
-   beat single-property utilities in the same layer and active states wouldn't
-   show their tint. */
 /* Cascade layer order: Tailwind's base reset lowest, then PrimeNG's own `primeng` layer,
    then our `.mp-*` component classes, then Tailwind utilities highest — so a utility stacked
    on `.mp-chip` still wins. PrimeNG registers into `primeng` via providePrimeNG (app.config.ts).
@@ -18,6 +11,10 @@
 @import 'tailwindcss/theme.css' layer(tailwind-base);
 @import 'tailwindcss/preflight.css' layer(tailwind-base);
 @import 'tailwindcss/utilities.css' layer(tailwind-utilities);
+
+/* Tailwind auto-detects sources under the app's own tree; point it at the design-system
+   library too so `libs/ui` component classes are generated. */
+@source '../libs/ui/src';
 
 @plugin 'tailwindcss-primeui';
 @custom-variant dark (&:where(.mp-dark, .mp-dark *));
@@ -42,9 +39,10 @@ html, body { height: 100%; }
    variables so they also generate utilities (`rounded-control`, `shadow-overlay`,
    `font-sans`) and are consumable by Spartan's helm components later.
 
-   Colour tokens are deliberately NOT here yet — the palette is still driven by
-   PrimeNG's Aura preset (@primeuix/themes) during the migration. Semantic colour
-   tokens land in Phase 2 alongside Spartan, when PrimeNG's palette is replaced.
+   Semantic colour tokens follow (shadcn/Spartan convention: --background, --primary,
+   --border, …) — the palette libs/ui components render against. During the migration these
+   coexist with PrimeNG's own --p-* palette (Aura); as screens move to libs/ui, --p-* usage
+   drains away and these become the single source of truth.
 
    Radius ramp — one disciplined scale instead of the 4/6/8/12/14px scatter:
      control  4px  — inputs, buttons          surface  6px  — cards, panels
@@ -59,6 +57,65 @@ html, body { height: 100%; }
   --radius-overlay: 8px;
 
   --shadow-overlay: 0 8px 24px -6px rgb(0 0 0 / 0.18), 0 2px 6px -2px rgb(0 0 0 / 0.12);
+}
+
+/* Semantic colour palette (shadcn/Spartan convention). Light in :root, dark under .mp-dark
+   (the app's dark selector, see @custom-variant above). Values are the neutral/slate base
+   with a blue primary — refined against the PrimeNG look as screens migrate. */
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #f8fafc;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #dc2626;
+  --destructive-foreground: #f8fafc;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #2563eb;
+}
+
+.mp-dark {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --primary: #3b82f6;
+  --primary-foreground: #0b1120;
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #e2e8f0;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #3b82f6;
+}
+
+/* Expose the palette as Tailwind colour utilities (bg-background, text-foreground, bg-primary…).
+   `inline` so the utilities reference the vars directly and thus flip with .mp-dark at runtime. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
 /* MyPortal brand font. Aura preset doesn't set a font-family of its own, so the

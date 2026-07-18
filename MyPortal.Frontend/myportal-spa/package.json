@@ -24,6 +24,7 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "^21.2.18",
+    "@angular/cdk": "^21.2.14",
     "@angular/common": "^21.2.18",
     "@angular/compiler": "^21.2.18",
     "@angular/core": "^21.2.18",
@@ -37,9 +38,13 @@
     "@fullcalendar/timegrid": "^6.1.21",
     "@jsverse/transloco": "^8.3.0",
     "@primeuix/themes": "^3.0.0",
+    "@spartan-ng/brain": "^1.1.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.9",
     "rxjs": "~7.8.0",
+    "tailwind-merge": "^3.6.0",
     "tailwindcss-primeui": "^0.6.1",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
