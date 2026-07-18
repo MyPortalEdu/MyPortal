@@ -7,6 +7,7 @@ using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models.School;
 using MyPortal.Services.Interfaces.School;
+using MyPortal.WebApi.Infrastructure.Attributes;
 
 namespace MyPortal.WebApi.Controllers;
 
@@ -49,6 +50,7 @@ public class SchoolsController(
     /// </summary>
     /// <param name="model">The request model containing the local school's new details.</param>
     [HttpPost("local/details")]
+    [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.EditAgencies)]
     public async Task<IActionResult> SaveLocalSchoolDetails([FromBody] SchoolUpsertRequest model)
