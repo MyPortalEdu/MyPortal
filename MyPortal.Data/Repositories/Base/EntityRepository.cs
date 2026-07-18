@@ -13,15 +13,11 @@ using System.Security.Authentication;
 
 namespace MyPortal.Data.Repositories.Base;
 
-public class EntityRepository<TEntity> : BaseEntityRepository<TEntity, Guid>, IEntityRepository<TEntity>
+public class EntityRepository<TEntity>(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : BaseEntityRepository<TEntity, Guid>(factory), IEntityRepository<TEntity>
     where TEntity : class, IEntity
 {
-    protected IAuthorizationService AuthorizationService { get; }
-
-    public EntityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory)
-    {
-        AuthorizationService = authorizationService;
-    }
+    protected IAuthorizationService AuthorizationService { get; } = authorizationService;
 
     private readonly SortOptions _defaultSort = new()
     {

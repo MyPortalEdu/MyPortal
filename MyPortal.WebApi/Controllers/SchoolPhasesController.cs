@@ -10,23 +10,19 @@ using MyPortal.Services.Interfaces.Lookups;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Read-only catalogue of school phases — used by the school-details dropdown.</summary>
-public sealed class SchoolPhasesController : BaseApiController
+public sealed class SchoolPhasesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<SchoolPhasesController> logger,
+    ILookupService lookupService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ILookupService _lookupService;
-
-    public SchoolPhasesController(ProblemDetailsFactory problemFactory, ILogger<SchoolPhasesController> logger,
-        ILookupService lookupService) : base(problemFactory, logger)
-    {
-        _lookupService = lookupService;
-    }
-
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.ViewAgencies)]
     [ProducesResponseType(typeof(IList<LookupResponse>), 200)]
     public async Task<IActionResult> GetSchoolPhases()
     {
-        var result = await _lookupService.GetSchoolPhasesAsync(CancellationToken);
+        var result = await lookupService.GetSchoolPhasesAsync(CancellationToken);
         return Ok(result);
     }
 }

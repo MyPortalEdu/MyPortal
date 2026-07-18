@@ -6,11 +6,6 @@ namespace MyPortal.Contracts.Models.System.Users;
 // (admin) / change-password (self) endpoints, never as part of a general edit.
 public class UserUpdateRequest
 {
-    public UserUpdateRequest()
-    {
-        RoleIds = new List<Guid>();
-    }
-
     public Guid? PersonId { get; set; }
 
     public UserType UserType { get; set; }
@@ -21,5 +16,5 @@ public class UserUpdateRequest
 
     public string? Email { get; set; }
 
-    public IList<Guid> RoleIds { get; set; }
+    public IList<Guid> RoleIds { get; set; } = new List<Guid>();
 }

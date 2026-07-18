@@ -19,55 +19,39 @@ namespace MyPortal.Services.People;
 /// member plus the structured qualifications child collection. Gating is enforced under
 /// <see cref="StaffArea.ProfessionalDetails"/> — Own / Managed / All view, HR or line-manager edit.
 /// </summary>
-public class StaffProfessionalService : BaseService, IStaffProfessionalService
+public class StaffProfessionalService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffProfessionalService> logger,
+    IStaffMemberAccessService accessService,
+    IStaffMemberRepository staffMemberRepository,
+    IStaffQualificationRepository qualificationRepository,
+    IQtsRouteRepository qtsRouteRepository,
+    IInductionStatusRepository inductionStatusRepository,
+    IQualificationLevelRepository qualificationLevelRepository,
+    IClassOfDegreeRepository classOfDegreeRepository,
+    IValidationService validationService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), IStaffProfessionalService
 {
-    private readonly IStaffMemberAccessService _accessService;
-    private readonly IStaffMemberRepository _staffMemberRepository;
-    private readonly IStaffQualificationRepository _qualificationRepository;
-    private readonly IQtsRouteRepository _qtsRouteRepository;
-    private readonly IInductionStatusRepository _inductionStatusRepository;
-    private readonly IQualificationLevelRepository _qualificationLevelRepository;
-    private readonly IClassOfDegreeRepository _classOfDegreeRepository;
-    private readonly IValidationService _validationService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public StaffProfessionalService(IAuthorizationService authorizationService,
-        ILogger<StaffProfessionalService> logger, IStaffMemberAccessService accessService,
-        IStaffMemberRepository staffMemberRepository, IStaffQualificationRepository qualificationRepository,
-        IQtsRouteRepository qtsRouteRepository, IInductionStatusRepository inductionStatusRepository,
-        IQualificationLevelRepository qualificationLevelRepository, IClassOfDegreeRepository classOfDegreeRepository,
-        IValidationService validationService, IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
-    {
-        _accessService = accessService;
-        _staffMemberRepository = staffMemberRepository;
-        _qualificationRepository = qualificationRepository;
-        _qtsRouteRepository = qtsRouteRepository;
-        _inductionStatusRepository = inductionStatusRepository;
-        _qualificationLevelRepository = qualificationLevelRepository;
-        _classOfDegreeRepository = classOfDegreeRepository;
-        _validationService = validationService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<StaffProfessionalDetailsResponse> GetProfessionalDetailsAsync(Guid staffMemberId,
         CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(staffMemberId, StaffArea.ProfessionalDetails,
+        await accessService.RequireAsync(staffMemberId, StaffArea.ProfessionalDetails,
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
             throw new NotFoundException("Staff member not found.");
         }
 
-        var qualifications = await _qualificationRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
+        var qualifications = await qualificationRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
 
-        var qtsRoutes = await _qtsRouteRepository.GetListAsync(cancellationToken: cancellationToken);
-        var inductionStatuses = await _inductionStatusRepository.GetListAsync(cancellationToken: cancellationToken);
-        var qualificationLevels = await _qualificationLevelRepository.GetListAsync(cancellationToken: cancellationToken);
-        var classesOfDegree = await _classOfDegreeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var qtsRoutes = await qtsRouteRepository.GetListAsync(cancellationToken: cancellationToken);
+        var inductionStatuses = await inductionStatusRepository.GetListAsync(cancellationToken: cancellationToken);
+        var qualificationLevels = await qualificationLevelRepository.GetListAsync(cancellationToken: cancellationToken);
+        var classesOfDegree = await classOfDegreeRepository.GetListAsync(cancellationToken: cancellationToken);
 
         return new StaffProfessionalDetailsResponse
         {
@@ -106,12 +90,12 @@ public class StaffProfessionalService : BaseService, IStaffProfessionalService
         StaffProfessionalDetailsUpsertRequest model, CancellationToken cancellationToken)
     {
         // HR (All) or the line manager (Managed) — no self-edit; the data is HR-verified.
-        await _accessService.RequireAsync(staffMemberId, StaffArea.ProfessionalDetails,
+        await accessService.RequireAsync(staffMemberId, StaffArea.ProfessionalDetails,
             StaffAccess.EditManaged | StaffAccess.EditAll, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
@@ -132,9 +116,9 @@ public class StaffProfessionalService : BaseService, IStaffProfessionalService
         staffMember.InductionCompletedDate = model.InductionCompletedDate;
         staffMember.Qualifications = model.QualificationsSummary;
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
-            await _staffMemberRepository.UpdateAsync(staffMember, cancellationToken, uow.Transaction);
+            await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, uow.Transaction);
             await ReconcileQualificationsAsync(staffMemberId, model.Qualifications, uow.Transaction, cancellationToken);
         }, cancellationToken);
     }
@@ -143,7 +127,7 @@ public class StaffProfessionalService : BaseService, IStaffProfessionalService
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var existing =
-            await _qualificationRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction);
+            await qualificationRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction);
         var existingById = existing.ToDictionary(q => q.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
 
@@ -152,7 +136,7 @@ public class StaffProfessionalService : BaseService, IStaffProfessionalService
         {
             if (!keptIds.Contains(row.Id))
             {
-                await _qualificationRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+                await qualificationRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
             }
         }
 
@@ -167,12 +151,12 @@ public class StaffProfessionalService : BaseService, IStaffProfessionalService
                 entity.Grade = item.Grade;
                 entity.ClassOfDegreeId = item.ClassOfDegreeId;
                 entity.YearAwarded = item.YearAwarded;
-                await _qualificationRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await qualificationRepository.UpdateAsync(entity, cancellationToken, transaction);
             }
             else
             {
                 // Null id, or an id we don't own — treat as a new row rather than trusting it.
-                await _qualificationRepository.InsertAsync(new StaffQualification
+                await qualificationRepository.InsertAsync(new StaffQualification
                 {
                     Id = SqlConvention.SequentialGuid(),
                     StaffMemberId = staffMemberId,

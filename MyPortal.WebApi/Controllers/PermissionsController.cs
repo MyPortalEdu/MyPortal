@@ -10,16 +10,12 @@ using MyPortal.Contracts.Models.System.Permissions;
 namespace MyPortal.WebApi.Controllers
 {
     /// <summary>Permission catalogue endpoints.</summary>
-    public sealed class PermissionsController : BaseApiController
+    public sealed class PermissionsController(
+        ProblemDetailsFactory problemFactory,
+        ILogger<PermissionsController> logger,
+        IPermissionService permissionService)
+        : BaseApiController(problemFactory, logger)
     {
-        private readonly IPermissionService _permissionService;
-
-        public PermissionsController(ProblemDetailsFactory problemFactory, ILogger<PermissionsController> logger,
-            IPermissionService permissionService) : base(problemFactory, logger)
-        {
-            _permissionService = permissionService;
-        }
-
         /// <summary>List every permission seeded into the database.</summary>
         /// <remarks>Returned grouped by area for tree-style UIs.</remarks>
         [HttpGet]
@@ -28,7 +24,7 @@ namespace MyPortal.WebApi.Controllers
         [ProducesResponseType(typeof(IList<PermissionResponse>), 200)]
         public async Task<IActionResult> GetPermissionsAsync([FromQuery] UserType? userType = null)
         {
-            var result = await _permissionService.GetAllPermissionsAsync(userType, CancellationToken);
+            var result = await permissionService.GetAllPermissionsAsync(userType, CancellationToken);
 
             return Ok(result);
         }

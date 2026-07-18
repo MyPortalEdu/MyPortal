@@ -8,25 +8,14 @@ using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Services.Security;
 
-public class PermissionService : IPermissionService
+public class PermissionService(
+    ICurrentUser user,
+    IRolePermissionProvider provider,
+    IPermissionRepository permissionRepository,
+    UserManager<ApplicationUser> userManager,
+    IUserStatusCache userStatusCache)
+    : IPermissionService
 {
-    private readonly ICurrentUser _user;
-    private readonly IRolePermissionProvider _provider;
-    private readonly IPermissionRepository _permissionRepository;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IUserStatusCache _userStatusCache;
-
-    public PermissionService(ICurrentUser user, IRolePermissionProvider provider,
-        IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
-        IUserStatusCache userStatusCache)
-    {
-        _user = user;
-        _provider = provider;
-        _permissionRepository = permissionRepository;
-        _userManager = userManager;
-        _userStatusCache = userStatusCache;
-    }
-
     public async Task<bool> HasPermissionAsync(string permission, CancellationToken ct = default)
     {
         return await HasAllPermissionsAsync([permission], ct);
@@ -51,12 +40,12 @@ public class PermissionService : IPermissionService
     {
         // Short-circuits before the enabled check (which dereferences UserId) keep the
         // unauthenticated path from touching the status cache or provider.
-        if (_user.UserId is null) return NoPermissions;
+        if (user.UserId is null) return NoPermissions;
 
         if (!await IsCurrentUserEnabledAsync(ct)) return NoPermissions;
 
-        var roles = await _user.GetRolesAsync(ct);
-        var perms = await _provider.GetPermissionsForRolesAsync(roles, ct);
+        var roles = await user.GetRolesAsync(ct);
+        var perms = await provider.GetPermissionsForRolesAsync(roles, ct);
 
         // Case-insensitive set so callers get O(1), comparer-correct membership tests.
         return new HashSet<string>(perms, StringComparer.OrdinalIgnoreCase);
@@ -64,17 +53,17 @@ public class PermissionService : IPermissionService
 
     private Task<bool> IsCurrentUserEnabledAsync(CancellationToken ct)
     {
-        var userId = _user.UserId!.Value;
-        return _userStatusCache.IsEnabledAsync(userId, async _ =>
+        var userId = user.UserId!.Value;
+        return userStatusCache.IsEnabledAsync(userId, async _ =>
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var user = await userManager.FindByIdAsync(userId.ToString());
             return user?.IsEnabled ?? false;
         }, ct);
     }
 
     public async Task<IList<PermissionResponse>> GetAllPermissionsAsync(UserType? userType, CancellationToken cancellationToken)
     {
-        var perms = await _permissionRepository.GetListAsync(cancellationToken: cancellationToken);
+        var perms = await permissionRepository.GetListAsync(cancellationToken: cancellationToken);
 
         var filtered = userType.HasValue ? perms.Where(p => p.UserType == userType.Value) : perms;
 

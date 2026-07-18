@@ -24,26 +24,19 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.School.Bulletins;
 
-public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinService
+public class BulletinService(
+    IAuthorizationService authorizationService,
+    ILogger<BulletinService> logger,
+    IDirectoryService directoryService,
+    IDocumentService documentService,
+    IValidationService validationService,
+    IBulletinRepository bulletinRepository,
+    IBulletinAcknowledgementRepository ackRepository,
+    IAccessPolicy<Bulletin, BulletinVisibilityScope> accessPolicy,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : DirectoryEntityService<Bulletin>(authorizationService, logger, directoryService, documentService,
+        validationService), IBulletinService
 {
-    private readonly IBulletinRepository _bulletinRepository;
-    private readonly IBulletinAcknowledgementRepository _ackRepository;
-    private readonly IAccessPolicy<Bulletin, BulletinVisibilityScope> _accessPolicy;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public BulletinService(IAuthorizationService authorizationService, ILogger<BulletinService> logger,
-        IDirectoryService directoryService, IDocumentService documentService, IValidationService validationService,
-        IBulletinRepository bulletinRepository, IBulletinAcknowledgementRepository ackRepository,
-        IAccessPolicy<Bulletin, BulletinVisibilityScope> accessPolicy,
-        IUnitOfWorkFactory unitOfWorkFactory) : base(
-        authorizationService, logger, directoryService, documentService, validationService)
-    {
-        _bulletinRepository = bulletinRepository;
-        _ackRepository = ackRepository;
-        _accessPolicy = accessPolicy;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<BulletinDetailsResponse> GetDetailsByIdAsync(Guid bulletinId,
         CancellationToken cancellationToken)
     {
@@ -52,7 +45,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         // The SP enforces audience-membership filtering for non-staff and returns no
         // header row when the bulletin isn't visible to the caller — that's how we
         // map non-visible to 404, same as a genuinely-missing id.
-        var bulletin = await _bulletinRepository.GetDetailsByIdAsync(bulletinId, scope, cancellationToken);
+        var bulletin = await bulletinRepository.GetDetailsByIdAsync(bulletinId, scope, cancellationToken);
 
         return bulletin ?? throw new NotFoundException("Bulletin not found.");
     }
@@ -63,7 +56,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
     {
         var scope = await BulletinVisibilityScope.FromAsync(AuthorizationService, cancellationToken);
 
-        return await _bulletinRepository.GetSummariesAsync(scope, filter, sort, paging, cancellationToken);
+        return await bulletinRepository.GetSummariesAsync(scope, filter, sort, paging, cancellationToken);
     }
 
     public async Task<Guid> CreateAsync(BulletinUpsertRequest model, CancellationToken cancellationToken)
@@ -89,7 +82,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             UploadPolicy = DirectoryUploadPolicy.StaffOnly
         };
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
         {
             var directory = await DirectoryService.CreateAsync(directoryRequest, cancellationToken, uow);
 
@@ -107,10 +100,10 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
                 DirectoryId = directory.Id
             };
 
-            await _bulletinRepository.InsertAsync(bulletin, cancellationToken, uow.Transaction);
+            await bulletinRepository.InsertAsync(bulletin, cancellationToken, uow.Transaction);
 
             var audienceRows = ToAudienceEntities(bulletinId, model.Audiences);
-            await _bulletinRepository.ReplaceAudiencesAsync(bulletinId, audienceRows, cancellationToken,
+            await bulletinRepository.ReplaceAudiencesAsync(bulletinId, audienceRows, cancellationToken,
                 uow.Transaction);
         }, cancellationToken);
 
@@ -128,7 +121,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         var bulletin = await GetVisibleBulletinOrThrowAsync(bulletinId, scope, cancellationToken);
 
-        if (!_accessPolicy.CanEdit(bulletin, scope))
+        if (!accessPolicy.CanEdit(bulletin, scope))
         {
             throw new ForbiddenException("You do not have permission to edit this bulletin.");
         }
@@ -154,12 +147,12 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         // and throws ConcurrencyException on mismatch.
         bulletin.Version = model.ExpectedVersion;
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
         {
-            await _bulletinRepository.UpdateAsync(bulletin, cancellationToken, uow.Transaction);
+            await bulletinRepository.UpdateAsync(bulletin, cancellationToken, uow.Transaction);
 
             var audienceRows = ToAudienceEntities(bulletinId, model.Audiences);
-            await _bulletinRepository.ReplaceAudiencesAsync(bulletinId, audienceRows, cancellationToken,
+            await bulletinRepository.ReplaceAudiencesAsync(bulletinId, audienceRows, cancellationToken,
                 uow.Transaction);
         }, cancellationToken);
 
@@ -174,12 +167,12 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         var bulletin = await GetVisibleBulletinOrThrowAsync(bulletinId, scope, cancellationToken);
 
-        if (!_accessPolicy.CanEdit(bulletin, scope))
+        if (!accessPolicy.CanEdit(bulletin, scope))
         {
             throw new ForbiddenException("You do not have permission to delete this bulletin.");
         }
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
         {
             // Order matters: the bulletin holds an FK to its directory
             // (FK_Bulletins_DirectoryId_Directories), so deleting the directory
@@ -192,7 +185,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             // so a single Bulletins delete reaps the lot. The directory is
             // owned by the bulletin and is cleaned up alongside, including any
             // attachments inside it (DirectoryService.DeleteAsync recurses).
-            await _bulletinRepository.DeleteAsync(bulletinId, cancellationToken, transaction: uow.Transaction);
+            await bulletinRepository.DeleteAsync(bulletinId, cancellationToken, transaction: uow.Transaction);
 
             await DirectoryService.DeleteAsync(bulletin.DirectoryId, cancellationToken, uow, false);
         }, cancellationToken);
@@ -214,7 +207,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         bulletin.PinnedAt = isPinned ? DateTime.UtcNow : null;
         bulletin.Version = expectedVersion;
 
-        await _bulletinRepository.UpdateAsync(bulletin, cancellationToken);
+        await bulletinRepository.UpdateAsync(bulletin, cancellationToken);
 
         Logger.LogInformation("Bulletin pin updated: {bulletinId}, IsPinned: {isPinned}", bulletinId, isPinned);
     }
@@ -228,7 +221,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         // GetDetailsByIdAsync uses the audience-aware SP; if the caller isn't in the
         // audience the result is null and we 404 — same shape as for missing ids.
-        var details = await _bulletinRepository.GetDetailsByIdAsync(bulletinId, scope, cancellationToken);
+        var details = await bulletinRepository.GetDetailsByIdAsync(bulletinId, scope, cancellationToken);
         if (details is null)
         {
             throw new NotFoundException("Bulletin not found.");
@@ -239,7 +232,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
             throw new InvalidOperationException("This bulletin does not require acknowledgement.");
         }
 
-        var inserted = await _ackRepository.AcknowledgeAsync(bulletinId, userId, cancellationToken);
+        var inserted = await ackRepository.AcknowledgeAsync(bulletinId, userId, cancellationToken);
 
         if (inserted)
         {
@@ -249,7 +242,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
     public override async Task<Bulletin> GetByIdAsync(Guid entityId, CancellationToken cancellationToken)
     {
-        return await _bulletinRepository.GetByIdAsync(entityId, cancellationToken)
+        return await bulletinRepository.GetByIdAsync(entityId, cancellationToken)
                ?? throw new NotFoundException("Bulletin not found.");
     }
 
@@ -263,7 +256,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         // one round-trip). Attachment endpoints don't go through that SP, so we hit the
         // dedicated visibility SP here — otherwise a non-targeted reader who knows the
         // ids could pull a bulletin's attachments.
-        if (!await _bulletinRepository.IsVisibleToUserAsync(entityId, scope, cancellationToken))
+        if (!await bulletinRepository.IsVisibleToUserAsync(entityId, scope, cancellationToken))
         {
             return false;
         }
@@ -278,7 +271,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         var bulletin = await GetBulletinOrThrowAsync(entityId, cancellationToken);
 
-        if (!_accessPolicy.CanEdit(bulletin, scope))
+        if (!accessPolicy.CanEdit(bulletin, scope))
         {
             return false;
         }
@@ -295,7 +288,7 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
 
         // Upload to a bulletin's directory is gated by CanEdit on the bulletin — only the
         // creator (with edit permission) or a pinner can attach documents to it.
-        if (!_accessPolicy.CanEdit(bulletin, scope))
+        if (!accessPolicy.CanEdit(bulletin, scope))
         {
             return false;
         }
@@ -339,15 +332,15 @@ public class BulletinService : DirectoryEntityService<Bulletin>, IBulletinServic
         }).ToList();
 
     private async Task<Bulletin> GetBulletinOrThrowAsync(Guid bulletinId, CancellationToken ct) =>
-        await _bulletinRepository.GetByIdAsync(bulletinId, ct)
+        await bulletinRepository.GetByIdAsync(bulletinId, ct)
         ?? throw new NotFoundException("Bulletin not found.");
 
     private async Task<Bulletin> GetVisibleBulletinOrThrowAsync(Guid bulletinId, BulletinVisibilityScope scope,
         CancellationToken ct)
     {
-        var bulletin = await _bulletinRepository.GetByIdAsync(bulletinId, ct);
+        var bulletin = await bulletinRepository.GetByIdAsync(bulletinId, ct);
 
-        if (bulletin == null || !await _accessPolicy.CanViewAsync(bulletin, scope, ct))
+        if (bulletin == null || !await accessPolicy.CanViewAsync(bulletin, scope, ct))
         {
             throw new NotFoundException("Bulletin not found.");
         }

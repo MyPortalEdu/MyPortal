@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class InductionStatusRepository : EntityRepository<InductionStatus>, IInductionStatusRepository
-{
-    public InductionStatusRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class InductionStatusRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<InductionStatus>(factory, authorizationService), IInductionStatusRepository;

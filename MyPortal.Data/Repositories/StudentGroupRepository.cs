@@ -15,13 +15,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class StudentGroupRepository : EntityRepository<StudentGroup>, IStudentGroupRepository
+public class StudentGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<StudentGroup>(factory, authorizationService), IStudentGroupRepository
 {
-    public StudentGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<StudentGroup>> GetStudentGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken)
     {

@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class ObservationOutcomeRepository : EntityRepository<ObservationOutcome>, IObservationOutcomeRepository
-{
-    public ObservationOutcomeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
-        base(factory, authorizationService)
-    {
-    }
-}
+public class ObservationOutcomeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<ObservationOutcome>(factory, authorizationService), IObservationOutcomeRepository;

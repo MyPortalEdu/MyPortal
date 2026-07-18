@@ -14,13 +14,9 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories;
 
-public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupRepository
+public class YearGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<YearGroup>(factory, authorizationService), IYearGroupRepository
 {
-    public YearGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<YearGroup>> GetYearGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken)
     {

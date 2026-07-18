@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class DepartmentRepository : EntityRepository<Department>, IDepartmentRepository
-{
-    public DepartmentRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class DepartmentRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<Department>(factory, authorizationService), IDepartmentRepository;

@@ -21,68 +21,37 @@ namespace MyPortal.Services.People;
 /// <see cref="StaffArea.EmploymentDetails"/> — self / HR view, HR-only edit. The save is a
 /// whole-graph replace reconciled two levels deep (spells, then each spell's contracts).
 /// </summary>
-public class StaffEmploymentService : BaseService, IStaffEmploymentService
+public class StaffEmploymentService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffEmploymentService> logger,
+    IStaffMemberAccessService accessService,
+    IStaffMemberRepository staffMemberRepository,
+    IStaffEmploymentRepository employmentRepository,
+    IStaffContractRepository contractRepository,
+    ILeavingReasonRepository leavingReasonRepository,
+    IStaffOriginRepository originRepository,
+    IStaffDestinationRepository destinationRepository,
+    IContractTypeRepository contractTypeRepository,
+    IStaffRoleRepository staffRoleRepository,
+    IServiceTermRepository serviceTermRepository,
+    IDepartmentRepository departmentRepository,
+    IPayScaleRepository payScaleRepository,
+    IPayScalePointRepository payScalePointRepository,
+    IPayScalePointRateRepository payScalePointRateRepository,
+    IPayZoneRepository payZoneRepository,
+    ISchoolRepository schoolRepository,
+    IDateTimeProvider dateTimeProvider,
+    IValidationService validationService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), IStaffEmploymentService
 {
-    private readonly IStaffMemberAccessService _accessService;
-    private readonly IStaffMemberRepository _staffMemberRepository;
-    private readonly IStaffEmploymentRepository _employmentRepository;
-    private readonly IStaffContractRepository _contractRepository;
-    private readonly ILeavingReasonRepository _leavingReasonRepository;
-    private readonly IStaffOriginRepository _originRepository;
-    private readonly IStaffDestinationRepository _destinationRepository;
-    private readonly IContractTypeRepository _contractTypeRepository;
-    private readonly IStaffRoleRepository _staffRoleRepository;
-    private readonly IServiceTermRepository _serviceTermRepository;
-    private readonly IDepartmentRepository _departmentRepository;
-    private readonly IPayScaleRepository _payScaleRepository;
-    private readonly IPayScalePointRepository _payScalePointRepository;
-    private readonly IPayScalePointRateRepository _payScalePointRateRepository;
-    private readonly IPayZoneRepository _payZoneRepository;
-    private readonly ISchoolRepository _schoolRepository;
-    private readonly IDateTimeProvider _dateTimeProvider;
-    private readonly IValidationService _validationService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public StaffEmploymentService(IAuthorizationService authorizationService,
-        ILogger<StaffEmploymentService> logger, IStaffMemberAccessService accessService,
-        IStaffMemberRepository staffMemberRepository, IStaffEmploymentRepository employmentRepository,
-        IStaffContractRepository contractRepository, ILeavingReasonRepository leavingReasonRepository,
-        IStaffOriginRepository originRepository, IStaffDestinationRepository destinationRepository,
-        IContractTypeRepository contractTypeRepository, IStaffRoleRepository staffRoleRepository,
-        IServiceTermRepository serviceTermRepository, IDepartmentRepository departmentRepository,
-        IPayScaleRepository payScaleRepository, IPayScalePointRepository payScalePointRepository,
-        IPayScalePointRateRepository payScalePointRateRepository, IPayZoneRepository payZoneRepository,
-        ISchoolRepository schoolRepository, IDateTimeProvider dateTimeProvider,
-        IValidationService validationService, IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
-    {
-        _accessService = accessService;
-        _staffMemberRepository = staffMemberRepository;
-        _employmentRepository = employmentRepository;
-        _contractRepository = contractRepository;
-        _leavingReasonRepository = leavingReasonRepository;
-        _originRepository = originRepository;
-        _destinationRepository = destinationRepository;
-        _contractTypeRepository = contractTypeRepository;
-        _staffRoleRepository = staffRoleRepository;
-        _serviceTermRepository = serviceTermRepository;
-        _departmentRepository = departmentRepository;
-        _payScaleRepository = payScaleRepository;
-        _payScalePointRepository = payScalePointRepository;
-        _payScalePointRateRepository = payScalePointRateRepository;
-        _payZoneRepository = payZoneRepository;
-        _schoolRepository = schoolRepository;
-        _dateTimeProvider = dateTimeProvider;
-        _validationService = validationService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<StaffEmploymentDetailsResponse> GetEmploymentDetailsAsync(Guid staffMemberId,
         CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(staffMemberId, StaffArea.EmploymentDetails,
+        await accessService.RequireAsync(staffMemberId, StaffArea.EmploymentDetails,
             StaffAccess.ViewOwn | StaffAccess.ViewAll, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
@@ -90,36 +59,36 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         }
 
         var employments =
-            (await _employmentRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken)).ToList();
-        var contracts = await _contractRepository.GetByEmploymentIdsAsync(employments.Select(e => e.Id),
+            (await employmentRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken)).ToList();
+        var contracts = await contractRepository.GetByEmploymentIdsAsync(employments.Select(e => e.Id),
             cancellationToken);
         var contractsByEmployment = contracts
             .GroupBy(c => c.StaffEmploymentId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var leavingReasons = await _leavingReasonRepository.GetListAsync(cancellationToken: cancellationToken);
-        var origins = await _originRepository.GetListAsync(cancellationToken: cancellationToken);
-        var destinations = await _destinationRepository.GetListAsync(cancellationToken: cancellationToken);
-        var contractTypes = await _contractTypeRepository.GetListAsync(cancellationToken: cancellationToken);
-        var staffRoles = await _staffRoleRepository.GetListAsync(cancellationToken: cancellationToken);
-        var serviceTerms = await _serviceTermRepository.GetListAsync(cancellationToken: cancellationToken);
-        var departments = await _departmentRepository.GetListAsync(cancellationToken: cancellationToken);
-        var payScales = await _payScaleRepository.GetListAsync(cancellationToken: cancellationToken);
-        var payScalePoints = await _payScalePointRepository.GetListAsync(cancellationToken: cancellationToken);
+        var leavingReasons = await leavingReasonRepository.GetListAsync(cancellationToken: cancellationToken);
+        var origins = await originRepository.GetListAsync(cancellationToken: cancellationToken);
+        var destinations = await destinationRepository.GetListAsync(cancellationToken: cancellationToken);
+        var contractTypes = await contractTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var staffRoles = await staffRoleRepository.GetListAsync(cancellationToken: cancellationToken);
+        var serviceTerms = await serviceTermRepository.GetListAsync(cancellationToken: cancellationToken);
+        var departments = await departmentRepository.GetListAsync(cancellationToken: cancellationToken);
+        var payScales = await payScaleRepository.GetListAsync(cancellationToken: cancellationToken);
+        var payScalePoints = await payScalePointRepository.GetListAsync(cancellationToken: cancellationToken);
 
         // Resolve the school's pay zone and the statutory salary in effect today for each spine
         // point, so the editor can pre-fill a contract's salary as (full-time rate × FTE).
-        var payZoneId = await _schoolRepository.GetLocalSchoolPayZoneIdAsync(cancellationToken);
+        var payZoneId = await schoolRepository.GetLocalSchoolPayZoneIdAsync(cancellationToken);
         var fullTimeSalaryByPoint = new Dictionary<Guid, decimal>();
         string? payZoneName = null;
 
         if (payZoneId.HasValue)
         {
-            var payZone = await _payZoneRepository.GetByIdAsync(payZoneId.Value, cancellationToken);
+            var payZone = await payZoneRepository.GetByIdAsync(payZoneId.Value, cancellationToken);
             payZoneName = payZone?.Description;
 
-            var rates = await _payScalePointRateRepository.GetCurrentByZoneAsync(payZoneId.Value,
-                _dateTimeProvider.UtcNow.Date, cancellationToken);
+            var rates = await payScalePointRateRepository.GetCurrentByZoneAsync(payZoneId.Value,
+                dateTimeProvider.UtcNow.Date, cancellationToken);
 
             // Latest effective rate wins if more than one row qualifies.
             foreach (var rate in rates.OrderBy(r => r.EffectiveFrom))
@@ -180,12 +149,12 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         CancellationToken cancellationToken)
     {
         // Employment data is the "crown jewels" — HR-edit only (All scope).
-        await _accessService.RequireAsync(staffMemberId, StaffArea.EmploymentDetails, StaffAccess.EditAll,
+        await accessService.RequireAsync(staffMemberId, StaffArea.EmploymentDetails, StaffAccess.EditAll,
             cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
@@ -197,9 +166,9 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         staffMember.BankSortCode = model.BankSortCode;
         staffMember.NiNumber = model.NiNumber;
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
-            await _staffMemberRepository.UpdateAsync(staffMember, cancellationToken, uow.Transaction);
+            await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, uow.Transaction);
             await ReconcileEmploymentsAsync(staffMemberId, model.Employments, uow.Transaction, cancellationToken);
         }, cancellationToken);
     }
@@ -208,7 +177,7 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var existing =
-            (await _employmentRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction))
+            (await employmentRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction))
             .ToList();
         var existingById = existing.ToDictionary(e => e.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
@@ -219,16 +188,16 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         if (droppedEmploymentIds.Count > 0)
         {
             var orphanedContracts =
-                await _contractRepository.GetByEmploymentIdsAsync(droppedEmploymentIds, cancellationToken, transaction);
+                await contractRepository.GetByEmploymentIdsAsync(droppedEmploymentIds, cancellationToken, transaction);
 
             foreach (var contract in orphanedContracts)
             {
-                await _contractRepository.DeleteAsync(contract.Id, cancellationToken, true, transaction);
+                await contractRepository.DeleteAsync(contract.Id, cancellationToken, true, transaction);
             }
 
             foreach (var employmentId in droppedEmploymentIds)
             {
-                await _employmentRepository.DeleteAsync(employmentId, cancellationToken, true, transaction);
+                await employmentRepository.DeleteAsync(employmentId, cancellationToken, true, transaction);
             }
         }
 
@@ -244,13 +213,13 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
                 entity.OriginId = item.OriginId;
                 entity.DestinationId = item.DestinationId;
                 entity.Notes = item.Notes;
-                await _employmentRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await employmentRepository.UpdateAsync(entity, cancellationToken, transaction);
                 employmentId = entity.Id;
             }
             else
             {
                 employmentId = SqlConvention.SequentialGuid();
-                await _employmentRepository.InsertAsync(new StaffEmployment
+                await employmentRepository.InsertAsync(new StaffEmployment
                 {
                     Id = employmentId,
                     StaffMemberId = staffMemberId,
@@ -271,7 +240,7 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var existing =
-            (await _contractRepository.GetByEmploymentIdsAsync(new[] { employmentId }, cancellationToken, transaction))
+            (await contractRepository.GetByEmploymentIdsAsync(new[] { employmentId }, cancellationToken, transaction))
             .ToList();
         var existingById = existing.ToDictionary(c => c.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
@@ -280,7 +249,7 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
         {
             if (!keptIds.Contains(row.Id))
             {
-                await _contractRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+                await contractRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
             }
         }
 
@@ -289,7 +258,7 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
             if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
             {
                 ApplyContract(entity, item);
-                await _contractRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await contractRepository.UpdateAsync(entity, cancellationToken, transaction);
             }
             else
             {
@@ -299,7 +268,7 @@ public class StaffEmploymentService : BaseService, IStaffEmploymentService
                     StaffEmploymentId = employmentId
                 };
                 ApplyContract(contract, item);
-                await _contractRepository.InsertAsync(contract, cancellationToken, transaction);
+                await contractRepository.InsertAsync(contract, cancellationToken, transaction);
             }
         }
     }

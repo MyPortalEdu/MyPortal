@@ -28,23 +28,15 @@ namespace MyPortal.Services.People;
 /// equality-sensitive fields (NhsNumber, EthnicityId) are never set through here — they're
 /// populated post-creation via the equality-area endpoint when that ships.
 /// </summary>
-public class PersonService : BaseService, IPersonService
+public class PersonService(
+    IAuthorizationService authorizationService,
+    ILogger<PersonService> logger,
+    IPersonRepository personRepository,
+    IDirectoryService directoryService,
+    IPhotoService photoService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), IPersonService
 {
-    private readonly IPersonRepository _personRepository;
-    private readonly IDirectoryService _directoryService;
-    private readonly IPhotoService _photoService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public PersonService(IAuthorizationService authorizationService, ILogger<PersonService> logger,
-        IPersonRepository personRepository, IDirectoryService directoryService, IPhotoService photoService,
-        IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
-    {
-        _personRepository = personRepository;
-        _directoryService = directoryService;
-        _photoService = photoService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<Guid> CreateAsync(PersonBasicBio bio, CancellationToken cancellationToken,
         IUnitOfWork? uow = null)
     {
@@ -58,9 +50,9 @@ public class PersonService : BaseService, IPersonService
             UploadPolicy = DirectoryUploadPolicy.StaffOnly
         };
 
-        return await _unitOfWorkFactory.RunInTransactionAsync<Guid>(uow, async ownedUow =>
+        return await unitOfWorkFactory.RunInTransactionAsync<Guid>(uow, async ownedUow =>
         {
-            var directory = await _directoryService.CreateAsync(directoryRequest, cancellationToken, ownedUow);
+            var directory = await directoryService.CreateAsync(directoryRequest, cancellationToken, ownedUow);
 
             var person = new Person
             {
@@ -81,7 +73,7 @@ public class PersonService : BaseService, IPersonService
                 // deliberately omitted — they're populated via the equality-area PUT.
             };
 
-            await _personRepository.InsertAsync(person, cancellationToken, ownedUow.Transaction);
+            await personRepository.InsertAsync(person, cancellationToken, ownedUow.Transaction);
 
             return personId;
         }, cancellationToken);
@@ -90,7 +82,7 @@ public class PersonService : BaseService, IPersonService
     public async Task UpdateBasicBioAsync(Guid personId, PersonBasicBio bio, CancellationToken cancellationToken,
         IUnitOfWork? uow = null)
     {
-        var person = await _personRepository.GetByIdAsync(personId, cancellationToken);
+        var person = await personRepository.GetByIdAsync(personId, cancellationToken);
 
         if (person == null)
         {
@@ -111,34 +103,34 @@ public class PersonService : BaseService, IPersonService
         // MaritalStatusId, ReligionId, SexualOrientationId, GenderIdentityId) are not
         // touched here — they're owned by the equality-area update.
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
-            await _personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
+            await personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
         }, cancellationToken);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        var person = await _personRepository.GetByIdAsync(id, cancellationToken);
+        var person = await personRepository.GetByIdAsync(id, cancellationToken);
 
         if (person == null)
         {
             throw new NotFoundException("Person not found.");
         }
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
             // Person → directory FK: drop the person row first to release it.
-            await _personRepository.DeleteAsync(id, cancellationToken, softDelete: false, ownedUow.Transaction);
+            await personRepository.DeleteAsync(id, cancellationToken, softDelete: false, ownedUow.Transaction);
 
-            await _directoryService.DeleteAsync(person.DirectoryId, cancellationToken, ownedUow, softDelete: false);
+            await directoryService.DeleteAsync(person.DirectoryId, cancellationToken, ownedUow, softDelete: false);
 
             // The photo document lives in the system Photos directory, outside this person's
             // directory subtree, so the cascade above doesn't reach it — purge it explicitly. Safe
             // now the person row (and its PhotoId FK) is gone.
             if (person.PhotoId is not null)
             {
-                await _photoService.PurgePhotoAsync(person.PhotoId.Value, cancellationToken, ownedUow);
+                await photoService.PurgePhotoAsync(person.PhotoId.Value, cancellationToken, ownedUow);
             }
         }, cancellationToken);
     }
@@ -153,6 +145,6 @@ public class PersonService : BaseService, IPersonService
 
         // Escape LIKE wildcards ([, %, _) before wrapping in a contains pattern. '[' must go first.
         var escaped = term.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
-        return await _personRepository.SearchAsync($"%{escaped}%", cancellationToken);
+        return await personRepository.SearchAsync($"%{escaped}%", cancellationToken);
     }
 }

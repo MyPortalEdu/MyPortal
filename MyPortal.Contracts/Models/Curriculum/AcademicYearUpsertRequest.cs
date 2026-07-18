@@ -2,21 +2,13 @@
 
 public class AcademicYearUpsertRequest
 {
-    public AcademicYearUpsertRequest()
-    {
-        FirstWeekOffset = 0;
-        AcademicTerms = Array.Empty<AcademicTermUpsertRequest>();
-        AttendancePeriods = Array.Empty<AttendancePeriodUpsertRequest>();
-        SchoolHolidays = Array.Empty<SchoolHolidayUpsertRequest>();
-    }
-    
     public int TimetableCycleLength { get; set; }
     public int SchoolWeekLength { get; set; }
-    public int FirstWeekOffset { get; set; }
+    public int FirstWeekOffset { get; set; } = 0;
     public Guid? CopyPeriodsFromAcademicYearId { get; set; }
     public Guid? CopyPastoralStructureFromAcademicYearId { get; set; }
     
-    public AcademicTermUpsertRequest[] AcademicTerms { get; set; }
-    public AttendancePeriodUpsertRequest[] AttendancePeriods { get; set; }
-    public SchoolHolidayUpsertRequest[] SchoolHolidays { get; set; }
+    public AcademicTermUpsertRequest[] AcademicTerms { get; set; } = Array.Empty<AcademicTermUpsertRequest>();
+    public AttendancePeriodUpsertRequest[] AttendancePeriods { get; set; } = Array.Empty<AttendancePeriodUpsertRequest>();
+    public SchoolHolidayUpsertRequest[] SchoolHolidays { get; set; } = Array.Empty<SchoolHolidayUpsertRequest>();
 }

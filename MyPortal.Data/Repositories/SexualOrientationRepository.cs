@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class SexualOrientationRepository : EntityRepository<SexualOrientation>, ISexualOrientationRepository
-{
-    public SexualOrientationRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class SexualOrientationRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<SexualOrientation>(factory, authorizationService), ISexualOrientationRepository;

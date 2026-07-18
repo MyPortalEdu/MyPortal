@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class ReferenceTypeRepository : EntityRepository<ReferenceType>, IReferenceTypeRepository
-{
-    public ReferenceTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class ReferenceTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<ReferenceType>(factory, authorizationService), IReferenceTypeRepository;

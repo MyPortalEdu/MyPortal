@@ -14,18 +14,13 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>People lookup endpoints.</summary>
-public sealed class PeopleController : BaseApiController
+public sealed class PeopleController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<PeopleController> logger,
+    IStaffMemberService staffMemberService,
+    IPersonService personService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IStaffMemberService _staffMemberService;
-    private readonly IPersonService _personService;
-
-    public PeopleController(ProblemDetailsFactory problemFactory, ILogger<PeopleController> logger,
-        IStaffMemberService staffMemberService, IPersonService personService) : base(problemFactory, logger)
-    {
-        _staffMemberService = staffMemberService;
-        _personService = personService;
-    }
-
     /// <summary>Page through staff-member summaries for the picker.</summary>
     /// <remarks>Requires <c>Staff.ViewAllStaffBasicDetails</c>.</remarks>
     /// <param name="page">1-based page number.</param>
@@ -40,7 +35,7 @@ public sealed class PeopleController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _staffMemberService.GetStaffMembersAsync(options.FilterOptions, options.SortOptions,
+        var result = await staffMemberService.GetStaffMembersAsync(options.FilterOptions, options.SortOptions,
             options.PageOptions, CancellationToken);
 
         return Ok(result);
@@ -54,7 +49,7 @@ public sealed class PeopleController : BaseApiController
     [ProducesResponseType(typeof(IReadOnlyList<PersonSearchResponse>), 200)]
     public async Task<IActionResult> SearchPeopleAsync([FromQuery] string query)
     {
-        var result = await _personService.SearchAsync(query, CancellationToken);
+        var result = await personService.SearchAsync(query, CancellationToken);
 
         return Ok(result);
     }

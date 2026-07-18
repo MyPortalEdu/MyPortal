@@ -3,13 +3,8 @@ using OpenIddict.EntityFrameworkCore.Models;
 
 namespace MyPortal.Auth.Models;
 
-public class AuthDbContext : DbContext
+public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(options)
 {
-    public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
-    {
-        
-    }
-    
     public DbSet<OpenIddictEntityFrameworkCoreApplication<Guid>> Applications => Set<OpenIddictEntityFrameworkCoreApplication<Guid>>();
     public DbSet<OpenIddictEntityFrameworkCoreAuthorization<Guid>> Authorizations => Set<OpenIddictEntityFrameworkCoreAuthorization<Guid>>();
     public DbSet<OpenIddictEntityFrameworkCoreScope<Guid>> Scopes => Set<OpenIddictEntityFrameworkCoreScope<Guid>>();

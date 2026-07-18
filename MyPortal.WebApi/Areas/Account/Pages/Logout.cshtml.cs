@@ -5,14 +5,11 @@ using MyPortal.Auth.Models;
 
 namespace MyPortal.WebApi.Areas.Account.Pages;
 
-public class LogoutModel : PageModel
+public class LogoutModel(SignInManager<ApplicationUser> signIn) : PageModel
 {
-    private readonly SignInManager<ApplicationUser> _signIn;
-    public LogoutModel(SignInManager<ApplicationUser> signIn) => _signIn = signIn;
-
     public async Task<IActionResult> OnPostAsync(string? returnUrl = "/")
     {
-        await _signIn.SignOutAsync();
+        await signIn.SignOutAsync();
         return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
     }
 }

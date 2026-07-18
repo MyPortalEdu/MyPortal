@@ -10,13 +10,10 @@ using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Data.Repositories;
 
-public class SchoolRepository : EntityRepository<School>, ISchoolRepository
+public class SchoolRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<School>(factory,
+        authorizationService), ISchoolRepository
 {
-    public SchoolRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
-        authorizationService)
-    {
-    }
-
     public async Task<SchoolDetailsResponse?> GetLocalSchoolAsync(CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
@@ -44,9 +41,10 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
     {
         using var conn = _factory.Create();
 
-        const string sql = "SELECT TOP 1 [PayZoneId] FROM [dbo].[Schools] WHERE [IsLocal] = 1;";
-        var command = new CommandDefinition(sql, cancellationToken: cancellationToken);
+        var sql = @"[dbo].[usp_school_get_local_pay_zone_id]";
+        var result =
+            await conn.ExecuteStoredProcedureAsync<Guid?>(sql, cancellationToken: cancellationToken);
 
-        return await conn.QuerySingleOrDefaultAsync<Guid?>(command);
+        return result.FirstOrDefault();
     }
 }

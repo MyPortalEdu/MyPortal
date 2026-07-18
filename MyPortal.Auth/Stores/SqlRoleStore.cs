@@ -6,15 +6,9 @@ using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Auth.Stores;
 
-public class SqlRoleStore : IRoleStore<ApplicationRole>
+public class SqlRoleStore(IDbConnectionFactory connectionFactory) : IRoleStore<ApplicationRole>
 {
-    private readonly IDbConnectionFactory _connectionFactory;
     private static string? Normalize(string? value) => value?.ToUpperInvariant();
-
-    public SqlRoleStore(IDbConnectionFactory connectionFactory)
-    {
-        _connectionFactory = connectionFactory;
-    }
 
     public void Dispose() { /* nothing to dispose */ }
 
@@ -29,7 +23,7 @@ public class SqlRoleStore : IRoleStore<ApplicationRole>
 INSERT INTO dbo.Roles (Id, Name, NormalizedName, ConcurrencyStamp, Description, IsSystem, UserType, IsDefault)
 VALUES (@Id, @Name, @NormalizedName, @ConcurrencyStamp, @Description, @IsSystem, @UserType, @IsDefault);";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql, role, cancellationToken: cancellationToken));
         return IdentityResult.Success;
     }
@@ -55,7 +49,7 @@ UPDATE dbo.Roles SET
   IsSystem=@IsSystem
 WHERE Id=@Id AND ConcurrencyStamp=@OldConcurrencyStamp;";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new
         {
             role.Id,
@@ -86,7 +80,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@OldConcurrencyStamp;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "DELETE FROM dbo.Roles WHERE Id=@Id;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql, new { role.Id }, cancellationToken: cancellationToken));
         return IdentityResult.Success;
     }
@@ -120,7 +114,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@OldConcurrencyStamp;";
             return null;
 
         const string sql = "SELECT TOP 1 * FROM dbo.Roles WHERE Id=@Id;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationRole>(
             new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
@@ -130,7 +124,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@OldConcurrencyStamp;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "SELECT TOP 1 * FROM dbo.Roles WHERE NormalizedName=@NormalizedName;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationRole>(
             new CommandDefinition(sql, new { NormalizedName = normalizedRoleName }, cancellationToken: cancellationToken));
     }

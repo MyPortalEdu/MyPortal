@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class DisabilityRepository : EntityRepository<Disability>, IDisabilityRepository
-{
-    public DisabilityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class DisabilityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<Disability>(factory, authorizationService), IDisabilityRepository;

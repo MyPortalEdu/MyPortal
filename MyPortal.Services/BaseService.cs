@@ -4,16 +4,10 @@ using MyPortal.Auth.Interfaces;
 
 namespace MyPortal.Services;
 
-public class BaseService
+public class BaseService(IAuthorizationService authorizationService, ILogger<BaseService> logger)
 {
-    protected IAuthorizationService AuthorizationService { get; }
-    protected ILogger<BaseService> Logger { get; }
-
-    public BaseService(IAuthorizationService authorizationService, ILogger<BaseService> logger)
-    {
-        AuthorizationService = authorizationService;
-        Logger = logger;
-    }
+    protected IAuthorizationService AuthorizationService { get; } = authorizationService;
+    protected ILogger<BaseService> Logger { get; } = logger;
 
     /// <summary>
     /// Ambient TransactionScope for code paths that have to bridge ASP.NET Identity calls

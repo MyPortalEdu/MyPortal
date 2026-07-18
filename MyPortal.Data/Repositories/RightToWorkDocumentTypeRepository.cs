@@ -6,11 +6,8 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class RightToWorkDocumentTypeRepository : EntityRepository<RightToWorkDocumentType>,
-    IRightToWorkDocumentTypeRepository
-{
-    public RightToWorkDocumentTypeRepository(IDbConnectionFactory factory,
-        IAuthorizationService authorizationService) : base(factory, authorizationService)
-    {
-    }
-}
+public class RightToWorkDocumentTypeRepository(
+    IDbConnectionFactory factory,
+    IAuthorizationService authorizationService)
+    : EntityRepository<RightToWorkDocumentType>(factory, authorizationService),
+        IRightToWorkDocumentTypeRepository;

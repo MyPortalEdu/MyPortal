@@ -6,17 +6,12 @@ using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Auth.Stores;
 
-public class SqlUserStore : IUserStore<ApplicationUser>, IUserPasswordStore<ApplicationUser>,
+public class SqlUserStore(IDbConnectionFactory connectionFactory) : IUserStore<ApplicationUser>,
+    IUserPasswordStore<ApplicationUser>,
     IUserEmailStore<ApplicationUser>, IUserRoleStore<ApplicationUser>, IUserClaimStore<ApplicationUser>,
     IUserSecurityStampStore<ApplicationUser>, IUserLockoutStore<ApplicationUser>
 {
-    private readonly IDbConnectionFactory _connectionFactory;
     private static string? Normalize(string? value) => value?.ToUpperInvariant();
-
-    public SqlUserStore(IDbConnectionFactory connectionFactory)
-    {
-        _connectionFactory = connectionFactory;
-    }
 
     public void Dispose() { /* nothing to dispose */ }
 
@@ -43,7 +38,7 @@ VALUES
  @TwoFactorEnabled, @LockoutEnd, @LockoutEnabled, @AccessFailedCount, @CreatedAt, @CreatedById, @CreatedByIpAddress,
  @LastModifiedAt, @LastModifiedById, @LastModifiedByIpAddress, @Version);";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql, user, cancellationToken: cancellationToken));
         return IdentityResult.Success;
     }
@@ -73,7 +68,7 @@ UPDATE dbo.Users SET
  Version=@Version
 WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         var rowsAffected = await connection.ExecuteAsync(
             new CommandDefinition(sql, new
             {
@@ -123,7 +118,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "DELETE FROM dbo.Users WHERE Id=@Id;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql, new { user.Id }, cancellationToken: cancellationToken));
         return IdentityResult.Success;
     }
@@ -136,7 +131,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
             return null;
 
         const string sql = "SELECT TOP 1 * FROM dbo.Users WHERE Id=@Id;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationUser>(
             new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
@@ -146,7 +141,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "SELECT TOP 1 * FROM dbo.Users WHERE NormalizedUserName=@NormalizedUserName;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationUser>(
             new CommandDefinition(sql, new { NormalizedUserName = normalizedUserName }, cancellationToken: cancellationToken));
     }
@@ -156,7 +151,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "SELECT TOP 1 * FROM dbo.Users WHERE NormalizedEmail=@NormalizedEmail;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         return await connection.QuerySingleOrDefaultAsync<ApplicationUser>(
             new CommandDefinition(sql, new { NormalizedEmail = normalizedEmail }, cancellationToken: cancellationToken));
     }
@@ -238,7 +233,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
                      ?? throw new InvalidOperationException($"Role '{roleName}' not found.");
 
         const string sql = "INSERT INTO dbo.UserRoles (Id,UserId,RoleId) VALUES (@Id,@UserId,@RoleId);";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql,
             new { Id = Guid.NewGuid(), UserId = user.Id, RoleId = roleId }, cancellationToken: cancellationToken));
     }
@@ -251,7 +246,7 @@ WHERE Id=@Id AND ConcurrencyStamp=@ConcurrencyStamp;";
         if (roleId is null) return;
 
         const string sql = "DELETE FROM dbo.UserRoles WHERE UserId=@UserId AND RoleId=@RoleId;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql,
             new { UserId = user.Id, RoleId = roleId }, cancellationToken: cancellationToken));
     }
@@ -266,7 +261,7 @@ FROM dbo.UserRoles ur
 JOIN dbo.Roles r ON r.Id = ur.RoleId
 WHERE ur.UserId = @UserId;";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         var roles = await connection.QueryAsync<string>(
             new CommandDefinition(sql, new { UserId = user.Id }, cancellationToken: cancellationToken));
         return roles.ToList();
@@ -282,7 +277,7 @@ FROM dbo.UserRoles ur
 JOIN dbo.Roles r ON r.Id = ur.RoleId
 WHERE ur.UserId = @UserId AND r.NormalizedName = @NormalizedRoleName;";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         var exists = await connection.ExecuteScalarAsync<int?>(
             new CommandDefinition(sql, new { UserId = user.Id, NormalizedRoleName = Normalize(roleName) },
                 cancellationToken: cancellationToken));
@@ -301,7 +296,7 @@ JOIN dbo.Roles r ON r.Id = ur.RoleId
 JOIN dbo.Users u ON u.Id = ur.UserId
 WHERE r.NormalizedName = @NormalizedRoleName;";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         var users = await connection.QueryAsync<ApplicationUser>(
             new CommandDefinition(sql, new { NormalizedRoleName = Normalize(roleName) }, cancellationToken: cancellationToken));
         return users.ToList();
@@ -312,7 +307,7 @@ WHERE r.NormalizedName = @NormalizedRoleName;";
         cancellationToken.ThrowIfCancellationRequested();
 
         const string sql = "SELECT ClaimType, ClaimValue FROM dbo.UserClaims WHERE UserId=@UserId;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         var rows = await connection.QueryAsync<(string? ClaimType, string? ClaimValue)>(
             new CommandDefinition(sql, new { UserId = user.Id }, cancellationToken: cancellationToken));
 
@@ -326,7 +321,7 @@ WHERE r.NormalizedName = @NormalizedRoleName;";
         const string sql = "INSERT INTO dbo.UserClaims (Id,UserId,ClaimType,ClaimValue) VALUES (@Id,@UserId,@Type,@Value);";
 
         // Single connection + explicit transaction so the batch is all-or-nothing.
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         connection.Open();
         using var tx = connection.BeginTransaction();
 
@@ -354,7 +349,7 @@ UPDATE dbo.UserClaims
 SET ClaimType=@NewType, ClaimValue=@NewValue
 WHERE UserId=@UserId AND ClaimType=@OldType AND ClaimValue=@OldValue;";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         await connection.ExecuteAsync(new CommandDefinition(sql,
             new
             {
@@ -373,7 +368,7 @@ WHERE UserId=@UserId AND ClaimType=@OldType AND ClaimValue=@OldValue;";
         const string sql = "DELETE FROM dbo.UserClaims WHERE UserId=@UserId AND ClaimType=@Type AND ClaimValue=@Value;";
 
         // Single connection + explicit transaction so the batch is all-or-nothing.
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         connection.Open();
         using var tx = connection.BeginTransaction();
 
@@ -397,7 +392,7 @@ FROM dbo.UserClaims c
 JOIN dbo.Users u ON u.Id = c.UserId
 WHERE c.ClaimType = @Type AND c.ClaimValue = @Value;";
 
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         var users = await connection.QueryAsync<ApplicationUser>(
             new CommandDefinition(sql, new { Type = claim.Type, Value = claim.Value }, cancellationToken: cancellationToken));
         return users.ToList();
@@ -441,7 +436,7 @@ WHERE c.ClaimType = @Type AND c.ClaimValue = @Value;";
     private async Task<Guid?> GetRoleIdByNameAsync(string roleName, CancellationToken cancellationToken)
     {
         const string sql = "SELECT Id FROM dbo.Roles WHERE NormalizedName=@NormalizedRoleName;";
-        using var connection = _connectionFactory.Create();
+        using var connection = connectionFactory.Create();
         return await connection.ExecuteScalarAsync<Guid?>(
             new CommandDefinition(sql, new { NormalizedRoleName = Normalize(roleName) }, cancellationToken: cancellationToken));
     }

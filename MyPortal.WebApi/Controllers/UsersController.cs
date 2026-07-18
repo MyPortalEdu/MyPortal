@@ -16,16 +16,12 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>User management endpoints.</summary>
-public class UsersController : BaseApiController
+public class UsersController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<UsersController> logger,
+    IUserService userService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IUserService _userService;
-
-    public UsersController(ProblemDetailsFactory problemFactory, ILogger<UsersController> logger,
-        IUserService userService) : base(problemFactory, logger)
-    {
-        _userService = userService;
-    }
-
     /// <summary>Get a user by id.</summary>
     /// <remarks>Returns 404 if no user matches.</remarks>
     /// <param name="userId">The id of the user.</param>
@@ -35,7 +31,7 @@ public class UsersController : BaseApiController
     [ProducesResponseType(typeof(UserDetailsResponse), 200)]
     public async Task<IActionResult> GetUserDetailsByIdAsync([FromRoute] Guid userId)
     {
-        var result = await _userService.GetDetailsByIdAsync(userId, CancellationToken);
+        var result = await userService.GetDetailsByIdAsync(userId, CancellationToken);
 
         if (result == null)
         {
@@ -53,7 +49,7 @@ public class UsersController : BaseApiController
     [ProducesResponseType(typeof(IList<PermissionResponse>), 200)]
     public async Task<IActionResult> GetUserPermissionsAsync([FromRoute] Guid userId)
     {
-        var result = await _userService.GetEffectivePermissionsAsync(userId, CancellationToken);
+        var result = await userService.GetEffectivePermissionsAsync(userId, CancellationToken);
 
         return Ok(result);
     }
@@ -73,7 +69,7 @@ public class UsersController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _userService.GetUsersAsync(options.FilterOptions, options.SortOptions, options.PageOptions,
+        var result = await userService.GetUsersAsync(options.FilterOptions, options.SortOptions, options.PageOptions,
             CancellationToken);
 
         return Ok(result);
@@ -88,7 +84,7 @@ public class UsersController : BaseApiController
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateUserAsync([FromBody] UserUpsertRequest model)
     {
-        var (result, userId) = await _userService.CreateAsync(model, CancellationToken);
+        var (result, userId) = await userService.CreateAsync(model, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : Ok(new IdResponse { Id = userId });
     }
@@ -104,7 +100,7 @@ public class UsersController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> UpdateUserAsync([FromRoute] Guid userId, [FromBody] UserUpdateRequest model)
     {
-        var result = await _userService.UpdateAsync(userId, model, CancellationToken);
+        var result = await userService.UpdateAsync(userId, model, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
@@ -120,7 +116,7 @@ public class UsersController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> SetPasswordAsync([FromRoute] Guid userId, [FromBody] UserSetPasswordRequest model)
     {
-        var result = await _userService.SetPasswordAsync(userId, model, CancellationToken);
+        var result = await userService.SetPasswordAsync(userId, model, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
@@ -134,7 +130,7 @@ public class UsersController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteUserAsync([FromRoute] Guid userId)
     {
-        var result = await _userService.DeleteAsync(userId, CancellationToken);
+        var result = await userService.DeleteAsync(userId, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }

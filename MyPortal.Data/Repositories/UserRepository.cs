@@ -12,13 +12,10 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories;
 
-public class UserRepository : EntityRepository<User>, IUserRepository
+public class UserRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<User>(factory,
+        authorizationService), IUserRepository
 {
-    public UserRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
-        authorizationService)
-    {
-    }
-
     public async Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();

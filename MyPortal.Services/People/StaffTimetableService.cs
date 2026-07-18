@@ -18,31 +18,24 @@ namespace MyPortal.Services.People;
 /// person, the events they're an attendee of). The absence source follows the same self/HR
 /// confidentiality rule as the Absences area.
 /// </summary>
-public class StaffTimetableService : BaseService, IStaffTimetableService
+public class StaffTimetableService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffTimetableService> logger,
+    IStaffMemberAccessService accessService,
+    IStaffMemberRepository staffMemberRepository,
+    IStaffCalendarRepository calendarRepository)
+    : BaseService(authorizationService, logger), IStaffTimetableService
 {
     // A defensive cap so a malformed range can't ask the views to expand an unbounded window.
     private const int MaxWindowDays = 62;
 
-    private readonly IStaffMemberAccessService _accessService;
-    private readonly IStaffMemberRepository _staffMemberRepository;
-    private readonly IStaffCalendarRepository _calendarRepository;
-
-    public StaffTimetableService(IAuthorizationService authorizationService, ILogger<StaffTimetableService> logger,
-        IStaffMemberAccessService accessService, IStaffMemberRepository staffMemberRepository,
-        IStaffCalendarRepository calendarRepository) : base(authorizationService, logger)
-    {
-        _accessService = accessService;
-        _staffMemberRepository = staffMemberRepository;
-        _calendarRepository = calendarRepository;
-    }
-
     public async Task<StaffCalendarResponse> GetCalendarAsync(Guid staffMemberId, DateTime from, DateTime to,
         CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(staffMemberId, StaffArea.Timetable,
+        await accessService.RequireAsync(staffMemberId, StaffArea.Timetable,
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
@@ -55,7 +48,7 @@ public class StaffTimetableService : BaseService, IStaffTimetableService
         }
 
         // Absences ride along only if the viewer is entitled to the Absences area for this person.
-        var canViewAbsences = await _accessService.CanAsync(staffMemberId, StaffArea.Absences,
+        var canViewAbsences = await accessService.CanAsync(staffMemberId, StaffArea.Absences,
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
         var includeConfidential = canViewAbsences &&
                                   await CanSeeConfidentialAbsencesAsync(staffMemberId, cancellationToken);
@@ -80,18 +73,18 @@ public class StaffTimetableService : BaseService, IStaffTimetableService
         // GetDiaryEvents with an id that matches no attendee returns the public-only set.
         if (personId is null)
         {
-            var publicOnly = await _calendarRepository.GetDiaryEventsAsync(Guid.Empty, from, to, cancellationToken);
+            var publicOnly = await calendarRepository.GetDiaryEventsAsync(Guid.Empty, from, to, cancellationToken);
             return Ordered(publicOnly.ToList());
         }
 
         var staffMemberId =
-            await _staffMemberRepository.GetStaffMemberIdByPersonIdAsync(personId.Value, cancellationToken);
+            await staffMemberRepository.GetStaffMemberIdByPersonIdAsync(personId.Value, cancellationToken);
 
         // A person who isn't (active) staff: public events plus the ones they're an attendee of.
         if (staffMemberId is null)
         {
             var personEvents =
-                await _calendarRepository.GetDiaryEventsAsync(personId.Value, from, to, cancellationToken);
+                await calendarRepository.GetDiaryEventsAsync(personId.Value, from, to, cancellationToken);
             return Ordered(personEvents.ToList());
         }
 
@@ -110,16 +103,16 @@ public class StaffTimetableService : BaseService, IStaffTimetableService
     {
         var events = new List<StaffCalendarEventResponse>();
 
-        events.AddRange(await _calendarRepository.GetLessonsAsync(staffMemberId, from, to, cancellationToken));
-        events.AddRange(await _calendarRepository.GetDetentionsAsync(staffMemberId, from, to, cancellationToken));
-        events.AddRange(await _calendarRepository.GetDiaryEventsAsync(personId, from, to, cancellationToken));
-        events.AddRange(await _calendarRepository.GetNonContactAsync(staffMemberId, from, to, cancellationToken));
+        events.AddRange(await calendarRepository.GetLessonsAsync(staffMemberId, from, to, cancellationToken));
+        events.AddRange(await calendarRepository.GetDetentionsAsync(staffMemberId, from, to, cancellationToken));
+        events.AddRange(await calendarRepository.GetDiaryEventsAsync(personId, from, to, cancellationToken));
+        events.AddRange(await calendarRepository.GetNonContactAsync(staffMemberId, from, to, cancellationToken));
         events.AddRange(
-            await _calendarRepository.GetParentEveningAppointmentsAsync(staffMemberId, from, to, cancellationToken));
+            await calendarRepository.GetParentEveningAppointmentsAsync(staffMemberId, from, to, cancellationToken));
 
         if (includeAbsences)
         {
-            events.AddRange(await _calendarRepository.GetAbsencesAsync(staffMemberId, from, to, includeConfidential,
+            events.AddRange(await calendarRepository.GetAbsencesAsync(staffMemberId, from, to, includeConfidential,
                 cancellationToken));
         }
 
@@ -153,14 +146,14 @@ public class StaffTimetableService : BaseService, IStaffTimetableService
     // rows; a line manager does not.
     private async Task<bool> CanSeeConfidentialAbsencesAsync(Guid staffMemberId, CancellationToken cancellationToken)
     {
-        var relationship = await _accessService.GetRelationshipAsync(staffMemberId, cancellationToken);
+        var relationship = await accessService.GetRelationshipAsync(staffMemberId, cancellationToken);
 
         if (relationship == StaffRelationship.Self)
         {
             return true;
         }
 
-        return await _accessService.CanAsync(staffMemberId, StaffArea.Absences,
+        return await accessService.CanAsync(staffMemberId, StaffArea.Absences,
             StaffAccess.ViewAll | StaffAccess.EditAll, cancellationToken);
     }
 }

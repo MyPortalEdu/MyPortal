@@ -4,20 +4,13 @@ using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Data.UnitOfWork;
 
-internal sealed class UnitOfWork : IUnitOfWork
+internal sealed class UnitOfWork(IDbConnection connection, IDbTransaction transaction, ILogger<UnitOfWork> logger)
+    : IUnitOfWork
 {
-    private IDbConnection? _connection;
-    private IDbTransaction? _transaction;
+    private IDbConnection? _connection = connection;
+    private IDbTransaction? _transaction = transaction;
     private bool _completed;
     private readonly List<Func<CancellationToken, Task>> _postCommit = new();
-    private readonly ILogger<UnitOfWork> _logger;
-
-    public UnitOfWork(IDbConnection connection, IDbTransaction transaction, ILogger<UnitOfWork> logger)
-    {
-        _connection = connection;
-        _transaction = transaction;
-        _logger = logger;
-    }
 
     public IDbConnection Connection =>
         _connection ?? throw new ObjectDisposedException(nameof(UnitOfWork));
@@ -57,7 +50,7 @@ internal sealed class UnitOfWork : IUnitOfWork
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Post-commit action failed; the transaction is still committed.");
+                logger.LogWarning(ex, "Post-commit action failed; the transaction is still committed.");
             }
         }
     }

@@ -13,17 +13,12 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Student-group listing endpoints.</summary>
-public sealed class StudentGroupsController : BaseApiController
+public sealed class StudentGroupsController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<StudentGroupsController> logger,
+    IStudentGroupService service)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IStudentGroupService _service;
-
-    public StudentGroupsController(ProblemDetailsFactory problemFactory,
-        ILogger<StudentGroupsController> logger, IStudentGroupService service)
-        : base(problemFactory, logger)
-    {
-        _service = service;
-    }
-
     /// <summary>Page through student-group summaries for an academic year.</summary>
     /// <remarks>Includes a <c>Kind</c> column for subtype filtering.</remarks>
     /// <param name="academicYearId">The academic year to scope to.</param>
@@ -40,7 +35,7 @@ public sealed class StudentGroupsController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _service.GetSummariesAsync(academicYearId, options.FilterOptions,
+        var result = await service.GetSummariesAsync(academicYearId, options.FilterOptions,
             options.SortOptions, options.PageOptions, CancellationToken);
 
         return Ok(result);

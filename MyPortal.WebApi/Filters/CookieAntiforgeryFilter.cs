@@ -14,17 +14,9 @@ namespace MyPortal.WebApi.Filters;
 /// bearer tokens cross-site. Honors [IgnoreAntiforgeryToken] for opt-outs
 /// (OAuth/OIDC endpoints).
 /// </summary>
-public sealed class CookieAntiforgeryFilter : IAsyncAuthorizationFilter
+public sealed class CookieAntiforgeryFilter(IAntiforgery antiforgery, ILogger<CookieAntiforgeryFilter> logger)
+    : IAsyncAuthorizationFilter
 {
-    private readonly IAntiforgery _antiforgery;
-    private readonly ILogger<CookieAntiforgeryFilter> _logger;
-
-    public CookieAntiforgeryFilter(IAntiforgery antiforgery, ILogger<CookieAntiforgeryFilter> logger)
-    {
-        _antiforgery = antiforgery;
-        _logger = logger;
-    }
-
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         var method = context.HttpContext.Request.Method;
@@ -68,7 +60,7 @@ public sealed class CookieAntiforgeryFilter : IAsyncAuthorizationFilter
 
         try
         {
-            await _antiforgery.ValidateRequestAsync(context.HttpContext);
+            await antiforgery.ValidateRequestAsync(context.HttpContext);
         }
         catch (AntiforgeryValidationException ex)
         {
@@ -78,7 +70,7 @@ public sealed class CookieAntiforgeryFilter : IAsyncAuthorizationFilter
             // why CSRF validation is rejecting an otherwise-well-formed request.
             // Log it at Warning so it surfaces in dev consoles without spamming
             // info-level traces.
-            _logger.LogWarning(ex,
+            logger.LogWarning(ex,
                 "Antiforgery validation failed for {Method} {Path} (user: {User}, hasStorageCookie: {HasStorage}, hasHeader: {HasHeader})",
                 method,
                 context.HttpContext.Request.Path,

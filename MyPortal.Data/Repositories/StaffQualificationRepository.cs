@@ -1,39 +1,26 @@
 using System.Data;
-using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
+using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
 
-public class StaffQualificationRepository : EntityRepository<StaffQualification>, IStaffQualificationRepository
+public class StaffQualificationRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<StaffQualification>(factory, authorizationService), IStaffQualificationRepository
 {
-    public StaffQualificationRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
-        base(factory, authorizationService)
-    {
-    }
-
     public async Task<IEnumerable<StaffQualification>> GetByStaffMemberIdAsync(Guid staffMemberId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        // Full column list (incl. audit + version) so reconcile updates round-trip without
-        // zeroing the created/audit columns; soft-deleted rows are excluded.
-        const string sql =
-            "SELECT [Id], [StaffMemberId], [QualificationLevelId], [Title], [Subject], [AwardingBody], " +
-            "[Grade], [ClassOfDegreeId], [YearAwarded], [IsDeleted], [CreatedById], [CreatedByIpAddress], " +
-            "[CreatedAt], [LastModifiedById], [LastModifiedByIpAddress], [LastModifiedAt], [Version] " +
-            "FROM [dbo].[StaffQualifications] WHERE [StaffMemberId] = @staffMemberId AND [IsDeleted] = 0;";
-
         var (conn, owns) = AcquireConnection(transaction);
 
         try
         {
-            var command = new CommandDefinition(sql, new { staffMemberId }, transaction,
+            return await conn.ExecuteStoredProcedureAsync<StaffQualification>(
+                "[dbo].[usp_staff_qualification_get_by_staff_member_id]", new { staffMemberId }, transaction,
                 cancellationToken: cancellationToken);
-
-            return await conn.QueryAsync<StaffQualification>(command);
         }
         finally
         {

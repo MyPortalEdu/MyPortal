@@ -7,19 +7,14 @@ using MyPortal.Auth.Requirements;
 
 namespace MyPortal.Auth.Providers;
 
-public sealed class ApplicationPolicyProvider : IAuthorizationPolicyProvider
+public sealed class ApplicationPolicyProvider(IServiceProvider sp) : IAuthorizationPolicyProvider
 {
     private const string PermPrefix = "perm:";
     private const string UtPrefix   = "ut:";
 
-    private readonly DefaultAuthorizationPolicyProvider _fallback;
+    private readonly DefaultAuthorizationPolicyProvider _fallback = new(
+        sp.GetRequiredService<IOptions<AuthorizationOptions>>());
     private readonly ConcurrentDictionary<string, AuthorizationPolicy> _cache = new();
-
-    public ApplicationPolicyProvider(IServiceProvider sp)
-    {
-        _fallback = new DefaultAuthorizationPolicyProvider(
-            sp.GetRequiredService<IOptions<AuthorizationOptions>>());
-    }
 
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {

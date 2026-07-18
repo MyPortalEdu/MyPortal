@@ -11,28 +11,20 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.School.Bulletins;
 
-public class BulletinCategoryService : IBulletinCategoryService
+public class BulletinCategoryService(
+    IAuthorizationService authorizationService,
+    IBulletinCategoryRepository repository,
+    ILogger<BulletinCategoryService> logger)
+    : IBulletinCategoryService
 {
-    private readonly IAuthorizationService _authorizationService;
-    private readonly IBulletinCategoryRepository _repository;
-    private readonly ILogger<BulletinCategoryService> _logger;
-
-    public BulletinCategoryService(IAuthorizationService authorizationService,
-        IBulletinCategoryRepository repository, ILogger<BulletinCategoryService> logger)
-    {
-        _authorizationService = authorizationService;
-        _repository = repository;
-        _logger = logger;
-    }
-
     public async Task<IList<BulletinCategoryResponse>> GetAllAsync(bool includeInactive,
         CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, cancellationToken);
+        await authorizationService.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, cancellationToken);
 
         // Categories are a small set (typically <20 rows). Pulling the lot and filtering /
         // ordering in memory keeps the call site free of QueryKit's filter/sort plumbing.
-        var page = await _repository.GetListPagedAsync(cancellationToken: cancellationToken);
+        var page = await repository.GetListPagedAsync(cancellationToken: cancellationToken);
 
         return page.Items
             .Where(c => includeInactive || c.Active)
@@ -44,9 +36,9 @@ public class BulletinCategoryService : IBulletinCategoryService
 
     public async Task<BulletinCategoryResponse> GetByIdAsync(Guid categoryId, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, cancellationToken);
+        await authorizationService.RequirePermissionAsync(Permissions.School.ViewSchoolBulletins, cancellationToken);
 
-        var entity = await _repository.GetByIdAsync(categoryId, cancellationToken)
+        var entity = await repository.GetByIdAsync(categoryId, cancellationToken)
                      ?? throw new NotFoundException("Bulletin category not found.");
 
         return Map(entity);
@@ -54,7 +46,7 @@ public class BulletinCategoryService : IBulletinCategoryService
 
     public async Task<Guid> CreateAsync(BulletinCategoryUpsertRequest model, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
+        await authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
         var entity = new BulletinCategory
         {
@@ -67,18 +59,18 @@ public class BulletinCategoryService : IBulletinCategoryService
             IsSystem = false
         };
 
-        await _repository.InsertAsync(entity, cancellationToken);
+        await repository.InsertAsync(entity, cancellationToken);
 
-        _logger.LogInformation("Bulletin category created: {categoryId}", entity.Id);
+        logger.LogInformation("Bulletin category created: {categoryId}", entity.Id);
         return entity.Id;
     }
 
     public async Task UpdateAsync(Guid categoryId, BulletinCategoryUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
+        await authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
-        var entity = await _repository.GetByIdAsync(categoryId, cancellationToken)
+        var entity = await repository.GetByIdAsync(categoryId, cancellationToken)
                      ?? throw new NotFoundException("Bulletin category not found.");
 
         entity.Name = model.Name;
@@ -88,18 +80,18 @@ public class BulletinCategoryService : IBulletinCategoryService
         entity.Active = model.Active;
         entity.Version = model.ExpectedVersion;
 
-        await _repository.UpdateAsync(entity, cancellationToken);
+        await repository.UpdateAsync(entity, cancellationToken);
 
-        _logger.LogInformation("Bulletin category updated: {categoryId}", categoryId);
+        logger.LogInformation("Bulletin category updated: {categoryId}", categoryId);
     }
 
     public async Task DeleteAsync(Guid categoryId, CancellationToken cancellationToken)
     {
-        await _authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
+        await authorizationService.RequirePermissionAsync(Permissions.SystemAdmin.BulletinSettings, cancellationToken);
 
-        await _repository.DeleteAsync(categoryId, cancellationToken);
+        await repository.DeleteAsync(categoryId, cancellationToken);
 
-        _logger.LogInformation("Bulletin category deleted: {categoryId}", categoryId);
+        logger.LogInformation("Bulletin category deleted: {categoryId}", categoryId);
     }
 
     private static BulletinCategoryResponse Map(BulletinCategory c) => new()

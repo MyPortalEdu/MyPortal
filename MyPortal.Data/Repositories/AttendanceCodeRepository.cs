@@ -8,13 +8,9 @@ using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
 
-public class AttendanceCodeRepository : EntityRepository<AttendanceCode>, IAttendanceCodeRepository
+public class AttendanceCodeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<AttendanceCode>(factory, authorizationService), IAttendanceCodeRepository
 {
-    public AttendanceCodeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<AttendanceCode>> GetByIdsAsync(IEnumerable<Guid> attendanceCodeIds,
         CancellationToken cancellationToken)
     {

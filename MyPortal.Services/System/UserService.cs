@@ -21,40 +21,29 @@ using MyPortal.Services.Interfaces.System;
 
 namespace MyPortal.Services.System;
 
-public class UserService : BaseService, IUserService
+public class UserService(
+    IAuthorizationService authorizationService,
+    ILogger<UserService> logger,
+    IUserRepository userRepository,
+    IPermissionRepository permissionRepository,
+    UserManager<ApplicationUser> userManager,
+    RoleManager<ApplicationRole> roleManager,
+    IValidationService validationService,
+    IUserStatusCache userStatusCache)
+    : BaseService(authorizationService, logger), IUserService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPermissionRepository _permissionRepository;
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<ApplicationRole> _roleManager;
-    private readonly IValidationService _validationService;
-    private readonly IUserStatusCache _userStatusCache;
-
-    public UserService(IAuthorizationService authorizationService, ILogger<UserService> logger, IUserRepository userRepository,
-        IPermissionRepository permissionRepository, UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager, IValidationService validationService,
-        IUserStatusCache userStatusCache) : base(authorizationService, logger)
-    {
-        _userRepository = userRepository;
-        _permissionRepository = permissionRepository;
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _validationService = validationService;
-        _userStatusCache = userStatusCache;
-    }
-
     public async Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
 
-        var details = await _userRepository.GetDetailsByIdAsync(userId, cancellationToken);
+        var details = await userRepository.GetDetailsByIdAsync(userId, cancellationToken);
 
         if (details is null)
         {
             return null;
         }
 
-        details.RoleIds = await _userRepository.GetRoleIdsByUserIdAsync(userId, cancellationToken);
+        details.RoleIds = await userRepository.GetRoleIdsByUserIdAsync(userId, cancellationToken);
 
         return details;
     }
@@ -63,7 +52,7 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
 
-        return await _permissionRepository.GetPermissionsByUserIdAsync(userId, cancellationToken);
+        return await permissionRepository.GetPermissionsByUserIdAsync(userId, cancellationToken);
     }
 
     public async Task<UserInfoResponse?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken)
@@ -75,14 +64,14 @@ public class UserService : BaseService, IUserService
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
         }
 
-        var userInfo = await _userRepository.GetInfoByIdAsync(userId, cancellationToken);
+        var userInfo = await userRepository.GetInfoByIdAsync(userId, cancellationToken);
 
         if (userInfo == null)
         {
             return null;
         }
 
-        var permissions = await _permissionRepository.GetPermissionsByUserIdAsync(userId, cancellationToken);
+        var permissions = await permissionRepository.GetPermissionsByUserIdAsync(userId, cancellationToken);
 
         userInfo.Permissions = permissions.Select(p => p.Name).ToArray();
 
@@ -94,7 +83,7 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewUsers, cancellationToken);
 
-        var result = await _userRepository.GetUsersAsync(filter, sort, paging, cancellationToken);
+        var result = await userRepository.GetUsersAsync(filter, sort, paging, cancellationToken);
         
         return result;
     }
@@ -104,7 +93,7 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
         {
@@ -114,8 +103,8 @@ public class UserService : BaseService, IUserService
         // Reset via a generated token so the new hash replaces the old in a single store
         // operation. The previous remove-then-add could leave a user without a password if
         // the second step failed (e.g. complexity rejection).
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        return await _userManager.ResetPasswordAsync(user, token, model.Password);
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        return await userManager.ResetPasswordAsync(user, token, model.Password);
     }
 
     public async Task<IdentityResult> ChangePasswordAsync(Guid userId, UserChangePasswordRequest model,
@@ -128,21 +117,21 @@ public class UserService : BaseService, IUserService
             throw new ForbiddenException("You can only change your own password.");
         }
 
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
         {
             throw new NotFoundException("User not found.");
         }
 
-        return await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.Password);
+        return await userManager.ChangePasswordAsync(user, model.CurrentPassword, model.Password);
     }
 
     public async Task<(IdentityResult Result, Guid UserId)> CreateAsync(UserUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
         var newUser = new ApplicationUser
         {
@@ -163,7 +152,7 @@ public class UserService : BaseService, IUserService
 
         using var tx = CreateTransactionScope();
 
-        var result = await _userManager.CreateAsync(newUser, model.Password);
+        var result = await userManager.CreateAsync(newUser, model.Password);
 
         if (!result.Succeeded)
         {
@@ -182,9 +171,9 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
         {
@@ -218,11 +207,11 @@ public class UserService : BaseService, IUserService
         // session keeps its claims (UserType, roles) until ValidationInterval expires.
         if (userDisabled || userTypeChanged || rolesChanged)
         {
-            result = await _userManager.UpdateSecurityStampAsync(user);
+            result = await userManager.UpdateSecurityStampAsync(user);
         }
         else
         {
-            result = await _userManager.UpdateAsync(user);
+            result = await userManager.UpdateAsync(user);
         }
 
         if (result.Succeeded)
@@ -230,7 +219,7 @@ public class UserService : BaseService, IUserService
             tx.Complete();
             // Drop the cached IsEnabled so a disable takes effect on the next permission check
             // instead of waiting up to the cache TTL.
-            _userStatusCache.Invalidate(userId);
+            userStatusCache.Invalidate(userId);
         }
 
         return result;
@@ -240,7 +229,7 @@ public class UserService : BaseService, IUserService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, cancellationToken);
 
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await userManager.FindByIdAsync(userId.ToString());
 
         if (user == null)
         {
@@ -252,11 +241,11 @@ public class UserService : BaseService, IUserService
             throw new SystemEntityException("System users cannot be deleted.");
         }
 
-        var result = await _userManager.DeleteAsync(user);
+        var result = await userManager.DeleteAsync(user);
 
         if (result.Succeeded)
         {
-            _userStatusCache.Invalidate(userId);
+            userStatusCache.Invalidate(userId);
         }
 
         return result;
@@ -285,13 +274,13 @@ public class UserService : BaseService, IUserService
     {
         var changesMade = false;
 
-        var currentRoleNames = await _userManager.GetRolesAsync(user);
+        var currentRoleNames = await userManager.GetRolesAsync(user);
 
         var newRoleNames = new List<string>();
 
         foreach (var roleId in roleIds)
         {
-            var role = await _roleManager.FindByIdAsync(roleId.ToString());
+            var role = await roleManager.FindByIdAsync(roleId.ToString());
 
             if (role == null)
             {
@@ -319,7 +308,7 @@ public class UserService : BaseService, IUserService
                 continue;
             }
 
-            await _userManager.AddToRoleAsync(user, role.Name);
+            await userManager.AddToRoleAsync(user, role.Name);
             changesMade = true;
         }
 
@@ -330,7 +319,7 @@ public class UserService : BaseService, IUserService
                 continue;
             }
 
-            await _userManager.RemoveFromRoleAsync(user, userRole);
+            await userManager.RemoveFromRoleAsync(user, userRole);
             changesMade = true;
         }
 

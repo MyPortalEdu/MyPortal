@@ -8,13 +8,9 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class StaffContractRepository : EntityRepository<StaffContract>, IStaffContractRepository
+public class StaffContractRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<StaffContract>(factory, authorizationService), IStaffContractRepository
 {
-    public StaffContractRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
-        base(factory, authorizationService)
-    {
-    }
-
     public async Task<IEnumerable<StaffContract>> GetByEmploymentIdsAsync(IEnumerable<Guid> employmentIds,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {

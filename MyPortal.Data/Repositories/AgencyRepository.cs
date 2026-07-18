@@ -6,10 +6,6 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class AgencyRepository : EntityRepository<Agency>, IAgencyRepository
-{
-    public AgencyRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
-        authorizationService)
-    {
-    }
-}
+public class AgencyRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<Agency>(factory,
+        authorizationService), IAgencyRepository;

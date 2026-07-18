@@ -2,11 +2,6 @@ namespace MyPortal.Contracts.Models.Pastoral;
 
 public class HouseDetailsResponse
 {
-    public HouseDetailsResponse()
-    {
-        Supervisors = new List<StudentGroupSupervisorResponse>();
-    }
-    
     public Guid Id { get; set; }
     public Guid AcademicYearId { get; set; }
     public string Code { get; set; } = null!;
@@ -14,5 +9,5 @@ public class HouseDetailsResponse
     public bool Active { get; set; }
     public string? Notes { get; set; }
     public string? ColourCode { get; set; }
-    public IList<StudentGroupSupervisorResponse> Supervisors { get; set; }
+    public IList<StudentGroupSupervisorResponse> Supervisors { get; set; } = new List<StudentGroupSupervisorResponse>();
 }

@@ -17,22 +17,24 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Curriculum;
 
-public class AcademicYearService : BaseService, IAcademicYearService
+public class AcademicYearService(
+    IAuthorizationService authorizationService,
+    ILogger<AcademicYearService> logger,
+    IAcademicYearRepository academicYearRepository,
+    IAcademicTermRepository academicTermRepository,
+    IAttendancePeriodRepository attendancePeriodRepository,
+    IAttendanceWeekRepository attendanceWeekRepository,
+    ISchoolHolidayRepository schoolHolidayRepository,
+    IDiaryEventRepository diaryEventRepository,
+    IStudentGroupRepository studentGroupRepository,
+    IStudentGroupSupervisorRepository studentGroupSupervisorRepository,
+    IYearGroupRepository yearGroupRepository,
+    IRegGroupRepository regGroupRepository,
+    IHouseRepository houseRepository,
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IValidationService validationService)
+    : BaseService(authorizationService, logger), IAcademicYearService
 {
-    private readonly IAcademicYearRepository _academicYearRepository;
-    private readonly IAcademicTermRepository _academicTermRepository;
-    private readonly IAttendancePeriodRepository _attendancePeriodRepository;
-    private readonly IAttendanceWeekRepository _attendanceWeekRepository;
-    private readonly ISchoolHolidayRepository _schoolHolidayRepository;
-    private readonly IDiaryEventRepository _diaryEventRepository;
-    private readonly IStudentGroupRepository _studentGroupRepository;
-    private readonly IStudentGroupSupervisorRepository _studentGroupSupervisorRepository;
-    private readonly IYearGroupRepository _yearGroupRepository;
-    private readonly IRegGroupRepository _regGroupRepository;
-    private readonly IHouseRepository _houseRepository;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-    private readonly IValidationService _validationService;
-
     private IDictionary<SchoolHolidayType, Guid> _schoolHolidayMap = new Dictionary<SchoolHolidayType, Guid>
     {
         { SchoolHolidayType.HalfTerm, DiaryEventTypes.SchoolHoliday },
@@ -51,37 +53,12 @@ public class AcademicYearService : BaseService, IAcademicYearService
         };
 
 
-    public AcademicYearService(IAuthorizationService authorizationService, ILogger<AcademicYearService> logger,
-        IAcademicYearRepository academicYearRepository, IAcademicTermRepository academicTermRepository,
-        IAttendancePeriodRepository attendancePeriodRepository, IAttendanceWeekRepository attendanceWeekRepository,
-        ISchoolHolidayRepository schoolHolidayRepository, IDiaryEventRepository diaryEventRepository,
-        IStudentGroupRepository studentGroupRepository,
-        IStudentGroupSupervisorRepository studentGroupSupervisorRepository,
-        IYearGroupRepository yearGroupRepository, IRegGroupRepository regGroupRepository,
-        IHouseRepository houseRepository, IUnitOfWorkFactory unitOfWorkFactory,
-        IValidationService validationService) : base(authorizationService, logger)
-    {
-        _academicYearRepository = academicYearRepository;
-        _academicTermRepository = academicTermRepository;
-        _attendancePeriodRepository = attendancePeriodRepository;
-        _attendanceWeekRepository = attendanceWeekRepository;
-        _schoolHolidayRepository = schoolHolidayRepository;
-        _diaryEventRepository = diaryEventRepository;
-        _studentGroupRepository = studentGroupRepository;
-        _studentGroupSupervisorRepository = studentGroupSupervisorRepository;
-        _yearGroupRepository = yearGroupRepository;
-        _regGroupRepository = regGroupRepository;
-        _houseRepository = houseRepository;
-        _unitOfWorkFactory = unitOfWorkFactory;
-        _validationService = validationService;
-    }
-
     public async Task<IList<AcademicYearSummaryResponse>> ListAsync(CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.ViewAcademicYears,
             cancellationToken);
 
-        return await _academicYearRepository.GetSummariesAsync(cancellationToken);
+        return await academicYearRepository.GetSummariesAsync(cancellationToken);
     }
 
     public async Task<AcademicYearDetailsResponse> GetByIdAsync(Guid academicYearId,
@@ -90,7 +67,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
         await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.ViewAcademicYears,
             cancellationToken);
 
-        var result = await _academicYearRepository.GetDetailsByIdAsync(academicYearId, cancellationToken)
+        var result = await academicYearRepository.GetDetailsByIdAsync(academicYearId, cancellationToken)
                      ?? throw new NotFoundException("Academic year not found.");
 
         result.Header.Terms = result.Terms;
@@ -116,16 +93,16 @@ public class AcademicYearService : BaseService, IAcademicYearService
         await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.ViewAcademicYears,
             cancellationToken);
 
-        return await _academicYearRepository.GetCurrentAsync(cancellationToken);
+        return await academicYearRepository.GetCurrentAsync(cancellationToken);
     }
 
     public async Task<Guid> CreateAcademicYear(AcademicYearUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.EditAcademicYears, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        return await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        return await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             await EnsureNoOverlapAsync(excludeAcademicYearId: null, model, uow.Transaction, cancellationToken);
 
@@ -139,7 +116,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 SchoolWeekLength = model.SchoolWeekLength
             };
 
-            await _academicYearRepository.InsertAsync(academicYear, cancellationToken, uow.Transaction);
+            await academicYearRepository.InsertAsync(academicYear, cancellationToken, uow.Transaction);
 
             await InsertCalendarArtefactsAsync(academicYearId, model, uow.Transaction, cancellationToken);
 
@@ -159,7 +136,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
         var rangeStart = model.AcademicTerms.Min(t => t.StartDate);
         var rangeEnd = model.AcademicTerms.Max(t => t.EndDate);
 
-        if (await _academicYearRepository.HasOverlapAsync(excludeAcademicYearId, rangeStart, rangeEnd,
+        if (await academicYearRepository.HasOverlapAsync(excludeAcademicYearId, rangeStart, rangeEnd,
                 cancellationToken, transaction))
         {
             throw new ArgumentException(
@@ -188,7 +165,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 EndDate = termModel.EndDate
             };
 
-            await _academicTermRepository.InsertAsync(academicTerm, cancellationToken, transaction);
+            await academicTermRepository.InsertAsync(academicTerm, cancellationToken, transaction);
 
             // Walk every calendar week that touches the term, anchored on Monday. Every week
             // gets a row — weeks where the entire Mon-Fri block is covered by SchoolHoliday
@@ -217,7 +194,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                     IsNonTimetable = IsFullHolidayWeek(monday, model.SchoolWeekLength, model.SchoolHolidays)
                 };
 
-                await _attendanceWeekRepository.InsertAsync(attendanceWeek, cancellationToken, transaction);
+                await attendanceWeekRepository.InsertAsync(attendanceWeek, cancellationToken, transaction);
             }
         }
 
@@ -240,7 +217,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
             };
 
             var diaryEventEntity =
-                await _diaryEventRepository.InsertAsync(diaryEvent, cancellationToken, transaction);
+                await diaryEventRepository.InsertAsync(diaryEvent, cancellationToken, transaction);
 
             var schoolHoliday = new SchoolHoliday
             {
@@ -249,13 +226,13 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 EventId = diaryEventEntity.Id
             };
 
-            await _schoolHolidayRepository.InsertAsync(schoolHoliday, cancellationToken, transaction);
+            await schoolHolidayRepository.InsertAsync(schoolHoliday, cancellationToken, transaction);
         }
 
         IEnumerable<AttendancePeriodUpsertRequest> periodSource;
         if (model.CopyPeriodsFromAcademicYearId.HasValue)
         {
-            var periodsToCopy = await _attendancePeriodRepository.GetAttendancePeriodsByAcademicYear(
+            var periodsToCopy = await attendancePeriodRepository.GetAttendancePeriodsByAcademicYear(
                 model.CopyPeriodsFromAcademicYearId.Value, cancellationToken);
 
             periodSource = periodsToCopy.Select(p => new AttendancePeriodUpsertRequest
@@ -289,7 +266,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 IsLesson = periodModel.IsLesson
             };
 
-            await _attendancePeriodRepository.InsertAsync(attendancePeriod, cancellationToken, transaction);
+            await attendancePeriodRepository.InsertAsync(attendancePeriod, cancellationToken, transaction);
         }
     }
 
@@ -300,16 +277,16 @@ public class AcademicYearService : BaseService, IAcademicYearService
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var sourceStudentGroups =
-            await _studentGroupRepository.GetStudentGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
+            await studentGroupRepository.GetStudentGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
         var sourceSupervisors =
-            await _studentGroupSupervisorRepository.GetStudentGroupSupervisorsByAcademicYear(sourceAcademicYearId,
+            await studentGroupSupervisorRepository.GetStudentGroupSupervisorsByAcademicYear(sourceAcademicYearId,
                 cancellationToken);
         var sourceYearGroups =
-            await _yearGroupRepository.GetYearGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
+            await yearGroupRepository.GetYearGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
         var sourceRegGroups =
-            await _regGroupRepository.GetRegGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
+            await regGroupRepository.GetRegGroupsByAcademicYear(sourceAcademicYearId, cancellationToken);
         var sourceHouses =
-            await _houseRepository.GetHousesByAcademicYear(sourceAcademicYearId, cancellationToken);
+            await houseRepository.GetHousesByAcademicYear(sourceAcademicYearId, cancellationToken);
 
         // Pre-allocate IDs so cross-row references can be remapped without ordering hacks.
         var studentGroupIdMap = sourceStudentGroups.ToDictionary(sg => sg.Id, _ => SqlConvention.SequentialGuid());
@@ -338,7 +315,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 IsSystem = src.IsSystem
             };
 
-            var inserted = await _studentGroupRepository.InsertAsync(studentGroup, cancellationToken, transaction);
+            var inserted = await studentGroupRepository.InsertAsync(studentGroup, cancellationToken, transaction);
             insertedStudentGroups[src.Id] = inserted;
         }
 
@@ -352,7 +329,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 Title = src.Title
             };
 
-            await _studentGroupSupervisorRepository.InsertAsync(supervisor, cancellationToken, transaction);
+            await studentGroupSupervisorRepository.InsertAsync(supervisor, cancellationToken, transaction);
         }
 
         foreach (var src in sourceStudentGroups.Where(sg => sg.MainSupervisorId.HasValue))
@@ -360,7 +337,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
             var inserted = insertedStudentGroups[src.Id];
             inserted.MainSupervisorId = supervisorIdMap[src.MainSupervisorId!.Value];
 
-            await _studentGroupRepository.UpdateAsync(inserted, cancellationToken, transaction);
+            await studentGroupRepository.UpdateAsync(inserted, cancellationToken, transaction);
         }
 
         foreach (var src in sourceYearGroups)
@@ -372,7 +349,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 CurriculumYearGroupId = src.CurriculumYearGroupId
             };
 
-            await _yearGroupRepository.InsertAsync(yearGroup, cancellationToken, transaction);
+            await yearGroupRepository.InsertAsync(yearGroup, cancellationToken, transaction);
         }
 
         foreach (var src in sourceRegGroups)
@@ -385,7 +362,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 RoomId = src.RoomId
             };
 
-            await _regGroupRepository.InsertAsync(regGroup, cancellationToken, transaction);
+            await regGroupRepository.InsertAsync(regGroup, cancellationToken, transaction);
         }
 
         foreach (var src in sourceHouses)
@@ -397,7 +374,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 ColourCode = src.ColourCode
             };
 
-            await _houseRepository.InsertAsync(house, cancellationToken, transaction);
+            await houseRepository.InsertAsync(house, cancellationToken, transaction);
         }
     }
 
@@ -418,11 +395,11 @@ public class AcademicYearService : BaseService, IAcademicYearService
                 "Delete and recreate the year if you want to re-copy structure.");
         }
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        return await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        return await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
-            var academicYear = await _academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
+            var academicYear = await academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
                                    uow.Transaction)
                                ?? throw new NotFoundException("Academic year not found.");
 
@@ -436,7 +413,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
             // attendance weeks are being read by the register flow, sessions reference
             // periods, etc. Blocking updates from this point keeps regen safe even if no
             // marks have been written yet.
-            var earliestStart = await _academicYearRepository.GetEarliestTermStartDateAsync(
+            var earliestStart = await academicYearRepository.GetEarliestTermStartDateAsync(
                 academicYearId, cancellationToken, uow.Transaction);
 
             if (earliestStart.HasValue && earliestStart.Value.Date <= DateTime.UtcNow.Date)
@@ -445,7 +422,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                     "This academic year has already started and cannot be edited.");
             }
 
-            if (await _academicYearRepository.HasDownstreamDataAsync(academicYearId, cancellationToken,
+            if (await academicYearRepository.HasDownstreamDataAsync(academicYearId, cancellationToken,
                     uow.Transaction))
             {
                 throw new AcademicYearLockedException(
@@ -459,20 +436,20 @@ public class AcademicYearService : BaseService, IAcademicYearService
             // FK-safe wipe order: periods (no children — marks already proven absent),
             // weeks (parent of marks), terms (parent of weeks), holidays + their backing
             // diary events. Pastoral hierarchy is intentionally left in place.
-            await _attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
-            await _attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
-            await _academicTermRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await academicTermRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
-            await _schoolHolidayRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await schoolHolidayRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
 
             academicYear.Name = BuildAcademicYearName(model);
             academicYear.TimetableCycleLength = model.TimetableCycleLength;
             academicYear.SchoolWeekLength = model.SchoolWeekLength;
 
-            await _academicYearRepository.UpdateAsync(academicYear, cancellationToken, uow.Transaction);
+            await academicYearRepository.UpdateAsync(academicYear, cancellationToken, uow.Transaction);
 
             await InsertCalendarArtefactsAsync(academicYearId, model, uow.Transaction, cancellationToken);
 
@@ -484,9 +461,9 @@ public class AcademicYearService : BaseService, IAcademicYearService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.EditAcademicYears, cancellationToken);
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
-            var academicYear = await _academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
+            var academicYear = await academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
                                    uow.Transaction)
                                ?? throw new NotFoundException("Academic year not found.");
 
@@ -499,7 +476,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
             // Same gate as update: once the calendar is live other systems read from it,
             // and once any user data is attached we can't tear the AY down without
             // orphaning that data.
-            var earliestStart = await _academicYearRepository.GetEarliestTermStartDateAsync(
+            var earliestStart = await academicYearRepository.GetEarliestTermStartDateAsync(
                 academicYearId, cancellationToken, uow.Transaction);
 
             if (earliestStart.HasValue && earliestStart.Value.Date <= DateTime.UtcNow.Date)
@@ -508,7 +485,7 @@ public class AcademicYearService : BaseService, IAcademicYearService
                     "This academic year has already started and cannot be deleted.");
             }
 
-            if (await _academicYearRepository.HasDownstreamDataAsync(academicYearId, cancellationToken,
+            if (await academicYearRepository.HasDownstreamDataAsync(academicYearId, cancellationToken,
                     uow.Transaction))
             {
                 throw new AcademicYearLockedException(
@@ -518,18 +495,18 @@ public class AcademicYearService : BaseService, IAcademicYearService
 
             // Same FK-safe wipe as update, then add the pastoral hierarchy on top (which
             // update leaves alone) and finally the AY row itself.
-            await _attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
-            await _attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
-            await _academicTermRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await academicTermRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
-            await _schoolHolidayRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await schoolHolidayRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
-            await _studentGroupRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
+            await studentGroupRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
 
-            await _academicYearRepository.DeleteAsync(academicYearId, cancellationToken,
+            await academicYearRepository.DeleteAsync(academicYearId, cancellationToken,
                 transaction: uow.Transaction);
         }, cancellationToken);
     }

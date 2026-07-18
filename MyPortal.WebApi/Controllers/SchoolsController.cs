@@ -11,16 +11,12 @@ using MyPortal.Services.Interfaces.School;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>School metadata endpoints.</summary>
-public class SchoolsController : BaseApiController
+public class SchoolsController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<SchoolsController> logger,
+    ISchoolService schoolService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ISchoolService _schoolService;
-
-    public SchoolsController(ProblemDetailsFactory problemFactory, ILogger<SchoolsController> logger,
-        ISchoolService schoolService) : base(problemFactory, logger)
-    {
-        _schoolService = schoolService;
-    }
-
     /// <summary>Get the local school's name.</summary>
     /// <remarks>Returns an empty string if no school has been configured yet.</remarks>
     [HttpGet("local/name")]
@@ -28,7 +24,7 @@ public class SchoolsController : BaseApiController
     [ProducesResponseType(typeof(string), 200)]
     public async Task<IActionResult> GetLocalSchoolName()
     {
-        var school = await _schoolService.GetLocalSchoolDetailsAsync(CancellationToken);
+        var school = await schoolService.GetLocalSchoolDetailsAsync(CancellationToken);
 
         return Ok(school?.Name ?? "");
     }
@@ -43,7 +39,7 @@ public class SchoolsController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> GetLocalSchool()
     {
-        var school = await _schoolService.GetLocalSchoolDetailsAsync(CancellationToken);
+        var school = await schoolService.GetLocalSchoolDetailsAsync(CancellationToken);
 
         return school != null ? Ok(school) : NoContent();
     }
@@ -57,7 +53,7 @@ public class SchoolsController : BaseApiController
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.EditAgencies)]
     public async Task<IActionResult> SaveLocalSchoolDetails([FromBody] SchoolUpsertRequest model)
     {
-        var result = await _schoolService.CreateOrUpdateLocalSchoolAsync(model, CancellationToken);
+        var result = await schoolService.CreateOrUpdateLocalSchoolAsync(model, CancellationToken);
         
         return Ok(result);
     }

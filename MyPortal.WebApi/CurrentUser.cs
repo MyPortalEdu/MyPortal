@@ -4,20 +4,12 @@ using MyPortal.Common.Enums;
 
 namespace MyPortal.WebApi;
 
-public class CurrentUser : ICurrentUser
+public class CurrentUser(IHttpContextAccessor httpContextAccessor, IRoleAccessor roles)
+    : ICurrentUser
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IRoleAccessor _roles;
+    private ClaimsPrincipal? Principal => httpContextAccessor.HttpContext?.User;
 
-    private ClaimsPrincipal? Principal => _httpContextAccessor.HttpContext?.User;
-
-    public CurrentUser(IHttpContextAccessor httpContextAccessor, IRoleAccessor roles)
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _roles = roles;
-    }
-
-    public string? IpAddress => _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+    public string? IpAddress => httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
 
     public Guid? UserId
     {
@@ -53,6 +45,6 @@ public class CurrentUser : ICurrentUser
         if (UserId is null)
             return [];
 
-        return await _roles.GetRolesForUserAsync(UserId.Value, ct);
+        return await roles.GetRolesForUserAsync(UserId.Value, ct);
     }
 }

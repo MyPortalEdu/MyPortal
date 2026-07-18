@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class MaritalStatusRepository : EntityRepository<MaritalStatus>, IMaritalStatusRepository
-{
-    public MaritalStatusRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class MaritalStatusRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<MaritalStatus>(factory, authorizationService), IMaritalStatusRepository;

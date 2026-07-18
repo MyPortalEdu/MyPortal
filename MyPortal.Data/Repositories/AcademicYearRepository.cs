@@ -10,13 +10,9 @@ using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
 
-public class AcademicYearRepository : EntityRepository<AcademicYear>, IAcademicYearRepository
+public class AcademicYearRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<AcademicYear>(factory, authorizationService), IAcademicYearRepository
 {
-    public AcademicYearRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<DateTime?> GetEarliestTermStartDateAsync(Guid academicYearId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {

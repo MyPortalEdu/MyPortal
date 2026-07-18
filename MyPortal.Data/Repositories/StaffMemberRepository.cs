@@ -9,19 +9,16 @@ using MyPortal.Data.Interfaces;
 using MyPortal.Data.Models;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
+using QueryKit.Extensions;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories;
 
-public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMemberRepository
+public class StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<StaffMember>(factory, authorizationService), IStaffMemberRepository
 {
-    public StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-
     public async Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default)
@@ -81,17 +78,15 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
     public async Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {
-        const string sql =
-            "SELECT TOP 1 [Id] FROM [dbo].[StaffMembers] WHERE [PersonId] = @personId AND [IsDeleted] = 0;";
-
         var (conn, owns) = AcquireConnection(transaction);
 
         try
         {
-            var command = new CommandDefinition(sql, new { personId }, transaction,
+            var rows = await conn.ExecuteStoredProcedureAsync<Guid?>(
+                "[dbo].[usp_staff_member_get_id_by_person_id]", new { personId }, transaction,
                 cancellationToken: cancellationToken);
 
-            return await conn.ExecuteScalarAsync<Guid?>(command);
+            return rows.FirstOrDefault();
         }
         finally
         {
@@ -105,21 +100,12 @@ public class StaffMemberRepository : EntityRepository<StaffMember>, IStaffMember
     public async Task<IEnumerable<LookupResponse>> GetStaffLookupAsync(CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {
-        // {id, name} for every active staff member. Name composed via the shared person-name
-        // function (format 3 = First [Middle] Last, preferred names on).
-        const string sql =
-            "SELECT sm.[Id] AS Id, nm.[Name] AS Description " +
-            "FROM [dbo].[StaffMembers] sm " +
-            "OUTER APPLY [dbo].[fn_person_get_name](sm.[PersonId], 3, 1, 0) AS nm " +
-            "WHERE sm.[IsDeleted] = 0 ORDER BY nm.[Name];";
-
         var (conn, owns) = AcquireConnection(transaction);
 
         try
         {
-            var command = new CommandDefinition(sql, null, transaction, cancellationToken: cancellationToken);
-
-            return await conn.QueryAsync<LookupResponse>(command);
+            return await conn.ExecuteStoredProcedureAsync<LookupResponse>(
+                "[dbo].[usp_staff_member_get_lookup]", null, transaction, cancellationToken: cancellationToken);
         }
         finally
         {

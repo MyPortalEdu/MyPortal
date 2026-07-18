@@ -14,13 +14,9 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories;
 
-public class HouseRepository : EntityRepository<House>, IHouseRepository
+public class HouseRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<House>(factory, authorizationService), IHouseRepository
 {
-    public HouseRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<House>> GetHousesByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken)
     {

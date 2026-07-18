@@ -21,20 +21,17 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Agencies;
 
-public class AgencyService : DirectoryEntityService<Agency>, IAgencyService
+public class AgencyService(
+    IAuthorizationService authorizationService,
+    ILogger<DirectoryEntityService<Agency>> logger,
+    IDirectoryService directoryService,
+    IDocumentService documentService,
+    IValidationService validationService,
+    IAgencyRepository agencyRepository,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : DirectoryEntityService<Agency>(authorizationService, logger,
+        directoryService, documentService, validationService), IAgencyService
 {
-    private readonly IAgencyRepository _agencyRepository;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public AgencyService(IAuthorizationService authorizationService, ILogger<DirectoryEntityService<Agency>> logger,
-        IDirectoryService directoryService, IDocumentService documentService, IValidationService validationService,
-        IAgencyRepository agencyRepository, IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger,
-        directoryService, documentService, validationService)
-    {
-        _agencyRepository = agencyRepository;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public Task<PageResult<AgencySummaryResponse>> GetListPagedAsync(FilterOptions? filter, SortOptions? sort, int page,
         int pageSize,
         CancellationToken cancellationToken)
@@ -61,7 +58,7 @@ public class AgencyService : DirectoryEntityService<Agency>, IAgencyService
             UploadPolicy = DirectoryUploadPolicy.StaffOnly
         };
 
-        return await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        return await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
             var directory = await DirectoryService.CreateAsync(directoryRequest, cancellationToken, ownedUow);
 
@@ -75,7 +72,7 @@ public class AgencyService : DirectoryEntityService<Agency>, IAgencyService
                 IsDeleted = false
             };
 
-            await _agencyRepository.InsertAsync(agency, cancellationToken, ownedUow.Transaction);
+            await agencyRepository.InsertAsync(agency, cancellationToken, ownedUow.Transaction);
 
             return agencyId;
         }, cancellationToken);
@@ -92,9 +89,9 @@ public class AgencyService : DirectoryEntityService<Agency>, IAgencyService
         agency.Name = model.Name;
         agency.Website = model.Website;
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
-            await _agencyRepository.UpdateAsync(agency, cancellationToken, ownedUow.Transaction);
+            await agencyRepository.UpdateAsync(agency, cancellationToken, ownedUow.Transaction);
         }, cancellationToken);
     }
 
@@ -104,13 +101,13 @@ public class AgencyService : DirectoryEntityService<Agency>, IAgencyService
 
         var agency = await GetByIdAsync(id, cancellationToken);
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
             // Order matches BulletinService: the agency row holds an FK to its directory,
             // so deleting the directory first throws a REFERENCE-constraint error once
             // the directory has content. Drop the agency row to release the FK, then
             // hard-delete the directory (and its subtree) in the same transaction.
-            await _agencyRepository.DeleteAsync(id, cancellationToken, softDelete: false, ownedUow.Transaction);
+            await agencyRepository.DeleteAsync(id, cancellationToken, softDelete: false, ownedUow.Transaction);
 
             await DirectoryService.DeleteAsync(agency.DirectoryId, cancellationToken, ownedUow, softDelete: false);
         }, cancellationToken);
@@ -118,7 +115,7 @@ public class AgencyService : DirectoryEntityService<Agency>, IAgencyService
 
     public override async Task<Agency> GetByIdAsync(Guid entityId, CancellationToken cancellationToken)
     {
-        var agency = await _agencyRepository.GetByIdAsync(entityId, cancellationToken);
+        var agency = await agencyRepository.GetByIdAsync(entityId, cancellationToken);
 
         if (agency == null)
         {

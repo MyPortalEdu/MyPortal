@@ -1,0 +1,13 @@
+SET QUOTED_IDENTIFIER ON;
+SET ANSI_NULLS ON;
+
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[usp_timetable_pin_get_by_id]
+    @pinId UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT * FROM dbo.TimetablePins WHERE Id = @pinId;
+END;

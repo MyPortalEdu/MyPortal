@@ -3,33 +3,18 @@ using Dapper;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Data.Interfaces;
+using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
 
-public class BulletinSettingsRepository : IBulletinSettingsRepository
+public class BulletinSettingsRepository(IDbConnectionFactory factory) : IBulletinSettingsRepository
 {
-    private readonly IDbConnectionFactory _factory;
-
-    public BulletinSettingsRepository(IDbConnectionFactory factory)
-    {
-        _factory = factory;
-    }
-
     public async Task<IList<BulletinAllowedGroupResponse>> GetAllowedAudienceGroupsAsync(
         CancellationToken cancellationToken)
     {
-        const string sql = @"
-SELECT
-    SG.Id          AS StudentGroupId,
-    SG.Code        AS Code,
-    SG.Description AS Name
-FROM dbo.BulletinAudienceAllowedGroups AAG
-JOIN dbo.StudentGroups                  SG ON SG.Id = AAG.StudentGroupId
-ORDER BY SG.Description;";
-
-        using var conn = _factory.Create();
-        var rows = await conn.QueryAsync<BulletinAllowedGroupResponse>(
-            new CommandDefinition(sql, cancellationToken: cancellationToken));
+        using var conn = factory.Create();
+        var rows = await conn.ExecuteStoredProcedureAsync<BulletinAllowedGroupResponse>(
+            "[dbo].[usp_bulletin_audience_allowed_group_get_all]", cancellationToken: cancellationToken);
         return rows.ToList();
     }
 
@@ -45,7 +30,7 @@ ORDER BY SG.Description;";
         // No caller-supplied transaction: open a local one so DELETE + INSERT are atomic.
         // Without this, a failure (or cancellation) after the DELETE would leave the
         // allowlist empty.
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
         conn.Open();
         using var localTx = conn.BeginTransaction();
         try

@@ -14,13 +14,9 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories;
 
-public class RegGroupRepository : EntityRepository<RegGroup>, IRegGroupRepository
+public class RegGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<RegGroup>(factory, authorizationService), IRegGroupRepository
 {
-    public RegGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<RegGroup>> GetRegGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken)
     {

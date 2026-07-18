@@ -8,23 +8,18 @@ using MyPortal.Services.Interfaces.Attendance;
 
 namespace MyPortal.Services.Attendance;
 
-public class AttendanceCodeService : BaseService, IAttendanceCodeService
+public class AttendanceCodeService(
+    IAuthorizationService authorizationService,
+    ILogger<AttendanceCodeService> logger,
+    IAttendanceCodeRepository attendanceCodeRepository)
+    : BaseService(authorizationService, logger), IAttendanceCodeService
 {
-    private readonly IAttendanceCodeRepository _attendanceCodeRepository;
-
-    public AttendanceCodeService(IAuthorizationService authorizationService,
-        ILogger<AttendanceCodeService> logger, IAttendanceCodeRepository attendanceCodeRepository)
-        : base(authorizationService, logger)
-    {
-        _attendanceCodeRepository = attendanceCodeRepository;
-    }
-
     public async Task<IList<AttendanceCodeResponse>> GetActiveAsync(CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Attendance.ViewAttendanceMarks,
             cancellationToken);
 
-        var codes = await _attendanceCodeRepository.GetActiveAsync(cancellationToken);
+        var codes = await attendanceCodeRepository.GetActiveAsync(cancellationToken);
 
         return codes.Select(c => new AttendanceCodeResponse
         {
@@ -41,7 +36,7 @@ public class AttendanceCodeService : BaseService, IAttendanceCodeService
         var distinct = codeIds.Distinct().ToList();
         if (distinct.Count == 0) return;
 
-        var codes = await _attendanceCodeRepository.GetByIdsAsync(distinct, cancellationToken);
+        var codes = await attendanceCodeRepository.GetByIdsAsync(distinct, cancellationToken);
         var codesById = codes.ToDictionary(c => c.Id);
 
         var unknown = distinct.Where(id => !codesById.ContainsKey(id)).ToList();

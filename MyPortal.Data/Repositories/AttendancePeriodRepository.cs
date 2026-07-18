@@ -9,13 +9,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class AttendancePeriodRepository : EntityRepository<AttendancePeriod>, IAttendancePeriodRepository
+public class AttendancePeriodRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<AttendancePeriod>(factory, authorizationService), IAttendancePeriodRepository
 {
-    public AttendancePeriodRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<AttendancePeriod>> GetAttendancePeriodsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken)
     {

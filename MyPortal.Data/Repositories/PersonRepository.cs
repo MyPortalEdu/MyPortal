@@ -9,13 +9,9 @@ using MyPortal.Data.Utilities;
 
 namespace MyPortal.Data.Repositories
 {
-    public class PersonRepository : EntityRepository<Person>, IPersonRepository
+    public class PersonRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : EntityRepository<Person>(factory, authorizationService), IPersonRepository
     {
-        public PersonRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-            factory, authorizationService)
-        {
-        }
-
         public async Task<IReadOnlyList<PersonSearchResponse>> SearchAsync(string like, CancellationToken cancellationToken)
         {
             var sql = SqlResourceLoader.Load("People.SearchPeople.sql");

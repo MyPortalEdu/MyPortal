@@ -16,22 +16,14 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Pastoral;
 
-public class RegGroupService : BaseService, IRegGroupService
+public class RegGroupService(
+    IAuthorizationService authorizationService,
+    ILogger<RegGroupService> logger,
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IRegGroupRepository regGroupRepository,
+    IStudentGroupService studentGroupService)
+    : BaseService(authorizationService, logger), IRegGroupService
 {
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-    private readonly IRegGroupRepository _regGroupRepository;
-    private readonly IStudentGroupService _studentGroupService;
-
-    public RegGroupService(IAuthorizationService authorizationService, ILogger<RegGroupService> logger,
-        IUnitOfWorkFactory unitOfWorkFactory, IRegGroupRepository regGroupRepository,
-        IStudentGroupService studentGroupService) : base(
-        authorizationService, logger)
-    {
-        _unitOfWorkFactory = unitOfWorkFactory;
-        _regGroupRepository = regGroupRepository;
-        _studentGroupService = studentGroupService;
-    }
-
     public async Task<PageResult<RegGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
         FilterOptions? filter = null, SortOptions? sort = null,
         PageOptions? paging = null, CancellationToken cancellationToken = default)
@@ -39,7 +31,7 @@ public class RegGroupService : BaseService, IRegGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure, cancellationToken);
 
         var result =
-            await _regGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging, cancellationToken);
+            await regGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging, cancellationToken);
 
         return result;
     }
@@ -48,7 +40,7 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure, cancellationToken);
         
-        var result = await _regGroupRepository.GetDetailsByIdAsync(regGroupId, cancellationToken);
+        var result = await regGroupRepository.GetDetailsByIdAsync(regGroupId, cancellationToken);
 
         if (result == null)
         {
@@ -62,9 +54,9 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure, cancellationToken);
         
-        return await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        return await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
-            var studentGroupId = await _studentGroupService.CreateAsync(model.AcademicYearId, ToCore(model), model.Supervisors, cancellationToken, uow);
+            var studentGroupId = await studentGroupService.CreateAsync(model.AcademicYearId, ToCore(model), model.Supervisors, cancellationToken, uow);
 
             var regGroup = new RegGroup
             {
@@ -74,7 +66,7 @@ public class RegGroupService : BaseService, IRegGroupService
                 RoomId = model.RoomId
             };
 
-            await _regGroupRepository.InsertAsync(regGroup, cancellationToken, uow.Transaction);
+            await regGroupRepository.InsertAsync(regGroup, cancellationToken, uow.Transaction);
 
             return regGroup.Id;
 
@@ -85,17 +77,17 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure, cancellationToken);
         
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             var regGroup = await GetRegGroupAsync(regGroupId, cancellationToken);
 
-            await _studentGroupService.UpdateAsync(regGroup.StudentGroupId, ToCore(model), model.Supervisors,
+            await studentGroupService.UpdateAsync(regGroup.StudentGroupId, ToCore(model), model.Supervisors,
                 cancellationToken, uow);
             
             regGroup.RoomId = model.RoomId;
             regGroup.YearGroupId = model.YearGroupId;
             
-            await _regGroupRepository.UpdateAsync(regGroup, cancellationToken, uow.Transaction);
+            await regGroupRepository.UpdateAsync(regGroup, cancellationToken, uow.Transaction);
         }, cancellationToken);
     }
 
@@ -103,19 +95,19 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure, cancellationToken);
         
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             var regGroup = await GetRegGroupAsync(regGroupId, cancellationToken);
 
-            await _regGroupRepository.DeleteAsync(regGroupId, cancellationToken, transaction: uow.Transaction);
+            await regGroupRepository.DeleteAsync(regGroupId, cancellationToken, transaction: uow.Transaction);
 
-            await _studentGroupService.DeleteAsync(regGroup.StudentGroupId, cancellationToken, uow);
+            await studentGroupService.DeleteAsync(regGroup.StudentGroupId, cancellationToken, uow);
         }, cancellationToken);
     }
     
     private async Task<RegGroup> GetRegGroupAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await _regGroupRepository.GetByIdAsync(id, cancellationToken)
+        return await regGroupRepository.GetByIdAsync(id, cancellationToken)
                ?? throw new NotFoundException("Year group not found.");
     }
     

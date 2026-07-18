@@ -19,40 +19,29 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.System
 {
-    public class RoleService : BaseService, IRoleService
+    public class RoleService(
+        IAuthorizationService authorizationService,
+        ILogger<RoleService> logger,
+        IRoleRepository roleRepository,
+        IRolePermissionRepository rolePermissionRepository,
+        IPermissionRepository permissionRepository,
+        IRolePermissionCache rolePermissionCache,
+        RoleManager<ApplicationRole> roleManager,
+        IValidationService validationService)
+        : BaseService(authorizationService, logger), IRoleService
     {
-        private readonly IRoleRepository _roleRepository;
-        private readonly IRolePermissionRepository _rolePermissionRepository;
-        private readonly IPermissionRepository _permissionRepository;
-        private readonly IRolePermissionCache _rolePermissionCache;
-        private readonly RoleManager<ApplicationRole> _roleManager;
-        private readonly IValidationService _validationService;
-
-        public RoleService(IAuthorizationService authorizationService, ILogger<RoleService> logger, IRoleRepository roleRepository,
-            IRolePermissionRepository rolePermissionRepository, IPermissionRepository permissionRepository,
-            IRolePermissionCache rolePermissionCache,
-            RoleManager<ApplicationRole> roleManager, IValidationService validationService) : base(authorizationService, logger)
-        {
-            _roleRepository = roleRepository;
-            _rolePermissionRepository = rolePermissionRepository;
-            _permissionRepository = permissionRepository;
-            _rolePermissionCache = rolePermissionCache;
-            _roleManager = roleManager;
-            _validationService = validationService;
-        }
-
         public async Task<RoleDetailsResponse?> GetDetailsByIdAsync(Guid roleId, CancellationToken cancellationToken)
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewRoles, cancellationToken);
 
-            var details = await _roleRepository.GetDetailsByIdAsync(roleId, cancellationToken);
+            var details = await roleRepository.GetDetailsByIdAsync(roleId, cancellationToken);
 
             if (details is null)
             {
                 return null;
             }
 
-            var rolePermissions = await _rolePermissionRepository.GetByRoleIdAsync(roleId, cancellationToken);
+            var rolePermissions = await rolePermissionRepository.GetByRoleIdAsync(roleId, cancellationToken);
             details.PermissionIds = rolePermissions.Select(rp => rp.PermissionId).ToList();
 
             return details;
@@ -63,7 +52,7 @@ namespace MyPortal.Services.System
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.ViewRoles, cancellationToken);
 
-            var result = await _roleRepository.GetRolesAsync(filter, sort, paging, cancellationToken);
+            var result = await roleRepository.GetRolesAsync(filter, sort, paging, cancellationToken);
 
             return result;
         }
@@ -72,7 +61,7 @@ namespace MyPortal.Services.System
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
-            await _validationService.ValidateAsync(model);
+            await validationService.ValidateAsync(model);
 
             var role = new ApplicationRole
             {
@@ -86,7 +75,7 @@ namespace MyPortal.Services.System
 
             using var tx = CreateTransactionScope();
 
-            var result = await _roleManager.CreateAsync(role);
+            var result = await roleManager.CreateAsync(role);
 
             if (!result.Succeeded)
             {
@@ -104,9 +93,9 @@ namespace MyPortal.Services.System
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
-            await _validationService.ValidateAsync(model);
+            await validationService.ValidateAsync(model);
 
-            var role = await _roleManager.FindByIdAsync(roleId.ToString());
+            var role = await roleManager.FindByIdAsync(roleId.ToString());
 
             if (role == null)
             {
@@ -131,7 +120,7 @@ namespace MyPortal.Services.System
 
             using var tx = CreateTransactionScope();
 
-            var result = await _roleManager.UpdateAsync(role);
+            var result = await roleManager.UpdateAsync(role);
 
             if (!result.Succeeded)
             {
@@ -149,7 +138,7 @@ namespace MyPortal.Services.System
         {
             await AuthorizationService.RequirePermissionAsync(Permissions.SystemAdmin.EditRoles, cancellationToken);
 
-            var role = await _roleManager.FindByIdAsync(roleId.ToString());
+            var role = await roleManager.FindByIdAsync(roleId.ToString());
 
             if (role == null)
             {
@@ -168,20 +157,20 @@ namespace MyPortal.Services.System
 
             using var tx = CreateTransactionScope();
 
-            var rolePermissions = await _rolePermissionRepository.GetByRoleIdAsync(role.Id, cancellationToken);
+            var rolePermissions = await rolePermissionRepository.GetByRoleIdAsync(role.Id, cancellationToken);
 
             foreach (var rolePermission in rolePermissions)
             {
-                await _rolePermissionRepository.DeleteAsync(rolePermission.Id, cancellationToken);
+                await rolePermissionRepository.DeleteAsync(rolePermission.Id, cancellationToken);
             }
 
-            var deleteResult = await _roleManager.DeleteAsync(role);
+            var deleteResult = await roleManager.DeleteAsync(role);
 
             if (deleteResult.Succeeded)
             {
                 tx.Complete();
                 // Invalidate AFTER successful commit so a failed delete doesn't blow the cache.
-                _rolePermissionCache.Invalidate(role.Id);
+                rolePermissionCache.Invalidate(role.Id);
             }
 
             return deleteResult;
@@ -193,7 +182,7 @@ namespace MyPortal.Services.System
 
             bool changesMade = false;
 
-            var rolePermissions = await _rolePermissionRepository.GetByRoleIdAsync(role.Id, cancellationToken);
+            var rolePermissions = await rolePermissionRepository.GetByRoleIdAsync(role.Id, cancellationToken);
 
             foreach (var permissionId in permissionIds)
             {
@@ -211,7 +200,7 @@ namespace MyPortal.Services.System
                     PermissionId = permissionId
                 };
 
-                await _rolePermissionRepository.InsertAsync(newRolePermission, cancellationToken);
+                await rolePermissionRepository.InsertAsync(newRolePermission, cancellationToken);
                 changesMade = true;
             }
 
@@ -222,13 +211,13 @@ namespace MyPortal.Services.System
                     continue;
                 }
 
-                await _rolePermissionRepository.DeleteAsync(rolePermission.Id, cancellationToken);
+                await rolePermissionRepository.DeleteAsync(rolePermission.Id, cancellationToken);
                 changesMade = true;
             }
 
             if (changesMade)
             {
-                _rolePermissionCache.Invalidate(role.Id);
+                rolePermissionCache.Invalidate(role.Id);
             }
 
             return changesMade;
@@ -245,7 +234,7 @@ namespace MyPortal.Services.System
                 return;
             }
 
-            var permissions = await _permissionRepository.GetListAsync(cancellationToken: cancellationToken);
+            var permissions = await permissionRepository.GetListAsync(cancellationToken: cancellationToken);
             var byId = permissions.ToDictionary(p => p.Id);
 
             var mismatch = permissionIds.Any(id => byId.TryGetValue(id, out var p) && p.UserType != role.UserType);

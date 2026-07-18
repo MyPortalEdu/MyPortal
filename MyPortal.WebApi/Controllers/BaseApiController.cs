@@ -25,24 +25,17 @@ namespace MyPortal.WebApi.Controllers;
 [Authorize(Policy = ScopePolicy.PolicyName)]
 [Route("api/[controller]")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public abstract class BaseApiController : ControllerBase
+public abstract class BaseApiController(ProblemDetailsFactory problemFactory, ILogger<BaseApiController> logger)
+    : ControllerBase
 {
-    private readonly ProblemDetailsFactory _problemFactory;
-
-    protected readonly ILogger Logger;
-
-    public BaseApiController(ProblemDetailsFactory problemFactory, ILogger<BaseApiController> logger)
-    {
-        _problemFactory = problemFactory;
-        Logger = logger;
-    }
+    protected readonly ILogger Logger = logger;
 
     protected CancellationToken CancellationToken => HttpContext.RequestAborted;
 
     protected IActionResult Problem(int statusCode, string? title = null, string? detail = null, string? type = null,
         string? instance = null, IDictionary<string, object?>? extensions = null)
     {
-        var problem = _problemFactory.CreateProblemDetails(HttpContext, statusCode, title, type, detail, instance);
+        var problem = problemFactory.CreateProblemDetails(HttpContext, statusCode, title, type, detail, instance);
         
         problem.Extensions["traceId"] = HttpContext.TraceIdentifier;
 
@@ -62,7 +55,7 @@ public abstract class BaseApiController : ControllerBase
         string? title = "Validation failed.",
         string? detail = null)
     {
-        var vpd = _problemFactory.CreateValidationProblemDetails(
+        var vpd = problemFactory.CreateValidationProblemDetails(
             HttpContext,
             modelState,
             statusCode: statusCode,

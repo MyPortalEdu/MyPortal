@@ -21,34 +21,21 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.People;
 
-public class StaffMemberService : BaseService, IStaffMemberService
+public class StaffMemberService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffMemberService> logger,
+    IStaffMemberRepository staffMemberRepository,
+    IPersonRepository personRepository,
+    IStaffMemberAccessService accessService,
+    IPersonService personService,
+    IPhotoService photoService,
+    IValidationService validationService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), IStaffMemberService
 {
-    private readonly IStaffMemberRepository _staffMemberRepository;
-    private readonly IPersonRepository _personRepository;
-    private readonly IStaffMemberAccessService _accessService;
-    private readonly IPersonService _personService;
-    private readonly IPhotoService _photoService;
-    private readonly IValidationService _validationService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
     /// <summary>Minimum query length before <see cref="SearchPeopleAsync"/> hits the database —
     /// guards against an effectively unfiltered scan on a one-character term.</summary>
     private const int MinSearchLength = 2;
-
-    public StaffMemberService(IAuthorizationService authorizationService, ILogger<StaffMemberService> logger,
-        IStaffMemberRepository staffMemberRepository, IPersonRepository personRepository,
-        IStaffMemberAccessService accessService, IPersonService personService, IPhotoService photoService,
-        IValidationService validationService, IUnitOfWorkFactory unitOfWorkFactory)
-        : base(authorizationService, logger)
-    {
-        _staffMemberRepository = staffMemberRepository;
-        _personRepository = personRepository;
-        _accessService = accessService;
-        _personService = personService;
-        _photoService = photoService;
-        _validationService = validationService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
 
     public async Task<PageResult<StaffMemberSummaryResponse>> GetStaffMembersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null,
@@ -57,16 +44,16 @@ public class StaffMemberService : BaseService, IStaffMemberService
         // Listing every staff member is inherently an All-scope read.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.ViewAllStaffBasicDetails, cancellationToken);
 
-        return await _staffMemberRepository.GetStaffMembersAsync(filter, sort, paging, cancellationToken);
+        return await staffMemberRepository.GetStaffMembersAsync(filter, sort, paging, cancellationToken);
     }
 
     public async Task<StaffMemberHeaderResponse> GetHeaderAsync(Guid id, CancellationToken cancellationToken)
     {
         // Minimum-to-open: any view-basic-details scope covering this subject, else 403.
-        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+        await accessService.RequireAsync(id, StaffArea.BasicDetails,
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
 
-        var row = await _staffMemberRepository.GetHeaderByIdAsync(id, cancellationToken);
+        var row = await staffMemberRepository.GetHeaderByIdAsync(id, cancellationToken);
 
         if (row == null)
         {
@@ -75,7 +62,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
             throw new NotFoundException("Staff member not found.");
         }
 
-        var relationship = await _accessService.GetRelationshipAsync(id, cancellationToken);
+        var relationship = await accessService.GetRelationshipAsync(id, cancellationToken);
 
         return new StaffMemberHeaderResponse
         {
@@ -104,10 +91,10 @@ public class StaffMemberService : BaseService, IStaffMemberService
 
     public async Task<StaffBasicDetailsResponse> GetBasicDetailsAsync(Guid id, CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+        await accessService.RequireAsync(id, StaffArea.BasicDetails,
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
 
-        var details = await _staffMemberRepository.GetBasicDetailsByIdAsync(id, cancellationToken);
+        var details = await staffMemberRepository.GetBasicDetailsByIdAsync(id, cancellationToken);
 
         if (details == null)
         {
@@ -120,12 +107,12 @@ public class StaffMemberService : BaseService, IStaffMemberService
     public async Task UpdateBasicDetailsAsync(Guid id, StaffBasicDetailsUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+        await accessService.RequireAsync(id, StaffArea.BasicDetails,
             StaffAccess.EditManaged | StaffAccess.EditAll, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(id, cancellationToken);
 
         if (staffMember == null)
         {
@@ -148,45 +135,45 @@ public class StaffMemberService : BaseService, IStaffMemberService
             Dob: model.Dob,
             Deceased: model.Deceased);
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
         {
-            await _personService.UpdateBasicBioAsync(staffMember.PersonId, bio, cancellationToken, ownedUow);
-            await _staffMemberRepository.UpdateAsync(staffMember, cancellationToken, ownedUow.Transaction);
+            await personService.UpdateBasicBioAsync(staffMember.PersonId, bio, cancellationToken, ownedUow);
+            await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, ownedUow.Transaction);
         }, cancellationToken);
     }
 
     public async Task SetPhotoAsync(Guid id, Stream image, string contentType, string fileName,
         CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+        await accessService.RequireAsync(id, StaffArea.BasicDetails,
             StaffAccess.EditManaged | StaffAccess.EditAll, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken)
+        var staffMember = await staffMemberRepository.GetByIdAsync(id, cancellationToken)
                           ?? throw new NotFoundException("Staff member not found.");
 
-        await _photoService.SetPhotoAsync(staffMember.PersonId, image, contentType, fileName, cancellationToken);
+        await photoService.SetPhotoAsync(staffMember.PersonId, image, contentType, fileName, cancellationToken);
     }
 
     public async Task<DocumentContentResponse> GetPhotoAsync(Guid id, CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+        await accessService.RequireAsync(id, StaffArea.BasicDetails,
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken)
+        var staffMember = await staffMemberRepository.GetByIdAsync(id, cancellationToken)
                           ?? throw new NotFoundException("Staff member not found.");
 
-        return await _photoService.GetPhotoContentAsync(staffMember.PersonId, cancellationToken);
+        return await photoService.GetPhotoContentAsync(staffMember.PersonId, cancellationToken);
     }
 
     public async Task DeletePhotoAsync(Guid id, CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(id, StaffArea.BasicDetails,
+        await accessService.RequireAsync(id, StaffArea.BasicDetails,
             StaffAccess.EditManaged | StaffAccess.EditAll, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken)
+        var staffMember = await staffMemberRepository.GetByIdAsync(id, cancellationToken)
                           ?? throw new NotFoundException("Staff member not found.");
 
-        await _photoService.DeletePhotoAsync(staffMember.PersonId, cancellationToken);
+        await photoService.DeletePhotoAsync(staffMember.PersonId, cancellationToken);
     }
 
     public async Task<Guid> CreateAsync(StaffBasicDetailsUpsertRequest model, CancellationToken cancellationToken)
@@ -194,11 +181,11 @@ public class StaffMemberService : BaseService, IStaffMemberService
         // Create has no subject yet, so it can't be relationship-scoped — All only.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.EditAllStaffBasicDetails, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
         var staffMemberId = SqlConvention.SequentialGuid();
 
-        return await _unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async ownedUow =>
+        return await unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async ownedUow =>
         {
             // Person row + its directory first; the staff row hangs off the new person, both in
             // one transaction.
@@ -214,7 +201,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
                 Dob: model.Dob,
                 Deceased: model.Deceased);
 
-            var personId = await _personService.CreateAsync(bio, cancellationToken, ownedUow);
+            var personId = await personService.CreateAsync(bio, cancellationToken, ownedUow);
 
             var staffMember = new StaffMember
             {
@@ -226,7 +213,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
                 // their area PUTs.
             };
 
-            await _staffMemberRepository.InsertAsync(staffMember, cancellationToken, ownedUow.Transaction);
+            await staffMemberRepository.InsertAsync(staffMember, cancellationToken, ownedUow.Transaction);
 
             return staffMemberId;
         }, cancellationToken);
@@ -250,7 +237,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
         // contains pattern. The SQL relies on the default escape char.
         var escaped = trimmed.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
-        return await _staffMemberRepository.SearchPeopleForStaffCreateAsync($"%{escaped}%", cancellationToken);
+        return await staffMemberRepository.SearchPeopleForStaffCreateAsync($"%{escaped}%", cancellationToken);
     }
 
     public async Task<Guid> CreateForPersonAsync(StaffMemberCreateForPersonRequest model,
@@ -259,9 +246,9 @@ public class StaffMemberService : BaseService, IStaffMemberService
         // Attaching a staff role to any person is an All-scope action, same as a fresh create.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.EditAllStaffBasicDetails, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var person = await _personRepository.GetByIdAsync(model.PersonId, cancellationToken);
+        var person = await personRepository.GetByIdAsync(model.PersonId, cancellationToken);
 
         if (person == null)
         {
@@ -270,7 +257,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
 
         // A person can only hold one staff role — block a duplicate StaffMember row. The FE
         // already disables already-staff matches; this is the server-side guard.
-        var existing = await _staffMemberRepository.GetStaffMemberIdByPersonIdAsync(model.PersonId, cancellationToken);
+        var existing = await staffMemberRepository.GetStaffMemberIdByPersonIdAsync(model.PersonId, cancellationToken);
 
         if (existing != null)
         {
@@ -280,7 +267,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
 
         var staffMemberId = SqlConvention.SequentialGuid();
 
-        return await _unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async ownedUow =>
+        return await unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async ownedUow =>
         {
             // Only the StaffMember row is created — the Person (and its bio + directory) already
             // exists. All other staff fields stay at entity defaults, populated post-creation via
@@ -292,7 +279,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
                 Code = model.Code
             };
 
-            await _staffMemberRepository.InsertAsync(staffMember, cancellationToken, ownedUow.Transaction);
+            await staffMemberRepository.InsertAsync(staffMember, cancellationToken, ownedUow.Transaction);
 
             return staffMemberId;
         }, cancellationToken);
@@ -303,7 +290,7 @@ public class StaffMemberService : BaseService, IStaffMemberService
         // HR-only action; All-scope.
         await AuthorizationService.RequirePermissionAsync(Permissions.Staff.EditAllStaffBasicDetails, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(id, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(id, cancellationToken);
 
         if (staffMember == null)
         {
@@ -311,6 +298,6 @@ public class StaffMemberService : BaseService, IStaffMemberService
         }
 
         // Soft-delete the staff row only — the person may also be a contact/student.
-        await _staffMemberRepository.DeleteAsync(id, cancellationToken);
+        await staffMemberRepository.DeleteAsync(id, cancellationToken);
     }
 }
