@@ -38,7 +38,7 @@ function makeSummary(overrides: Partial<BulletinSummaryResponse> = {}): Bulletin
 function makeMe(overrides: Partial<Me> = {}): Me {
   return {
     id: 'me-1',
-    userName: 'me',
+    username: 'me',
     userType: UserType.Staff,
     isEnabled: true,
     isSystem: false,

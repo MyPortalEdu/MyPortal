@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -7,6 +8,7 @@ import { BulletinsDataService } from '../../../../shared/services/bulletins-data
 import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { AcademicYearService } from '../../../../core/services/academic-year-service';
+import { SelectedAcademicYearService } from '../../../../core/services/selected-academic-year-service';
 import {
   BulletinAllowedGroupResponse,
   BulletinCategoryResponse,
@@ -56,6 +58,8 @@ describe('BulletinSettingsPage', () => {
         { provide: NotificationService, useValue: notify },
         { provide: ConfirmationDialog, useValue: confirm },
         { provide: AcademicYearService, useValue: academic },
+        // academicYearId is driven by SelectedAcademicYearService.selectedId (a signal), not getCurrent.
+        { provide: SelectedAcademicYearService, useValue: { selectedId: signal('ay-current') } },
         { provide: TranslocoService, useValue: translocoStub },
       ],
     }).compileComponents();

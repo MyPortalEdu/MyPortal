@@ -50,7 +50,7 @@ function makeDetail(overrides: Partial<BulletinDetailsResponse> = {}): BulletinD
 function makeMe(overrides: Partial<Me> = {}): Me {
   return {
     id: 'me',
-    userName: 'me',
+    username: 'me',
     userType: UserType.Staff,
     isEnabled: true,
     isSystem: false,

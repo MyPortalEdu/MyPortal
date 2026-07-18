@@ -10,7 +10,7 @@ import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angul
 import {provideTransloco} from '@jsverse/transloco';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
-import {definePreset} from '@primeng/themes';
+import {definePreset} from '@primeuix/themes';
 import {apiBaseInterceptor} from './core/interceptors/api-base-interceptor';
 import {authErrorInterceptor} from './core/interceptors/auth-error-interceptor';
 import {AppErrorHandler} from './core/error/app-error-handler';
