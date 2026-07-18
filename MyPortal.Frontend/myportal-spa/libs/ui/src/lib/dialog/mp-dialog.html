@@ -1,0 +1,18 @@
+@if (visible()) {
+  <div
+    class="fixed inset-0 z-[1100] flex items-center justify-center p-4"
+    (keydown.escape)="onEscape()">
+    @if (modal()) {
+      <div class="absolute inset-0 bg-black/50" aria-hidden="true" (click)="onBackdrop()"></div>
+    }
+    <div
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="ariaLabel() ?? null"
+      [class]="panelClasses()">
+      <ng-content />
+    </div>
+  </div>
+}

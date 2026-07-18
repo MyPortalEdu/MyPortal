@@ -1,0 +1,35 @@
+    <div mpPopover #pop="mpPopover" [sideOffset]="4">
+      <div class="relative w-full">
+        <input
+          mpInput
+          type="text"
+          autocomplete="off"
+          [attr.id]="inputId() ?? null"
+          [value]="text()"
+          [placeholder]="placeholder() ?? dateFormat()"
+          [disabled]="disabled()"
+          [invalid]="invalid()"
+          (input)="text.set($any($event.target).value)"
+          (blur)="commitTyped()"
+          (keydown.enter)="commitTyped(); $event.preventDefault()"
+          class="w-full pr-9" />
+        <button
+          brnPopoverTrigger
+          type="button"
+          tabindex="-1"
+          [disabled]="disabled()"
+          aria-label="Open calendar"
+          class="absolute inset-y-0 right-0 flex w-9 items-center justify-center rounded-r-control text-muted-foreground outline-none transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50">
+          <i class="fa-regular fa-calendar text-sm"></i>
+        </button>
+      </div>
+
+      <div *brnPopoverContent [class]="contentClass">
+        <mp-calendar
+          [date]="value() ?? undefined"
+          [min]="minDate()"
+          [max]="maxDate()"
+          [disabled]="disabled()"
+          (dateChange)="onDatePicked($event, pop)" />
+      </div>
+    </div>

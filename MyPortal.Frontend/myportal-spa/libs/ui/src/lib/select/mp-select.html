@@ -1,0 +1,59 @@
+    <brn-popover
+      brnSelect
+      class="block"
+      [value]="value()"
+      (valueChange)="onValueChange($event)"
+      [disabled]="disabled()"
+      [itemToString]="itemToString">
+      <button
+        brnSelectTrigger
+        type="button"
+        [attr.id]="inputId() ?? null"
+        [attr.aria-invalid]="invalid() || null"
+        [disabled]="disabled()"
+        [class]="triggerClass()">
+        <span brnSelectValue class="truncate text-left" [placeholder]="placeholder() ?? ''"></span>
+        <span class="ml-2 flex shrink-0 items-center gap-1">
+          @if (showClear() && hasValue() && !disabled()) {
+            <!-- span (not a nested <button>) so it's valid inside the trigger button; stop the event
+                 reaching the trigger so clearing doesn't also toggle the panel. -->
+            <span
+              role="button"
+              tabindex="-1"
+              [attr.aria-label]="'Clear selection'"
+              class="flex h-4 w-4 items-center justify-center rounded-sm opacity-60 hover:opacity-100"
+              (click)="clear($event)"
+              (mousedown)="$event.stopPropagation()">
+              <i class="fa-solid fa-xmark text-xs"></i>
+            </span>
+          }
+          <i class="fa-solid fa-chevron-down text-xs opacity-60"></i>
+        </span>
+      </button>
+
+      <!-- *brnPopoverContent teleports this into a positioned CDK overlay that opens/closes with
+           the trigger (this is what Spartan's helm select does under the hood). -->
+      <div *brnPopoverContent brnSelectContent [class]="contentClass">
+        @if (filter()) {
+          <div class="mb-1 px-0.5 pt-0.5">
+            <input
+              type="text"
+              [placeholder]="filterPlaceholder()"
+              [value]="filterQuery()"
+              (input)="onFilterInput($event)"
+              (keydown)="$event.stopPropagation()"
+              [class]="filterClass" />
+          </div>
+        }
+        @for (opt of visibleOptions(); track valueOf(opt)) {
+          <button brnSelectItem [value]="valueOf(opt)" [class]="itemClass">
+            <span class="truncate">{{ labelOf(opt) }}</span>
+            @if (valueOf(opt) === value()) {
+              <i class="fa-solid fa-check text-xs"></i>
+            }
+          </button>
+        } @empty {
+          <div class="px-2 py-1.5 text-sm text-muted-foreground">{{ emptyMessage() }}</div>
+        }
+      </div>
+    </brn-popover>
