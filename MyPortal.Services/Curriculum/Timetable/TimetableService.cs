@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -15,33 +17,26 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Curriculum.Timetable;
 
-public class TimetableService : BaseService, ITimetableService
+public class TimetableService(
+    IAuthorizationService authorizationService,
+    ILogger<TimetableService> logger,
+    ITimetableRepository repository,
+    ITimetableRunRepository runRepository,
+    ITimetableMaterialisationService materialisationService,
+    IAcademicYearRepository academicYearRepository,
+    IValidationService validationService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), ITimetableService
 {
-    private readonly ITimetableRepository _repository;
-    private readonly ITimetableRunRepository _runRepository;
-    private readonly ITimetableMaterialisationService _materialisationService;
-    private readonly IValidationService _validationService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public TimetableService(IAuthorizationService authorizationService,
-        ILogger<TimetableService> logger, ITimetableRepository repository,
-        ITimetableRunRepository runRepository,
-        ITimetableMaterialisationService materialisationService,
-        IValidationService validationService,
-        IUnitOfWorkFactory unitOfWorkFactory)
-        : base(authorizationService, logger)
-    {
-        _repository = repository;
-        _runRepository = runRepository;
-        _materialisationService = materialisationService;
-        _validationService = validationService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<Guid> CreateDraftAsync(TimetableUpsertRequest model, CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
+
+        if (await academicYearRepository.GetByIdAsync(model.AcademicYearId, cancellationToken) is null)
+            throw new NotFoundException("Academic year not found.");
+
+        await EnsureDraftNameUniqueAsync(model.AcademicYearId, model.Name, cancellationToken);
 
         var entity = new Core.Entities.Timetable
         {
@@ -53,7 +48,7 @@ public class TimetableService : BaseService, ITimetableService
             EffectiveTo = null,
         };
 
-        await _repository.InsertAsync(entity, cancellationToken);
+        await repository.InsertAsync(entity, cancellationToken);
 
         Logger.LogInformation("Timetable draft created: {timetableId}", entity.Id);
         return entity.Id;
@@ -64,7 +59,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.ViewTimetables,
             cancellationToken);
 
-        var entity = await _repository.GetByIdAsync(timetableId, cancellationToken)
+        var entity = await repository.GetByIdAsync(timetableId, cancellationToken)
                      ?? throw new NotFoundException("Timetable not found.");
 
         return ToDetails(entity);
@@ -76,7 +71,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.ViewTimetables,
             cancellationToken);
 
-        var entities = await _repository.ListByAcademicYearAsync(academicYearId, cancellationToken);
+        var entities = await repository.ListByAcademicYearAsync(academicYearId, cancellationToken);
         return entities.Select(ToSummary).ToList();
     }
 
@@ -86,7 +81,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.ViewTimetables,
             cancellationToken);
 
-        var runs = await _repository.ListRunsAsync(timetableId, cancellationToken);
+        var runs = await repository.ListRunsAsync(timetableId, cancellationToken);
         return runs.Select(ToRunResponse).ToList();
     }
 
@@ -95,7 +90,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.ViewTimetables,
             cancellationToken);
 
-        var run = await _runRepository.GetRunAsync(runId, cancellationToken)
+        var run = await runRepository.GetRunAsync(runId, cancellationToken)
                   ?? throw new NotFoundException("Run not found.");
 
         return ToRunResponse(run);
@@ -107,7 +102,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.ViewTimetables,
             cancellationToken);
 
-        var assignments = await _repository.ListAssignmentsAsync(timetableId, cancellationToken);
+        var assignments = await repository.ListAssignmentsAsync(timetableId, cancellationToken);
         return assignments.Select(ToAssignmentResponse).ToList();
     }
 
@@ -117,7 +112,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
 
-        var timetable = await _repository.GetByIdAsync(timetableId, cancellationToken)
+        var timetable = await repository.GetByIdAsync(timetableId, cancellationToken)
                         ?? throw new NotFoundException("Timetable not found.");
 
         if (timetable.Status != TimetableStatus.Draft)
@@ -127,15 +122,31 @@ public class TimetableService : BaseService, ITimetableService
         if (model.EffectiveTo.HasValue && model.EffectiveTo.Value < model.EffectiveFrom)
             throw new ArgumentException("EffectiveTo must be on or after EffectiveFrom.");
 
+        // A draft with no solver assignments would flip to Active with an empty schedule, silently
+        // superseding a working timetable. Require a completed solve first.
+        var assignments = await repository.ListAssignmentsAsync(timetable.Id, cancellationToken);
+        if (assignments.Count == 0)
+            throw new InvalidOperationException(
+                "Cannot apply a timetable with no assignments — run the solver first.");
+
+        // Applying supersedes the current Active timetable by capping its EffectiveTo at
+        // EffectiveFrom - 1 day. An EffectiveFrom on or before the active timetable's start would
+        // invert that window, so reject it.
+        var currentActive = (await repository.ListByAcademicYearAsync(timetable.AcademicYearId, cancellationToken))
+            .FirstOrDefault(t => t.Status == TimetableStatus.Active);
+        if (currentActive?.EffectiveFrom is { } activeFrom && model.EffectiveFrom <= activeFrom)
+            throw new ArgumentException(
+                "EffectiveFrom must be after the currently-active timetable's effective date.");
+
         // Wrap the repository status flip + Session materialisation in one transaction so
         // the timetable can never be marked Active without the corresponding Sessions, or vice
         // versa. Both operations enlist via the shared UoW transaction.
-        await _unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow: null, async uow =>
         {
-            await _repository.ApplyAsync(timetable.Id, timetable.AcademicYearId,
+            await repository.ApplyAsync(timetable.Id, timetable.AcademicYearId,
                 model.EffectiveFrom, model.EffectiveTo, cancellationToken, uow.Transaction);
 
-            await _materialisationService.MaterialiseAsync(timetable.Id,
+            await materialisationService.MaterialiseAsync(timetable.Id,
                 model.EffectiveFrom, model.EffectiveTo, cancellationToken, uow);
         }, cancellationToken);
 
@@ -148,13 +159,13 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
 
-        var timetable = await _repository.GetByIdAsync(timetableId, cancellationToken)
+        var timetable = await repository.GetByIdAsync(timetableId, cancellationToken)
                         ?? throw new NotFoundException("Timetable not found.");
 
         if (timetable.Status == TimetableStatus.Active)
             throw new InvalidOperationException("Cannot discard an Active timetable — apply a replacement first.");
 
-        await _repository.UpdateStatusAsync(timetableId, TimetableStatus.Discarded, cancellationToken);
+        await repository.UpdateStatusAsync(timetableId, TimetableStatus.Discarded, cancellationToken);
 
         Logger.LogInformation("Timetable discarded: {timetableId}", timetableId);
     }
@@ -165,9 +176,9 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var timetable = await _repository.GetByIdAsync(timetableId, cancellationToken)
+        var timetable = await repository.GetByIdAsync(timetableId, cancellationToken)
                         ?? throw new NotFoundException("Timetable not found.");
 
         // Pinning a Superseded/Discarded timetable changes nothing meaningful (no future runs);
@@ -195,7 +206,7 @@ public class TimetableService : BaseService, ITimetableService
             CreatedAt = DateTime.UtcNow,
         };
 
-        await _repository.InsertPinAsync(pin, cancellationToken);
+        await repository.InsertPinAsync(pin, cancellationToken);
 
         Logger.LogInformation("Pin added: {pinId} to timetable {timetableId}", pin.Id, timetableId);
         return pin.Id;
@@ -207,7 +218,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.ViewTimetables,
             cancellationToken);
 
-        var pins = await _repository.ListPinsAsync(timetableId, cancellationToken);
+        var pins = await repository.ListPinsAsync(timetableId, cancellationToken);
         return pins.Select(ToPinResponse).ToList();
     }
 
@@ -216,7 +227,7 @@ public class TimetableService : BaseService, ITimetableService
         await AuthorizationService.RequirePermissionAsync(Permissions.Timetable.EditTimetables,
             cancellationToken);
 
-        var pin = await _repository.GetPinAsync(pinId, cancellationToken)
+        var pin = await repository.GetPinAsync(pinId, cancellationToken)
                   ?? throw new NotFoundException("Pin not found.");
 
         // Defence-in-depth: an attacker can't delete pins from a different timetable by guessing
@@ -224,9 +235,23 @@ public class TimetableService : BaseService, ITimetableService
         if (pin.TimetableId != timetableId)
             throw new NotFoundException("Pin not found.");
 
-        await _repository.DeletePinAsync(pinId, cancellationToken);
+        await repository.DeletePinAsync(pinId, cancellationToken);
 
         Logger.LogInformation("Pin removed: {pinId} from timetable {timetableId}", pinId, timetableId);
+    }
+
+    // Draft names must be unique within an academic year so users can tell timetables apart. Schools
+    // have only a handful of timetables per year, so an in-memory check over the AY list is cheap.
+    private async Task EnsureDraftNameUniqueAsync(Guid academicYearId, string name,
+        CancellationToken cancellationToken)
+    {
+        var existing = await repository.ListByAcademicYearAsync(academicYearId, cancellationToken);
+
+        if (existing.Any(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ValidationException(
+                [new ValidationFailure("Name", $"A timetable named '{name}' already exists in this academic year.")]);
+        }
     }
 
     private static TimetableSummaryResponse ToSummary(Core.Entities.Timetable t) => new()

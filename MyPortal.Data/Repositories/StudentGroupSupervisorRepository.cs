@@ -8,13 +8,9 @@ using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
 
-public class StudentGroupSupervisorRepository : EntityRepository<StudentGroupSupervisor>, IStudentGroupSupervisorRepository
+public class StudentGroupSupervisorRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<StudentGroupSupervisor>(factory, authorizationService), IStudentGroupSupervisorRepository
 {
-    public StudentGroupSupervisorRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<StudentGroupSupervisor>> GetStudentGroupSupervisorsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken)
     {

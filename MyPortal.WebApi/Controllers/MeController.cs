@@ -14,33 +14,26 @@ namespace MyPortal.WebApi.Controllers
     // Mirrors the dual-route pattern on the base: versioned canonical, unversioned alias.
     [Route("api/me")]
     [Route("api/v{version:apiVersion}/me")]
-    public sealed class MeController : BaseApiController
+    public sealed class MeController(
+        ProblemDetailsFactory problemFactory,
+        ILogger<MeController> logger,
+        IUserService userService,
+        IStaffTimetableService timetableService,
+        ICurrentUser user)
+        : BaseApiController(problemFactory, logger)
     {
-        private readonly IUserService _userService;
-        private readonly IStaffTimetableService _timetableService;
-        private readonly ICurrentUser _user;
-
-        public MeController(ProblemDetailsFactory problemFactory, ILogger<MeController> logger,
-            IUserService userService, IStaffTimetableService timetableService, ICurrentUser user)
-            : base(problemFactory, logger)
-        {
-            _userService = userService;
-            _timetableService = timetableService;
-            _user = user;
-        }
-
         /// <summary>Get the current user's profile, user type, and permission set.</summary>
         /// <remarks>Returns <c>401 Unauthorized</c> if the caller is not authenticated.</remarks>
         [HttpGet]
         [ProducesResponseType(typeof(UserInfoResponse), 200)]
         public async Task<IActionResult> GetCurrentUserInfoAsync()
         {
-            if (!_user.UserId.HasValue)
+            if (!user.UserId.HasValue)
             {
                 return UnauthorizedProblem("Unauthorized");
             }
 
-            var userInfo = await _userService.GetInfoByIdAsync(_user.UserId.Value, CancellationToken);
+            var userInfo = await userService.GetInfoByIdAsync(user.UserId.Value, CancellationToken);
 
             return Ok(userInfo);
         }
@@ -57,12 +50,12 @@ namespace MyPortal.WebApi.Controllers
         [ProducesResponseType(typeof(StaffCalendarResponse), 200)]
         public async Task<IActionResult> GetMyTimetableAsync([FromQuery] DateTime from, [FromQuery] DateTime to)
         {
-            if (!_user.UserId.HasValue)
+            if (!user.UserId.HasValue)
             {
                 return UnauthorizedProblem("Unauthorized");
             }
 
-            var result = await _timetableService.GetMyCalendarAsync(from, to, CancellationToken);
+            var result = await timetableService.GetMyCalendarAsync(from, to, CancellationToken);
 
             return Ok(result);
         }
@@ -75,12 +68,12 @@ namespace MyPortal.WebApi.Controllers
         [ProducesResponseType(204)]
         public async Task<IActionResult> ChangePasswordAsync([FromBody] UserChangePasswordRequest model)
         {
-            if (!_user.UserId.HasValue)
+            if (!user.UserId.HasValue)
             {
                 return UnauthorizedProblem("Unauthorized");
             }
 
-            var result = await _userService.ChangePasswordAsync(_user.UserId.Value, model, CancellationToken);
+            var result = await userService.ChangePasswordAsync(user.UserId.Value, model, CancellationToken);
 
             return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
         }

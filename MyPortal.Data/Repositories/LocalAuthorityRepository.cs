@@ -11,13 +11,9 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories;
 
-public class LocalAuthorityRepository : EntityRepository<LocalAuthority>, ILocalAuthorityRepository
+public class LocalAuthorityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<LocalAuthority>(factory, authorizationService), ILocalAuthorityRepository
 {
-    public LocalAuthorityRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-
     public async Task<PageResult<LocalAuthoritySummaryResponse>> GetSummariesAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default)
     {

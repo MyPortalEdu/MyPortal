@@ -2,11 +2,6 @@
 
 public class RegGroupUpsertRequest
 {
-    public RegGroupUpsertRequest()
-    {
-        Supervisors = new List<StudentGroupSupervisorUpsertRequest>();
-    }
-    
     public Guid AcademicYearId { get; set; }
     public Guid YearGroupId { get; set; }
     public Guid? RoomId { get; set; }
@@ -15,5 +10,5 @@ public class RegGroupUpsertRequest
     public bool Active { get; set; }
     public string? Notes { get; set; }
     
-    public IList<StudentGroupSupervisorUpsertRequest> Supervisors { get; set; }
+    public IList<StudentGroupSupervisorUpsertRequest> Supervisors { get; set; } = new List<StudentGroupSupervisorUpsertRequest>();
 }

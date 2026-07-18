@@ -1,4 +1,5 @@
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models.People;
 
 namespace MyPortal.Services.Interfaces.People;
 
@@ -46,4 +47,10 @@ public interface IPersonService
 
     /// <summary>Hard-deletes a Person and its backing directory.</summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken, IUnitOfWork? uow = null);
+
+    /// <summary>
+    /// Searches People by name for linking to a user account. Returns empty for terms shorter than
+    /// 2 characters. Authorization is the caller's responsibility (this service performs none).
+    /// </summary>
+    Task<IReadOnlyList<PersonSearchResponse>> SearchAsync(string query, CancellationToken cancellationToken);
 }

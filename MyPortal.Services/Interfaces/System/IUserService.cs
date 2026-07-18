@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using MyPortal.Contracts.Models.System.Permissions;
 using MyPortal.Contracts.Models.System.Users;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
@@ -24,6 +25,9 @@ public interface IUserService
     /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="UserDetailsResponse"/>
     /// with the user's details if found; otherwise, <see langword="null"/>.</returns>
     Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>The user's effective permissions — the union across their assigned roles.</summary>
+    Task<IList<PermissionResponse>> GetEffectivePermissionsAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Asynchronously retrieves user information for the specified user identifier.
@@ -81,7 +85,7 @@ public interface IUserService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
     /// the user creation succeeded or failed.</returns>
-    Task<IdentityResult> CreateAsync(UserUpsertRequest model, CancellationToken cancellationToken);
+    Task<(IdentityResult Result, Guid UserId)> CreateAsync(UserUpsertRequest model, CancellationToken cancellationToken);
     
     /// <summary>
     /// Asynchronously updates the user identified by the specified user ID with the provided data.
@@ -94,7 +98,7 @@ public interface IUserService
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the update operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
     /// the update succeeded and any associated errors.</returns>
-    Task<IdentityResult> UpdateAsync(Guid userId, UserUpsertRequest model, CancellationToken cancellationToken);
+    Task<IdentityResult> UpdateAsync(Guid userId, UserUpdateRequest model, CancellationToken cancellationToken);
     
     /// <summary>
     /// Asynchronously deletes the user identified by the specified unique identifier.

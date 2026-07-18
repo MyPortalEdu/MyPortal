@@ -8,19 +8,12 @@ using MyPortal.Data.Timetabler;
 
 namespace MyPortal.Data.Repositories;
 
-public class TimetableSourceRepository : ITimetableSourceRepository
+public class TimetableSourceRepository(IDbConnectionFactory factory) : ITimetableSourceRepository
 {
-    private readonly IDbConnectionFactory _factory;
-
-    public TimetableSourceRepository(IDbConnectionFactory factory)
-    {
-        _factory = factory;
-    }
-
     public async Task<TimetableInputSources> LoadAsync(Guid timetableId,
         CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
         if (conn is IDbConnection dbConn && dbConn.State != ConnectionState.Open) dbConn.Open();
 
         // Resolve the timetable's academic year — that scopes the curriculum tree we load.

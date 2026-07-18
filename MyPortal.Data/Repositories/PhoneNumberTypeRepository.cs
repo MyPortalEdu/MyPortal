@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class PhoneNumberTypeRepository : EntityRepository<PhoneNumberType>, IPhoneNumberTypeRepository
-{
-    public PhoneNumberTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class PhoneNumberTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<PhoneNumberType>(factory, authorizationService), IPhoneNumberTypeRepository;

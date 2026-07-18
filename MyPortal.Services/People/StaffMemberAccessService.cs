@@ -15,21 +15,16 @@ namespace MyPortal.Services.People;
 /// single audit-able source of truth: every endpoint's gating ultimately resolves to one of
 /// these constants, with no derivation / no drift. See docs/staff-profile-access.md.
 /// </summary>
-public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
+public class StaffMemberAccessService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffMemberAccessService> logger,
+    IStaffMemberRepository staffMemberRepository)
+    : BaseService(authorizationService, logger), IStaffMemberAccessService
 {
-    private readonly IStaffMemberRepository _staffMemberRepository;
-
     // Per-request caches (the service is scoped). A header request typically resolves a guard
     // plus an explicit relationship read; without these, that's 2× the DB lookups.
     private (Guid SubjectId, StaffRelationship Value)? _cachedRelationship;
     private IReadOnlySet<string>? _cachedPermissions;
-
-    public StaffMemberAccessService(IAuthorizationService authorizationService,
-        ILogger<StaffMemberAccessService> logger, IStaffMemberRepository staffMemberRepository)
-        : base(authorizationService, logger)
-    {
-        _staffMemberRepository = staffMemberRepository;
-    }
 
     // (Area, single access flag) → the seeded permission constant that grants it. Missing
     // combinations are not grantable — the lookup misses and the branch is skipped.
@@ -74,7 +69,6 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
             [(StaffArea.Timetable, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffTimetable,
             [(StaffArea.Timetable, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffTimetable,
             [(StaffArea.Timetable, StaffAccess.ViewAll)]               = Permissions.Staff.ViewAllStaffTimetable,
-            [(StaffArea.Timetable, StaffAccess.EditAll)]               = Permissions.Staff.EditAllStaffTimetable,
 
             [(StaffArea.Documents, StaffAccess.ViewOwn)]               = Permissions.Staff.ViewOwnStaffDocuments,
             [(StaffArea.Documents, StaffAccess.ViewManaged)]           = Permissions.Staff.ViewManagedStaffDocuments,
@@ -113,7 +107,7 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
             return StaffRelationship.Unrelated;
         }
 
-        var subject = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var subject = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (subject is null)
         {
@@ -126,7 +120,7 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
         }
 
         var currentStaffMemberId =
-            await _staffMemberRepository.GetStaffMemberIdByPersonIdAsync(currentPersonId.Value, cancellationToken);
+            await staffMemberRepository.GetStaffMemberIdByPersonIdAsync(currentPersonId.Value, cancellationToken);
 
         // Viewer isn't (active) staff, so can't be anyone's line manager.
         if (currentStaffMemberId is null)
@@ -134,7 +128,7 @@ public class StaffMemberAccessService : BaseService, IStaffMemberAccessService
             return StaffRelationship.Unrelated;
         }
 
-        var managed = await _staffMemberRepository.IsManagedByAsync(staffMemberId, currentStaffMemberId.Value,
+        var managed = await staffMemberRepository.IsManagedByAsync(staffMemberId, currentStaffMemberId.Value,
             cancellationToken);
 
         return managed ? StaffRelationship.LineManaged : StaffRelationship.Unrelated;

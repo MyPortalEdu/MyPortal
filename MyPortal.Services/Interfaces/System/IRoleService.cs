@@ -45,9 +45,8 @@ public interface IRoleService
     /// <param name="model">The role information to create. Must not be null. The properties of this object define the name and attributes
     /// of the new role.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains an IdentityResult indicating whether
-    /// the role creation succeeded.</returns>
-    Task<IdentityResult> CreateAsync(RoleUpsertRequest model, CancellationToken cancellationToken);
+    /// <returns>A task whose result is the IdentityResult and, on success, the id of the newly created role.</returns>
+    Task<(IdentityResult Result, Guid RoleId)> CreateAsync(RoleUpsertRequest model, CancellationToken cancellationToken);
 
     /// <summary>
     /// Asynchronously updates the details of an existing role identified by the specified ID.

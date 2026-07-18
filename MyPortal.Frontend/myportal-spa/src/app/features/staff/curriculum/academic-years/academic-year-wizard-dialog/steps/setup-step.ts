@@ -50,6 +50,9 @@ export class AcademicYearWizardSetupStep implements OnInit {
   // Hides copy-from controls when true; the server rejects copy-from on
   // update so we don't surface the option in edit mode at all.
   readonly editMode = input<boolean>(false);
+  // Disables every control and drops the add/remove actions — the step becomes
+  // a read-back of a year the server won't let us change.
+  readonly readOnly = input<boolean>(false);
   readonly modelChange = output<Partial<AcademicYearUpsertRequest>>();
 
   readonly priorYears = signal<AcademicYearSummary[]>([]);

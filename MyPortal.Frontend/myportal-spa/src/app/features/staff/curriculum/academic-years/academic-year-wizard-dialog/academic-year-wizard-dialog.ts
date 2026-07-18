@@ -20,6 +20,7 @@ import { ConfirmationDialog } from '../../../../../core/services/confirmation.se
 import { AcademicYearService } from '../../../../../core/services/academic-year-service';
 import { AcademicYearUpsertRequest } from '../../../../../shared/types/academic-year';
 import { AcademicYearDetailsResponse } from '../../../../../shared/types/academic-year-details';
+import { Callout } from '../../../../../shared/components/callout/callout';
 import { AcademicYearWizardSetupStep } from './steps/setup-step';
 import { AcademicYearWizardPeriodsStep } from './steps/periods-step';
 import { AcademicYearWizardHolidaysStep } from './steps/holidays-step';
@@ -55,6 +56,7 @@ function emptyRequest(): AcademicYearUpsertRequest {
     Button,
     Dialog,
     ProgressSpinner,
+    Callout,
     TranslocoDirective,
     TranslocoPipe,
     AcademicYearWizardSetupStep,
@@ -78,6 +80,11 @@ export class AcademicYearWizardDialog {
   // PUT on save. Null/undefined => create mode. Copy-from fields are forced
   // null in edit mode because the server rejects them on update.
   readonly editYearId = input<string | null>(null);
+  // View-only mode for years the server won't let us mutate (locked/started).
+  // The wizard is the only view of a year's terms/periods/holidays, so it still
+  // opens — it just drops the editable controls and the save action.
+  readonly readOnly = input<boolean>(false);
+  readonly readOnlyReason = input<string>('');
 
   readonly closed = output<void>();
   readonly saved = output<void>();
@@ -165,6 +172,11 @@ export class AcademicYearWizardDialog {
     }
   });
 
+  // Read-only browsing must never be blocked by the create/edit validators — an
+  // existing year can legitimately fail them (e.g. periods that predate the
+  // AM/PM rule), and there's nothing to submit anyway.
+  readonly canGoNext = computed(() => this.readOnly() || this.canAdvance());
+
   // Reset state every time the dialog opens. In edit mode, also fetch the
   // existing year and prefill the model before the user sees the steps —
   // without this, re-opening after a cancel would resume the previous
@@ -188,7 +200,7 @@ export class AcademicYearWizardDialog {
   }
 
   next(): void {
-    if (!this.canAdvance() || this.isLastStep()) return;
+    if (!this.canGoNext() || this.isLastStep()) return;
     this.currentStep.update(s => s + 1);
   }
 
@@ -201,7 +213,8 @@ export class AcademicYearWizardDialog {
     // Only prompt if the user has made progress past step 1 — a blank wizard
     // that hasn't been touched is fine to dismiss silently. In edit mode the
     // model is prefilled so step 0 is "dirty" by definition; prompt anyway.
-    const dirty = this.currentStep() > 0 || this.isEditMode();
+    // Read-only can't have changes to discard.
+    const dirty = !this.readOnly() && (this.currentStep() > 0 || this.isEditMode());
     if (dirty) {
       const ok = await this.confirm.confirm({
         header: this.transloco.translate('common.discardChanges'),
@@ -222,7 +235,7 @@ export class AcademicYearWizardDialog {
   }
 
   save(): void {
-    if (!this.isLastStep() || this.submitting()) return;
+    if (this.readOnly() || !this.isLastStep() || this.submitting()) return;
     this.submitting.set(true);
 
     const id = this.editYearId();

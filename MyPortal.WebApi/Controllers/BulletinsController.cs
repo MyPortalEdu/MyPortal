@@ -17,17 +17,13 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Bulletin endpoints.</summary>
-public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin>
+public sealed class BulletinsController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<BulletinsController> logger,
+    IDirectoryEntityService<Bulletin> directoryEntityService,
+    IBulletinService bulletinService)
+    : BaseDirectoryEntityController<Bulletin>(problemFactory, logger, directoryEntityService)
 {
-    private readonly IBulletinService _bulletinService;
-
-    public BulletinsController(ProblemDetailsFactory problemFactory, ILogger<BulletinsController> logger,
-        IDirectoryEntityService<Bulletin> directoryEntityService, IBulletinService bulletinService) : base(
-        problemFactory, logger, directoryEntityService)
-    {
-        _bulletinService = bulletinService;
-    }
-
     // Bulletins hard-delete, so their attachments should too.
     protected override bool HardDeleteDocuments => true;
 
@@ -38,7 +34,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     [ProducesResponseType(typeof(BulletinDetailsResponse), 200)]
     public async Task<IActionResult> GetBulletinDetailsByIdAsync([FromRoute] Guid bulletinId)
     {
-        var result = await _bulletinService.GetDetailsByIdAsync(bulletinId, CancellationToken);
+        var result = await bulletinService.GetDetailsByIdAsync(bulletinId, CancellationToken);
 
         return Ok(result);
     }
@@ -57,7 +53,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _bulletinService.GetBulletinSummariesAsync(options.FilterOptions, options.SortOptions,
+        var result = await bulletinService.GetBulletinSummariesAsync(options.FilterOptions, options.SortOptions,
             options.PageOptions, CancellationToken);
 
         return Ok(result);
@@ -72,7 +68,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateBulletinAsync([FromBody] BulletinUpsertRequest model)
     {
-        var id = await _bulletinService.CreateAsync(model, CancellationToken);
+        var id = await bulletinService.CreateAsync(model, CancellationToken);
 
         return Ok(new IdResponse { Id = id });
     }
@@ -89,7 +85,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     public async Task<IActionResult> UpdateBulletinAsync([FromRoute] Guid bulletinId,
         [FromBody] BulletinUpsertRequest model)
     {
-        await _bulletinService.UpdateAsync(bulletinId, model, CancellationToken);
+        await bulletinService.UpdateAsync(bulletinId, model, CancellationToken);
 
         return NoContent();
     }
@@ -106,7 +102,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     public async Task<IActionResult> PinBulletinAsync([FromRoute] Guid bulletinId,
         [FromBody] BulletinPinRequest model)
     {
-        await _bulletinService.UpdatePinAsync(bulletinId, model.IsPinned, model.ExpectedVersion, CancellationToken);
+        await bulletinService.UpdatePinAsync(bulletinId, model.IsPinned, model.ExpectedVersion, CancellationToken);
 
         return NoContent();
     }
@@ -119,7 +115,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     [ProducesResponseType(204)]
     public async Task<IActionResult> AcknowledgeBulletinAsync([FromRoute] Guid bulletinId)
     {
-        await _bulletinService.AcknowledgeAsync(bulletinId, CancellationToken);
+        await bulletinService.AcknowledgeAsync(bulletinId, CancellationToken);
 
         return NoContent();
     }
@@ -132,7 +128,7 @@ public sealed class BulletinsController : BaseDirectoryEntityController<Bulletin
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteBulletinAsync([FromRoute] Guid bulletinId)
     {
-        await _bulletinService.DeleteAsync(bulletinId, CancellationToken);
+        await bulletinService.DeleteAsync(bulletinId, CancellationToken);
 
         return NoContent();
     }

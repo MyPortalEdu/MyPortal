@@ -19,31 +19,20 @@ namespace MyPortal.Services.People;
 /// subtype service that calls in (staff/student/contact) owns access control. See
 /// <see cref="IPersonAddressService"/>.
 /// </summary>
-public class PersonAddressService : IPersonAddressService
+public class PersonAddressService(
+    IAddressRepository addressRepository,
+    IAddressPersonRepository addressPersonRepository,
+    IAddressTypeRepository addressTypeRepository,
+    IValidationService validationService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : IPersonAddressService
 {
-    private readonly IAddressRepository _addressRepository;
-    private readonly IAddressPersonRepository _addressPersonRepository;
-    private readonly IAddressTypeRepository _addressTypeRepository;
-    private readonly IValidationService _validationService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
     private const int MinSearchLength = 2;
-
-    public PersonAddressService(IAddressRepository addressRepository,
-        IAddressPersonRepository addressPersonRepository, IAddressTypeRepository addressTypeRepository,
-        IValidationService validationService, IUnitOfWorkFactory unitOfWorkFactory)
-    {
-        _addressRepository = addressRepository;
-        _addressPersonRepository = addressPersonRepository;
-        _addressTypeRepository = addressTypeRepository;
-        _validationService = validationService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
 
     public async Task<AddressListResponse> GetAddressesAsync(Guid personId, CancellationToken cancellationToken)
     {
-        var addresses = await _addressRepository.GetByPersonIdAsync(personId, cancellationToken);
-        var types = await _addressTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var addresses = await addressRepository.GetByPersonIdAsync(personId, cancellationToken);
+        var types = await addressTypeRepository.GetListAsync(cancellationToken: cancellationToken);
 
         return new AddressListResponse
         {
@@ -64,15 +53,15 @@ public class PersonAddressService : IPersonAddressService
 
         var escaped = trimmed.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
-        return await _addressRepository.SearchAsync($"%{escaped}%", cancellationToken);
+        return await addressRepository.SearchAsync($"%{escaped}%", cancellationToken);
     }
 
     public async Task<Guid> AddAddressAsync(Guid personId, PersonAddressUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        return await _unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async uow =>
+        return await unitOfWorkFactory.RunInTransactionAsync<Guid>(null, async uow =>
         {
             var tx = uow.Transaction;
 
@@ -80,7 +69,7 @@ public class PersonAddressService : IPersonAddressService
 
             if (model.ExistingAddressId.HasValue)
             {
-                var existing = await _addressRepository.GetByIdAsync(model.ExistingAddressId.Value,
+                var existing = await addressRepository.GetByIdAsync(model.ExistingAddressId.Value,
                     cancellationToken, tx);
 
                 if (existing == null)
@@ -91,7 +80,7 @@ public class PersonAddressService : IPersonAddressService
                 addressId = existing.Id;
 
                 // Don't double-link the same address to the same person.
-                var links = await _addressPersonRepository.GetByPersonIdAsync(personId, cancellationToken, tx);
+                var links = await addressPersonRepository.GetByPersonIdAsync(personId, cancellationToken, tx);
                 if (links.Any(l => l.AddressId == addressId))
                 {
                     throw new ValidationException([
@@ -103,7 +92,7 @@ public class PersonAddressService : IPersonAddressService
             else
             {
                 // Dedupe: reuse an existing address with the same key rather than inserting a twin.
-                var match = await _addressRepository.FindByMatchKeyAsync(model.Postcode!, model.BuildingNumber,
+                var match = await addressRepository.FindByMatchKeyAsync(model.Postcode!, model.BuildingNumber,
                     model.BuildingName, model.Street!, cancellationToken, tx);
 
                 if (match != null)
@@ -126,7 +115,7 @@ public class PersonAddressService : IPersonAddressService
                         Country = model.Country!,
                         IsValidated = false
                     };
-                    await _addressRepository.InsertAsync(address, cancellationToken, tx);
+                    await addressRepository.InsertAsync(address, cancellationToken, tx);
                     addressId = address.Id;
                 }
             }
@@ -144,7 +133,7 @@ public class PersonAddressService : IPersonAddressService
                 AddressTypeId = model.TypeId,
                 IsMain = model.IsMain
             };
-            await _addressPersonRepository.InsertAsync(link, cancellationToken, tx);
+            await addressPersonRepository.InsertAsync(link, cancellationToken, tx);
 
             return link.Id;
         }, cancellationToken);
@@ -153,13 +142,13 @@ public class PersonAddressService : IPersonAddressService
     public async Task UpdateAddressAsync(Guid personId, Guid addressPersonId,
         PersonAddressUpdateRequest model, CancellationToken cancellationToken)
     {
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             var tx = uow.Transaction;
 
-            var link = await _addressPersonRepository.GetByIdAsync(addressPersonId, cancellationToken, tx);
+            var link = await addressPersonRepository.GetByIdAsync(addressPersonId, cancellationToken, tx);
 
             // Not found, or not this person's link — same 404 either way so we don't leak existence.
             if (link == null || link.PersonId != personId)
@@ -167,14 +156,14 @@ public class PersonAddressService : IPersonAddressService
                 throw new NotFoundException("Address not found.");
             }
 
-            var address = await _addressRepository.GetByIdAsync(link.AddressId, cancellationToken, tx);
+            var address = await addressRepository.GetByIdAsync(link.AddressId, cancellationToken, tx);
             if (address == null)
             {
                 throw new NotFoundException("Address not found.");
             }
 
             // Is the address shared with anyone else? (SharedCount includes this person.)
-            var personAddresses = await _addressRepository.GetByPersonIdAsync(personId, cancellationToken, tx);
+            var personAddresses = await addressRepository.GetByPersonIdAsync(personId, cancellationToken, tx);
             var sharedByOthers =
                 personAddresses.FirstOrDefault(a => a.AddressPersonId == addressPersonId)?.SharedCount > 1;
 
@@ -195,7 +184,7 @@ public class PersonAddressService : IPersonAddressService
                     Country = model.Country,
                     IsValidated = false
                 };
-                await _addressRepository.InsertAsync(forked, cancellationToken, tx);
+                await addressRepository.InsertAsync(forked, cancellationToken, tx);
                 link.AddressId = forked.Id;
             }
             else
@@ -210,7 +199,7 @@ public class PersonAddressService : IPersonAddressService
                 address.County = model.County;
                 address.Postcode = model.Postcode;
                 address.Country = model.Country;
-                await _addressRepository.UpdateAsync(address, cancellationToken, tx);
+                await addressRepository.UpdateAsync(address, cancellationToken, tx);
             }
 
             if (model.IsMain)
@@ -220,14 +209,14 @@ public class PersonAddressService : IPersonAddressService
 
             link.AddressTypeId = model.TypeId;
             link.IsMain = model.IsMain;
-            await _addressPersonRepository.UpdateAsync(link, cancellationToken, tx);
+            await addressPersonRepository.UpdateAsync(link, cancellationToken, tx);
         }, cancellationToken);
     }
 
     public async Task RemoveAddressAsync(Guid personId, Guid addressPersonId,
         CancellationToken cancellationToken)
     {
-        var link = await _addressPersonRepository.GetByIdAsync(addressPersonId, cancellationToken);
+        var link = await addressPersonRepository.GetByIdAsync(addressPersonId, cancellationToken);
 
         if (link == null || link.PersonId != personId)
         {
@@ -235,21 +224,21 @@ public class PersonAddressService : IPersonAddressService
         }
 
         // Soft-delete the link only — the shared address survives for anyone else linked to it.
-        await _addressPersonRepository.DeleteAsync(addressPersonId, cancellationToken);
+        await addressPersonRepository.DeleteAsync(addressPersonId, cancellationToken);
     }
 
     // Enforce one-main-per-person: clear IsMain on the person's other links before setting a new one.
     private async Task ClearMainAsync(Guid personId, Guid? exceptLinkId, IDbTransaction? tx,
         CancellationToken cancellationToken)
     {
-        var links = await _addressPersonRepository.GetByPersonIdAsync(personId, cancellationToken, tx);
+        var links = await addressPersonRepository.GetByPersonIdAsync(personId, cancellationToken, tx);
 
         foreach (var link in links)
         {
             if (link.Id != exceptLinkId && link.IsMain)
             {
                 link.IsMain = false;
-                await _addressPersonRepository.UpdateAsync(link, cancellationToken, tx);
+                await addressPersonRepository.UpdateAsync(link, cancellationToken, tx);
             }
         }
     }

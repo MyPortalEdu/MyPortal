@@ -2,13 +2,12 @@
 <div
   class="sticky top-0 z-[1003] h-14 w-full
          flex items-center justify-between px-3 md:px-4
-         backdrop-blur shadow-sm
-         bg-indigo-600/95 dark:bg-[var(--p-surface-900)]
-         border-b border-indigo-700 dark:border-[var(--p-surface-800)]
-         text-white dark:text-[var(--p-text-color)] transition-colors"
+         bg-primary-600 dark:bg-primary-950
+         border-b border-primary-700 dark:border-primary-900
+         text-white transition-colors"
 >
   <div class="flex items-center gap-3">
-    <button pButton type="button" class="p-button-text p-button-sm !text-white dark:!text-[var(--p-text-color)] hover:!bg-white/10 dark:hover:!bg-white/10" (click)="menuToggle.emit()" [attr.aria-label]="t('topbar.toggleNavigation')">
+    <button pButton type="button" class="p-button-text p-button-sm !text-white hover:!bg-white/10" (click)="menuToggle.emit()" [attr.aria-label]="t('topbar.toggleNavigation')">
       <i pButtonIcon class="fa-solid fa-bars"></i>
     </button>
 
@@ -21,8 +20,8 @@
       @if (label.school || label.year) {
         <div
           class="hidden md:flex items-center gap-1.5 text-sm
-                 text-white dark:text-[var(--p-text-color)] opacity-80 dark:opacity-75
-                 border-l border-white/30 dark:border-[var(--p-surface-700)]
+                 text-white opacity-80
+                 border-l border-white/30
                  pl-3 ml-1 truncate"
           [attr.aria-label]="t('topbar.context')"
         >
@@ -51,15 +50,15 @@
               shape="circle"
               [label]="initials(me.displayName)"
               size="large"
-              styleClass="!bg-indigo-500 !text-white !w-12 !h-12 !text-base font-semibold"
+              styleClass="!bg-primary-500 !text-white !w-12 !h-12 !text-base font-semibold"
             ></p-avatar>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
                 <span class="font-semibold truncate">{{ me.displayName }}</span>
                 @if (userTypeLabel(me.userType); as label) {
                   <span class="text-xs px-2 py-0.5 rounded
-                               bg-indigo-100 text-indigo-700
-                               dark:bg-indigo-900/40 dark:text-indigo-300">{{ label }}</span>
+                               bg-primary-100 text-primary-700
+                               dark:bg-primary-900 dark:text-primary-300">{{ label }}</span>
                 }
               </div>
               @if (me.email) {

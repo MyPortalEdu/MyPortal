@@ -19,54 +19,48 @@ namespace MyPortal.Services.People;
 /// <see cref="IStaffMemberAccessService"/>, so view/edit follow the same relationship-scoped
 /// (Own/Managed/All) model as the rest of the staff profile.
 /// </summary>
-public class StaffAttachmentsService : DirectoryEntityService<Person>, IStaffAttachmentsService
+public class StaffAttachmentsService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffAttachmentsService> logger,
+    IDirectoryService directoryService,
+    IDocumentService documentService,
+    IValidationService validationService,
+    IStaffMemberAccessService accessService,
+    IStaffMemberRepository staffMemberRepository,
+    IPersonRepository personRepository)
+    : DirectoryEntityService<Person>(authorizationService, logger, directoryService, documentService,
+        validationService), IStaffAttachmentsService
 {
-    private readonly IStaffMemberAccessService _accessService;
-    private readonly IStaffMemberRepository _staffMemberRepository;
-    private readonly IPersonRepository _personRepository;
-
     private const StaffAccess ViewAccess =
         StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll;
 
     private const StaffAccess EditAccess =
         StaffAccess.EditOwn | StaffAccess.EditManaged | StaffAccess.EditAll;
 
-    public StaffAttachmentsService(IAuthorizationService authorizationService,
-        ILogger<StaffAttachmentsService> logger, IDirectoryService directoryService,
-        IDocumentService documentService, IValidationService validationService,
-        IStaffMemberAccessService accessService, IStaffMemberRepository staffMemberRepository,
-        IPersonRepository personRepository)
-        : base(authorizationService, logger, directoryService, documentService, validationService)
-    {
-        _accessService = accessService;
-        _staffMemberRepository = staffMemberRepository;
-        _personRepository = personRepository;
-    }
-
     // entityId is the StaffMember id; resolve to the owning Person (root-directory holder).
     public override async Task<Person> GetByIdAsync(Guid entityId, CancellationToken cancellationToken)
     {
-        var staffMember = await _staffMemberRepository.GetByIdAsync(entityId, cancellationToken)
+        var staffMember = await staffMemberRepository.GetByIdAsync(entityId, cancellationToken)
             ?? throw new NotFoundException("Staff member not found.");
 
-        return await _personRepository.GetByIdAsync(staffMember.PersonId, cancellationToken)
+        return await personRepository.GetByIdAsync(staffMember.PersonId, cancellationToken)
             ?? throw new NotFoundException("Person not found.");
     }
 
     public override async Task<bool> CanViewDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
-        => await _accessService.CanAsync(entityId, StaffArea.Documents, ViewAccess, ct)
+        => await accessService.CanAsync(entityId, StaffArea.Documents, ViewAccess, ct)
            && await CanStructurallyViewDirectoryAsync(entityId, directoryId, ct);
 
     public override async Task<bool> CanEditDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
-        => await _accessService.CanAsync(entityId, StaffArea.Documents, EditAccess, ct)
+        => await accessService.CanAsync(entityId, StaffArea.Documents, EditAccess, ct)
            && await CanStructurallyEditDirectoryAsync(entityId, directoryId, ct);
 
     public override async Task<bool> CanUploadToDirectoryAsync(Guid entityId, Guid directoryId, CancellationToken ct)
-        => await _accessService.CanAsync(entityId, StaffArea.Documents, EditAccess, ct)
+        => await accessService.CanAsync(entityId, StaffArea.Documents, EditAccess, ct)
            && await CanStructurallyUploadToDirectoryAsync(entityId, directoryId, ct);
 
     public override async Task<bool> CanEditDocumentAsync(Guid entityId, DocumentDetailsResponse document,
         CancellationToken ct)
-        => await _accessService.CanAsync(entityId, StaffArea.Documents, EditAccess, ct)
+        => await accessService.CanAsync(entityId, StaffArea.Documents, EditAccess, ct)
            && await CanStructurallyViewDirectoryAsync(entityId, document.DirectoryId, ct);
 }

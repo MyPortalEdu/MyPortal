@@ -60,6 +60,9 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
   // server rejects copy-from on update so edit mode only ever submits inline
   // periods.
   readonly editMode = input<boolean>(false);
+  // Disables every control and drops the add/remove/copy actions — the step
+  // becomes a read-back of a year the server won't let us change.
+  readonly readOnly = input<boolean>(false);
   readonly modelChange = output<Partial<AcademicYearUpsertRequest>>();
 
   readonly priorYears = signal<AcademicYearSummary[]>([]);
@@ -169,9 +172,11 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
     // user shrank the cycle on step 1 after defining periods on a now-removed
     // day). Otherwise they'd be invisible in the UI but flunk the server's
     // CycleDayIndex < cycle check on submit.
+    // Read-only never submits, so leave the loaded data exactly as the server
+    // returned it.
     const cycle = m.timetableCycleLength;
     const inRange = m.attendancePeriods.filter(p => p.cycleDayIndex < cycle);
-    if (inRange.length !== m.attendancePeriods.length) {
+    if (!this.readOnly() && inRange.length !== m.attendancePeriods.length) {
       this.modelChange.emit({ attendancePeriods: inRange });
     }
 

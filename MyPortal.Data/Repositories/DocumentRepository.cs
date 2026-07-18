@@ -9,13 +9,9 @@ using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories
 {
-    public class DocumentRepository : EntityRepository<Document>, IDocumentRepository
+    public class DocumentRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : EntityRepository<Document>(factory, authorizationService), IDocumentRepository
     {
-        public DocumentRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-            factory, authorizationService)
-        {
-        }
-
         public async Task<DocumentDetailsResponse> GetDetailsByIdAsync(Guid documentId, CancellationToken cancellationToken)
         {
             using var conn = _factory.Create();

@@ -60,6 +60,11 @@ export class StaffMenuContributor implements AppMenuContributor {
             permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers]
           },
           {
+            label: 'nav.roles',
+            routerLink: ['/staff/system/roles'],
+            permissionsAny: [Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles]
+          },
+          {
             label: 'nav.bulletinSettings',
             routerLink: ['/staff/system/bulletin-settings'],
             permissionsAny: [Permissions.SystemAdmin.BulletinSettings]

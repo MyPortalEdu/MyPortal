@@ -7,13 +7,9 @@ using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories
 {
-    public class RolePermissionRepository : EntityRepository<RolePermission>, IRolePermissionRepository
+    public class RolePermissionRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : EntityRepository<RolePermission>(factory, authorizationService), IRolePermissionRepository
     {
-        public RolePermissionRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
-            base(factory, authorizationService)
-        {
-        }
-
         public async Task<IList<RolePermission>> GetByRoleIdAsync(Guid roleId, CancellationToken cancellationToken)
         {
             var sql = "[dbo].[usp_role_permission_get_by_role_id]";

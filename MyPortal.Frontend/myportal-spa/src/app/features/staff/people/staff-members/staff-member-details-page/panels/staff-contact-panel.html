@@ -1,8 +1,6 @@
 <ng-container *transloco="let t">
   @if (loading() && !contact()) {
-    <div class="flex justify-center py-10">
-      <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
-    </div>
+    <mp-loading></mp-loading>
   } @else if (contact()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.contactDetails') }}</h3>
     <p class="text-sm text-muted-color mb-4">
@@ -11,10 +9,7 @@
 
     <div class="flex flex-col gap-6">
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-envelope text-muted-color"></i>
-          {{ t('staff-members.contact.emailsHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-envelope" [title]="t('staff-members.contact.emailsHeading')"></mp-section-header>
         <mp-person-emails
           [emails]="emails()"
           (emailsChange)="emails.set($event)"
@@ -23,10 +18,7 @@
       </section>
 
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-phone text-muted-color"></i>
-          {{ t('staff-members.contact.phonesHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-phone" [title]="t('staff-members.contact.phonesHeading')"></mp-section-header>
         <mp-person-phones
           [phones]="phones()"
           (phonesChange)="phones.set($event)"
@@ -34,11 +26,13 @@
           [editing]="editing()"></mp-person-phones>
       </section>
 
-      <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-location-dot text-muted-color"></i>
-          {{ t('staff-members.contact.addressesHeading') }}
-        </h4>
+      <!-- Addresses commit immediately (shared-address semantics can't stage behind the panel's
+           Save), so they sit outside the staged Emails/Phones region above. -->
+      <section class="border-t border-surface pt-6">
+        <mp-section-header icon="fa-solid fa-location-dot" [title]="t('staff-members.contact.addressesHeading')"></mp-section-header>
+        <p class="text-sm text-muted-color -mt-2 mb-3">
+          {{ t('staff-members.contact.addressesHint') }}
+        </p>
         <mp-person-addresses
           [staffMemberId]="staffMemberId()"
           [canEdit]="canEdit()"></mp-person-addresses>

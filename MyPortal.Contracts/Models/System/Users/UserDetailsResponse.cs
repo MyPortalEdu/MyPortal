@@ -4,11 +4,6 @@ namespace MyPortal.Contracts.Models.System.Users;
 
 public class UserDetailsResponse
 {
-    public UserDetailsResponse()
-    {
-        RoleIds =  new List<Guid>();
-    }
-    
     public Guid Id { get; set; }
     
     public DateTime CreatedAt { get; set; }
@@ -33,5 +28,5 @@ public class UserDetailsResponse
 
     public bool LockoutEnabled { get; set; }
 
-    public IList<Guid> RoleIds { get; set; }
+    public IList<Guid> RoleIds { get; set; } = new List<Guid>();
 }

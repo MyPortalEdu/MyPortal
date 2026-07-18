@@ -11,17 +11,12 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Bulk attendance-mark endpoints.</summary>
-public sealed class AttendanceMarksController : BaseApiController
+public sealed class AttendanceMarksController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<AttendanceMarksController> logger,
+    IAttendanceMarkService attendanceMarkService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IAttendanceMarkService _attendanceMarkService;
-
-    public AttendanceMarksController(ProblemDetailsFactory problemFactory,
-        ILogger<AttendanceMarksController> logger, IAttendanceMarkService attendanceMarkService)
-        : base(problemFactory, logger)
-    {
-        _attendanceMarkService = attendanceMarkService;
-    }
-
     /// <summary>Get attendance marks for a group across a date range.</summary>
     /// <remarks>Returns the full student-by-period matrix, including blank cells.</remarks>
     /// <param name="studentGroupId">The student group whose marks to fetch.</param>
@@ -33,7 +28,7 @@ public sealed class AttendanceMarksController : BaseApiController
     public async Task<IActionResult> GetBulkAsync([FromQuery] Guid studentGroupId,
         [FromQuery] DateTime from, [FromQuery] DateTime to)
     {
-        var result = await _attendanceMarkService.GetBulkAsync(studentGroupId, from, to, CancellationToken);
+        var result = await attendanceMarkService.GetBulkAsync(studentGroupId, from, to, CancellationToken);
 
         return Ok(result);
     }
@@ -47,7 +42,7 @@ public sealed class AttendanceMarksController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> SubmitBulkAsync([FromBody] BulkAttendanceMarksRequest model)
     {
-        await _attendanceMarkService.SubmitBulkAsync(model, CancellationToken);
+        await attendanceMarkService.SubmitBulkAsync(model, CancellationToken);
 
         return NoContent();
     }

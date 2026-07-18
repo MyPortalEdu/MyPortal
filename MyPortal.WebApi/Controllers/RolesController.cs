@@ -4,6 +4,7 @@ using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.System.Roles;
 using MyPortal.Services.Interfaces.System;
 using MyPortal.WebApi.Infrastructure.Attributes;
@@ -14,16 +15,12 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Role management endpoints.</summary>
-public sealed class RolesController : BaseApiController
+public sealed class RolesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<RolesController> logger,
+    IRoleService roleService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IRoleService _roleService;
-
-    public RolesController(ProblemDetailsFactory problemFactory, ILogger<RolesController> logger,
-        IRoleService roleService) : base(problemFactory, logger)
-    {
-        _roleService = roleService;
-    }
-
     /// <summary>Get a role, including its permissions.</summary>
     /// <param name="roleId">The id of the role.</param>
     [HttpGet("{roleId:guid}")]
@@ -32,7 +29,7 @@ public sealed class RolesController : BaseApiController
     [ProducesResponseType(typeof(RoleDetailsResponse), 200)]
     public async Task<IActionResult> GetRoleDetailsAsync([FromRoute] Guid roleId)
     {
-        var result = await _roleService.GetDetailsByIdAsync(roleId, CancellationToken);
+        var result = await roleService.GetDetailsByIdAsync(roleId, CancellationToken);
 
         if (result == null)
         {
@@ -53,7 +50,7 @@ public sealed class RolesController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _roleService.GetRolesAsync(options.FilterOptions, options.SortOptions, options.PageOptions);
+        var result = await roleService.GetRolesAsync(options.FilterOptions, options.SortOptions, options.PageOptions);
 
         return Ok(result);
     }
@@ -63,12 +60,12 @@ public sealed class RolesController : BaseApiController
     [ValidateModel]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditRoles)]
-    [ProducesResponseType(204)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateRoleAsync([FromBody] RoleUpsertRequest model)
     {
-        var result = await _roleService.CreateAsync(model, CancellationToken);
+        var (result, roleId) = await roleService.CreateAsync(model, CancellationToken);
 
-        return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
+        return !result.Succeeded ? IdentityResultProblem(result) : Ok(new IdResponse { Id = roleId });
     }
 
     /// <summary>Update a role's name and/or permission set.</summary>
@@ -82,7 +79,7 @@ public sealed class RolesController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> UpdateRoleAsync([FromRoute] Guid roleId, [FromBody] RoleUpsertRequest model)
     {
-        var result = await _roleService.UpdateAsync(roleId, model, CancellationToken);
+        var result = await roleService.UpdateAsync(roleId, model, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }
@@ -96,7 +93,7 @@ public sealed class RolesController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteRoleAsync([FromRoute] Guid roleId)
     {
-        var result = await _roleService.DeleteAsync(roleId, CancellationToken);
+        var result = await roleService.DeleteAsync(roleId, CancellationToken);
 
         return !result.Succeeded ? IdentityResultProblem(result) : NoContent();
     }

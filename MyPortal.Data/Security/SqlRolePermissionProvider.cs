@@ -4,17 +4,9 @@ using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Data.Security;
 
-public class SqlRolePermissionProvider : IRolePermissionProvider
+public class SqlRolePermissionProvider(IDbConnectionFactory connectionFactory, IRolePermissionCache cache)
+    : IRolePermissionProvider
 {
-    private readonly IDbConnectionFactory _connectionFactory;
-    private readonly IRolePermissionCache _cache;
-
-    public SqlRolePermissionProvider(IDbConnectionFactory connectionFactory, IRolePermissionCache cache)
-    {
-        _connectionFactory = connectionFactory;
-        _cache = cache;
-    }
-
     public async Task<IReadOnlyCollection<string>> GetPermissionsForRolesAsync(IEnumerable<Guid> roleIds,
         CancellationToken ct = default)
     {
@@ -25,7 +17,7 @@ public class SqlRolePermissionProvider : IRolePermissionProvider
 
         foreach (var role in roles)
         {
-            var perms = await _cache.GetOrAddAsync(role, FetchAsync, ct);
+            var perms = await cache.GetOrAddAsync(role, FetchAsync, ct);
             all.Add(perms);
 
             async Task<IReadOnlyCollection<string>> FetchAsync(CancellationToken token)
@@ -37,7 +29,7 @@ public class SqlRolePermissionProvider : IRolePermissionProvider
                     JOIN Permissions P ON P.Id = RP.PermissionId
                     WHERE R.Id = @roleId;";
 
-                using var conn = _connectionFactory.Create();
+                using var conn = connectionFactory.Create();
                 return (await conn.QueryAsync<string>(
                     new CommandDefinition(sql, new { roleId = role }, cancellationToken: token))).ToArray();
             }

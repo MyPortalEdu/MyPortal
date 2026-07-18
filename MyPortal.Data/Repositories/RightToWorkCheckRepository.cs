@@ -1,39 +1,26 @@
 using System.Data;
-using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
+using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
 
-public class RightToWorkCheckRepository : EntityRepository<RightToWorkCheck>, IRightToWorkCheckRepository
+public class RightToWorkCheckRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<RightToWorkCheck>(factory, authorizationService), IRightToWorkCheckRepository
 {
-    public RightToWorkCheckRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
-        base(factory, authorizationService)
-    {
-    }
-
     public async Task<IEnumerable<RightToWorkCheck>> GetByStaffMemberIdAsync(Guid staffMemberId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        // Full column list (incl. audit + version) so reconcile updates round-trip without
-        // zeroing the created/audit columns; soft-deleted rows are excluded.
-        const string sql =
-            "SELECT [Id], [StaffMemberId], [DocumentTypeId], [VerifiedById], [DocumentNumber], [CheckDate], " +
-            "[DocumentExpiryDate], [FollowUpDate], [Notes], [IsDeleted], [CreatedById], [CreatedByIpAddress], " +
-            "[CreatedAt], [LastModifiedById], [LastModifiedByIpAddress], [LastModifiedAt], [Version] " +
-            "FROM [dbo].[RightToWorkChecks] WHERE [StaffMemberId] = @staffMemberId AND [IsDeleted] = 0;";
-
         var (conn, owns) = AcquireConnection(transaction);
 
         try
         {
-            var command = new CommandDefinition(sql, new { staffMemberId }, transaction,
+            return await conn.ExecuteStoredProcedureAsync<RightToWorkCheck>(
+                "[dbo].[usp_right_to_work_check_get_by_staff_member_id]", new { staffMemberId }, transaction,
                 cancellationToken: cancellationToken);
-
-            return await conn.QueryAsync<RightToWorkCheck>(command);
         }
         finally
         {

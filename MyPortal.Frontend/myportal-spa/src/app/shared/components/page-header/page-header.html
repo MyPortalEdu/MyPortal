@@ -1,13 +1,12 @@
-<header class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-[var(--p-content-background)]
-                   rounded-xl shadow-sm px-4 py-3 mb-3">
+<header class="mp-surface flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3 mb-4">
   <div class="flex items-center gap-2 min-w-0">
     @if (icon(); as i) {
       <i [class]="i + ' text-primary mr-2 text-lg'"></i>
     }
     <div class="min-w-0">
-      <span class="text-lg font-semibold leading-tight truncate">{{ title() }}</span>
+      <span class="mp-title truncate">{{ title() }}</span>
       @if (subtitle(); as s) {
-        <span class="text-sm opacity-70 ml-2">{{ s }}</span>
+        <span class="text-sm text-muted-color ml-2">{{ s }}</span>
       }
     </div>
   </div>
@@ -20,6 +19,7 @@
         [label]="a.label"
         [icon]="a.icon ?? ''"
         [outlined]="a.outlined"
+        [text]="a.text"
         [severity]="a.severity ?? 'primary'"
         [disabled]="a.disabled"
         [loading]="a.loading"

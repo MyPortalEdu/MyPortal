@@ -1,15 +1,123 @@
-<ng-container *transloco="let t">
-<mp-page-header
-  [title]="t('pages.users.title')"
-  icon="fa-solid fa-users"
-  [actions]="headerActions()"
-></mp-page-header>
+<ng-container *transloco="let t; prefix: 'users'">
+  <mp-page-header [title]="t('title')" icon="fa-solid fa-users" [actions]="headerActions()"></mp-page-header>
 
-<div class="flex flex-col md:flex-row gap-4">
-  <p-card class="flex-1">
-    <p-table>
+  <p-card>
+    <p-table
+      #dt
+      [lazy]="true"
+      [paginator]="true"
+      [first]="initialState.first"
+      [rows]="initialState.rows"
+      [sortField]="initialState.sortField"
+      [sortOrder]="initialState.sortOrder ?? 1"
+      [totalRecords]="totalRecords()"
+      [loading]="loading()"
+      [value]="rows()"
+      (onLazyLoad)="load($event)"
+      [filterDelay]="300"
+      [filters]="initialFilters"
+      [globalFilterFields]="['username', 'email', 'personFullName']"
+      dataKey="id"
+      selectionMode="single"
+      [scrollable]="true">
 
+      <ng-template pTemplate="caption">
+        <div class="flex items-center justify-end">
+          <span class="relative w-full sm:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
+            <input
+              pInputText
+              type="text"
+              class="w-full pl-9 pr-9"
+              [placeholder]="t('searchPlaceholder')"
+              [value]="searchTerm()"
+              (input)="onSearch($any($event.target).value)" />
+            @if (searchTerm()) {
+              <button
+                type="button"
+                class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                [attr.aria-label]="t('clearSearch')"
+                (click)="clearSearch()">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            }
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="username">{{ t('columns.username') }} <p-sortIcon field="username"></p-sortIcon></th>
+          <th>{{ t('columns.person') }}</th>
+          <th style="width: 9rem">{{ t('columns.portal') }}</th>
+          <th style="width: 8rem">{{ t('columns.status') }}</th>
+          <th style="width: 7rem"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr [pSelectableRow]="user" class="cursor-pointer" (click)="onRowClick($event, user)">
+          <td>
+            <a [routerLink]="['/staff/system/users', user.id]" class="font-medium hover:underline">{{ user.username }}</a>
+          </td>
+          <td class="text-muted-color">{{ user.personFullName }}</td>
+          <td>
+            <p-tag [value]="audienceLabel(user.userType)" [severity]="audienceSeverity(user.userType)"></p-tag>
+          </td>
+          <td>
+            @if (user.isEnabled) {
+              <p-tag [value]="t('enabled')" severity="success"></p-tag>
+            } @else {
+              <p-tag [value]="t('disabled')" severity="secondary"></p-tag>
+            }
+          </td>
+          <td>
+            <div class="flex items-center justify-end gap-1">
+              @if (canEdit()) {
+                <span [pTooltip]="user.isSystem ? t('protectedHint') : ''" tooltipPosition="top">
+                  <p-button
+                    [label]="t('delete')"
+                    icon="fa-solid fa-trash-can"
+                    severity="danger"
+                    size="small"
+                    [text]="true"
+                    [disabled]="user.isSystem"
+                    (click)="deleteUser(user)"></p-button>
+                </span>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="5" class="p-4">
+            @if (hasFilter()) {
+              <mp-empty-state icon="fa-solid fa-magnifying-glass" [message]="t('emptyFiltered')">
+                <p-button
+                  [label]="t('clearSearch')"
+                  icon="fa-solid fa-xmark"
+                  severity="secondary"
+                  size="small"
+                  [outlined]="true"
+                  (click)="clearSearch()"></p-button>
+              </mp-empty-state>
+            } @else {
+              <mp-empty-state icon="fa-solid fa-users" [message]="t('emptyNone')">
+                @if (canEdit()) {
+                  <p-button
+                    [label]="t('new')"
+                    icon="fa-solid fa-plus"
+                    severity="primary"
+                    size="small"
+                    (click)="openCreate()"></p-button>
+                }
+              </mp-empty-state>
+            }
+          </td>
+        </tr>
+      </ng-template>
     </p-table>
   </p-card>
-</div>
 </ng-container>

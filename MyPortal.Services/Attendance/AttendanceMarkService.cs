@@ -9,22 +9,14 @@ using MyPortal.Services.Interfaces.Attendance;
 
 namespace MyPortal.Services.Attendance;
 
-public class AttendanceMarkService : BaseService, IAttendanceMarkService
+public class AttendanceMarkService(
+    IAuthorizationService authorizationService,
+    ILogger<AttendanceMarkService> logger,
+    IAttendanceMarkRepository attendanceMarkRepository,
+    IAttendanceCodeService attendanceCodeService,
+    IValidationService validationService)
+    : BaseService(authorizationService, logger), IAttendanceMarkService
 {
-    private readonly IAttendanceMarkRepository _attendanceMarkRepository;
-    private readonly IAttendanceCodeService _attendanceCodeService;
-    private readonly IValidationService _validationService;
-
-    public AttendanceMarkService(IAuthorizationService authorizationService, ILogger<AttendanceMarkService> logger,
-        IAttendanceMarkRepository attendanceMarkRepository, IAttendanceCodeService attendanceCodeService,
-        IValidationService validationService)
-        : base(authorizationService, logger)
-    {
-        _attendanceMarkRepository = attendanceMarkRepository;
-        _attendanceCodeService = attendanceCodeService;
-        _validationService = validationService;
-    }
-
     public async Task<BulkAttendanceMarksResponse> GetBulkAsync(Guid studentGroupId, DateTime from, DateTime to,
         CancellationToken cancellationToken)
     {
@@ -36,7 +28,7 @@ public class AttendanceMarkService : BaseService, IAttendanceMarkService
             throw new ArgumentException("From date must be on or before To date.");
         }
 
-        var result = await _attendanceMarkRepository.GetBulkAsync(studentGroupId, from, to, cancellationToken);
+        var result = await attendanceMarkRepository.GetBulkAsync(studentGroupId, from, to, cancellationToken);
 
         return result ?? throw new NotFoundException("Student group not found.");
     }
@@ -46,15 +38,15 @@ public class AttendanceMarkService : BaseService, IAttendanceMarkService
         await AuthorizationService.RequirePermissionAsync(Permissions.Attendance.EditAttendanceMarksBulk,
             cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
         // Null AttendanceCodeId entries are deletes — skip them in the policy check.
-        await _attendanceCodeService.EnsureCodesAreUsableAsync(
+        await attendanceCodeService.EnsureCodesAreUsableAsync(
             model.Marks.Where(m => m.AttendanceCodeId.HasValue)
                        .Select(m => m.AttendanceCodeId!.Value),
             cancellationToken);
 
-        await _attendanceMarkRepository.SubmitBulkAsync(model.StudentGroupId, model.From, model.To,
+        await attendanceMarkRepository.SubmitBulkAsync(model.StudentGroupId, model.From, model.To,
             model.Marks.ToList(), cancellationToken);
 
         Logger.LogInformation(

@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class QualificationLevelRepository : EntityRepository<QualificationLevel>, IQualificationLevelRepository
-{
-    public QualificationLevelRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
-        base(factory, authorizationService)
-    {
-    }
-}
+public class QualificationLevelRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<QualificationLevel>(factory, authorizationService), IQualificationLevelRepository;

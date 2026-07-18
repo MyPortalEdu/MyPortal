@@ -1,4 +1,5 @@
 using System.Data;
+using FluentValidation;
 using Microsoft.Extensions.Logging;
 using Moq;
 using MyPortal.Auth.Constants;
@@ -30,6 +31,10 @@ public class BulletinCategoryServiceTests
         _authorizationService = new Mock<IAuthorizationService>(MockBehavior.Strict);
         _repository = new Mock<IBulletinCategoryRepository>(MockBehavior.Strict);
         _logger = new Mock<ILogger<BulletinCategoryService>>(MockBehavior.Loose);
+
+        // Default: no existing categories, so the name-uniqueness guard passes. Tests that assert on
+        // the listing override this via StubGetListPaged.
+        StubGetListPaged(Array.Empty<BulletinCategory>());
 
         _service = new BulletinCategoryService(
             _authorizationService.Object,
@@ -254,5 +259,23 @@ public class BulletinCategoryServiceTests
 
         _repository.Verify(r => r.DeleteAsync(id, It.IsAny<CancellationToken>(),
             It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Once);
+    }
+
+    [Test]
+    public void CreateAsync_Throws_Validation_WhenNameAlreadyExists()
+    {
+        RequireSettingsPermission();
+        StubGetListPaged(new[] { MakeCategory("Notices", 1, true) });
+
+        var model = new BulletinCategoryUpsertRequest
+        {
+            Name = "Notices", Icon = "pi pi-info-circle", ColourCode = "#000000", DisplayOrder = 2, Active = true
+        };
+
+        Assert.That(async () => await _service.CreateAsync(model, CancellationToken.None),
+            Throws.TypeOf<ValidationException>());
+
+        _repository.Verify(r => r.InsertAsync(It.IsAny<BulletinCategory>(),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
 }

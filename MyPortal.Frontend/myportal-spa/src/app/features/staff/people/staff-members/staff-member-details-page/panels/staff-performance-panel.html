@@ -1,24 +1,25 @@
 <ng-container *transloco="let t">
   @if (loading() && !performance()) {
-    <div class="flex justify-center py-10">
-      <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
-    </div>
+    <mp-loading></mp-loading>
   } @else if (performance()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.performanceDetails') }}</h3>
     <p class="text-sm text-muted-color mb-4">{{ t('staff-members.performance.hint') }}</p>
 
+    @if (editing() && !valid()) {
+      <mp-callout severity="warn" [title]="t('common.validation.missingTitle')" class="mb-4 block">
+        {{ t('common.validation.missingBlocked') }}
+      </mp-callout>
+    }
+
     <div class="flex flex-col gap-6">
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-clipboard-user text-muted-color"></i>
-          {{ t('staff-members.performance.reviewsHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-clipboard-user" [title]="t('staff-members.performance.reviewsHeading')"></mp-section-header>
         @if (!reviews().length) {
-          <span class="text-sm text-muted-color">{{ t('staff-members.performance.noReviews') }}</span>
+          <mp-empty-state icon="fa-solid fa-clipboard-user" [message]="t('staff-members.performance.noReviews')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
           @for (r of reviews(); track $index; let i = $index) {
-            <div class="rounded bg-surface-50 dark:bg-surface-800 p-3">
+            <div class="rounded bg-emphasis p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ r.cycleName || t('staff-members.performance.review') }}</span>
                 @if (editing()) {
@@ -28,34 +29,27 @@
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.cycle') }}</label>
+                  <mp-field [label]="t('staff-members.performance.cycle')">
                     <input pInputText maxlength="128" [ngModel]="r.cycleName ?? ''" (ngModelChange)="patchReview(i, 'cycleName', $event)" />
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.status') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.status')">
                     <mp-lookup-select [options]="reviewStatuses()" [value]="r.statusId ?? null" (valueChange)="patchReview(i, 'statusId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.reviewer') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.reviewer')">
                     <mp-lookup-select [options]="staff()" [value]="r.reviewerId ?? null" (valueChange)="patchReview(i, 'reviewerId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.overallRating') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.overallRating')">
                     <mp-lookup-select [options]="observationOutcomes()" [value]="r.overallRatingId ?? null" (valueChange)="patchReview(i, 'overallRatingId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.reviewDate') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.reviewDate')">
                     <p-datepicker [ngModel]="toDate(r.reviewDate)" (ngModelChange)="patchReview(i, 'reviewDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.nextReview') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.nextReview')">
                     <p-datepicker [ngModel]="toDate(r.nextReviewDate)" (ngModelChange)="patchReview(i, 'nextReviewDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.summary') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.summary')">
                     <textarea pTextarea rows="3" [ngModel]="r.summary ?? ''" (ngModelChange)="patchReview(i, 'summary', $event)"></textarea>
-                  </div>
+                  </mp-field>
                 </div>
               } @else {
                 <div class="text-sm text-muted-color">
@@ -80,16 +74,13 @@
       </section>
 
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-bullseye text-muted-color"></i>
-          {{ t('staff-members.performance.objectivesHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-bullseye" [title]="t('staff-members.performance.objectivesHeading')"></mp-section-header>
         @if (!objectives().length) {
-          <span class="text-sm text-muted-color">{{ t('staff-members.performance.noObjectives') }}</span>
+          <mp-empty-state icon="fa-solid fa-bullseye" [message]="t('staff-members.performance.noObjectives')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
           @for (o of objectives(); track $index; let i = $index) {
-            <div class="rounded bg-surface-50 dark:bg-surface-800 p-3">
+            <div class="rounded bg-emphasis p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ t('staff-members.performance.objective') }}{{ objectives().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
@@ -99,38 +90,30 @@
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.objectiveTitle') }}</label>
-                    <input pInputText maxlength="256" [ngModel]="o.title" (ngModelChange)="patchObjective(i, 'title', $event)" />
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.category') }}</label>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.objectiveTitle')" [required]="true">
+                    <input pInputText required maxlength="256" [ngModel]="o.title" (ngModelChange)="patchObjective(i, 'title', $event)" [invalid]="!o.title.trim()" />
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.category')">
                     <mp-lookup-select [options]="objectiveCategories()" [value]="o.categoryId ?? null" (valueChange)="patchObjective(i, 'categoryId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.cycle') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.cycle')">
                     <mp-lookup-select [options]="reviewOptions()" [value]="o.reviewId ?? null" (valueChange)="patchObjective(i, 'reviewId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.status') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.status')">
                     <mp-lookup-select [options]="objectiveStatuses()" [value]="o.statusId ?? null" (valueChange)="patchObjective(i, 'statusId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.dueDate') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.dueDate')">
                     <p-datepicker [ngModel]="toDate(o.dueDate)" (ngModelChange)="patchObjective(i, 'dueDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.objectiveDescription') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.objectiveDescription')">
                     <textarea pTextarea rows="2" [ngModel]="o.description ?? ''" (ngModelChange)="patchObjective(i, 'description', $event)"></textarea>
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.successCriteria') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.successCriteria')">
                     <textarea pTextarea rows="2" [ngModel]="o.successCriteria ?? ''" (ngModelChange)="patchObjective(i, 'successCriteria', $event)"></textarea>
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.progressNotes') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.progressNotes')">
                     <textarea pTextarea rows="2" [ngModel]="o.progressNotes ?? ''" (ngModelChange)="patchObjective(i, 'progressNotes', $event)"></textarea>
-                  </div>
+                  </mp-field>
                 </div>
               } @else {
                 <div class="text-sm font-medium">{{ o.title }}</div>
@@ -158,16 +141,13 @@
       </section>
 
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-eye text-muted-color"></i>
-          {{ t('staff-members.performance.observationsHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-eye" [title]="t('staff-members.performance.observationsHeading')"></mp-section-header>
         @if (!observations().length) {
-          <span class="text-sm text-muted-color">{{ t('staff-members.performance.noObservations') }}</span>
+          <mp-empty-state icon="fa-solid fa-eye" [message]="t('staff-members.performance.noObservations')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
           @for (o of observations(); track $index; let i = $index) {
-            <div class="rounded bg-surface-50 dark:bg-surface-800 p-3">
+            <div class="rounded bg-emphasis p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ t('staff-members.performance.observation') }}{{ observations().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
@@ -177,38 +157,30 @@
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.observationDate') }}</label>
-                    <p-datepicker [ngModel]="toDate(o.date)" (ngModelChange)="patchObservation(i, 'date', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.observer') }}</label>
-                    <mp-lookup-select [options]="staff()" [value]="o.observerId" (valueChange)="patchObservation(i, 'observerId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.outcome') }}</label>
-                    <mp-lookup-select [options]="observationOutcomes()" [value]="o.outcomeId" (valueChange)="patchObservation(i, 'outcomeId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.focus') }}</label>
+                  <mp-field [label]="t('staff-members.performance.observationDate')" [required]="true">
+                    <p-datepicker required [ngModel]="toDate(o.date)" (ngModelChange)="patchObservation(i, 'date', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full" [invalid]="!o.date"></p-datepicker>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.observer')" [required]="true">
+                    <mp-lookup-select [options]="staff()" [value]="o.observerId" (valueChange)="patchObservation(i, 'observerId', $event)" [invalid]="!o.observerId"></mp-lookup-select>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.outcome')" [required]="true">
+                    <mp-lookup-select [options]="observationOutcomes()" [value]="o.outcomeId" (valueChange)="patchObservation(i, 'outcomeId', $event)" [invalid]="!o.outcomeId"></mp-lookup-select>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.focus')">
                     <input pInputText maxlength="128" [ngModel]="o.focus ?? ''" (ngModelChange)="patchObservation(i, 'focus', $event)" />
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.subjectObserved') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.subjectObserved')">
                     <input pInputText maxlength="128" [ngModel]="o.subjectObserved ?? ''" (ngModelChange)="patchObservation(i, 'subjectObserved', $event)" />
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.strengths') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.strengths')">
                     <textarea pTextarea rows="2" [ngModel]="o.strengths ?? ''" (ngModelChange)="patchObservation(i, 'strengths', $event)"></textarea>
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.areasForDevelopment') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.areasForDevelopment')">
                     <textarea pTextarea rows="2" [ngModel]="o.areasForDevelopment ?? ''" (ngModelChange)="patchObservation(i, 'areasForDevelopment', $event)"></textarea>
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.notes') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.notes')">
                     <textarea pTextarea rows="2" [ngModel]="o.notes ?? ''" (ngModelChange)="patchObservation(i, 'notes', $event)"></textarea>
-                  </div>
+                  </mp-field>
                 </div>
               } @else {
                 <div class="text-sm">
@@ -242,16 +214,13 @@
       </section>
 
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-certificate text-muted-color"></i>
-          {{ t('staff-members.performance.trainingHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-certificate" [title]="t('staff-members.performance.trainingHeading')"></mp-section-header>
         @if (!trainingRecords().length) {
-          <span class="text-sm text-muted-color">{{ t('staff-members.performance.noTraining') }}</span>
+          <mp-empty-state icon="fa-solid fa-certificate" [message]="t('staff-members.performance.noTraining')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
           @for (tr of trainingRecords(); track $index; let i = $index) {
-            <div class="rounded bg-surface-50 dark:bg-surface-800 p-3">
+            <div class="rounded bg-emphasis p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ t('staff-members.performance.training') }}{{ trainingRecords().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
@@ -261,34 +230,27 @@
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.course') }}</label>
-                    <mp-lookup-select [options]="trainingCourses()" [value]="tr.trainingCourseId" (valueChange)="patchTrainingRecord(i, 'trainingCourseId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.status') }}</label>
-                    <mp-lookup-select [options]="trainingStatuses()" [value]="tr.statusId" (valueChange)="patchTrainingRecord(i, 'statusId', $event)"></mp-lookup-select>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.completedDate') }}</label>
+                  <mp-field [label]="t('staff-members.performance.course')" [required]="true">
+                    <mp-lookup-select [options]="trainingCourses()" [value]="tr.trainingCourseId" (valueChange)="patchTrainingRecord(i, 'trainingCourseId', $event)" [invalid]="!tr.trainingCourseId"></mp-lookup-select>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.status')" [required]="true">
+                    <mp-lookup-select [options]="trainingStatuses()" [value]="tr.statusId" (valueChange)="patchTrainingRecord(i, 'statusId', $event)" [invalid]="!tr.statusId"></mp-lookup-select>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.completedDate')">
                     <p-datepicker [ngModel]="toDate(tr.completedDate)" (ngModelChange)="patchTrainingRecord(i, 'completedDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.expiryDate') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.expiryDate')">
                     <p-datepicker [ngModel]="toDate(tr.expiryDate)" (ngModelChange)="patchTrainingRecord(i, 'expiryDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.provider') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.provider')">
                     <input pInputText maxlength="128" [ngModel]="tr.provider ?? ''" (ngModelChange)="patchTrainingRecord(i, 'provider', $event)" />
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.hours') }}</label>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.performance.hours')">
                     <p-inputnumber [ngModel]="tr.hours ?? null" (ngModelChange)="patchTrainingRecord(i, 'hours', $event)" [min]="0" [maxFractionDigits]="2" styleClass="w-full" inputStyleClass="w-full"></p-inputnumber>
-                  </div>
-                  <div class="flex flex-col gap-1 md:col-span-2">
-                    <label class="text-sm font-medium">{{ t('staff-members.performance.certificateReference') }}</label>
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.performance.certificateReference')">
                     <input pInputText maxlength="64" [ngModel]="tr.certificateReference ?? ''" (ngModelChange)="patchTrainingRecord(i, 'certificateReference', $event)" />
-                  </div>
+                  </mp-field>
                 </div>
               } @else {
                 <div class="text-sm font-medium">{{ lookupLabel(trainingCourses(), tr.trainingCourseId) }}</div>

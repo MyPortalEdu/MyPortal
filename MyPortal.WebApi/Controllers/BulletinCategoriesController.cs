@@ -12,17 +12,12 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Bulletin category endpoints.</summary>
-public sealed class BulletinCategoriesController : BaseApiController
+public sealed class BulletinCategoriesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<BulletinCategoriesController> logger,
+    IBulletinCategoryService service)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IBulletinCategoryService _service;
-
-    public BulletinCategoriesController(ProblemDetailsFactory problemFactory,
-        ILogger<BulletinCategoriesController> logger, IBulletinCategoryService service)
-        : base(problemFactory, logger)
-    {
-        _service = service;
-    }
-
     /// <summary>List bulletin categories.</summary>
     /// <param name="includeInactive">Include categories with Active=false. Defaults to false.</param>
     [HttpGet]
@@ -30,7 +25,7 @@ public sealed class BulletinCategoriesController : BaseApiController
     [ProducesResponseType(typeof(IList<BulletinCategoryResponse>), 200)]
     public async Task<IActionResult> GetAllAsync([FromQuery] bool includeInactive = false)
     {
-        var result = await _service.GetAllAsync(includeInactive, CancellationToken);
+        var result = await service.GetAllAsync(includeInactive, CancellationToken);
         return Ok(result);
     }
 
@@ -40,7 +35,7 @@ public sealed class BulletinCategoriesController : BaseApiController
     [ProducesResponseType(typeof(BulletinCategoryResponse), 200)]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid categoryId)
     {
-        var result = await _service.GetByIdAsync(categoryId, CancellationToken);
+        var result = await service.GetByIdAsync(categoryId, CancellationToken);
         return Ok(result);
     }
 
@@ -53,7 +48,7 @@ public sealed class BulletinCategoriesController : BaseApiController
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateAsync([FromBody] BulletinCategoryUpsertRequest model)
     {
-        var id = await _service.CreateAsync(model, CancellationToken);
+        var id = await service.CreateAsync(model, CancellationToken);
         return Ok(new IdResponse { Id = id });
     }
 
@@ -67,7 +62,7 @@ public sealed class BulletinCategoriesController : BaseApiController
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid categoryId,
         [FromBody] BulletinCategoryUpsertRequest model)
     {
-        await _service.UpdateAsync(categoryId, model, CancellationToken);
+        await service.UpdateAsync(categoryId, model, CancellationToken);
         return NoContent();
     }
 
@@ -79,7 +74,7 @@ public sealed class BulletinCategoriesController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid categoryId)
     {
-        await _service.DeleteAsync(categoryId, CancellationToken);
+        await service.DeleteAsync(categoryId, CancellationToken);
         return NoContent();
     }
 }

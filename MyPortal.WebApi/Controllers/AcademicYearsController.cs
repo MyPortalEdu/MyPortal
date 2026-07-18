@@ -12,17 +12,12 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Academic-year endpoints.</summary>
-public sealed class AcademicYearsController : BaseApiController
+public sealed class AcademicYearsController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<AcademicYearsController> logger,
+    IAcademicYearService academicYearService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IAcademicYearService _academicYearService;
-
-    public AcademicYearsController(ProblemDetailsFactory problemFactory,
-        ILogger<AcademicYearsController> logger, IAcademicYearService academicYearService)
-        : base(problemFactory, logger)
-    {
-        _academicYearService = academicYearService;
-    }
-
     /// <summary>List academic years for the local school.</summary>
     /// <remarks>Returns lightweight summaries. Use the by-id endpoint for full details.</remarks>
     [HttpGet]
@@ -35,7 +30,7 @@ public sealed class AcademicYearsController : BaseApiController
     [ProducesResponseType(typeof(IList<AcademicYearSummaryResponse>), 200)]
     public async Task<IActionResult> ListAsync()
     {
-        var result = await _academicYearService.ListAsync(CancellationToken);
+        var result = await academicYearService.ListAsync(CancellationToken);
         return Ok(result);
     }
 
@@ -49,7 +44,7 @@ public sealed class AcademicYearsController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> GetCurrentAsync()
     {
-        var result = await _academicYearService.GetCurrentAsync(CancellationToken);
+        var result = await academicYearService.GetCurrentAsync(CancellationToken);
         // Null = no AY has started yet. 204 keeps the contract simple — clients
         // either get an AY summary body or know there isn't one.
         return result is null ? NoContent() : Ok(result);
@@ -64,7 +59,7 @@ public sealed class AcademicYearsController : BaseApiController
     [ProducesResponseType(typeof(AcademicYearDetailsResponse), 200)]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid academicYearId)
     {
-        var result = await _academicYearService.GetByIdAsync(academicYearId, CancellationToken);
+        var result = await academicYearService.GetByIdAsync(academicYearId, CancellationToken);
         return Ok(result);
     }
 
@@ -76,7 +71,7 @@ public sealed class AcademicYearsController : BaseApiController
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateAsync([FromBody] AcademicYearUpsertRequest model)
     {
-        var id = await _academicYearService.CreateAcademicYear(model, CancellationToken);
+        var id = await academicYearService.CreateAcademicYear(model, CancellationToken);
         return Ok(new IdResponse { Id = id });
     }
 
@@ -91,7 +86,7 @@ public sealed class AcademicYearsController : BaseApiController
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid academicYearId,
         [FromBody] AcademicYearUpsertRequest model)
     {
-        var id = await _academicYearService.UpdateAcademicYear(academicYearId, model, CancellationToken);
+        var id = await academicYearService.UpdateAcademicYear(academicYearId, model, CancellationToken);
         return Ok(new IdResponse { Id = id });
     }
 
@@ -103,7 +98,7 @@ public sealed class AcademicYearsController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid academicYearId)
     {
-        await _academicYearService.DeleteAcademicYear(academicYearId, CancellationToken);
+        await academicYearService.DeleteAcademicYear(academicYearId, CancellationToken);
         return NoContent();
     }
 }

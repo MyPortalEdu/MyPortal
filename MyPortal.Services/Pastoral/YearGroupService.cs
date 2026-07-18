@@ -16,21 +16,14 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Pastoral;
 
-public class YearGroupService : BaseService, IYearGroupService
+public class YearGroupService(
+    IAuthorizationService authorizationService,
+    ILogger<YearGroupService> logger,
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IYearGroupRepository yearGroupRepository,
+    IStudentGroupService studentGroupService)
+    : BaseService(authorizationService, logger), IYearGroupService
 {
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-    private readonly IYearGroupRepository _yearGroupRepository;
-    private readonly IStudentGroupService _studentGroupService;
-
-    public YearGroupService(IAuthorizationService authorizationService, ILogger<YearGroupService> logger,
-        IUnitOfWorkFactory unitOfWorkFactory, IYearGroupRepository yearGroupRepository,
-        IStudentGroupService studentGroupService) : base(authorizationService, logger)
-    {
-        _unitOfWorkFactory = unitOfWorkFactory;
-        _yearGroupRepository = yearGroupRepository;
-        _studentGroupService = studentGroupService;
-    }
-
     public async Task<PageResult<YearGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
         FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default)
@@ -38,7 +31,7 @@ public class YearGroupService : BaseService, IYearGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure,
             cancellationToken);
 
-        return await _yearGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging,
+        return await yearGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging,
             cancellationToken);
     }
 
@@ -47,7 +40,7 @@ public class YearGroupService : BaseService, IYearGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure,
             cancellationToken);
 
-        var result = await _yearGroupRepository.GetDetailsByIdAsync(id, cancellationToken)
+        var result = await yearGroupRepository.GetDetailsByIdAsync(id, cancellationToken)
                      ?? throw new NotFoundException("Year group not found.");
         return result;
     }
@@ -58,9 +51,9 @@ public class YearGroupService : BaseService, IYearGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
             cancellationToken);
 
-        return await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        return await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
-            var studentGroupId = await _studentGroupService.CreateAsync(model.AcademicYearId,
+            var studentGroupId = await studentGroupService.CreateAsync(model.AcademicYearId,
                 ToCore(model), model.Supervisors, cancellationToken, uow);
 
             var yearGroup = new YearGroup
@@ -70,7 +63,7 @@ public class YearGroupService : BaseService, IYearGroupService
                 CurriculumYearGroupId = model.CurriculumYearGroupId
             };
 
-            await _yearGroupRepository.InsertAsync(yearGroup, cancellationToken, uow.Transaction);
+            await yearGroupRepository.InsertAsync(yearGroup, cancellationToken, uow.Transaction);
 
             return yearGroup.Id;
         }, cancellationToken);
@@ -82,15 +75,15 @@ public class YearGroupService : BaseService, IYearGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
             cancellationToken);
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             var yearGroup = await GetYearGroupAsync(id, cancellationToken);
 
-            await _studentGroupService.UpdateAsync(yearGroup.StudentGroupId, ToCore(model),
+            await studentGroupService.UpdateAsync(yearGroup.StudentGroupId, ToCore(model),
                 model.Supervisors, cancellationToken, uow);
 
             yearGroup.CurriculumYearGroupId = model.CurriculumYearGroupId;
-            await _yearGroupRepository.UpdateAsync(yearGroup, cancellationToken, uow.Transaction);
+            await yearGroupRepository.UpdateAsync(yearGroup, cancellationToken, uow.Transaction);
         }, cancellationToken);
     }
 
@@ -99,23 +92,23 @@ public class YearGroupService : BaseService, IYearGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure,
             cancellationToken);
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             var yearGroup = await GetYearGroupAsync(id, cancellationToken);
 
             // YearGroups.StudentGroupId FKs to StudentGroups, so the YearGroup row must go
             // before the StudentGroup. StudentGroupService.DeleteAsync runs the lock +
             // downstream-data gates at the top, so a failure there rolls back via the UoW.
-            await _yearGroupRepository.DeleteAsync(yearGroup.Id, cancellationToken,
+            await yearGroupRepository.DeleteAsync(yearGroup.Id, cancellationToken,
                 transaction: uow.Transaction);
 
-            await _studentGroupService.DeleteAsync(yearGroup.StudentGroupId, cancellationToken, uow);
+            await studentGroupService.DeleteAsync(yearGroup.StudentGroupId, cancellationToken, uow);
         }, cancellationToken);
     }
 
     private async Task<YearGroup> GetYearGroupAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await _yearGroupRepository.GetByIdAsync(id, cancellationToken)
+        return await yearGroupRepository.GetByIdAsync(id, cancellationToken)
                ?? throw new NotFoundException("Year group not found.");
     }
 

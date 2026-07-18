@@ -46,8 +46,8 @@ export class Topbar implements OnInit {
   readonly topbarAvatarClass = computed(
     () =>
       (this.themeService.isDark()
-        ? '!bg-indigo-500 !text-white'
-        : '!bg-white !text-indigo-600') + ' !w-9 !h-9 !text-sm font-medium',
+        ? '!bg-primary-500 !text-white'
+        : '!bg-white !text-primary-600') + ' !w-9 !h-9 !text-sm font-medium',
   );
 
   // School name as a signal — toSignal must be called in injection context, so

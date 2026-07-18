@@ -12,7 +12,6 @@ import { FormsModule } from '@angular/forms';
 import { Checkbox } from 'primeng/checkbox';
 import { Textarea } from 'primeng/textarea';
 import { MultiSelect } from 'primeng/multiselect';
-import { ProgressSpinner } from 'primeng/progressspinner';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -24,6 +23,9 @@ import { NotificationService } from '../../../../../../core/services/notificatio
 import { Permissions } from '../../../../../../core/constants/permissions';
 import { StaffMembersDataService } from '../../../../../../shared/services/staff-members-data.service';
 import { LookupSelect } from '../../../../../../shared/components/lookup-select/lookup-select';
+import { Loading } from '../../../../../../shared/components/loading/loading';
+import { SectionHeader } from '../../../../../../shared/components/section-header/section-header';
+import { Field } from '../../../../../../shared/components/field/field';
 import {
   StaffEqualityDetailsResponse,
   StaffEqualityDetailsUpsertRequest,
@@ -38,7 +40,7 @@ import { StaffAreaPanel } from './staff-area-panel';
   selector: 'mp-staff-equality-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Checkbox, Textarea, MultiSelect, ProgressSpinner, LookupSelect, TranslocoDirective],
+  imports: [FormsModule, Checkbox, Textarea, MultiSelect, LookupSelect, Loading, SectionHeader, Field, TranslocoDirective],
   providers: [
     provideTranslocoScope('staff-members'),
     { provide: StaffAreaPanel, useExisting: forwardRef(() => StaffEqualityPanel) },

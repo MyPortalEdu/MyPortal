@@ -16,13 +16,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class BulletinRepository : EntityRepository<Bulletin>, IBulletinRepository
+public class BulletinRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<Bulletin>(factory, authorizationService), IBulletinRepository
 {
-    public BulletinRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-
     public async Task<BulletinDetailsResponse?> GetDetailsByIdAsync(Guid bulletinId, BulletinVisibilityScope scope,
         CancellationToken cancellationToken)
     {

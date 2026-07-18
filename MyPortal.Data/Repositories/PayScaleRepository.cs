@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class PayScaleRepository : EntityRepository<PayScale>, IPayScaleRepository
-{
-    public PayScaleRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class PayScaleRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<PayScale>(factory, authorizationService), IPayScaleRepository;

@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class DocumentTypeRepository : EntityRepository<DocumentType>, IDocumentTypeRepository
-{
-    public DocumentTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class DocumentTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<DocumentType>(factory, authorizationService), IDocumentTypeRepository;

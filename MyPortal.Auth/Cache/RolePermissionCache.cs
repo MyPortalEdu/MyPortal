@@ -4,18 +4,12 @@ using MyPortal.Auth.Interfaces;
 
 namespace MyPortal.Auth.Cache;
 
-public class RolePermissionCache : IRolePermissionCache
+public class RolePermissionCache(IMemoryCache cache) : IRolePermissionCache
 {
-    private readonly IMemoryCache _cache;
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _locks = new();
 
-    public RolePermissionCache(IMemoryCache cache)
-    {
-        _cache = cache;
-    }
-
     public Task<IReadOnlyCollection<string>?> GetAsync(Guid roleId, CancellationToken ct = default)
-        => Task.FromResult(_cache.Get<IReadOnlyCollection<string>>(Key(roleId)));
+        => Task.FromResult(cache.Get<IReadOnlyCollection<string>>(Key(roleId)));
 
     public void Set(Guid roleId, IReadOnlyCollection<string> perms)
     {
@@ -25,7 +19,7 @@ public class RolePermissionCache : IRolePermissionCache
             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
         };
         options.RegisterPostEvictionCallback(OnEvicted, roleId);
-        _cache.Set(Key(roleId), perms, options);
+        cache.Set(Key(roleId), perms, options);
     }
 
     private void OnEvicted(object key, object? value, EvictionReason reason, object? state)
@@ -36,11 +30,11 @@ public class RolePermissionCache : IRolePermissionCache
         }
     }
 
-    public void Invalidate(Guid roleId) => _cache.Remove(Key(roleId));
+    public void Invalidate(Guid roleId) => cache.Remove(Key(roleId));
 
     public void InvalidateMany(IEnumerable<Guid> roleIds)
     {
-        foreach (var r in roleIds) _cache.Remove(Key(r));
+        foreach (var r in roleIds) cache.Remove(Key(r));
     }
 
     public async Task<IReadOnlyCollection<string>> GetOrAddAsync(
@@ -48,7 +42,7 @@ public class RolePermissionCache : IRolePermissionCache
         Func<CancellationToken, Task<IReadOnlyCollection<string>>> factory,
         CancellationToken ct = default)
     {
-        var cached = _cache.Get<IReadOnlyCollection<string>>(Key(roleId));
+        var cached = cache.Get<IReadOnlyCollection<string>>(Key(roleId));
         if (cached is not null) return cached;
 
         var sem = _locks.GetOrAdd(roleId, _ => new SemaphoreSlim(1, 1));
@@ -56,7 +50,7 @@ public class RolePermissionCache : IRolePermissionCache
         try
         {
             // Double-check inside the lock — another caller may have populated the cache while we waited.
-            cached = _cache.Get<IReadOnlyCollection<string>>(Key(roleId));
+            cached = cache.Get<IReadOnlyCollection<string>>(Key(roleId));
             if (cached is not null) return cached;
 
             var fresh = await factory(ct);

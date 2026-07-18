@@ -15,16 +15,12 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Year-group endpoints.</summary>
-public sealed class YearGroupsController : BaseApiController
+public sealed class YearGroupsController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<YearGroupsController> logger,
+    IYearGroupService yearGroupService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IYearGroupService _yearGroupService;
-
-    public YearGroupsController(ProblemDetailsFactory problemFactory, ILogger<YearGroupsController> logger,
-        IYearGroupService yearGroupService) : base(problemFactory, logger)
-    {
-        _yearGroupService = yearGroupService;
-    }
-
     /// <summary>Page through year-group summaries for an academic year.</summary>
     /// <remarks>Supports server-side filtering, sorting, and paging. Page size is clamped.</remarks>
     /// <param name="academicYearId">The academic year to scope the results to.</param>
@@ -41,7 +37,7 @@ public sealed class YearGroupsController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _yearGroupService.GetSummariesAsync(academicYearId, options.FilterOptions,
+        var result = await yearGroupService.GetSummariesAsync(academicYearId, options.FilterOptions,
             options.SortOptions, options.PageOptions, CancellationToken);
 
         return Ok(result);
@@ -54,7 +50,7 @@ public sealed class YearGroupsController : BaseApiController
     [ProducesResponseType(typeof(YearGroupDetailsResponse), 200)]
     public async Task<IActionResult> GetDetailsByIdAsync([FromRoute] Guid yearGroupId)
     {
-        var result = await _yearGroupService.GetDetailsByIdAsync(yearGroupId, CancellationToken);
+        var result = await yearGroupService.GetDetailsByIdAsync(yearGroupId, CancellationToken);
 
         return Ok(result);
     }
@@ -67,7 +63,7 @@ public sealed class YearGroupsController : BaseApiController
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateAsync([FromBody] YearGroupUpsertRequest model)
     {
-        var id = await _yearGroupService.CreateAsync(model, CancellationToken);
+        var id = await yearGroupService.CreateAsync(model, CancellationToken);
 
         return Ok(new IdResponse { Id = id });
     }
@@ -83,7 +79,7 @@ public sealed class YearGroupsController : BaseApiController
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid yearGroupId,
         [FromBody] YearGroupUpsertRequest model)
     {
-        await _yearGroupService.UpdateAsync(yearGroupId, model, CancellationToken);
+        await yearGroupService.UpdateAsync(yearGroupId, model, CancellationToken);
 
         return NoContent();
     }
@@ -97,7 +93,7 @@ public sealed class YearGroupsController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid yearGroupId)
     {
-        await _yearGroupService.DeleteAsync(yearGroupId, CancellationToken);
+        await yearGroupService.DeleteAsync(yearGroupId, CancellationToken);
 
         return NoContent();
     }

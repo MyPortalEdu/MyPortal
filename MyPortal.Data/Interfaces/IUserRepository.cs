@@ -10,6 +10,7 @@ namespace MyPortal.Data.Interfaces;
 public interface IUserRepository : IEntityRepository<User>
 {
     Task<UserDetailsResponse?> GetDetailsByIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<IList<Guid>> GetRoleIdsByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<UserInfoResponse?> GetInfoByIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<PageResult<UserSummaryResponse>> GetUsersAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default);

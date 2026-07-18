@@ -4,19 +4,13 @@ using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using QueryKit.Extensions;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class TimetableRunRepository : ITimetableRunRepository
+public class TimetableRunRepository(IDbConnectionFactory factory) : ITimetableRunRepository
 {
-    private readonly IDbConnectionFactory _factory;
-
-    public TimetableRunRepository(IDbConnectionFactory factory)
-    {
-        _factory = factory;
-    }
-
     public async Task<TimetableRun> CreateRunAsync(Guid timetableId, Guid triggeredById,
         string? inputSnapshot, CancellationToken cancellationToken)
     {
@@ -32,13 +26,10 @@ public class TimetableRunRepository : ITimetableRunRepository
             TriggeredById = triggeredById,
         };
 
-        using var conn = _factory.Create();
-        await conn.ExecuteAsync(new CommandDefinition(
-            @"INSERT INTO dbo.TimetableRuns
-                (Id, TimetableId, Status, StartedAt, CompletedAt, SolverDiagnostic, InputSnapshot, TriggeredById)
-              VALUES
-                (@Id, @TimetableId, @Status, @StartedAt, @CompletedAt, @SolverDiagnostic, @InputSnapshot, @TriggeredById);",
-            run, cancellationToken: cancellationToken));
+        using var conn = factory.Create();
+        // SP returns no result set; discardable element type.
+        await conn.ExecuteStoredProcedureAsync<int>("[dbo].[usp_timetable_run_add]",
+            run, cancellationToken: cancellationToken);
 
         return run;
     }
@@ -46,15 +37,11 @@ public class TimetableRunRepository : ITimetableRunRepository
     public async Task MarkRunCompletedAsync(Guid runId, TimetableRunStatus status, string? diagnostic,
         CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
-        await conn.ExecuteAsync(new CommandDefinition(
-            @"UPDATE dbo.TimetableRuns
-                  SET Status = @status,
-                      CompletedAt = @completedAt,
-                      SolverDiagnostic = @diagnostic
-                WHERE Id = @runId;",
+        using var conn = factory.Create();
+        // SP returns no result set; discardable element type.
+        await conn.ExecuteStoredProcedureAsync<int>("[dbo].[usp_timetable_run_mark_completed]",
             new { runId, status = (int)status, completedAt = DateTime.UtcNow, diagnostic },
-            cancellationToken: cancellationToken));
+            cancellationToken: cancellationToken);
     }
 
     public async Task ReplaceAssignmentsAsync(Guid timetableId,
@@ -62,7 +49,7 @@ public class TimetableRunRepository : ITimetableRunRepository
     {
         // Atomic swap: clearing previous-run output before inserting new rows means a partially
         // failed write can't leave a mix of stale + fresh assignments under the same Timetable.
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
         conn.Open();
         using var tx = conn.BeginTransaction(IsolationLevel.ReadCommitted);
 
@@ -87,35 +74,31 @@ public class TimetableRunRepository : ITimetableRunRepository
 
     public async Task<TimetableRun?> GetRunAsync(Guid runId, CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
-        return await conn.QuerySingleOrDefaultAsync<TimetableRun>(new CommandDefinition(
-            "SELECT * FROM dbo.TimetableRuns WHERE Id = @runId;",
-            new { runId }, cancellationToken: cancellationToken));
+        using var conn = factory.Create();
+        var rows = await conn.ExecuteStoredProcedureAsync<TimetableRun>("[dbo].[usp_timetable_run_get_by_id]",
+            new { runId }, cancellationToken: cancellationToken);
+        return rows.FirstOrDefault();
     }
 
     public async Task UpdateRunStatusAsync(Guid runId, TimetableRunStatus status,
         CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
-        await conn.ExecuteAsync(new CommandDefinition(
-            "UPDATE dbo.TimetableRuns SET Status = @status WHERE Id = @runId;",
-            new { runId, status = (int)status }, cancellationToken: cancellationToken));
+        using var conn = factory.Create();
+        // SP returns no result set; discardable element type.
+        await conn.ExecuteStoredProcedureAsync<int>("[dbo].[usp_timetable_run_update_status]",
+            new { runId, status = (int)status }, cancellationToken: cancellationToken);
     }
 
     public async Task<int> MarkOrphanedRunsFailedAsync(CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
-        return await conn.ExecuteAsync(new CommandDefinition(
-            @"UPDATE dbo.TimetableRuns
-                  SET Status = @failed,
-                      CompletedAt = SYSUTCDATETIME(),
-                      SolverDiagnostic = 'Orphaned by host restart.'
-                WHERE Status IN (@queued, @running);",
+        using var conn = factory.Create();
+        var rows = await conn.ExecuteStoredProcedureAsync<int>("[dbo].[usp_timetable_run_mark_orphaned_failed]",
             new
             {
                 queued  = (int)TimetableRunStatus.Queued,
                 running = (int)TimetableRunStatus.Running,
                 failed  = (int)TimetableRunStatus.Failed,
-            }, cancellationToken: cancellationToken));
+            }, cancellationToken: cancellationToken);
+        return rows.FirstOrDefault();
     }
 }

@@ -15,16 +15,12 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>House endpoints.</summary>
-public sealed class HousesController : BaseApiController
+public sealed class HousesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<HousesController> logger,
+    IHouseService houseService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IHouseService _houseService;
-
-    public HousesController(ProblemDetailsFactory problemFactory, ILogger<HousesController> logger,
-        IHouseService houseService) : base(problemFactory, logger)
-    {
-        _houseService = houseService;
-    }
-
     /// <summary>Page through house summaries for an academic year.</summary>
     /// <remarks>Supports server-side filtering, sorting, and paging. Page size is clamped.</remarks>
     /// <param name="academicYearId">The academic year to scope the results to.</param>
@@ -41,7 +37,7 @@ public sealed class HousesController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _houseService.GetSummariesAsync(academicYearId, options.FilterOptions,
+        var result = await houseService.GetSummariesAsync(academicYearId, options.FilterOptions,
             options.SortOptions, options.PageOptions, CancellationToken);
 
         return Ok(result);
@@ -54,7 +50,7 @@ public sealed class HousesController : BaseApiController
     [ProducesResponseType(typeof(HouseDetailsResponse), 200)]
     public async Task<IActionResult> GetDetailsByIdAsync([FromRoute] Guid houseId)
     {
-        var result = await _houseService.GetDetailsByIdAsync(houseId, CancellationToken);
+        var result = await houseService.GetDetailsByIdAsync(houseId, CancellationToken);
 
         return Ok(result);
     }
@@ -67,7 +63,7 @@ public sealed class HousesController : BaseApiController
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateAsync([FromBody] HouseUpsertRequest model)
     {
-        var id = await _houseService.CreateAsync(model, CancellationToken);
+        var id = await houseService.CreateAsync(model, CancellationToken);
 
         return Ok(new IdResponse { Id = id });
     }
@@ -82,7 +78,7 @@ public sealed class HousesController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> UpdateAsync([FromRoute] Guid houseId, [FromBody] HouseUpsertRequest model)
     {
-        await _houseService.UpdateAsync(houseId, model, CancellationToken);
+        await houseService.UpdateAsync(houseId, model, CancellationToken);
 
         return NoContent();
     }
@@ -96,7 +92,7 @@ public sealed class HousesController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid houseId)
     {
-        await _houseService.DeleteAsync(houseId, CancellationToken);
+        await houseService.DeleteAsync(houseId, CancellationToken);
 
         return NoContent();
     }

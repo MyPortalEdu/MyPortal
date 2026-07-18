@@ -12,52 +12,35 @@ namespace MyPortal.Services.People;
 /// Shared person-level equality mechanics, keyed by personId and auth-free — the calling subtype
 /// service owns the access gate. See <see cref="IPersonEqualityService"/>.
 /// </summary>
-public class PersonEqualityService : IPersonEqualityService
+public class PersonEqualityService(
+    IPersonRepository personRepository,
+    IEthnicityRepository ethnicityRepository,
+    INationalityRepository nationalityRepository,
+    ILanguageRepository languageRepository,
+    IMaritalStatusRepository maritalStatusRepository,
+    IReligionRepository religionRepository,
+    ISexualOrientationRepository sexualOrientationRepository,
+    IGenderIdentityRepository genderIdentityRepository,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : IPersonEqualityService
 {
-    private readonly IPersonRepository _personRepository;
-    private readonly IEthnicityRepository _ethnicityRepository;
-    private readonly INationalityRepository _nationalityRepository;
-    private readonly ILanguageRepository _languageRepository;
-    private readonly IMaritalStatusRepository _maritalStatusRepository;
-    private readonly IReligionRepository _religionRepository;
-    private readonly ISexualOrientationRepository _sexualOrientationRepository;
-    private readonly IGenderIdentityRepository _genderIdentityRepository;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public PersonEqualityService(IPersonRepository personRepository, IEthnicityRepository ethnicityRepository,
-        INationalityRepository nationalityRepository, ILanguageRepository languageRepository,
-        IMaritalStatusRepository maritalStatusRepository, IReligionRepository religionRepository,
-        ISexualOrientationRepository sexualOrientationRepository, IGenderIdentityRepository genderIdentityRepository,
-        IUnitOfWorkFactory unitOfWorkFactory)
-    {
-        _personRepository = personRepository;
-        _ethnicityRepository = ethnicityRepository;
-        _nationalityRepository = nationalityRepository;
-        _languageRepository = languageRepository;
-        _maritalStatusRepository = maritalStatusRepository;
-        _religionRepository = religionRepository;
-        _sexualOrientationRepository = sexualOrientationRepository;
-        _genderIdentityRepository = genderIdentityRepository;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<StaffEqualityDetailsResponse> GetEqualityDetailsAsync(Guid personId,
         CancellationToken cancellationToken)
     {
-        var person = await _personRepository.GetByIdAsync(personId, cancellationToken);
+        var person = await personRepository.GetByIdAsync(personId, cancellationToken);
 
         if (person == null)
         {
             throw new NotFoundException("Person not found.");
         }
 
-        var ethnicities = await _ethnicityRepository.GetListAsync(cancellationToken: cancellationToken);
-        var nationalities = await _nationalityRepository.GetListAsync(cancellationToken: cancellationToken);
-        var languages = await _languageRepository.GetListAsync(cancellationToken: cancellationToken);
-        var maritalStatuses = await _maritalStatusRepository.GetListAsync(cancellationToken: cancellationToken);
-        var religions = await _religionRepository.GetListAsync(cancellationToken: cancellationToken);
-        var sexualOrientations = await _sexualOrientationRepository.GetListAsync(cancellationToken: cancellationToken);
-        var genderIdentities = await _genderIdentityRepository.GetListAsync(cancellationToken: cancellationToken);
+        var ethnicities = await ethnicityRepository.GetListAsync(cancellationToken: cancellationToken);
+        var nationalities = await nationalityRepository.GetListAsync(cancellationToken: cancellationToken);
+        var languages = await languageRepository.GetListAsync(cancellationToken: cancellationToken);
+        var maritalStatuses = await maritalStatusRepository.GetListAsync(cancellationToken: cancellationToken);
+        var religions = await religionRepository.GetListAsync(cancellationToken: cancellationToken);
+        var sexualOrientations = await sexualOrientationRepository.GetListAsync(cancellationToken: cancellationToken);
+        var genderIdentities = await genderIdentityRepository.GetListAsync(cancellationToken: cancellationToken);
 
         return new StaffEqualityDetailsResponse
         {
@@ -81,7 +64,7 @@ public class PersonEqualityService : IPersonEqualityService
     public async Task UpdateEqualityDetailsAsync(Guid personId, StaffEqualityDetailsUpsertRequest model,
         CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        var person = await _personRepository.GetByIdAsync(personId, cancellationToken);
+        var person = await personRepository.GetByIdAsync(personId, cancellationToken);
 
         if (person == null)
         {
@@ -96,9 +79,9 @@ public class PersonEqualityService : IPersonEqualityService
         person.SexualOrientationId = model.SexualOrientationId;
         person.GenderIdentityId = model.GenderIdentityId;
 
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
-            await _personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
+            await personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
         }, cancellationToken);
     }
 }

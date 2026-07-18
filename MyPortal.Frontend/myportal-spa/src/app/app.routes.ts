@@ -9,8 +9,11 @@ export const routes: Routes = [
     redirectTo: 'portal'
   },
   {
-    path: 'portal', canActivate: [AuthGuard],
-    loadComponent: () => import('./core/components/portal-redirect/portal-redirect').then(m => m.PortalRedirect)
+    path: 'portal',
+    // canMatch short-circuits the lazy load on access denied (same rationale as /staff).
+    // No userTypes data — the portal area (account settings, etc.) is for every user type.
+    canMatch: [AuthGuard],
+    loadChildren: () => import('./features/portal/routes').then(m => m.PORTAL_ROUTES)
   },
   {
     path: 'staff',

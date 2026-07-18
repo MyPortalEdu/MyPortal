@@ -12,21 +12,17 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Services.School;
 
-public class LocalAuthorityService : BaseService, ILocalAuthorityService
+public class LocalAuthorityService(
+    IAuthorizationService authorizationService,
+    ILogger<BaseService> logger,
+    ILocalAuthorityRepository repository)
+    : BaseService(authorizationService, logger), ILocalAuthorityService
 {
-    private readonly ILocalAuthorityRepository _repository;
-
-    public LocalAuthorityService(IAuthorizationService authorizationService, ILogger<BaseService> logger,
-        ILocalAuthorityRepository repository) : base(authorizationService, logger)
-    {
-        _repository = repository;
-    }
-
     public async Task<PageResult<LocalAuthoritySummaryResponse>> GetSummariesAsync(FilterOptions? filter = null,
         SortOptions? sort = null, PageOptions? paging = null, CancellationToken cancellationToken = default)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Agencies.ViewAgencies, cancellationToken);
 
-        return await _repository.GetSummariesAsync(filter, sort, paging, cancellationToken);
+        return await repository.GetSummariesAsync(filter, sort, paging, cancellationToken);
     }
 }

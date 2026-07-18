@@ -10,23 +10,19 @@ using MyPortal.Services.Interfaces.Lookups;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Read-only catalogue of intake types — used by the school-details dropdown.</summary>
-public sealed class IntakeTypesController : BaseApiController
+public sealed class IntakeTypesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<IntakeTypesController> logger,
+    ILookupService lookupService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ILookupService _lookupService;
-
-    public IntakeTypesController(ProblemDetailsFactory problemFactory, ILogger<IntakeTypesController> logger,
-        ILookupService lookupService) : base(problemFactory, logger)
-    {
-        _lookupService = lookupService;
-    }
-
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.ViewAgencies)]
     [ProducesResponseType(typeof(IList<LookupResponse>), 200)]
     public async Task<IActionResult> GetIntakeTypes()
     {
-        var result = await _lookupService.GetIntakeTypesAsync(CancellationToken);
+        var result = await lookupService.GetIntakeTypesAsync(CancellationToken);
         return Ok(result);
     }
 }

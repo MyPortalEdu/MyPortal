@@ -10,23 +10,19 @@ using MyPortal.Services.Interfaces.Lookups;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Read-only catalogue of governance types — used by the school-details dropdown.</summary>
-public sealed class GovernanceTypesController : BaseApiController
+public sealed class GovernanceTypesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<GovernanceTypesController> logger,
+    ILookupService lookupService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ILookupService _lookupService;
-
-    public GovernanceTypesController(ProblemDetailsFactory problemFactory, ILogger<GovernanceTypesController> logger,
-        ILookupService lookupService) : base(problemFactory, logger)
-    {
-        _lookupService = lookupService;
-    }
-
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.ViewAgencies)]
     [ProducesResponseType(typeof(IList<LookupResponse>), 200)]
     public async Task<IActionResult> GetGovernanceTypes()
     {
-        var result = await _lookupService.GetGovernanceTypesAsync(CancellationToken);
+        var result = await lookupService.GetGovernanceTypesAsync(CancellationToken);
         return Ok(result);
     }
 }

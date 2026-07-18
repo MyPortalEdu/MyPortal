@@ -1,13 +1,7 @@
 ﻿namespace MyPortal.Common.Models;
 
-public class WeeklyPattern
+public class WeeklyPattern(DayOfWeek[] days, DateTime endDate)
 {
-    public WeeklyPattern(DayOfWeek[] days, DateTime endDate)
-    {
-        Days = days;
-        EndDate = endDate;
-    }
-
-    public DayOfWeek[] Days { get; set; }
-    public DateTime EndDate { get; set; }
+    public DayOfWeek[] Days { get; set; } = days;
+    public DateTime EndDate { get; set; } = endDate;
 }

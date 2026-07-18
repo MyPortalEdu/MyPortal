@@ -12,18 +12,13 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Timetable endpoints.</summary>
-public sealed class TimetablesController : BaseApiController
+public sealed class TimetablesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<TimetablesController> logger,
+    ITimetableService service,
+    ITimetableSolveService solveService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ITimetableService _service;
-    private readonly ITimetableSolveService _solveService;
-
-    public TimetablesController(ProblemDetailsFactory problemFactory, ILogger<TimetablesController> logger,
-        ITimetableService service, ITimetableSolveService solveService) : base(problemFactory, logger)
-    {
-        _service = service;
-        _solveService = solveService;
-    }
-
     /// <summary>Create a new draft timetable.</summary>
     [HttpPost]
     [ValidateModel]
@@ -32,7 +27,7 @@ public sealed class TimetablesController : BaseApiController
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateAsync([FromBody] TimetableUpsertRequest model)
     {
-        var id = await _service.CreateDraftAsync(model, CancellationToken);
+        var id = await service.CreateDraftAsync(model, CancellationToken);
         return Ok(new IdResponse { Id = id });
     }
 
@@ -43,7 +38,7 @@ public sealed class TimetablesController : BaseApiController
     [ProducesResponseType(typeof(IList<TimetableSummaryResponse>), 200)]
     public async Task<IActionResult> ListAsync([FromQuery] Guid academicYearId)
     {
-        var result = await _service.ListByAcademicYearAsync(academicYearId, CancellationToken);
+        var result = await service.ListByAcademicYearAsync(academicYearId, CancellationToken);
         return Ok(result);
     }
 
@@ -54,7 +49,7 @@ public sealed class TimetablesController : BaseApiController
     [ProducesResponseType(typeof(TimetableDetailsResponse), 200)]
     public async Task<IActionResult> GetByIdAsync([FromRoute] Guid timetableId)
     {
-        var result = await _service.GetByIdAsync(timetableId, CancellationToken);
+        var result = await service.GetByIdAsync(timetableId, CancellationToken);
         return Ok(result);
     }
 
@@ -66,7 +61,7 @@ public sealed class TimetablesController : BaseApiController
     [ProducesResponseType(typeof(IList<TimetableAssignmentResponse>), 200)]
     public async Task<IActionResult> ListAssignmentsAsync([FromRoute] Guid timetableId)
     {
-        var result = await _service.ListAssignmentsAsync(timetableId, CancellationToken);
+        var result = await service.ListAssignmentsAsync(timetableId, CancellationToken);
         return Ok(result);
     }
 
@@ -78,7 +73,7 @@ public sealed class TimetablesController : BaseApiController
     [ProducesResponseType(typeof(IList<TimetableRunResponse>), 200)]
     public async Task<IActionResult> ListRunsAsync([FromRoute] Guid timetableId)
     {
-        var result = await _service.ListRunsAsync(timetableId, CancellationToken);
+        var result = await service.ListRunsAsync(timetableId, CancellationToken);
         return Ok(result);
     }
 
@@ -93,7 +88,7 @@ public sealed class TimetablesController : BaseApiController
     {
         // timetableId is in the route for resource-shape consistency; the run is identified by
         // its own id. Service implementations may want to assert membership later.
-        var result = await _service.GetRunAsync(runId, CancellationToken);
+        var result = await service.GetRunAsync(runId, CancellationToken);
         return Ok(result);
     }
 
@@ -108,7 +103,7 @@ public sealed class TimetablesController : BaseApiController
     {
         // Returns immediately — the BackgroundService picks up the queued item and
         // executes the solve. Caller polls GET /runs/{runId} for status.
-        var run = await _solveService.QueueRunAsync(timetableId, CancellationToken);
+        var run = await solveService.QueueRunAsync(timetableId, CancellationToken);
         return Accepted(new
         {
             id = run.Id,
@@ -132,7 +127,7 @@ public sealed class TimetablesController : BaseApiController
     public async Task<IActionResult> ApplyAsync([FromRoute] Guid timetableId,
         [FromBody] TimetableApplyRequest model)
     {
-        await _service.ApplyAsync(timetableId, model, CancellationToken);
+        await service.ApplyAsync(timetableId, model, CancellationToken);
         return NoContent();
     }
 
@@ -145,7 +140,7 @@ public sealed class TimetablesController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> DiscardAsync([FromRoute] Guid timetableId)
     {
-        await _service.DiscardAsync(timetableId, CancellationToken);
+        await service.DiscardAsync(timetableId, CancellationToken);
         return NoContent();
     }
 
@@ -157,7 +152,7 @@ public sealed class TimetablesController : BaseApiController
     [ProducesResponseType(typeof(IList<TimetablePinResponse>), 200)]
     public async Task<IActionResult> ListPinsAsync([FromRoute] Guid timetableId)
     {
-        var result = await _service.ListPinsAsync(timetableId, CancellationToken);
+        var result = await service.ListPinsAsync(timetableId, CancellationToken);
         return Ok(result);
     }
 
@@ -173,7 +168,7 @@ public sealed class TimetablesController : BaseApiController
     public async Task<IActionResult> AddPinAsync([FromRoute] Guid timetableId,
         [FromBody] TimetablePinUpsertRequest model)
     {
-        var id = await _service.AddPinAsync(timetableId, model, CancellationToken);
+        var id = await service.AddPinAsync(timetableId, model, CancellationToken);
         return Ok(new IdResponse { Id = id });
     }
 
@@ -187,7 +182,7 @@ public sealed class TimetablesController : BaseApiController
     public async Task<IActionResult> RemovePinAsync([FromRoute] Guid timetableId,
         [FromRoute] Guid pinId)
     {
-        await _service.RemovePinAsync(timetableId, pinId, CancellationToken);
+        await service.RemovePinAsync(timetableId, pinId, CancellationToken);
         return NoContent();
     }
 }

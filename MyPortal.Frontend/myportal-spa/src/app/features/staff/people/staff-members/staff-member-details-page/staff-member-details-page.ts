@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   HostListener,
   OnInit,
   computed,
@@ -31,6 +32,13 @@ import {
 } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
+import { Loading } from '../../../../../shared/components/loading/loading';
+import { ErrorState } from '../../../../../shared/components/error-state/error-state';
+import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
+import { SectionHeader } from '../../../../../shared/components/section-header/section-header';
+import { Field } from '../../../../../shared/components/field/field';
+import { Callout } from '../../../../../shared/components/callout/callout';
+import { focusFirstInvalid } from '../../../../../shared/utils/focus-first-invalid';
 import { HeaderAction } from '../../../../../shared/types/header-action.type';
 import { CanComponentDeactivate } from '../../../../../core/guards/can-deactivate.guard';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
@@ -122,6 +130,12 @@ const AREAS: AreaTab[] = [
     ProgressSpinner,
     Tag,
     PageHeader,
+    Loading,
+    ErrorState,
+    EmptyState,
+    SectionHeader,
+    Field,
+    Callout,
     GenderSelect,
     GenderLabelPipe,
     DirectoryBrowser,
@@ -147,6 +161,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
   private readonly directoryData = inject(DirectoryDataService);
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   // A couple of areas gate their own tab on the viewer's access rather than the
   // static flag: equality (special-category, no Managed scope) and professional.
@@ -180,6 +195,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly activePanel = viewChild(StaffAreaPanel);
 
   protected readonly loadingHeader = signal(false);
+  protected readonly headerError = signal(false);
   protected readonly loadingBasic = signal(false);
   protected readonly saving = signal(false);
   protected readonly editing = signal(false);
@@ -318,11 +334,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly canViewTimetable = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
-    if (
-      perms.has(Permissions.Staff.ViewAllStaffTimetable) ||
-      perms.has(Permissions.Staff.EditAllStaffTimetable)
-    )
-      return true;
+    if (perms.has(Permissions.Staff.ViewAllStaffTimetable)) return true;
     if (rel === 'LineManaged' && perms.has(Permissions.Staff.ViewManagedStaffTimetable)) return true;
     if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffTimetable)) return true;
     return false;
@@ -381,6 +393,15 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected readonly isValid = computed(() => this.basicValid());
 
+  // Set when Save is pressed on an incomplete form. Basic details has no wrapping NgForm to
+  // markAllAsTouched, so this stands in for "touched" on every required field at once.
+  protected readonly basicSubmitAttempted = signal(false);
+
+  protected basicFieldError(value: string | null): string | undefined {
+    if (!this.editing() || !this.basicSubmitAttempted()) return undefined;
+    return value?.trim() ? undefined : this.transloco.translate('common.validation.required');
+  }
+
   private readonly snapshot = signal<BasicFormSnapshot | null>(null);
 
   private readonly currentForm = computed<BasicFormSnapshot>(() => ({
@@ -415,6 +436,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         dirty: panel.dirty(),
         valid: panel.valid(),
         saving: panel.saving(),
+        // Extracted panels can't yet explain an invalid form, so their Save stays disabled on
+        // invalid rather than dead-clicking.
+        explainsInvalid: false,
         start: () => panel.startEdit(),
         cancel: () => panel.cancel(),
         save: () => panel.save(),
@@ -426,6 +450,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       dirty: this.isDirty(),
       valid: this.isValid(),
       saving: this.saving(),
+      explainsInvalid: true,
       start: () => this.startEdit(),
       cancel: () => this.cancelEdit(),
       save: () => this.save(),
@@ -447,9 +472,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         },
         {
           label: this.transloco.translate('common.save'),
-          icon: 'fa-solid fa-floppy-disk',
+          icon: 'fa-solid fa-check',
           severity: 'primary',
-          disabled: !edit.valid || !edit.dirty,
+          disabled: !edit.dirty || (!edit.valid && !edit.explainsInvalid),
           loading: edit.saving,
           command: () => edit.save(),
         },
@@ -477,6 +502,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   private loadHeader(): void {
     this.loadingHeader.set(true);
+    this.headerError.set(false);
     this.data.getHeader(this.staffMemberId()).subscribe({
       next: row => {
         this.header.set(row);
@@ -484,9 +510,15 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       },
       error: err => {
         this.loadingHeader.set(false);
+        this.headerError.set(true);
         this.notify.apiError(err, this.transloco.translate('staff-members.loadHeaderError'));
       },
     });
+  }
+
+  protected retry(): void {
+    this.loadHeader();
+    this.loadBasic();
   }
 
   private loadBasic(): void {
@@ -625,16 +657,25 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   protected startEdit(): void {
+    this.basicSubmitAttempted.set(false);
     this.editing.set(true);
   }
 
   protected cancelEdit(): void {
     // Basic details is the only area still edited inline in the shell.
     this.applyToForm(this.current());
+    this.basicSubmitAttempted.set(false);
     this.editing.set(false);
   }
 
   async save(): Promise<void> {
+    if (!this.canEditBasic() || this.saving()) return;
+    if (!this.basicValid()) {
+      // Flag every required field at once, then take the user to the first one.
+      this.basicSubmitAttempted.set(true);
+      focusFirstInvalid(this.host.nativeElement);
+      return;
+    }
     await this.saveBasic();
   }
 
@@ -662,6 +703,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     try {
       await firstValueFrom(this.data.updateBasicDetails(this.staffMemberId(), payload));
       this.notify.success(this.transloco.translate('staff-members.savedToast'));
+      this.basicSubmitAttempted.set(false);
       this.editing.set(false);
       this.loadHeader();
       this.loadBasic();

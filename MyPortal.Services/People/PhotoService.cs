@@ -18,24 +18,15 @@ using Task = System.Threading.Tasks.Task;
 namespace MyPortal.Services.People;
 
 /// <inheritdoc cref="IPhotoService"/>
-public class PhotoService : BaseService, IPhotoService
+public class PhotoService(
+    IAuthorizationService authorizationService,
+    ILogger<PhotoService> logger,
+    IPhotoRepository photoRepository,
+    IPersonRepository personRepository,
+    IDocumentService documentService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), IPhotoService
 {
-    private readonly IPhotoRepository _photoRepository;
-    private readonly IPersonRepository _personRepository;
-    private readonly IDocumentService _documentService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public PhotoService(IAuthorizationService authorizationService, ILogger<PhotoService> logger,
-        IPhotoRepository photoRepository, IPersonRepository personRepository,
-        IDocumentService documentService, IUnitOfWorkFactory unitOfWorkFactory)
-        : base(authorizationService, logger)
-    {
-        _photoRepository = photoRepository;
-        _personRepository = personRepository;
-        _documentService = documentService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task SetPhotoAsync(Guid personId, Stream image, string contentType, string fileName,
         CancellationToken cancellationToken)
     {
@@ -45,7 +36,7 @@ public class PhotoService : BaseService, IPhotoService
             throw new ArgumentException("The uploaded file must be an image.", "file");
         }
 
-        var person = await _personRepository.GetByIdAsync(personId, cancellationToken)
+        var person = await personRepository.GetByIdAsync(personId, cancellationToken)
                      ?? throw new NotFoundException("Person not found.");
 
         ResizedImage resized;
@@ -76,7 +67,7 @@ public class PhotoService : BaseService, IPhotoService
                 SizeBytes = resized.Stream.Length
             };
 
-            newDocument = await _documentService.CreateAsync(request, cancellationToken);
+            newDocument = await documentService.CreateAsync(request, cancellationToken);
         }
         catch
         {
@@ -88,7 +79,7 @@ public class PhotoService : BaseService, IPhotoService
 
         try
         {
-            await _unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
+            await unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
             {
                 var photo = new Photo
                 {
@@ -96,10 +87,10 @@ public class PhotoService : BaseService, IPhotoService
                     DocumentId = newDocument.Id,
                     PhotoDate = DateTime.UtcNow
                 };
-                await _photoRepository.InsertAsync(photo, cancellationToken, ownedUow.Transaction);
+                await photoRepository.InsertAsync(photo, cancellationToken, ownedUow.Transaction);
 
                 person.PhotoId = photo.Id;
-                await _personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
+                await personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
 
                 // Replacing: purge the previous photo within the same transaction (its blob purge is
                 // deferred to commit by DocumentService).
@@ -115,7 +106,7 @@ public class PhotoService : BaseService, IPhotoService
             // rolled-back Photo/Person changes by removing them.
             try
             {
-                await _documentService.DeleteAsync(newDocument.Id, CancellationToken.None, softDelete: false);
+                await documentService.DeleteAsync(newDocument.Id, CancellationToken.None, softDelete: false);
             }
             catch (Exception cleanupEx)
             {
@@ -130,7 +121,7 @@ public class PhotoService : BaseService, IPhotoService
     public async Task<DocumentContentResponse> GetPhotoContentAsync(Guid personId,
         CancellationToken cancellationToken)
     {
-        var person = await _personRepository.GetByIdAsync(personId, cancellationToken)
+        var person = await personRepository.GetByIdAsync(personId, cancellationToken)
                      ?? throw new NotFoundException("Person not found.");
 
         if (person.PhotoId is null)
@@ -138,15 +129,15 @@ public class PhotoService : BaseService, IPhotoService
             throw new NotFoundException("This person has no photo.");
         }
 
-        var photo = await _photoRepository.GetByIdAsync(person.PhotoId.Value, cancellationToken)
+        var photo = await photoRepository.GetByIdAsync(person.PhotoId.Value, cancellationToken)
                     ?? throw new NotFoundException("This person has no photo.");
 
-        return await _documentService.GetDocumentWithContentByIdAsync(photo.DocumentId, cancellationToken);
+        return await documentService.GetDocumentWithContentByIdAsync(photo.DocumentId, cancellationToken);
     }
 
     public async Task DeletePhotoAsync(Guid personId, CancellationToken cancellationToken)
     {
-        var person = await _personRepository.GetByIdAsync(personId, cancellationToken)
+        var person = await personRepository.GetByIdAsync(personId, cancellationToken)
                      ?? throw new NotFoundException("Person not found.");
 
         var photoId = person.PhotoId;
@@ -155,11 +146,11 @@ public class PhotoService : BaseService, IPhotoService
             return;
         }
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async ownedUow =>
         {
             // Release the People.PhotoId FK before purging the Photos row.
             person.PhotoId = null;
-            await _personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
+            await personRepository.UpdateAsync(person, cancellationToken, ownedUow.Transaction);
 
             await PurgePhotoAsync(photoId.Value, cancellationToken, ownedUow);
         }, cancellationToken);
@@ -167,7 +158,7 @@ public class PhotoService : BaseService, IPhotoService
 
     public async Task PurgePhotoAsync(Guid photoId, CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        var photo = await _photoRepository.GetByIdAsync(photoId, cancellationToken);
+        var photo = await photoRepository.GetByIdAsync(photoId, cancellationToken);
         if (photo is null)
         {
             return;
@@ -175,7 +166,7 @@ public class PhotoService : BaseService, IPhotoService
 
         // Photos.DocumentId FK: drop the Photos row first, then hard-delete the document (which
         // purges the blob).
-        await _photoRepository.DeleteAsync(photoId, cancellationToken, softDelete: false, uow?.Transaction);
-        await _documentService.DeleteAsync(photo.DocumentId, cancellationToken, softDelete: false, uow);
+        await photoRepository.DeleteAsync(photoId, cancellationToken, softDelete: false, uow?.Transaction);
+        await documentService.DeleteAsync(photo.DocumentId, cancellationToken, softDelete: false, uow);
     }
 }

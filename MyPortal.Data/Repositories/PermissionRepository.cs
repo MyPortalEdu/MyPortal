@@ -7,13 +7,9 @@ using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories
 {
-    public class PermissionRepository : EntityReadRepository<Permission>, IPermissionRepository
+    public class PermissionRepository(IDbConnectionFactory factory)
+        : EntityReadRepository<Permission>(factory), IPermissionRepository
     {
-        public PermissionRepository(IDbConnectionFactory factory) : base(factory)
-        {
-            
-        }
-
         public async Task<IList<PermissionResponse>> GetPermissionsByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
             using var conn = _factory.Create();

@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class ObjectiveCategoryRepository : EntityRepository<ObjectiveCategory>, IObjectiveCategoryRepository
-{
-    public ObjectiveCategoryRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) :
-        base(factory, authorizationService)
-    {
-    }
-}
+public class ObjectiveCategoryRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<ObjectiveCategory>(factory, authorizationService), IObjectiveCategoryRepository;

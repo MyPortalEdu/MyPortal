@@ -6,15 +6,8 @@ using MyPortal.Data.Interfaces;
 
 namespace MyPortal.Data.Repositories;
 
-public class RegisterRepository : IRegisterRepository
+public class RegisterRepository(IDbConnectionFactory factory) : IRegisterRepository
 {
-    private readonly IDbConnectionFactory _factory;
-
-    public RegisterRepository(IDbConnectionFactory factory)
-    {
-        _factory = factory;
-    }
-
     public Task<RegisterResponse?> GetLessonRegisterAsync(Guid sessionPeriodId, Guid attendanceWeekId,
         CancellationToken cancellationToken)
     {
@@ -59,7 +52,7 @@ public class RegisterRepository : IRegisterRepository
     private async Task<RegisterResponse?> GetRegisterAsync(string sql, object parameters,
         CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
 
         var command = new CommandDefinition(sql, parameters,
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);
@@ -82,7 +75,7 @@ public class RegisterRepository : IRegisterRepository
 
     private async Task SubmitAsync(object parameters, CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
 
         var command = new CommandDefinition("[dbo].[usp_register_submit]", parameters,
             commandType: CommandType.StoredProcedure, cancellationToken: cancellationToken);

@@ -21,6 +21,20 @@
 
 html, body { height: 100%; }
 
+/* ─── Radius scale ────────────────────────────────────────────────────────
+   One disciplined ramp instead of the 4/6/8/12/14px scatter the app grew.
+   Mirrors Tailwind's `rounded`(4) / `rounded-md`(6) / `rounded-lg`(8) so
+   templates can use those utilities and land on the same values.
+     control  4px  — inputs, buttons (matches formField.borderRadius)
+     surface  6px  — cards, panels, page-header (matches content.borderRadius)
+     overlay  8px  — dialogs, popovers, menus (float above, read distinct)
+   Use `rounded-md` for any hand-built surface so it tracks `p-card`. */
+:root {
+  --mp-radius-control: 4px;
+  --mp-radius-surface: 6px;
+  --mp-radius-overlay: 8px;
+}
+
 /* MyPortal brand font. Aura preset doesn't set a font-family of its own, so the
    body declaration here flows through to every PrimeNG component too. */
 body {
@@ -40,6 +54,17 @@ body {
    their explicit sizes via higher-specificity rules. */
 .p-component {
   font-size: 0.875rem;
+}
+
+/* Hairline surface treatment. The app's visual language is border-defined, not
+   shadow-defined: cards/panels read as crisp 1px-edged surfaces and elevation
+   (real shadow) is reserved for things that float — dialogs, popovers, menus.
+   Aura ships p-card with a soft drop shadow and no border; flip that. This is
+   the single source of truth for "what a surface looks like" — `.mp-surface`
+   below matches it for hand-built surfaces that don't warrant a full p-card. */
+.p-card {
+  border: 1px solid var(--p-content-border-color);
+  box-shadow: none;
 }
 
 /* PrimeNG card title size override — Aura's default sits around 1.25rem which is
@@ -166,6 +191,39 @@ body {
    property utilities can override them surgically without needing the layer
    bump to do all the heavy lifting. */
 @layer mp-components {
+  /* Hand-built surface that matches `.p-card` exactly (border, radius, bg) for
+     places a full p-card is overkill — the page-header bar and dashboard
+     widgets. Keeps every "container" tracking one source of truth so the old
+     `bg-content rounded-xl shadow-sm` (12px + shadow) divergence can't recur. */
+  .mp-surface {
+    background-color: var(--p-content-background);
+    border: 1px solid var(--p-content-border-color);
+    border-radius: var(--mp-radius-surface);
+  }
+
+  /* Heading type scale. Four ad-hoc heading treatments (h2.text-lg.bold,
+     h3.text-base, card-title 1rem, page-header text-lg) collapse to three
+     roles. Applied by the shared header components (mp-page-header,
+     mp-section-header, mp-dialog) so pages don't hand-pick sizes. */
+  .mp-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .mp-section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .mp-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--p-text-muted-color);
+  }
+
   /* Pill-style toggle. Defaults to the muted/unselected state; the active
      state is supplied per-instance — Tailwind classes (`text-primary
      border-primary/40 bg-primary/10`) for fixed primary tinting, or inline

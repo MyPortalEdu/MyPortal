@@ -23,6 +23,7 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 import { StaffMembersDataService } from '../../../services/staff-members-data.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { LookupResponse } from '../../../types/lookup';
 import {
   AddressEditMode,
@@ -77,6 +78,7 @@ export class AddressFormDialog {
   private readonly data = inject(StaffMembersDataService);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
+  private readonly confirmDialog = inject(ConfirmationDialog);
 
   readonly open = input.required<boolean>();
   readonly staffMemberId = input.required<string>();
@@ -108,6 +110,19 @@ export class AddressFormDialog {
       f.postcode.trim().length > 0 &&
       f.country.trim().length > 0
     );
+  });
+
+  // Re-baselined whenever a step begins, so the search term itself never reads as dirty —
+  // only the address the user has actually composed (or the match they picked) does.
+  private readonly snapshot = signal<string | null>(null);
+
+  private readonly currentForm = computed(() =>
+    JSON.stringify({ ...this.form(), pickedId: this.picked()?.addressId ?? null }),
+  );
+
+  protected readonly isDirty = computed(() => {
+    const s = this.snapshot();
+    return s !== null && s !== this.currentForm();
   });
 
   constructor() {
@@ -151,6 +166,7 @@ export class AddressFormDialog {
   protected pickExisting(match: AddressMatchResponse): void {
     this.picked.set(match);
     this.step.set('link');
+    this.snapshot.set(this.currentForm());
   }
 
   protected enterManually(): void {
@@ -161,11 +177,13 @@ export class AddressFormDialog {
       country: 'United Kingdom',
     });
     this.step.set('form');
+    this.snapshot.set(this.currentForm());
   }
 
   protected backToSearch(): void {
     this.picked.set(null);
     this.step.set('search');
+    this.snapshot.set(this.currentForm());
   }
 
   protected formatMatch(m: AddressMatchResponse): string {
@@ -219,6 +237,8 @@ export class AddressFormDialog {
 
     try {
       await firstValueFrom(this.data.updateAddress(this.staffMemberId(), t.addressPersonId, payload));
+      // Re-baseline before emitting so the parent-driven close doesn't prompt.
+      this.snapshot.set(this.currentForm());
       this.notify.success(this.transloco.translate('common.contact.address.savedToast'));
       this.saved.emit();
     } catch (err) {
@@ -251,6 +271,7 @@ export class AddressFormDialog {
 
     try {
       await firstValueFrom(this.data.addAddress(this.staffMemberId(), payload));
+      this.snapshot.set(this.currentForm());
       this.notify.success(this.transloco.translate('common.contact.address.savedToast'));
       this.saved.emit();
     } catch (err) {
@@ -260,7 +281,23 @@ export class AddressFormDialog {
     }
   }
 
-  protected onClose(): void {
+  protected async onCancel(): Promise<void> {
+    if (this.saving()) return;
+    if (this.isDirty()) {
+      const ok = await this.confirmDialog.confirm({
+        header: this.transloco.translate('common.discardChanges'),
+        message: this.transloco.translate('common.discardConfirm'),
+        acceptLabel: this.transloco.translate('common.discard'),
+        acceptSeverity: 'danger',
+      });
+      if (!ok) return;
+    }
+    this.closed.emit();
+  }
+
+  // Escape is gated by closeOnEscape, so this only fires on a clean form or on a
+  // parent-driven close — just keep the parent in sync.
+  protected onHide(): void {
     this.closed.emit();
   }
 
@@ -295,6 +332,8 @@ export class AddressFormDialog {
         country: 'United Kingdom',
       });
     }
+
+    this.snapshot.set(this.currentForm());
   }
 
   private nz(value: string): string | null {

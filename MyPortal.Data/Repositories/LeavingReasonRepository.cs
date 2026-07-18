@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class LeavingReasonRepository : EntityRepository<LeavingReason>, ILeavingReasonRepository
-{
-    public LeavingReasonRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class LeavingReasonRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<LeavingReason>(factory, authorizationService), ILeavingReasonRepository;

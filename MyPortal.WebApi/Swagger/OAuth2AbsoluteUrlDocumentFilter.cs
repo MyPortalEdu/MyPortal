@@ -9,18 +9,11 @@ namespace MyPortal.WebApi.Swagger;
 /// requires absolute URLs; serving relative ones causes "Failed to authorize
 /// oauth2 flow" because the client-side URL constructor rejects them.
 /// </summary>
-public sealed class OAuth2AbsoluteUrlDocumentFilter : IDocumentFilter
+public sealed class OAuth2AbsoluteUrlDocumentFilter(IHttpContextAccessor httpAccessor) : IDocumentFilter
 {
-    private readonly IHttpContextAccessor _httpAccessor;
-
-    public OAuth2AbsoluteUrlDocumentFilter(IHttpContextAccessor httpAccessor)
-    {
-        _httpAccessor = httpAccessor;
-    }
-
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
-        var ctx = _httpAccessor.HttpContext;
+        var ctx = httpAccessor.HttpContext;
         if (ctx is null) return;
 
         if (swaggerDoc.Components?.SecuritySchemes is null) return;

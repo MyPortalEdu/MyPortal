@@ -1,5 +1,11 @@
 ﻿namespace MyPortal.Auth.Constants;
 
+/// <summary>
+/// Wire strings for permissions, grouped by area. A permission's portal audience (Staff / Student /
+/// Parent) is a DB attribute set by its seed migration — it is not encoded in the constant — so this
+/// stays a flat registry. Student and parent portal permissions get their own groups when those
+/// features are built.
+/// </summary>
 public static class Permissions
 {
     // Permissions to be uncommented as and when features are implemented
@@ -197,11 +203,11 @@ public static class Permissions
         public const string EditManagedStaffAbsences            = "Staff.EditManagedStaffAbsences";
         public const string EditAllStaffAbsences                = "Staff.EditAllStaffAbsences";
 
-        // Timetable. Editing is a central scheduling action — All only.
+        // Timetable is view-only on a staff profile — editing is a whole-school scheduling action
+        // (Timetable.EditTimetables), never per staff member.
         public const string ViewOwnStaffTimetable               = "Staff.ViewOwnStaffTimetable";
         public const string ViewManagedStaffTimetable           = "Staff.ViewManagedStaffTimetable";
         public const string ViewAllStaffTimetable               = "Staff.ViewAllStaffTimetable";
-        public const string EditAllStaffTimetable               = "Staff.EditAllStaffTimetable";
 
         // Documents.
         public const string ViewOwnStaffDocuments               = "Staff.ViewOwnStaffDocuments";
@@ -243,4 +249,13 @@ public static class Permissions
         // public const string StaffSettings      = "System.StaffSettings";
         // public const string SenSettings        = "System.SenSettings";
     }
+
+    // Administrative permissions that confer control over the access system itself (user/role/permission
+    // management and system configuration). The privilege-escalation ceiling only gates THESE: an actor
+    // may freely provision ordinary functional permissions they don't personally hold (e.g. IT support
+    // assigning "take the register" to a teacher), but may not grant or assign administrative control
+    // beyond their own. Segregation of duties for sensitive *functional* permissions (finance,
+    // safeguarding, restricted attendance codes) is a separate concern, not enforced here.
+    public static bool IsProtected(string permissionName) =>
+        permissionName.StartsWith("System.", StringComparison.OrdinalIgnoreCase);
 }
