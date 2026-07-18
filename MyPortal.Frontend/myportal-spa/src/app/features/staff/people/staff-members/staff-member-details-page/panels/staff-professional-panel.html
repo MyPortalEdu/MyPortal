@@ -51,7 +51,7 @@
 
             <mp-field [label]="t('staff-members.professional.qtsAwardedDate')" for="qtsAwarded">
               @if (editing()) {
-                <p-datepicker id="qtsAwarded" [ngModel]="qtsAwardedDate()" (ngModelChange)="qtsAwardedDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                <mp-date-picker inputId="qtsAwarded" [ngModel]="qtsAwardedDate()" (ngModelChange)="qtsAwardedDate.set($event)" [showIcon]="true" class="w-full"></mp-date-picker>
               } @else {
                 <span>{{ qtsAwardedDate() ? (qtsAwardedDate() | date:'mediumDate') : '—' }}</span>
               }
@@ -73,7 +73,7 @@
 
           <mp-field [label]="t('staff-members.professional.inductionStartDate')" for="inductionStart">
             @if (editing()) {
-              <p-datepicker id="inductionStart" [ngModel]="inductionStartDate()" (ngModelChange)="inductionStartDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+              <mp-date-picker inputId="inductionStart" [ngModel]="inductionStartDate()" (ngModelChange)="inductionStartDate.set($event)" [showIcon]="true" class="w-full"></mp-date-picker>
             } @else {
               <span>{{ inductionStartDate() ? (inductionStartDate() | date:'mediumDate') : '—' }}</span>
             }
@@ -81,7 +81,7 @@
 
           <mp-field [label]="t('staff-members.professional.inductionCompletedDate')" for="inductionCompleted">
             @if (editing()) {
-              <p-datepicker id="inductionCompleted" [ngModel]="inductionCompletedDate()" (ngModelChange)="inductionCompletedDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+              <mp-date-picker inputId="inductionCompleted" [ngModel]="inductionCompletedDate()" (ngModelChange)="inductionCompletedDate.set($event)" [showIcon]="true" class="w-full"></mp-date-picker>
             } @else {
               <span>{{ inductionCompletedDate() ? (inductionCompletedDate() | date:'mediumDate') : '—' }}</span>
             }

@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoService } from '@jsverse/transloco';
-import { Select } from 'primeng/select';
+import { MpSelect } from '@myportal/ui';
 
 import { LookupResponse } from '../../types/lookup';
 
@@ -23,9 +23,9 @@ import { LookupResponse } from '../../types/lookup';
   selector: 'mp-lookup-select',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Select],
+  imports: [FormsModule, MpSelect],
   template: `
-    <p-select
+    <mp-select
       [inputId]="inputId()"
       [options]="options()"
       optionLabel="description"
@@ -37,8 +37,7 @@ import { LookupResponse } from '../../types/lookup';
       [ngModel]="value()"
       (ngModelChange)="value.set($event)"
       [invalid]="invalid()"
-      appendTo="body"
-      styleClass="w-full"></p-select>
+      class="w-full"></mp-select>
   `,
 })
 export class LookupSelect {

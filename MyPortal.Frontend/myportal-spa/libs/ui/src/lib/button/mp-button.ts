@@ -1,4 +1,4 @@
-import { Directive, computed, input } from '@angular/core';
+import { Directive, ElementRef, computed, inject, input } from '@angular/core';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
@@ -41,14 +41,25 @@ export type MpButtonSize = NonNullable<VariantProps<typeof mpButtonVariants>['si
   standalone: true,
   host: {
     '[class]': 'computedClass()',
+    '[attr.type]': 'resolvedType()',
   },
 })
 export class MpButton {
+  private readonly el = inject<ElementRef<HTMLElement>>(ElementRef);
+
   readonly variant = input<MpButtonVariant>('default');
   readonly size = input<MpButtonSize>('default');
+  // Mirrors p-button: a native <button> defaults to type="button" so it never submits an enclosing
+  // form by accident. An explicit `type` (e.g. "submit") is respected; anchors get no type attr.
+  readonly type = input<string | null>(null);
   // Captures any static/bound `class` on the host so callers can extend styling; merged last
   // via `cn` so caller utilities win over variant defaults.
   readonly userClass = input<ClassValue>('', { alias: 'class' });
+
+  protected readonly resolvedType = computed(() => {
+    if (this.type()) return this.type();
+    return this.el.nativeElement.tagName === 'BUTTON' ? 'button' : null;
+  });
 
   protected readonly computedClass = computed(() =>
     cn(mpButtonVariants({ variant: this.variant(), size: this.size() }), this.userClass()),

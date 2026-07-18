@@ -35,10 +35,10 @@
                 <mp-lookup-select [options]="illnessTypes()" [value]="a.illnessTypeId ?? null" (valueChange)="patchAbsence(i, 'illnessTypeId', $event)"></mp-lookup-select>
               </mp-field>
               <mp-field [label]="t('staff-members.absences.startDate')">
-                <p-datepicker [ngModel]="toDate(a.startDate)" (ngModelChange)="patchAbsence(i, 'startDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                <mp-date-picker [ngModel]="toDate(a.startDate)" (ngModelChange)="patchAbsence(i, 'startDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
               </mp-field>
               <mp-field [label]="t('staff-members.absences.endDate')">
-                <p-datepicker [ngModel]="toDate(a.endDate)" (ngModelChange)="patchAbsence(i, 'endDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                <mp-date-picker [ngModel]="toDate(a.endDate)" (ngModelChange)="patchAbsence(i, 'endDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
               </mp-field>
               <mp-field class="md:col-span-2" [label]="t('staff-members.absences.notes')">
                 <textarea pTextarea rows="2" maxlength="256" [ngModel]="a.notes ?? ''" (ngModelChange)="patchAbsence(i, 'notes', $event)"></textarea>

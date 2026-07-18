@@ -1,15 +1,11 @@
 <ng-container *transloco="let t; prefix: 'bulletins'">
-<p-dialog
+<mp-dialog
   [visible]="visible()"
   [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [dismissableMask]="true"
+  [dismissable]="true"
   [closeOnEscape]="true"
-  [style]="{ width: 'min(44rem, 92vw)' }"
-  styleClass="bulletin-detail-dialog mp-flush-dialog"
-  (onHide)="onHide()"
-  [showHeader]="false">
+  panelClass="w-[min(44rem,92vw)]"
+  (closed)="onHide()">
 
   @if (bulletin(); as b) {
     <div class="flex items-center justify-between p-4 border-b border-surface">
@@ -69,12 +65,9 @@
           <i class="fa-regular fa-clock"></i> {{ t('detail.expired') }}
         </span>
       } @else if (b.requiresAcknowledgement && !b.hasAcknowledged) {
-        <p-button
-          [label]="t('detail.acknowledge')"
-          icon="fa-solid fa-check"
-          [loading]="acknowledging()"
-          (click)="acknowledge()">
-        </p-button>
+        <button mpButton
+          [disabled]="acknowledging()"
+          (click)="acknowledge()"><i class="fa-solid" [class.fa-check]="!acknowledging()" [class.fa-spinner]="acknowledging()" [class.fa-spin]="acknowledging()"></i> {{ t('detail.acknowledge') }}</button>
       } @else if (b.requiresAcknowledgement && b.hasAcknowledged) {
         <span class="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--p-green-600)]">
           <i class="fa-solid fa-circle-check"></i> {{ t('detail.acknowledged') }}
@@ -85,20 +78,13 @@
 
       <div class="flex items-center gap-1">
         @if (canEdit()) {
-          <p-button
-            [label]="t('detail.edit')"
-            icon="fa-solid fa-pen-to-square"
-            severity="secondary"
-            [text]="true"
-              (click)="requestEdit()">
-          </p-button>
-          <p-button
-            [label]="t('detail.delete')"
-            icon="fa-solid fa-trash-can"
-            severity="danger"
-            [text]="true"
-              (click)="requestDelete()">
-          </p-button>
+          <button mpButton
+            variant="ghost"
+            (click)="requestEdit()"><i class="fa-solid fa-pen-to-square"></i> {{ t('detail.edit') }}</button>
+          <button mpButton
+            variant="ghost"
+            class="text-destructive hover:text-destructive"
+            (click)="requestDelete()"><i class="fa-solid fa-trash-can"></i> {{ t('detail.delete') }}</button>
         }
       </div>
     </div>
@@ -107,5 +93,5 @@
       <p-progressSpinner [ariaLabel]="t('detail.loading')" strokeWidth="3" styleClass="!w-10 !h-10"></p-progressSpinner>
     </div>
   }
-</p-dialog>
+</mp-dialog>
 </ng-container>

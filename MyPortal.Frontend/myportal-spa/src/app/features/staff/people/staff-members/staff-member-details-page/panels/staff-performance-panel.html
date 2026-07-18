@@ -42,10 +42,10 @@
                     <mp-lookup-select [options]="observationOutcomes()" [value]="r.overallRatingId ?? null" (valueChange)="patchReview(i, 'overallRatingId', $event)"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.reviewDate')">
-                    <p-datepicker [ngModel]="toDate(r.reviewDate)" (ngModelChange)="patchReview(i, 'reviewDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(r.reviewDate)" (ngModelChange)="patchReview(i, 'reviewDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.nextReview')">
-                    <p-datepicker [ngModel]="toDate(r.nextReviewDate)" (ngModelChange)="patchReview(i, 'nextReviewDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(r.nextReviewDate)" (ngModelChange)="patchReview(i, 'nextReviewDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.summary')">
                     <textarea pTextarea rows="3" [ngModel]="r.summary ?? ''" (ngModelChange)="patchReview(i, 'summary', $event)"></textarea>
@@ -103,7 +103,7 @@
                     <mp-lookup-select [options]="objectiveStatuses()" [value]="o.statusId ?? null" (valueChange)="patchObjective(i, 'statusId', $event)"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.dueDate')">
-                    <p-datepicker [ngModel]="toDate(o.dueDate)" (ngModelChange)="patchObjective(i, 'dueDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(o.dueDate)" (ngModelChange)="patchObjective(i, 'dueDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.objectiveDescription')">
                     <textarea pTextarea rows="2" [ngModel]="o.description ?? ''" (ngModelChange)="patchObjective(i, 'description', $event)"></textarea>
@@ -158,7 +158,7 @@
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.performance.observationDate')" [required]="true">
-                    <p-datepicker required [ngModel]="toDate(o.date)" (ngModelChange)="patchObservation(i, 'date', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full" [invalid]="!o.date"></p-datepicker>
+                    <mp-date-picker required [ngModel]="toDate(o.date)" (ngModelChange)="patchObservation(i, 'date', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" [invalid]="!o.date"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.observer')" [required]="true">
                     <mp-lookup-select [options]="staff()" [value]="o.observerId" (valueChange)="patchObservation(i, 'observerId', $event)" [invalid]="!o.observerId"></mp-lookup-select>
@@ -237,10 +237,10 @@
                     <mp-lookup-select [options]="trainingStatuses()" [value]="tr.statusId" (valueChange)="patchTrainingRecord(i, 'statusId', $event)" [invalid]="!tr.statusId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.completedDate')">
-                    <p-datepicker [ngModel]="toDate(tr.completedDate)" (ngModelChange)="patchTrainingRecord(i, 'completedDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(tr.completedDate)" (ngModelChange)="patchTrainingRecord(i, 'completedDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.expiryDate')">
-                    <p-datepicker [ngModel]="toDate(tr.expiryDate)" (ngModelChange)="patchTrainingRecord(i, 'expiryDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(tr.expiryDate)" (ngModelChange)="patchTrainingRecord(i, 'expiryDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.provider')">
                     <input pInputText maxlength="128" [ngModel]="tr.provider ?? ''" (ngModelChange)="patchTrainingRecord(i, 'provider', $event)" />

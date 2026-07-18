@@ -8,12 +8,10 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
-import { Select } from 'primeng/select';
+import { MpButton, MpSelect, MpDatePicker } from '@myportal/ui';
 import { Checkbox } from 'primeng/checkbox';
-import { DatePicker } from 'primeng/datepicker';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
@@ -81,12 +79,12 @@ type FormSnapshot = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    Button,
+    MpButton,
     InputText,
     InputNumber,
-    Select,
+    MpSelect,
     Checkbox,
-    DatePicker,
+    MpDatePicker,
     PageHeader,
     Loading,
     SectionHeader,

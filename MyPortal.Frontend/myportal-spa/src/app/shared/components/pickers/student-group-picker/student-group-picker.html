@@ -1,16 +1,10 @@
 <ng-container *transloco="let t">
-  <p-button
-    [label]="buttonLabel() ?? t('common.studentGroupPicker.add')"
-    icon="fa-solid fa-plus"
-    severity="secondary"
-    (click)="open($event)">
-  </p-button>
+  <button mpButton variant="secondary" (click)="open()">
+    <i class="fa-solid fa-plus"></i> {{ buttonLabel() ?? t('common.studentGroupPicker.add') }}
+  </button>
 
-  <!-- dismissable=false so PrimeNG overlay panels (column-filter menu, Kind
-       select dropdown) — which render in body-attached portals — don't fire
-       the popover's outside-click handler. The user closes via the explicit
-       Cancel / Confirm buttons, or by clicking the trigger again. -->
-  <p-popover #op [style]="{ width: 'min(48rem, 92vw)' }" styleClass="mp-student-group-picker" [dismissable]="false">
+  <mp-dialog [(visible)]="visible" panelClass="w-[min(48rem,92vw)]" (closed)="cancel()"
+             [ariaLabel]="t('common.studentGroupPicker.title')">
     <div class="flex flex-col gap-3 p-2">
       <!-- Inline close affordance for the single-select case, which has no
            Cancel button in its footer. -->
@@ -70,7 +64,7 @@
               <span (click)="$event.stopPropagation()">
                 <p-columnFilter field="kind" matchMode="equals" [showMenu]="false">
                   <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                    <p-select
+                    <mp-select
                       [options]="kindOptions"
                       [ngModel]="value"
                       (ngModelChange)="filter($event)"
@@ -78,9 +72,8 @@
                       optionValue="value"
                       [showClear]="true"
                       [placeholder]="t('common.studentGroupPicker.kind.allKinds')"
-                      appendTo="body"
-                      [style]="{ minWidth: '8rem' }">
-                    </p-select>
+                      class="min-w-32">
+                    </mp-select>
                   </ng-template>
                 </p-columnFilter>
               </span>
@@ -128,14 +121,12 @@
 
       @if (allowMultiple()) {
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-surface">
-          <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="cancel()"></p-button>
-          <p-button
-            [label]="t('common.studentGroupPicker.confirm', { count: selection.length })"
-            [disabled]="selection.length === 0"
-            (click)="confirm()">
-          </p-button>
+          <button mpButton variant="ghost" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+          <button mpButton [disabled]="selection.length === 0" (click)="confirm()">
+            {{ t('common.studentGroupPicker.confirm', { count: selection.length }) }}
+          </button>
         </div>
       }
     </div>
-  </p-popover>
+  </mp-dialog>
 </ng-container>

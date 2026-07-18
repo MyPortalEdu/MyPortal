@@ -8,9 +8,8 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import { MpSelect, MpDatePicker } from '@myportal/ui';
 import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 import {
@@ -31,9 +30,9 @@ interface LabelledOption<T> {
   imports: [
     FormsModule,
     InputText,
-    Select,
+    MpSelect,
     Button,
-    DatePicker,
+    MpDatePicker,
     TranslocoDirective,
   ],
   templateUrl: './holidays-step.html',

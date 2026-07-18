@@ -16,7 +16,7 @@ import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
 import { InputText } from 'primeng/inputtext';
 import { Checkbox } from 'primeng/checkbox';
-import { Select } from 'primeng/select';
+import { MpSelect } from '@myportal/ui';
 import { Tag } from 'primeng/tag';
 import { Skeleton } from 'primeng/skeleton';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -61,7 +61,7 @@ interface AudienceOption {
     Card,
     InputText,
     Checkbox,
-    Select,
+    MpSelect,
     Tag,
     Skeleton,
     PageHeader,

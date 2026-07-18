@@ -48,15 +48,14 @@
               <input pInputText [ngModel]="email()" (ngModelChange)="email.set($event)" [disabled]="readOnly()" [ngModelOptions]="{ standalone: true }" />
             </mp-field>
             <mp-field [label]="t('form.userType')">
-              <p-select
+              <mp-select
                 [ngModel]="userType()"
                 (ngModelChange)="onUserTypeChange($event)"
                 [ngModelOptions]="{ standalone: true }"
                 [options]="audienceOptions()"
                 optionLabel="label"
                 optionValue="value"
-                appendTo="body"
-                [disabled]="readOnly()"></p-select>
+                [disabled]="readOnly()"></mp-select>
             </mp-field>
             @if (isCreate()) {
               <mp-field

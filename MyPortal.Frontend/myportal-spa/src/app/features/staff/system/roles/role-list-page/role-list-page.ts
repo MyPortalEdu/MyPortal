@@ -8,11 +8,20 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { InputText } from 'primeng/inputtext';
-import { FilterMetadata } from 'primeng/api';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
+import {
+  MpButton,
+  MpCard,
+  MpInput,
+  MpTable,
+  MpTableCaption,
+  MpTableHeader,
+  MpTableBody,
+  MpTableEmpty,
+  MpSortable,
+  MpSortIcon,
+  type MpTableLazyLoadEvent,
+  type MpFilterMetadata,
+} from '@myportal/ui';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -47,7 +56,25 @@ const GRID_DEFAULTS: GridState = { first: 0, rows: 25 };
   selector: 'mp-role-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Card, InputText, TableModule, Tag, Tooltip, RouterLink, PageHeader, EmptyState, RoleCreateDialog, TranslocoDirective],
+  imports: [
+    MpButton,
+    MpCard,
+    MpInput,
+    MpTable,
+    MpTableCaption,
+    MpTableHeader,
+    MpTableBody,
+    MpTableEmpty,
+    MpSortable,
+    MpSortIcon,
+    Tag,
+    Tooltip,
+    RouterLink,
+    PageHeader,
+    EmptyState,
+    RoleCreateDialog,
+    TranslocoDirective,
+  ],
   providers: [provideTranslocoScope('roles')],
   templateUrl: './role-list-page.html',
 })
@@ -73,11 +100,11 @@ export class RoleListPage implements OnInit {
 
   // Seeded onto the table's `filters` input so the one lazy-load it fires on init
   // already carries the restored search term — no second, redundant request.
-  readonly initialFilters: Record<string, FilterMetadata> = this.initialState.global
+  readonly initialFilters: Record<string, MpFilterMetadata> = this.initialState.global
     ? { global: { value: this.initialState.global, matchMode: 'contains' } }
     : {};
 
-  private readonly table = viewChild<Table>('dt');
+  private readonly table = viewChild(MpTable);
 
   // Mirrors the search box so the clear affordance and the empty state can both
   // read it; the table's own `filters` stay the source of truth for the request.
@@ -85,7 +112,7 @@ export class RoleListPage implements OnInit {
 
   readonly hasFilter = computed(() => this.searchTerm().trim().length > 0);
 
-  private lastEvent: TableLazyLoadEvent | null = null;
+  private lastEvent: MpTableLazyLoadEvent | null = null;
 
   readonly headerActions = computed<HeaderAction[]>(() =>
     this.canEdit()
@@ -106,7 +133,7 @@ export class RoleListPage implements OnInit {
     });
   }
 
-  load(event: TableLazyLoadEvent): void {
+  load(event: MpTableLazyLoadEvent): void {
     this.lastEvent = event;
     this.syncUrl(event);
     this.loading.set(true);
@@ -138,7 +165,7 @@ export class RoleListPage implements OnInit {
     this.onSearch('');
   }
 
-  private syncUrl(event: TableLazyLoadEvent): void {
+  private syncUrl(event: MpTableLazyLoadEvent): void {
     const state = gridStateFromLazyLoadEvent(event, { defaultRows: GRID_DEFAULTS.rows });
     // replaceUrl: rewrite the list URL in place. Without it every keystroke and
     // page change would push a history entry and Back would walk through them.

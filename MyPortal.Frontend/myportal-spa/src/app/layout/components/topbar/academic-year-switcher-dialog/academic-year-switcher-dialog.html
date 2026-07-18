@@ -1,16 +1,11 @@
 <ng-container *transloco="let t; prefix: 'topbar.yearSwitcher'">
-<p-dialog
+<mp-dialog
   [visible]="visible()"
   (visibleChange)="$event ? null : onHide()"
   [modal]="true"
-  [closable]="false"
   [closeOnEscape]="true"
-  [dismissableMask]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: 'min(28rem, 95vw)' }"
-  styleClass="mp-flush-dialog"
-  [showHeader]="false">
+  [dismissable]="true"
+  panelClass="w-[min(28rem,95vw)]">
 
   <div class="flex items-center justify-between p-4 border-b border-surface">
     <h3 class="text-base font-semibold m-0">{{ t('title') }}</h3>
@@ -61,5 +56,5 @@
       </ul>
     }
   </div>
-</p-dialog>
+</mp-dialog>
 </ng-container>

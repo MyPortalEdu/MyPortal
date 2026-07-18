@@ -81,6 +81,14 @@ export const appConfig: ApplicationConfig = {
             order: 'tailwind-base, primeng, tailwind-utilities'
           }
         },
+      },
+      // Lift PrimeNG overlays (e.g. p-columnFilter menus) above MpDialog (z-1101) and the CDK
+      // overlay layer (z-1200) so any PrimeNG popup opened inside an mp-dialog isn't hidden behind it.
+      zIndex: {
+        modal: 1100,
+        overlay: 1300,
+        menu: 1300,
+        tooltip: 1300,
       }
     }),
     // Single MessageService instance shared by everything that toasts via

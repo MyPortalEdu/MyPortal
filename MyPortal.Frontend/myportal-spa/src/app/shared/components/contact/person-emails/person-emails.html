@@ -3,14 +3,14 @@
     @if (editing()) {
       @for (email of emails(); track $index) {
         <div class="flex flex-wrap items-center gap-2 rounded border border-surface-200 dark:border-surface-700 p-3">
-          <p-select
-            styleClass="w-40"
+          <mp-select
+            class="w-40"
             [options]="types()"
             optionLabel="description"
             optionValue="id"
             [placeholder]="t('common.contact.type')"
             [ngModel]="email.typeId"
-            (ngModelChange)="patch($index, { typeId: $event })"></p-select>
+            (ngModelChange)="patch($index, { typeId: $event })"></mp-select>
 
           <input
             pInputText

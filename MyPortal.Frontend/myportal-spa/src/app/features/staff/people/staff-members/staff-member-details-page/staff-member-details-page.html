@@ -274,7 +274,7 @@
 
                       <mp-field [label]="t('staff-members.fields.dob')" for="dob">
                         @if (editing()) {
-                          <p-datepicker id="dob" [ngModel]="dob()" (ngModelChange)="dob.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                          <mp-date-picker inputId="dob" [ngModel]="dob()" (ngModelChange)="dob.set($event)" [showIcon]="true" class="w-full"></mp-date-picker>
                         } @else {
                           <span>{{ dob() ? (dob() | date:'mediumDate') : '—' }}</span>
                         }

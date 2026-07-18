@@ -12,10 +12,7 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
+import { MpDatePicker, MpDialog, MpButton, MpInput } from '@myportal/ui';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import {
   catchError,
@@ -59,10 +56,10 @@ import { PersonMatchResponse } from '../../../../../shared/types/person-match';
   imports: [
     FormsModule,
     DatePipe,
-    Button,
-    DatePicker,
-    Dialog,
-    InputText,
+    MpButton,
+    MpDatePicker,
+    MpDialog,
+    MpInput,
     GenderSelect,
     ProgressSpinner,
     TranslocoDirective,

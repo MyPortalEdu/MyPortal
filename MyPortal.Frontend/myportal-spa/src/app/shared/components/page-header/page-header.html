@@ -13,18 +13,20 @@
 
   <div class="flex flex-wrap items-center gap-2">
     @for (a of actions(); track a) {
-      <p-button
-        size="small"
+      <button
+        mpButton
+        size="sm"
         type="button"
-        [label]="a.label"
-        [icon]="a.icon ?? ''"
-        [outlined]="a.outlined"
-        [text]="a.text"
-        [severity]="a.severity ?? 'primary'"
-        [disabled]="a.disabled"
-        [loading]="a.loading"
+        [variant]="variantFor(a)"
+        [disabled]="a.disabled || a.loading"
         (click)="a.command?.()">
-      </p-button>
+        @if (a.loading) {
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+        } @else if (a.icon) {
+          <i [class]="a.icon"></i>
+        }
+        {{ a.label }}
+      </button>
     }
   </div>
 </header>

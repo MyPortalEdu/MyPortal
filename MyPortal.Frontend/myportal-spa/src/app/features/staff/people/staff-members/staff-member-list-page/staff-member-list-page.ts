@@ -9,13 +9,22 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import {
+  MpButton,
+  MpCard,
+  MpInput,
+  MpSelect,
+  MpTable,
+  MpTableCaption,
+  MpTableHeader,
+  MpTableBody,
+  MpTableEmpty,
+  MpSortable,
+  MpSortIcon,
+  type MpTableLazyLoadEvent,
+  type MpFilterMetadata,
+} from '@myportal/ui';
 import { Tag } from 'primeng/tag';
-import { FilterMetadata } from 'primeng/api';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { StaffStatus } from '../../../../../shared/types/staff-member-header';
@@ -52,12 +61,18 @@ const GRID_DEFAULTS: GridState = { first: 0, rows: 25, filters: { status: DEFAUL
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Button,
-    Card,
-    InputText,
-    Select,
+    MpButton,
+    MpCard,
+    MpInput,
+    MpSelect,
+    MpTable,
+    MpTableCaption,
+    MpTableHeader,
+    MpTableBody,
+    MpTableEmpty,
+    MpSortable,
+    MpSortIcon,
     Tag,
-    TableModule,
     FormsModule,
     RouterLink,
     PageHeader,
@@ -83,7 +98,7 @@ export class StaffMemberListPage implements OnInit {
 
   protected readonly canCreate = signal(false);
 
-  private readonly table = viewChild<Table>('dt');
+  private readonly table = viewChild(MpTable);
 
   // Read the URL once from the snapshot rather than subscribing to queryParams:
   // load() writes the state back, and a subscription would turn that write into
@@ -111,7 +126,7 @@ export class StaffMemberListPage implements OnInit {
 
   // Seeded onto the table's `filters` input so the one lazy-load it fires on init
   // already carries the restored search term and status — no second round-trip.
-  protected readonly initialFilters: Record<string, FilterMetadata> = {
+  protected readonly initialFilters: Record<string, MpFilterMetadata> = {
     ...(this.initialState.global
       ? { global: { value: this.initialState.global, matchMode: 'contains' } }
       : {}),
@@ -147,7 +162,7 @@ export class StaffMemberListPage implements OnInit {
     });
   }
 
-  load(event: TableLazyLoadEvent): void {
+  load(event: MpTableLazyLoadEvent): void {
     this.syncUrl(event);
     this.loading.set(true);
     this.data.list(toQueryKitParams(event, { globalFields: SEARCH_FIELDS })).subscribe({
@@ -163,7 +178,7 @@ export class StaffMemberListPage implements OnInit {
     });
   }
 
-  private syncUrl(event: TableLazyLoadEvent): void {
+  private syncUrl(event: MpTableLazyLoadEvent): void {
     // The dropdown, not the event, is the source of truth for status: 'All' is
     // absence-of-predicate in the event but still a value the URL must carry.
     const state = gridStateFromLazyLoadEvent(event, {

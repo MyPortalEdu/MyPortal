@@ -10,9 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
+import { MpButton, MpDialog, MpInput } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { UsersDataService } from '../../../../../shared/services/users-data.service';
@@ -27,7 +25,7 @@ import { ConfirmationDialog } from '../../../../../core/services/confirmation.se
 @Component({
   selector: 'mp-user-set-password-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, Dialog, InputText, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, MpButton, MpDialog, MpInput, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('users')],
   templateUrl: './user-set-password-dialog.html',
 })

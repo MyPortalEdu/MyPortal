@@ -24,16 +24,15 @@
           </div>
         } @else {
           <label class="text-sm">{{ t('copyFromLabel') }}</label>
-          <p-select
+          <mp-select
             [ngModel]="model().copyPeriodsFromAcademicYearId"
             (ngModelChange)="onCopyYearPicked($event)"
             [options]="priorYearOptions()"
             optionLabel="label"
             optionValue="value"
             [placeholder]="t('copyFromPlaceholder')"
-            [showClear]="true"
-            appendTo="body">
-          </p-select>
+            [showClear]="true">
+          </mp-select>
         }
       </section>
     } @else {

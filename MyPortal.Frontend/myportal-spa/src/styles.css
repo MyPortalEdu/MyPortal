@@ -1,5 +1,15 @@
 @import '@fontsource-variable/inter';
 @import 'primeicons/primeicons.css';
+/* CDK overlay container/positioning styles — required for libs/ui overlay components
+   (MpSelect and future popover/dialog) built on @angular/cdk's Overlay. */
+@import '@angular/cdk/overlay-prebuilt.css';
+
+/* CDK overlays (MpSelect / MpDatePicker / MpPopover dropdowns) must sit above MpDialog (z-1101)
+   and the sticky topbar (z-1003) — otherwise a dropdown opened INSIDE a dialog renders behind it.
+   The prebuilt CSS defaults the container to z-1000; lift it above everything overlay-anchored. */
+.cdk-overlay-container {
+  z-index: 1200;
+}
 
 /* Cascade layer order: Tailwind's base reset lowest, then PrimeNG's own `primeng` layer,
    then our `.mp-*` component classes, then Tailwind utilities highest — so a utility stacked
@@ -59,43 +69,27 @@ html, body { height: 100%; }
   --shadow-overlay: 0 8px 24px -6px rgb(0 0 0 / 0.18), 0 2px 6px -2px rgb(0 0 0 / 0.12);
 }
 
-/* Semantic colour palette (shadcn/Spartan convention). Light in :root, dark under .mp-dark
-   (the app's dark selector, see @custom-variant above). Values are the neutral/slate base
-   with a blue primary — refined against the PrimeNG look as screens migrate. */
+/* Semantic colour palette (shadcn/Spartan convention). During the PrimeNG→libs/ui migration these
+   ALIAS PrimeNG's live theme vars (@primeuix/themes Aura, indigo primary) so design-system
+   components inherit the app's exact palette — and flip with .mp-dark for free, since PrimeNG's
+   darkModeSelector is also `.mp-dark`. When PrimeNG is removed at the end of Phase 3, replace these
+   var() references with literal values captured from the final look. */
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --primary: #2563eb;
-  --primary-foreground: #f8fafc;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  --destructive: #dc2626;
-  --destructive-foreground: #f8fafc;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
-}
-
-.mp-dark {
-  --background: #0b1120;
-  --foreground: #e2e8f0;
-  --primary: #3b82f6;
-  --primary-foreground: #0b1120;
-  --secondary: #1e293b;
-  --secondary-foreground: #e2e8f0;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #e2e8f0;
-  --destructive: #ef4444;
-  --destructive-foreground: #f8fafc;
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #3b82f6;
+  --background: var(--p-content-background);
+  --foreground: var(--p-text-color);
+  --primary: var(--p-primary-color);
+  --primary-foreground: var(--p-primary-contrast-color, #ffffff);
+  --secondary: var(--p-content-hover-background);
+  --secondary-foreground: var(--p-text-color);
+  --muted: var(--p-content-hover-background);
+  --muted-foreground: var(--p-text-muted-color);
+  --accent: var(--p-content-hover-background);
+  --accent-foreground: var(--p-text-color);
+  --destructive: var(--p-red-500, #dc2626);
+  --destructive-foreground: #ffffff;
+  --border: var(--p-content-border-color);
+  --input: var(--p-form-field-border-color, var(--p-content-border-color));
+  --ring: var(--p-primary-color);
 }
 
 /* Expose the palette as Tailwind colour utilities (bg-background, text-foreground, bg-primary…).

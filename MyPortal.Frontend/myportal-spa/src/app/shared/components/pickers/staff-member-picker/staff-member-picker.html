@@ -1,83 +1,76 @@
 <ng-container *transloco="let t">
-  <p-button
-    [label]="buttonLabel() ?? t('common.staffMemberPicker.pick')"
-    icon="fa-solid fa-magnifying-glass"
-    severity="secondary"
-    (click)="open($event)">
-  </p-button>
+  <button mpButton variant="secondary" (click)="visible.set(true)">
+    <i class="fa-solid fa-magnifying-glass"></i> {{ buttonLabel() ?? t('common.staffMemberPicker.pick') }}
+  </button>
 
-  <!-- dismissable=false so the column-filter match-mode menus (Contains / Starts with / etc.)
-       can be clicked without their outside-click bubbling up and closing the popover. -->
-  <p-popover #op [style]="{ width: 'min(48rem, 92vw)' }" [dismissable]="false">
-    <div class="flex flex-col gap-3 p-2">
-      <div class="flex items-center justify-end">
-        <button type="button" class="mp-icon-button" (click)="close()" [attr.aria-label]="'common.close' | transloco">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <p-table
+  <mp-dialog [(visible)]="visible" panelClass="w-[min(48rem,92vw)]" [ariaLabel]="t('common.staffMemberPicker.title')">
+    <div class="flex items-center justify-between p-3 border-b border-border">
+      <span class="text-sm font-semibold">{{ t('common.staffMemberPicker.title') }}</span>
+      <button type="button" class="mp-icon-button" (click)="visible.set(false)" [attr.aria-label]="'common.close' | transloco">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="p-2">
+      <mp-table
         [lazy]="true"
         [paginator]="true"
         [rows]="25"
         [totalRecords]="totalRecords()"
         [loading]="loading()"
         [value]="rows()"
-        (onLazyLoad)="load($event)"
+        (lazyLoad)="load($event)"
         [filterDelay]="300"
         dataKey="id"
         selectionMode="single"
-        (onRowSelect)="onRowSelect($any($event).data)"
+        (rowSelect)="onRowSelect($any($event))"
         [scrollable]="true"
         scrollHeight="20rem">
 
-        <ng-template pTemplate="caption">
-          <span class="text-sm font-semibold">{{ t('common.staffMemberPicker.title') }}</span>
-        </ng-template>
-
-        <ng-template pTemplate="header">
+        <ng-template mpTableHeader>
           <tr>
-            <th pSortableColumn="code" style="width: 10rem">
+            <th mpSortable="code" style="width: 10rem">
               {{ t('common.staffMemberPicker.code') }}
-              <p-sortIcon field="code"></p-sortIcon>
+              <mp-sort-icon field="code"></mp-sort-icon>
             </th>
-            <th pSortableColumn="firstName">
+            <th mpSortable="firstName">
               {{ t('common.staffMemberPicker.firstName') }}
-              <p-sortIcon field="firstName"></p-sortIcon>
+              <mp-sort-icon field="firstName"></mp-sort-icon>
             </th>
-            <th pSortableColumn="lastName">
+            <th mpSortable="lastName">
               {{ t('common.staffMemberPicker.lastName') }}
-              <p-sortIcon field="lastName"></p-sortIcon>
+              <mp-sort-icon field="lastName"></mp-sort-icon>
             </th>
           </tr>
           <tr>
             <th>
-              <p-columnFilter type="text" field="code" matchMode="contains" display="row"></p-columnFilter>
+              <mp-column-filter field="code" matchMode="contains"></mp-column-filter>
             </th>
             <th>
-              <p-columnFilter type="text" field="firstName" matchMode="contains" display="row"></p-columnFilter>
+              <mp-column-filter field="firstName" matchMode="contains"></mp-column-filter>
             </th>
             <th>
-              <p-columnFilter type="text" field="lastName" matchMode="contains" display="row"></p-columnFilter>
+              <mp-column-filter field="lastName" matchMode="contains"></mp-column-filter>
             </th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-row>
-          <tr [pSelectableRow]="row">
+        <ng-template mpTableBody let-row>
+          <tr [mpSelectableRow]="row">
             <td class="font-mono text-xs">{{ row.code }}</td>
             <td>{{ row.preferredFirstName ?? row.firstName }}</td>
             <td>{{ row.preferredLastName ?? row.lastName }}</td>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template mpTableEmpty>
           <tr>
             <td colspan="3" class="text-center text-sm text-muted-color py-4">
               {{ t('common.staffMemberPicker.empty') }}
             </td>
           </tr>
         </ng-template>
-      </p-table>
+      </mp-table>
     </div>
-  </p-popover>
+  </mp-dialog>
 </ng-container>

@@ -5,17 +5,17 @@
     [actions]="headerActions()"></mp-page-header>
 
   @if (loading()) {
-    <p-card>
+    <mp-card>
       <div class="flex flex-col gap-3">
         @for (i of skeletonRows; track i) {
-          <p-skeleton height="2rem"></p-skeleton>
+          <mp-skeleton height="2rem"></mp-skeleton>
         }
       </div>
-    </p-card>
+    </mp-card>
   } @else if (notFound()) {
-    <p-card>
+    <mp-card>
       <div class="py-12 text-center text-muted-color">{{ t('form.errorLoad') }}</div>
-    </p-card>
+    </mp-card>
   } @else {
     <form class="flex flex-col gap-4 max-w-5xl" #f="ngForm">
       @if (readOnly()) {
@@ -26,7 +26,7 @@
       }
 
       <!-- Details -->
-      <p-card>
+      <mp-card>
         <div class="flex flex-col gap-4">
           <mp-section-header [title]="t('form.details')" icon="fa-solid fa-circle-info"></mp-section-header>
           <mp-field
@@ -34,7 +34,7 @@
             [required]="!readOnly()"
             [error]="nameRef.touched && nameRef.invalid ? ('common.validation.required' | transloco) : undefined">
             <input
-              pInputText
+              mpInput
               name="name"
               [ngModel]="name()"
               (ngModelChange)="name.set($event)"
@@ -49,23 +49,22 @@
 
           <mp-field [label]="t('form.description')">
             <textarea
-              pTextarea
+              mpTextarea
               name="description"
               [ngModel]="description()"
               (ngModelChange)="description.set($event)"
               rows="2"
-              [autoResize]="true"
               [disabled]="readOnly()"></textarea>
           </mp-field>
 
           <mp-field [label]="t('form.audience')">
-            <div><p-tag [value]="audienceLabel()"></p-tag></div>
+            <div><mp-badge [value]="audienceLabel()"></mp-badge></div>
           </mp-field>
         </div>
-      </p-card>
+      </mp-card>
 
       <!-- Permissions -->
-      <p-card>
+      <mp-card>
         <div class="flex flex-col gap-2">
           <mp-section-header [title]="t('form.permissions')" icon="fa-solid fa-key"></mp-section-header>
           <span class="text-xs text-muted-color">{{ t('form.permissionsHint') }}</span>
@@ -82,7 +81,7 @@
             </div>
           }
         </div>
-      </p-card>
+      </mp-card>
     </form>
   }
 </ng-container>

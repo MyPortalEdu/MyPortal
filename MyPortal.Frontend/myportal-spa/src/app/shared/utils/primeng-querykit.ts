@@ -1,6 +1,9 @@
 import { ParamMap, Params } from '@angular/router';
-import { FilterMetadata, SortMeta } from 'primeng/api';
-import { TableLazyLoadEvent } from 'primeng/table';
+import {
+  MpTableLazyLoadEvent as TableLazyLoadEvent,
+  MpFilterMetadata as FilterMetadata,
+  MpSortMeta as SortMeta,
+} from '@myportal/ui';
 
 // QueryKit's wire JSON shapes. Mirrors the C# types in Rowan.QueryKit.Repositories
 // (FilterOptions / FilterGroup / FilterCriterion / SortOptions / SortCriterion).

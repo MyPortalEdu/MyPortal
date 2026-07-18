@@ -10,10 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import { MpButton, MpDialog, MpInput, MpSelect } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { RolesDataService } from '../../../../../shared/services/roles-data.service';
@@ -29,7 +26,7 @@ interface AudienceOption {
 @Component({
   selector: 'mp-role-create-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, Dialog, InputText, Select, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, MpButton, MpDialog, MpInput, MpSelect, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('roles')],
   templateUrl: './role-create-dialog.html',
 })

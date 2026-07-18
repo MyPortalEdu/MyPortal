@@ -10,8 +10,8 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
+import { MpSelect } from '@myportal/ui';
 import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
@@ -41,7 +41,7 @@ interface LabelledOption<T> {
   imports: [
     FormsModule,
     InputText,
-    Select,
+    MpSelect,
     SelectButton,
     Button,
     Checkbox,

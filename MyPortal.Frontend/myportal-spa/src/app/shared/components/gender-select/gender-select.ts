@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoService } from '@jsverse/transloco';
-import { Select } from 'primeng/select';
+import { MpSelect } from '@myportal/ui';
 
 import { GENDER_CODES } from '../../constants/gender';
 
@@ -22,9 +22,9 @@ import { GENDER_CODES } from '../../constants/gender';
   selector: 'mp-gender-select',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Select],
+  imports: [FormsModule, MpSelect],
   template: `
-    <p-select
+    <mp-select
       [inputId]="inputId()"
       [options]="options()"
       optionLabel="label"
@@ -33,8 +33,7 @@ import { GENDER_CODES } from '../../constants/gender';
       [ngModel]="value()"
       (ngModelChange)="value.set($event)"
       [invalid]="invalid()"
-      appendTo="body"
-      styleClass="w-full"></p-select>
+      class="w-full"></mp-select>
   `,
 })
 export class GenderSelect {

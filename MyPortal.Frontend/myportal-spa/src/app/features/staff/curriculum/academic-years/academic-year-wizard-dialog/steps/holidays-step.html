@@ -37,35 +37,30 @@
               </div>
               <div class="flex flex-col gap-1 min-w-[10rem]">
                 <label class="text-xs text-muted-color">{{ t('holidayType') }}</label>
-                <p-select
+                <mp-select
                   [ngModel]="holiday.type"
                   (ngModelChange)="updateHoliday(i, { type: $event })"
                   [options]="holidayTypes"
                   optionLabel="label"
                   optionValue="value"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-select>
+                  [disabled]="readOnly()">
+                </mp-select>
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-xs text-muted-color">{{ t('holidayStart') }}</label>
-                <p-datepicker
+                <mp-date-picker
                   [ngModel]="holiday.startDate"
                   (ngModelChange)="updateHoliday(i, { startDate: $event })"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-xs text-muted-color">{{ t('holidayEnd') }}</label>
-                <p-datepicker
+                <mp-date-picker
                   [ngModel]="holiday.endDate"
                   (ngModelChange)="updateHoliday(i, { endDate: $event })"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               @if (!readOnly()) {
                 <p-button

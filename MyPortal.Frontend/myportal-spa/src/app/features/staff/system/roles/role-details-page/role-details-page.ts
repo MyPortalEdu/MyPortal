@@ -11,11 +11,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Card } from 'primeng/card';
-import { InputText } from 'primeng/inputtext';
-import { Textarea } from 'primeng/textarea';
-import { Tag } from 'primeng/tag';
-import { Skeleton } from 'primeng/skeleton';
+import { MpCard, MpInput, MpTextarea, MpBadge, MpSkeleton } from '@myportal/ui';
 import {
   TranslocoDirective,
   TranslocoPipe,
@@ -45,11 +41,11 @@ import { focusFirstInvalid } from '../../../../../shared/utils/focus-first-inval
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    Card,
-    InputText,
-    Textarea,
-    Tag,
-    Skeleton,
+    MpCard,
+    MpInput,
+    MpTextarea,
+    MpBadge,
+    MpSkeleton,
     PageHeader,
     Field,
     SectionHeader,

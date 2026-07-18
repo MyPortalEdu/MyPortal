@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
-import { DatePicker } from 'primeng/datepicker';
+import { MpDatePicker } from '@myportal/ui';
 import { Textarea } from 'primeng/textarea';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -57,7 +57,7 @@ import { StaffAreaPanel } from './staff-area-panel';
     Button,
     InputText,
     InputNumber,
-    DatePicker,
+    MpDatePicker,
     Textarea,
     LookupSelect,
     Loading,

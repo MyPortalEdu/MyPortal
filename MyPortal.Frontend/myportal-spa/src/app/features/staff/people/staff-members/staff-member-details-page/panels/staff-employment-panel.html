@@ -74,7 +74,7 @@
               <div class="grid gap-3 md:grid-cols-2">
                 <mp-field [label]="t('staff-members.employment.startDate')" [required]="editing()">
                   @if (editing()) {
-                    <p-datepicker [ngModel]="toDate(e.startDate)" (ngModelChange)="patchEmployment(ei, 'startDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full" required [invalid]="editing() && !e.startDate"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(e.startDate)" (ngModelChange)="patchEmployment(ei, 'startDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" required [invalid]="editing() && !e.startDate"></mp-date-picker>
                   } @else {
                     <span>{{ e.startDate ? (toDate(e.startDate) | date:'mediumDate') : '—' }}</span>
                   }
@@ -88,7 +88,7 @@
                 </mp-field>
                 <mp-field [label]="t('staff-members.employment.endDate')">
                   @if (editing()) {
-                    <p-datepicker [ngModel]="toDate(e.endDate)" (ngModelChange)="onEmploymentEndDate(ei, $event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(e.endDate)" (ngModelChange)="onEmploymentEndDate(ei, $event)" [showIcon]="true" class="w-full"></mp-date-picker>
                   } @else {
                     <span>{{ e.endDate ? (toDate(e.endDate) | date:'mediumDate') : t('staff-members.employment.current') }}</span>
                   }
@@ -222,10 +222,10 @@
                             <div class="flex flex-col gap-3">
                               <div class="grid gap-3 md:grid-cols-2">
                                 <mp-field [label]="t('staff-members.employment.contractStart')" [required]="true">
-                                  <p-datepicker required [ngModel]="toDate(c.startDate)" (ngModelChange)="patchContract(ei, ci, 'startDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full" [invalid]="!c.startDate"></p-datepicker>
+                                  <mp-date-picker required [ngModel]="toDate(c.startDate)" (ngModelChange)="patchContract(ei, ci, 'startDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" [invalid]="!c.startDate"></mp-date-picker>
                                 </mp-field>
                                 <mp-field [label]="t('staff-members.employment.contractEnd')">
-                                  <p-datepicker [ngModel]="toDate(c.endDate)" (ngModelChange)="patchContract(ei, ci, 'endDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                                  <mp-date-picker [ngModel]="toDate(c.endDate)" (ngModelChange)="patchContract(ei, ci, 'endDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                                 </mp-field>
                               </div>
                               <div class="grid gap-3 md:grid-cols-3">

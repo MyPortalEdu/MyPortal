@@ -1,21 +1,18 @@
 <ng-container *transloco="let t">
-  <p-button
-    [label]="buttonLabel() ?? t('common.personPicker.pick')"
-    icon="fa-solid fa-magnifying-glass"
-    severity="secondary"
-    (click)="open($event)">
-  </p-button>
+  <button mpButton variant="secondary" (click)="visible.set(true)">
+    <i class="fa-solid fa-magnifying-glass"></i> {{ buttonLabel() ?? t('common.personPicker.pick') }}
+  </button>
 
-  <p-popover #op [style]="{ width: 'min(32rem, 92vw)' }" [dismissable]="true">
-    <div class="flex flex-col gap-3 p-2">
+  <mp-dialog [(visible)]="visible" panelClass="w-[min(32rem,92vw)]" [ariaLabel]="t('common.personPicker.pick')">
+    <div class="flex flex-col gap-3 p-3">
       <div class="flex items-center gap-2">
         <input
-          pInputText
+          mpInput
           class="grow"
           [ngModel]="query()"
           (ngModelChange)="onQueryChange($event)"
           [placeholder]="t('common.personPicker.searchPlaceholder')" />
-        <button type="button" class="mp-icon-button" (click)="close()" [attr.aria-label]="'common.close' | transloco">
+        <button type="button" class="mp-icon-button" (click)="visible.set(false)" [attr.aria-label]="'common.close' | transloco">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -44,5 +41,5 @@
         <div class="text-xs text-muted-color py-4 text-center">{{ t('common.personPicker.hint') }}</div>
       }
     </div>
-  </p-popover>
+  </mp-dialog>
 </ng-container>

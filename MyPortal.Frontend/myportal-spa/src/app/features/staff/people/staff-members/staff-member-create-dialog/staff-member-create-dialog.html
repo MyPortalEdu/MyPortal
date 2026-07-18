@@ -1,14 +1,11 @@
 <ng-container *transloco="let t">
-  <p-dialog
+  <mp-dialog
     [visible]="open()"
     (visibleChange)="$event ? null : onClose()"
     [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
     [closeOnEscape]="!saving()"
-    [style]="{ width: 'min(40rem, 92vw)' }"
-    styleClass="mp-flush-dialog"
-    [showHeader]="false">
+    panelClass="w-[min(40rem,92vw)]"
+    [dismissable]="false">
 
     <!-- Header. Inlined (not pTemplate-projected) because PrimeNG 20 stopped
          honouring pTemplate-based slot projection on p-dialog — same reason the
@@ -36,7 +33,7 @@
             {{ t('staff-members.create.searchLabel') }}
           </label>
           <span class="relative">
-            <input pInputText id="create-search" class="w-full"
+            <input mpInput id="create-search" class="w-full"
                    [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
                    [placeholder]="t('staff-members.create.searchPlaceholder')"
                    autocomplete="off" />
@@ -100,7 +97,7 @@
             <label class="text-sm font-medium" for="create-code">
               {{ t('staff-members.fields.code') }}
             </label>
-            <input pInputText id="create-code"
+            <input mpInput id="create-code"
                    [ngModel]="code()" (ngModelChange)="code.set($event)"
                    (keydown.enter)="save()" />
           </div>
@@ -109,7 +106,7 @@
             <label class="text-sm font-medium" for="create-title">
               {{ t('staff-members.fields.title') }}
             </label>
-            <input pInputText id="create-title"
+            <input mpInput id="create-title"
                    [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)"
                    (keydown.enter)="save()" />
           </div>
@@ -118,7 +115,7 @@
             <label class="text-sm font-medium" for="create-firstName">
               {{ t('staff-members.fields.firstName') }}
             </label>
-            <input pInputText id="create-firstName"
+            <input mpInput id="create-firstName"
                    [ngModel]="firstName()" (ngModelChange)="firstName.set($event)"
                    (keydown.enter)="save()" />
           </div>
@@ -127,7 +124,7 @@
             <label class="text-sm font-medium" for="create-middleName">
               {{ t('staff-members.fields.middleName') }}
             </label>
-            <input pInputText id="create-middleName"
+            <input mpInput id="create-middleName"
                    [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)"
                    (keydown.enter)="save()" />
           </div>
@@ -136,7 +133,7 @@
             <label class="text-sm font-medium" for="create-lastName">
               {{ t('staff-members.fields.lastName') }}
             </label>
-            <input pInputText id="create-lastName"
+            <input mpInput id="create-lastName"
                    [ngModel]="lastName()" (ngModelChange)="lastName.set($event)"
                    (keydown.enter)="save()" />
           </div>
@@ -145,7 +142,7 @@
             <label class="text-sm font-medium" for="create-preferredFirst">
               {{ t('staff-members.fields.preferredFirstName') }}
             </label>
-            <input pInputText id="create-preferredFirst"
+            <input mpInput id="create-preferredFirst"
                    [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)"
                    (keydown.enter)="save()" />
           </div>
@@ -163,28 +160,21 @@
             <label class="text-sm font-medium" for="create-dob">
               {{ t('staff-members.fields.dob') }}
             </label>
-            <p-datepicker id="create-dob"
+            <mp-date-picker inputId="create-dob"
                           [ngModel]="dob()" (ngModelChange)="dob.set($event)"
-                          dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                          [showIcon]="true"></mp-date-picker>
           </div>
         </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
-        <p-button
-          [label]="t('common.cancel')"
-          icon="fa-solid fa-xmark"
-          severity="secondary"
-          [outlined]="true"
+        <button mpButton
+          variant="outline"
           [disabled]="saving()"
-          (onClick)="onClose()"></p-button>
-        <p-button
-          [label]="t('staff-members.create.submit')"
-          icon="fa-solid fa-plus"
-          severity="primary"
+          (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
+        <button mpButton
           [disabled]="!newPersonValid() || saving()"
-          [loading]="saving()"
-          (onClick)="save()"></p-button>
+          (click)="save()"><i class="fa-solid" [class.fa-plus]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> {{ t('staff-members.create.submit') }}</button>
       </div>
     }
 
@@ -212,36 +202,27 @@
           <label class="text-sm font-medium" for="attach-code">
             {{ t('staff-members.fields.code') }}
           </label>
-          <input pInputText id="attach-code"
+          <input mpInput id="attach-code"
                  [ngModel]="code()" (ngModelChange)="code.set($event)"
                  (keydown.enter)="attach()" />
         </div>
       </div>
 
       <div class="flex items-center justify-between gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
-        <p-button
-          [label]="t('common.back')"
-          icon="fa-solid fa-arrow-left"
-          severity="secondary"
-          [text]="true"
+        <button mpButton
+          variant="ghost"
           [disabled]="saving()"
-          (onClick)="backToSearch()"></p-button>
+          (click)="backToSearch()"><i class="fa-solid fa-arrow-left"></i> {{ t('common.back') }}</button>
         <div class="flex items-center gap-2">
-          <p-button
-            [label]="t('common.cancel')"
-            severity="secondary"
-            [outlined]="true"
+          <button mpButton
+            variant="outline"
             [disabled]="saving()"
-            (onClick)="onClose()"></p-button>
-          <p-button
-            [label]="t('staff-members.create.attachSubmit')"
-            icon="fa-solid fa-plus"
-            severity="primary"
+            (click)="onClose()">{{ t('common.cancel') }}</button>
+          <button mpButton
             [disabled]="!attachValid() || saving()"
-            [loading]="saving()"
-            (onClick)="attach()"></p-button>
+            (click)="attach()"><i class="fa-solid" [class.fa-plus]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> {{ t('staff-members.create.attachSubmit') }}</button>
         </div>
       </div>
     }
-  </p-dialog>
+  </mp-dialog>
 </ng-container>

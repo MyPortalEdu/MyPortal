@@ -7,9 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
-import { Skeleton } from 'primeng/skeleton';
+import { MpButton, MpInput, MpSkeleton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../shared/components/page-header/page-header';
@@ -29,7 +27,7 @@ import { UserType } from '../../../core/types/user-type';
   selector: 'mp-account-settings-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, InputText, Skeleton, PageHeader, TranslocoDirective],
+  imports: [FormsModule, MpButton, MpInput, MpSkeleton, PageHeader, TranslocoDirective],
   providers: [provideTranslocoScope('account-settings')],
   templateUrl: './account-settings-page.html',
 })

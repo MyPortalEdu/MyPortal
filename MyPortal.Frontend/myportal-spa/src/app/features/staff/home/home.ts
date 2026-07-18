@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Button } from 'primeng/button';
+import { MpButton } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Callout } from '../../../shared/components/callout/callout';
@@ -19,7 +19,7 @@ import { Permissions } from '../../../core/constants/permissions';
     Callout,
     BulletinsFeed,
     StaffTimetable,
-    Button,
+    MpButton,
     RouterLink,
     TranslocoDirective,
   ],

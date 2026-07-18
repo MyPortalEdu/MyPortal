@@ -11,7 +11,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
+import { MpDatePicker } from '@myportal/ui';
 import { Textarea } from 'primeng/textarea';
 import { Checkbox } from 'primeng/checkbox';
 import { firstValueFrom } from 'rxjs';
@@ -49,7 +49,7 @@ import { StaffAreaPanel } from './staff-area-panel';
     DatePipe,
     FormsModule,
     Button,
-    DatePicker,
+    MpDatePicker,
     Textarea,
     Checkbox,
     LookupSelect,

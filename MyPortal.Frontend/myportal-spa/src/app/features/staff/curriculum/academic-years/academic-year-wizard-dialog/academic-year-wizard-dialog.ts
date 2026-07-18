@@ -9,9 +9,8 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
 import { ProgressSpinner } from 'primeng/progressspinner';
+import { MpDialog, MpButton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { AcademicYearsDataService } from '../../../../../shared/services/academic-years-data.service';
@@ -53,8 +52,8 @@ function emptyRequest(): AcademicYearUpsertRequest {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Button,
-    Dialog,
+    MpButton,
+    MpDialog,
     ProgressSpinner,
     Callout,
     TranslocoDirective,

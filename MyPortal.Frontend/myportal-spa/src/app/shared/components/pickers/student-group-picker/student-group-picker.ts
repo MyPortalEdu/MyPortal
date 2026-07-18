@@ -1,8 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Popover } from 'primeng/popover';
-import { Select } from 'primeng/select';
+import { MpButton, MpDialog, MpSelect } from '@myportal/ui';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TranslocoDirective, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
@@ -30,7 +28,7 @@ interface KindOption {
 @Component({
   selector: 'mp-student-group-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, Popover, Select, TableModule, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, MpButton, MpDialog, MpSelect, TableModule, TranslocoDirective, TranslocoPipe],
   templateUrl: './student-group-picker.html',
 })
 export class StudentGroupPicker {
@@ -51,8 +49,7 @@ export class StudentGroupPicker {
 
   readonly picked = output<StudentGroupSummaryResponse[]>();
 
-  private readonly op = viewChild<Popover>('op');
-
+  protected readonly visible = signal(false);
   protected readonly rows = signal<StudentGroupSummaryResponse[]>([]);
   protected readonly totalRecords = signal(0);
   protected readonly loading = signal(false);
@@ -65,13 +62,13 @@ export class StudentGroupPicker {
   // language change between opens still gets picked up.
   protected kindOptions: KindOption[] = [];
 
-  open(event: Event): void {
+  open(): void {
     this.refreshKindOptions();
-    this.op()?.toggle(event);
+    this.visible.set(true);
   }
 
   close(): void {
-    this.op()?.hide();
+    this.visible.set(false);
   }
 
   load(event: TableLazyLoadEvent): void {

@@ -1,8 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import { MpButton, MpInput, MpSelect } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 import { LookupResponse } from '../../../types/lookup';
@@ -17,7 +15,7 @@ import { CopyButton } from '../../copy-button/copy-button';
   selector: 'mp-person-phones',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, InputText, Select, CopyButton, TranslocoDirective],
+  imports: [FormsModule, MpButton, MpInput, MpSelect, CopyButton, TranslocoDirective],
   templateUrl: './person-phones.html',
 })
 export class PersonPhones {

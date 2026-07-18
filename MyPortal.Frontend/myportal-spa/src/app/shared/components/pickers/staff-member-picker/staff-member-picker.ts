@@ -1,8 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Popover } from 'primeng/popover';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import {
+  MpButton,
+  MpDialog,
+  MpTable,
+  MpTableHeader,
+  MpTableBody,
+  MpTableEmpty,
+  MpSortable,
+  MpSortIcon,
+  MpSelectableRow,
+  MpColumnFilter,
+  type MpTableLazyLoadEvent,
+} from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 
 import { StaffMembersDataService } from '../../../services/staff-members-data.service';
@@ -20,7 +30,7 @@ import { toQueryKitParams } from '../../../utils/primeng-querykit';
 @Component({
   selector: 'mp-staff-member-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, Popover, TableModule, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, MpButton, MpDialog, MpTable, MpTableHeader, MpTableBody, MpTableEmpty, MpSortable, MpSortIcon, MpSelectableRow, MpColumnFilter, TranslocoDirective, TranslocoPipe],
   templateUrl: './staff-member-picker.html',
 })
 export class StaffMemberPicker {
@@ -31,21 +41,12 @@ export class StaffMemberPicker {
 
   readonly picked = output<StaffMemberSummaryResponse>();
 
-  private readonly op = viewChild<Popover>('op');
-
+  protected readonly visible = signal(false);
   protected readonly rows = signal<StaffMemberSummaryResponse[]>([]);
   protected readonly totalRecords = signal(0);
   protected readonly loading = signal(false);
 
-  open(event: Event): void {
-    this.op()?.toggle(event);
-  }
-
-  close(): void {
-    this.op()?.hide();
-  }
-
-  load(event: TableLazyLoadEvent): void {
+  load(event: MpTableLazyLoadEvent): void {
     this.loading.set(true);
     const params = toQueryKitParams(event);
     this.data.list(params).subscribe({
@@ -60,6 +61,6 @@ export class StaffMemberPicker {
 
   onRowSelect(row: StaffMemberSummaryResponse): void {
     this.picked.emit(row);
-    this.close();
+    this.visible.set(false);
   }
 }

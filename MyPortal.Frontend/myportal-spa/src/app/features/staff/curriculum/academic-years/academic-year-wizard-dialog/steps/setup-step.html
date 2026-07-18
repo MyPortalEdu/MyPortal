@@ -33,29 +33,27 @@
 
         <div class="flex flex-col gap-1">
           <label class="text-sm">{{ t('cycleLength') }}</label>
-          <p-select
+          <mp-select
             [ngModel]="cycleWeeks()"
             (ngModelChange)="onCycleWeeksChange($event)"
             [options]="cycleWeekChoices"
             optionLabel="label"
             optionValue="value"
-            [disabled]="readOnly()"
-            appendTo="body">
-          </p-select>
+            [disabled]="readOnly()">
+          </mp-select>
         </div>
 
         @if (cycleWeeks() > 1) {
           <div class="flex flex-col gap-1">
             <label class="text-sm">{{ t('yearStartsIn') }}</label>
-            <p-select
+            <mp-select
               [ngModel]="firstWeekIndex()"
               (ngModelChange)="onFirstWeekIndexChange($event)"
               [options]="weekChoices()"
               optionLabel="label"
               optionValue="value"
-              [disabled]="readOnly()"
-              appendTo="body">
-            </p-select>
+              [disabled]="readOnly()">
+            </mp-select>
           </div>
         }
       </div>
@@ -96,23 +94,19 @@
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-xs text-muted-color">{{ t('termStart') }}</label>
-                <p-datepicker
+                <mp-date-picker
                   [ngModel]="term.startDate"
                   (ngModelChange)="updateTermDate(i, 'startDate', $event)"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-xs text-muted-color">{{ t('termEnd') }}</label>
-                <p-datepicker
+                <mp-date-picker
                   [ngModel]="term.endDate"
                   (ngModelChange)="updateTermDate(i, 'endDate', $event)"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               @if (!readOnly()) {
                 <p-button
@@ -133,14 +127,13 @@
       <section class="flex flex-col gap-2">
         <h4 class="text-sm font-semibold m-0">{{ t('pastoralSection') }}</h4>
         <p class="text-xs text-muted-color m-0">{{ t('pastoralHint') }}</p>
-        <p-select
+        <mp-select
           [ngModel]="model().copyPastoralStructureFromAcademicYearId"
           (ngModelChange)="onPastoralYearPicked($event)"
           [options]="pastoralOptions()"
           optionLabel="label"
-          optionValue="value"
-          appendTo="body">
-        </p-select>
+          optionValue="value">
+        </mp-select>
       </section>
     }
   </div>

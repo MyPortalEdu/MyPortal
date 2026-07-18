@@ -11,9 +11,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import { MpSelect, MpDatePicker } from '@myportal/ui';
 import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 import { AcademicYearsDataService } from '../../../../../../shared/services/academic-years-data.service';
@@ -36,9 +35,9 @@ interface LabelledOption<T> {
     FormsModule,
     InputNumber,
     InputText,
-    Select,
+    MpSelect,
     Button,
-    DatePicker,
+    MpDatePicker,
     TranslocoDirective,
   ],
   templateUrl: './setup-step.html',

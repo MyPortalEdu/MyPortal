@@ -15,11 +15,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Card } from 'primeng/card';
-import { DatePicker } from 'primeng/datepicker';
 import { InputText } from 'primeng/inputtext';
 import { Menu } from 'primeng/menu';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { Tag } from 'primeng/tag';
+import { MpDatePicker } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   MAX_ATTACHMENT_BYTES,
@@ -124,7 +124,7 @@ const AREAS: AreaTab[] = [
     FormsModule,
     Button,
     Card,
-    DatePicker,
+    MpDatePicker,
     InputText,
     Menu,
     ProgressSpinner,

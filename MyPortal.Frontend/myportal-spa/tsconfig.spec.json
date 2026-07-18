@@ -9,6 +9,7 @@
     ]
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "libs/ui/src/**/*.ts"
   ]
 }

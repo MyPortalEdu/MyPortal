@@ -1,19 +1,19 @@
 <ng-container *transloco="let t; prefix: 'users'">
   <mp-page-header [title]="t('title')" icon="fa-solid fa-users" [actions]="headerActions()"></mp-page-header>
 
-  <p-card>
-    <p-table
+  <mp-card>
+    <mp-table
       #dt
       [lazy]="true"
       [paginator]="true"
       [first]="initialState.first"
       [rows]="initialState.rows"
-      [sortField]="initialState.sortField"
+      [sortField]="initialState.sortField ?? null"
       [sortOrder]="initialState.sortOrder ?? 1"
       [totalRecords]="totalRecords()"
       [loading]="loading()"
       [value]="rows()"
-      (onLazyLoad)="load($event)"
+      (lazyLoad)="load($event)"
       [filterDelay]="300"
       [filters]="initialFilters"
       [globalFilterFields]="['username', 'email', 'personFullName']"
@@ -21,12 +21,12 @@
       selectionMode="single"
       [scrollable]="true">
 
-      <ng-template pTemplate="caption">
+      <ng-template mpTableCaption>
         <div class="flex items-center justify-end">
           <span class="relative w-full sm:w-80">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
             <input
-              pInputText
+              mpInput
               type="text"
               class="w-full pl-9 pr-9"
               [placeholder]="t('searchPlaceholder')"
@@ -45,9 +45,9 @@
         </div>
       </ng-template>
 
-      <ng-template pTemplate="header">
+      <ng-template mpTableHeader>
         <tr>
-          <th pSortableColumn="username">{{ t('columns.username') }} <p-sortIcon field="username"></p-sortIcon></th>
+          <th mpSortable="username">{{ t('columns.username') }} <mp-sort-icon field="username"></mp-sort-icon></th>
           <th>{{ t('columns.person') }}</th>
           <th style="width: 9rem">{{ t('columns.portal') }}</th>
           <th style="width: 8rem">{{ t('columns.status') }}</th>
@@ -55,8 +55,8 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-user>
-        <tr [pSelectableRow]="user" class="cursor-pointer" (click)="onRowClick($event, user)">
+      <ng-template mpTableBody let-user>
+        <tr class="cursor-pointer" (click)="onRowClick($event, user)">
           <td>
             <a [routerLink]="['/staff/system/users', user.id]" class="font-medium hover:underline">{{ user.username }}</a>
           </td>
@@ -75,14 +75,13 @@
             <div class="flex items-center justify-end gap-1">
               @if (canEdit()) {
                 <span [pTooltip]="user.isSystem ? t('protectedHint') : ''" tooltipPosition="top">
-                  <p-button
-                    [label]="t('delete')"
-                    icon="fa-solid fa-trash-can"
-                    severity="danger"
-                    size="small"
-                    [text]="true"
+                  <button
+                    mpButton
+                    variant="ghost"
+                    size="sm"
+                    class="text-destructive hover:text-destructive"
                     [disabled]="user.isSystem"
-                    (click)="deleteUser(user)"></p-button>
+                    (click)="deleteUser(user)"><i class="fa-solid fa-trash-can"></i> {{ t('delete') }}</button>
                 </span>
               }
             </div>
@@ -90,34 +89,23 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="emptymessage">
+      <ng-template mpTableEmpty>
         <tr>
           <td [attr.colspan]="5" class="p-4">
             @if (hasFilter()) {
               <mp-empty-state icon="fa-solid fa-magnifying-glass" [message]="t('emptyFiltered')">
-                <p-button
-                  [label]="t('clearSearch')"
-                  icon="fa-solid fa-xmark"
-                  severity="secondary"
-                  size="small"
-                  [outlined]="true"
-                  (click)="clearSearch()"></p-button>
+                <button mpButton variant="outline" size="sm" (click)="clearSearch()"><i class="fa-solid fa-xmark"></i> {{ t('clearSearch') }}</button>
               </mp-empty-state>
             } @else {
               <mp-empty-state icon="fa-solid fa-users" [message]="t('emptyNone')">
                 @if (canEdit()) {
-                  <p-button
-                    [label]="t('new')"
-                    icon="fa-solid fa-plus"
-                    severity="primary"
-                    size="small"
-                    (click)="openCreate()"></p-button>
+                  <button mpButton size="sm" (click)="openCreate()"><i class="fa-solid fa-plus"></i> {{ t('new') }}</button>
                 }
               </mp-empty-state>
             }
           </td>
         </tr>
       </ng-template>
-    </p-table>
-  </p-card>
+    </mp-table>
+  </mp-card>
 </ng-container>

@@ -7,10 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { TableModule } from 'primeng/table';
-import { Skeleton } from 'primeng/skeleton';
+import { MpButton, MpCard, MpSkeleton, MpTable, MpTableHeader, MpTableBody } from '@myportal/ui';
 import { Tag } from 'primeng/tag';
 import { Tooltip } from 'primeng/tooltip';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -33,10 +30,12 @@ import { AcademicYearWizardDialog } from '../academic-year-wizard-dialog/academi
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
-    Button,
-    Card,
-    TableModule,
-    Skeleton,
+    MpButton,
+    MpCard,
+    MpSkeleton,
+    MpTable,
+    MpTableHeader,
+    MpTableBody,
     Tag,
     Tooltip,
     PageHeader,

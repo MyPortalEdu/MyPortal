@@ -12,19 +12,19 @@
     (openExisting)="onOpenExisting($event)"
   ></mp-staff-member-create-dialog>
 
-  <p-card>
-    <p-table
+  <mp-card>
+    <mp-table
       #dt
       [lazy]="true"
       [paginator]="true"
       [first]="initialState.first"
       [rows]="initialState.rows"
-      [sortField]="initialState.sortField"
+      [sortField]="initialState.sortField ?? null"
       [sortOrder]="initialState.sortOrder ?? 1"
       [totalRecords]="totalRecords()"
       [loading]="loading()"
       [value]="rows()"
-      (onLazyLoad)="load($event)"
+      (lazyLoad)="load($event)"
       [filterDelay]="300"
       [filters]="initialFilters"
       [globalFilterFields]="['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code']"
@@ -32,20 +32,20 @@
       selectionMode="single"
       [scrollable]="true">
 
-      <ng-template pTemplate="caption">
+      <ng-template mpTableCaption>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p-select
+          <mp-select
             [options]="statusOptions()"
             optionLabel="label"
             optionValue="value"
             [ngModel]="statusFilter()"
             (ngModelChange)="onStatusFilterChange($event)"
-            styleClass="w-full sm:w-44"
-            [ariaLabel]="t('staff-members.statusFilter.label')"></p-select>
+            class="w-full sm:w-44"
+            [ariaLabel]="t('staff-members.statusFilter.label')"></mp-select>
           <span class="relative w-full sm:w-80">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
             <input
-              pInputText
+              mpInput
               type="text"
               class="w-full pl-9 pr-9"
               [placeholder]="t('staff-members.searchPlaceholder')"
@@ -64,26 +64,26 @@
         </div>
       </ng-template>
 
-      <ng-template pTemplate="header">
+      <ng-template mpTableHeader>
         <tr>
           <th style="width: 4rem"></th>
-          <th pSortableColumn="lastName">
+          <th mpSortable="lastName">
             {{ t('staff-members.columns.name') }}
-            <p-sortIcon field="lastName"></p-sortIcon>
+            <mp-sort-icon field="lastName"></mp-sort-icon>
           </th>
-          <th pSortableColumn="code" style="width: 12rem">
+          <th mpSortable="code" style="width: 12rem">
             {{ t('staff-members.columns.code') }}
-            <p-sortIcon field="code"></p-sortIcon>
+            <mp-sort-icon field="code"></mp-sort-icon>
           </th>
-          <th pSortableColumn="status" style="width: 9rem">
+          <th mpSortable="status" style="width: 9rem">
             {{ t('staff-members.columns.status') }}
-            <p-sortIcon field="status"></p-sortIcon>
+            <mp-sort-icon field="status"></mp-sort-icon>
           </th>
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-row>
-        <tr [pSelectableRow]="row" class="cursor-pointer" (click)="onRowClick($event, row)">
+      <ng-template mpTableBody let-row>
+        <tr class="cursor-pointer" (click)="onRowClick($event, row)">
           <td>
             <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
               {{ initials(row) }}
@@ -106,36 +106,25 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="emptymessage">
+      <ng-template mpTableEmpty>
         <tr>
           <td [attr.colspan]="4" class="p-4">
             @if (hasFilter()) {
               <mp-empty-state
                 icon="fa-solid fa-magnifying-glass"
                 [message]="t('staff-members.emptyFiltered')">
-                <p-button
-                  [label]="t('staff-members.clearFilters')"
-                  icon="fa-solid fa-xmark"
-                  severity="secondary"
-                  size="small"
-                  [outlined]="true"
-                  (click)="clearFilters()"></p-button>
+                <button mpButton variant="outline" size="sm" (click)="clearFilters()"><i class="fa-solid fa-xmark"></i> {{ t('staff-members.clearFilters') }}</button>
               </mp-empty-state>
             } @else {
               <mp-empty-state icon="fa-solid fa-id-badge" [message]="t('staff-members.emptyNone')">
                 @if (canCreate()) {
-                  <p-button
-                    [label]="t('staff-members.new')"
-                    icon="fa-solid fa-plus"
-                    severity="primary"
-                    size="small"
-                    (click)="createOpen.set(true)"></p-button>
+                  <button mpButton size="sm" (click)="createOpen.set(true)"><i class="fa-solid fa-plus"></i> {{ t('staff-members.new') }}</button>
                 }
               </mp-empty-state>
             }
           </td>
         </tr>
       </ng-template>
-    </p-table>
-  </p-card>
+    </mp-table>
+  </mp-card>
 </ng-container>

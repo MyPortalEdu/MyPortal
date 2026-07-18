@@ -10,11 +10,8 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
 import { InputNumber } from 'primeng/inputnumber';
+import { MpButton, MpCheckbox, MpDialog, MpInput } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../../../shared/services/bulletins-data.service';
@@ -122,7 +119,7 @@ export const CATEGORY_COLOURS: readonly string[] = [
 @Component({
   selector: 'mp-bulletin-category-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, Checkbox, Dialog, InputText, InputNumber, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, MpButton, MpCheckbox, MpDialog, MpInput, InputNumber, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('bulletin-settings')],
   templateUrl: './bulletin-category-form-dialog.html',
 })

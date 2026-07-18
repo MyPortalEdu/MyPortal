@@ -7,28 +7,28 @@
 @if (showSchoolSetup()) {
   <mp-callout class="block mb-4" [title]="t('pages.home.schoolSetup.title')">
     {{ t('pages.home.schoolSetup.body') }}
-    <p-button
+    <a
+      mpButton
+      size="sm"
       calloutAction
-      [label]="t('pages.home.schoolSetup.action')"
-      icon="fa-solid fa-arrow-right"
-      iconPos="right"
-      size="small"
       routerLink="/staff/school/details">
-    </p-button>
+      {{ t('pages.home.schoolSetup.action') }}
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
   </mp-callout>
 }
 
 @if (showAcademicYearSetup()) {
   <mp-callout class="block mb-4" [title]="t('pages.home.academicYearSetup.title')">
     {{ t('pages.home.academicYearSetup.body') }}
-    <p-button
+    <a
+      mpButton
+      size="sm"
       calloutAction
-      [label]="t('pages.home.academicYearSetup.action')"
-      icon="fa-solid fa-arrow-right"
-      iconPos="right"
-      size="small"
       routerLink="/staff/curriculum/academic-years">
-    </p-button>
+      {{ t('pages.home.academicYearSetup.action') }}
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
   </mp-callout>
 }
 

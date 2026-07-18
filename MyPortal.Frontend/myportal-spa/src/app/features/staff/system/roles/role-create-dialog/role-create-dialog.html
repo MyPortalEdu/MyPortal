@@ -1,15 +1,11 @@
 <ng-container *transloco="let t; prefix: 'roles'">
-  <p-dialog
+  <mp-dialog
     [visible]="visible()"
     [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
-    [dismissableMask]="false"
+    [dismissable]="false"
     [closeOnEscape]="!isDirty()"
-    [style]="{ width: 'min(32rem, 94vw)' }"
-    styleClass="mp-flush-dialog"
-    [showHeader]="false"
-    (onHide)="onHide()">
+    panelClass="w-[min(32rem,94vw)]"
+    (closed)="onHide()">
 
     <div class="flex items-center justify-between p-4 border-b border-surface">
       <h3 class="text-base font-semibold m-0">{{ t('form.titleCreate') }}</h3>
@@ -21,18 +17,17 @@
     <div class="p-4 flex flex-col gap-4">
       <div class="flex flex-col gap-1">
         <label class="text-xs font-medium text-muted-color">{{ t('form.name') }}</label>
-        <input pInputText [ngModel]="name()" (ngModelChange)="name.set($event)" [placeholder]="t('form.namePlaceholder')" />
+        <input mpInput [ngModel]="name()" (ngModelChange)="name.set($event)" [placeholder]="t('form.namePlaceholder')" />
       </div>
 
       <div class="flex flex-col gap-1">
         <label class="text-xs font-medium text-muted-color">{{ t('form.audience') }}</label>
-        <p-select
+        <mp-select
           [ngModel]="userType()"
           (ngModelChange)="userType.set($event)"
           [options]="audienceOptions()"
           optionLabel="label"
-          optionValue="value"
-          appendTo="body"></p-select>
+          optionValue="value"></mp-select>
         <small class="text-muted-color">{{ t('form.audienceHint') }}</small>
       </div>
 
@@ -40,13 +35,11 @@
     </div>
 
     <div class="flex items-center justify-end gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
-      <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
-      <p-button
-        [label]="t('form.create')"
-        icon="fa-solid fa-check"
-        [disabled]="!isValid()"
-        [loading]="submitting()"
-        (click)="save()"></p-button>
+      <button mpButton variant="ghost" (click)="onCancel()">{{ 'common.cancel' | transloco }}</button>
+      <button mpButton [disabled]="!isValid() || submitting()" (click)="save()">
+        <i class="fa-solid" [class.fa-check]="!submitting()" [class.fa-spinner]="submitting()" [class.fa-spin]="submitting()"></i>
+        {{ t('form.create') }}
+      </button>
     </div>
-  </p-dialog>
+  </mp-dialog>
 </ng-container>

@@ -1,16 +1,11 @@
 <ng-container *transloco="let t; prefix: 'academic-years.wizard'">
-<p-dialog
+<mp-dialog
   [visible]="visible()"
   (visibleChange)="$event ? null : onHide()"
   [modal]="true"
-  [closable]="false"
   [closeOnEscape]="false"
-  [dismissableMask]="false"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: 'min(64rem, 95vw)' }"
-  styleClass="mp-flush-dialog"
-  [showHeader]="false">
+  [dismissable]="false"
+  panelClass="w-[min(64rem,95vw)]">
 
   <div class="flex items-center justify-between p-4 border-b border-surface">
     <h3 class="text-base font-semibold m-0">
@@ -119,43 +114,27 @@
        dialog's bottom edge (needs the mp-flush-dialog styleClass above to
        cancel the default content padding). -->
   <div class="flex items-center justify-between gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
-    <p-button
-      [label]="readOnly() ? ('common.close' | transloco) : t('cancel')"
-      severity="secondary"
-      [text]="true"
+    <button mpButton
+      variant="ghost"
       [disabled]="submitting()"
-      (click)="onCancel()">
-    </p-button>
+      (click)="onCancel()">{{ readOnly() ? ('common.close' | transloco) : t('cancel') }}</button>
 
     <div class="flex items-center gap-2">
-      <p-button
-        [label]="t('back')"
-        icon="fa-solid fa-arrow-left"
-        severity="secondary"
+      <button mpButton
+        variant="secondary"
         [disabled]="currentStep() === 0 || submitting()"
-        (click)="back()">
-      </p-button>
+        (click)="back()"><i class="fa-solid fa-arrow-left"></i> {{ t('back') }}</button>
 
       @if (!isLastStep()) {
-        <p-button
-          [label]="t('next')"
-          icon="fa-solid fa-arrow-right"
-          iconPos="right"
-          severity="primary"
+        <button mpButton
           [disabled]="!canGoNext() || submitting() || loading()"
-          (click)="next()">
-        </p-button>
+          (click)="next()"><i class="fa-solid fa-arrow-right"></i> {{ t('next') }}</button>
       } @else if (!readOnly()) {
-        <p-button
-          [label]="isEditMode() ? t('save') : t('create')"
-          icon="fa-solid fa-check"
-          severity="primary"
-          [disabled]="!canAdvance() || submitting() || loading()"
-          [loading]="submitting()"
-          (click)="save()">
-        </p-button>
+        <button mpButton
+          [disabled]="(!canAdvance() || submitting() || loading()) || submitting()"
+          (click)="save()"><i class="fa-solid" [class.fa-check]="!submitting()" [class.fa-spinner]="submitting()" [class.fa-spin]="submitting()"></i> {{ isEditMode() ? t('save') : t('create') }}</button>
       }
     </div>
   </div>
-</p-dialog>
+</mp-dialog>
 </ng-container>
