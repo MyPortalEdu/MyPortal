@@ -77,7 +77,7 @@
           @for (holiday of model().schoolHolidays; track $index) {
             <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface text-sm">
               <span class="font-medium flex-1">{{ holiday.name }}</span>
-              <span class="text-xs uppercase tracking-wide text-muted-color px-2 py-0.5 rounded bg-surface-100">
+              <span class="text-xs uppercase tracking-wide text-muted-color px-2 py-0.5 rounded bg-emphasis">
                 {{ holidayTypeLabel(holiday.type) }}
               </span>
               <span class="text-muted-color">

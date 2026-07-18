@@ -43,14 +43,23 @@ public static class SystemSeedVerifier
             {
                 missing.Add($"  - {description}: expected {table}.Id = {id}");
             }
-        }
 
-        if (missing.Count > 0)
-        {
-            throw new InvalidOperationException(
-                "The database is missing rows that this build references by well-known id. It is " +
-                "most likely behind on migrations — run the MyPortal.Migrations project against it." +
-                Environment.NewLine + string.Join(Environment.NewLine, missing));
+            // System Administrator is resolved by name (AuthSeeder); its id varies across databases.
+            var normalized = SystemRoles.SystemAdministratorRoleName.ToUpperInvariant();
+            var sysAdmin = await conn.ExecuteScalarAsync<int>(
+                "SELECT COUNT(1) FROM dbo.Roles WHERE NormalizedName = @n", new { n = normalized });
+            if (sysAdmin == 0)
+            {
+                missing.Add($"  - the {SystemRoles.SystemAdministratorRoleName} role (expected by NormalizedName)");
+            }
+
+            if (missing.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "The database is missing rows that this build references by well-known id. It is " +
+                    "most likely behind on migrations — run the MyPortal.Migrations project against it." +
+                    Environment.NewLine + string.Join(Environment.NewLine, missing));
+            }
         }
     }
 }

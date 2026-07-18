@@ -14,11 +14,13 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
-import { ProgressSpinner } from 'primeng/progressspinner';
 import { firstValueFrom } from 'rxjs';
-import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
+import { Loading } from '../../../../shared/components/loading/loading';
+import { SectionHeader } from '../../../../shared/components/section-header/section-header';
+import { Field } from '../../../../shared/components/field/field';
 import { HeaderAction } from '../../../../shared/types/header-action.type';
 import { CanComponentDeactivate } from '../../../../core/guards/can-deactivate.guard';
 import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
@@ -85,12 +87,13 @@ type FormSnapshot = {
     Select,
     Checkbox,
     DatePicker,
-    ProgressSpinner,
     PageHeader,
+    Loading,
+    SectionHeader,
+    Field,
     LocalAuthorityPicker,
     StaffMemberPicker,
     TranslocoDirective,
-    TranslocoPipe,
   ],
   providers: [provideTranslocoScope('school-details')],
   templateUrl: './school-details-page.html',
@@ -199,7 +202,7 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     this.canEdit()
       ? [{
           label: this.transloco.translate('school-details.save'),
-          icon: 'fa-solid fa-floppy-disk',
+          icon: 'fa-solid fa-check',
           disabled: !this.isValid() || !this.isDirty(),
           loading: this.saving(),
           command: () => this.save(),

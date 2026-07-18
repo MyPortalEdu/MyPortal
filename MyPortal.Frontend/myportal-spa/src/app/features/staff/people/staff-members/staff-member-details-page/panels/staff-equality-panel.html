@@ -1,89 +1,74 @@
 <ng-container *transloco="let t">
   @if (loading() && !equality()) {
-    <div class="flex justify-center py-10">
-      <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
-    </div>
+    <mp-loading></mp-loading>
   } @else if (equality()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.equalityDetails') }}</h3>
     <p class="text-sm text-muted-color mb-4">{{ t('staff-members.equality.hint') }}</p>
 
     <div class="flex flex-col gap-6">
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-globe text-muted-color"></i>
-          {{ t('staff-members.equality.backgroundHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-globe" [title]="t('staff-members.equality.backgroundHeading')"></mp-section-header>
         <div class="grid gap-4 md:grid-cols-2">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="ethnicity">{{ t('staff-members.equality.ethnicity') }}</label>
+          <mp-field [label]="t('staff-members.equality.ethnicity')" for="ethnicity">
             @if (editing()) {
               <mp-lookup-select inputId="ethnicity" [options]="ethnicities()" [value]="ethnicityId()" (valueChange)="ethnicityId.set($event)"></mp-lookup-select>
             } @else {
               <span>{{ lookupLabel(ethnicities(), ethnicityId()) }}</span>
             }
-          </div>
+          </mp-field>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="nationality">{{ t('staff-members.equality.nationality') }}</label>
+          <mp-field [label]="t('staff-members.equality.nationality')" for="nationality">
             @if (editing()) {
               <mp-lookup-select inputId="nationality" [options]="nationalities()" [value]="nationalityId()" (valueChange)="nationalityId.set($event)"></mp-lookup-select>
             } @else {
               <span>{{ lookupLabel(nationalities(), nationalityId()) }}</span>
             }
-          </div>
+          </mp-field>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="firstLanguage">{{ t('staff-members.equality.firstLanguage') }}</label>
+          <mp-field [label]="t('staff-members.equality.firstLanguage')" for="firstLanguage">
             @if (editing()) {
               <mp-lookup-select inputId="firstLanguage" [options]="languages()" [value]="firstLanguageId()" (valueChange)="firstLanguageId.set($event)"></mp-lookup-select>
             } @else {
               <span>{{ lookupLabel(languages(), firstLanguageId()) }}</span>
             }
-          </div>
+          </mp-field>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="religion">{{ t('staff-members.equality.religion') }}</label>
+          <mp-field [label]="t('staff-members.equality.religion')" for="religion">
             @if (editing()) {
               <mp-lookup-select inputId="religion" [options]="religions()" [value]="religionId()" (valueChange)="religionId.set($event)"></mp-lookup-select>
             } @else {
               <span>{{ lookupLabel(religions(), religionId()) }}</span>
             }
-          </div>
+          </mp-field>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="sexualOrientation">{{ t('staff-members.equality.sexualOrientation') }}</label>
+          <mp-field [label]="t('staff-members.equality.sexualOrientation')" for="sexualOrientation">
             @if (editing()) {
               <mp-lookup-select inputId="sexualOrientation" [options]="sexualOrientations()" [value]="sexualOrientationId()" (valueChange)="sexualOrientationId.set($event)"></mp-lookup-select>
             } @else {
               <span>{{ lookupLabel(sexualOrientations(), sexualOrientationId()) }}</span>
             }
-          </div>
+          </mp-field>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="genderIdentity">{{ t('staff-members.equality.genderIdentity') }}</label>
+          <mp-field [label]="t('staff-members.equality.genderIdentity')" for="genderIdentity">
             @if (editing()) {
               <mp-lookup-select inputId="genderIdentity" [options]="genderIdentities()" [value]="genderIdentityId()" (valueChange)="genderIdentityId.set($event)"></mp-lookup-select>
             } @else {
               <span>{{ lookupLabel(genderIdentities(), genderIdentityId()) }}</span>
             }
-          </div>
+          </mp-field>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="maritalStatus">{{ t('staff-members.equality.maritalStatus') }}</label>
+          <mp-field [label]="t('staff-members.equality.maritalStatus')" for="maritalStatus">
             @if (editing()) {
               <mp-lookup-select inputId="maritalStatus" [options]="maritalStatuses()" [value]="maritalStatusId()" (valueChange)="maritalStatusId.set($event)"></mp-lookup-select>
             } @else {
               <span>{{ lookupLabel(maritalStatuses(), maritalStatusId()) }}</span>
             }
-          </div>
+          </mp-field>
         </div>
       </section>
 
       <section>
-        <h4 class="flex items-center gap-2 text-sm font-semibold mb-3 pb-2 border-b border-surface-200 dark:border-surface-700">
-          <i class="fa-solid fa-wheelchair text-muted-color"></i>
-          {{ t('staff-members.equality.disabilityHeading') }}
-        </h4>
+        <mp-section-header icon="fa-solid fa-wheelchair" [title]="t('staff-members.equality.disabilityHeading')"></mp-section-header>
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-1">
             @if (editing()) {
@@ -99,8 +84,7 @@
 
           <!-- Disability type and details only apply once a disability is declared. -->
           @if (hasDisability()) {
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium" for="disabilities">{{ t('staff-members.equality.disabilities') }}</label>
+            <mp-field [label]="t('staff-members.equality.disabilities')" for="disabilities">
               @if (editing()) {
                 <p-multiselect
                   inputId="disabilities"
@@ -118,13 +102,12 @@
               } @else {
                 <span>{{ selectedLabels(disabilities(), disabilityIds()) }}</span>
               }
-            </div>
+            </mp-field>
 
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-medium" for="disabilityDetails">{{ t('staff-members.equality.details') }}</label>
+            <mp-field [label]="t('staff-members.equality.details')" for="disabilityDetails">
               @if (editing()) {
                 <textarea
-                  pInputTextarea
+                  pTextarea
                   id="disabilityDetails"
                   rows="3"
                   [placeholder]="t('staff-members.equality.detailsPlaceholder')"
@@ -133,7 +116,7 @@
               } @else {
                 <span class="whitespace-pre-wrap">{{ disabilityDetails() || '—' }}</span>
               }
-            </div>
+            </mp-field>
           }
         </div>
       </section>

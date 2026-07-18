@@ -1,7 +1,10 @@
 {
   "title": "Staff Members",
-  "new": "New Staff Member",
-  "empty": "No staff members found.",
+  "new": "New",
+  "emptyNone": "No staff members yet.",
+  "emptyFiltered": "No staff members match your search or filter.",
+  "clearSearch": "Clear Search",
+  "clearFilters": "Clear Filters",
   "searchPlaceholder": "Search by name or code…",
   "loadError": "Couldn't load staff members",
   "loadHeaderError": "Couldn't load staff member profile",
@@ -95,7 +98,8 @@
     "hint": "Email addresses, phone numbers, and addresses for this staff member.",
     "emailsHeading": "Email Addresses",
     "phonesHeading": "Phone Numbers",
-    "addressesHeading": "Addresses"
+    "addressesHeading": "Addresses",
+    "addressesHint": "Address changes save immediately — they aren't part of Save or Cancel above."
   },
   "equality": {
     "hint": "Special-category equality data. Visible to HR and the staff member themselves; only HR can edit it.",

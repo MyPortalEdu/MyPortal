@@ -2,12 +2,7 @@
 
 namespace MyPortal.Auth.Requirements;
 
-public class UserTypeRequirement : IAuthorizationRequirement
+public class UserTypeRequirement(string[] allowed) : IAuthorizationRequirement
 {
-    public string[] Allowed { get; }
-    
-    public UserTypeRequirement(string[] allowed)
-    {
-        Allowed = allowed;
-    }
+    public string[] Allowed { get; } = allowed;
 }

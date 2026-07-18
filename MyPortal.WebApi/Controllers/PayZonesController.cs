@@ -10,23 +10,19 @@ using MyPortal.Services.Interfaces.Lookups;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Read-only catalogue of pay zones — used by the school-details dropdown.</summary>
-public sealed class PayZonesController : BaseApiController
+public sealed class PayZonesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<PayZonesController> logger,
+    ILookupService lookupService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ILookupService _lookupService;
-
-    public PayZonesController(ProblemDetailsFactory problemFactory, ILogger<PayZonesController> logger,
-        ILookupService lookupService) : base(problemFactory, logger)
-    {
-        _lookupService = lookupService;
-    }
-
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.ViewAgencies)]
     [ProducesResponseType(typeof(IList<LookupResponse>), 200)]
     public async Task<IActionResult> GetPayZones()
     {
-        var result = await _lookupService.GetPayZonesAsync(CancellationToken);
+        var result = await lookupService.GetPayZonesAsync(CancellationToken);
         return Ok(result);
     }
 }

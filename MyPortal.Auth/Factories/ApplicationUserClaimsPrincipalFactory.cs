@@ -5,14 +5,13 @@ using MyPortal.Auth.Models;
 
 namespace MyPortal.Auth.Factories
 {
-    public class ApplicationUserClaimsPrincipalFactory : UserClaimsPrincipalFactory<ApplicationUser, ApplicationRole>
-    {
-        public ApplicationUserClaimsPrincipalFactory(UserManager<ApplicationUser> userManager,
-            RoleManager<ApplicationRole> roleManager, IOptions<IdentityOptions> options) : base(userManager,
+    public class ApplicationUserClaimsPrincipalFactory(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager,
+        IOptions<IdentityOptions> options)
+        : UserClaimsPrincipalFactory<ApplicationUser, ApplicationRole>(userManager,
             roleManager, options)
-        {
-        }
-
+    {
         protected override async Task<ClaimsIdentity> GenerateClaimsAsync(ApplicationUser user)
         {
             var identity = await base.GenerateClaimsAsync(user);

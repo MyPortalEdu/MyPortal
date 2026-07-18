@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class BulletinCategoryRepository : EntityRepository<BulletinCategory>, IBulletinCategoryRepository
-{
-    public BulletinCategoryRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-}
+public class BulletinCategoryRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<BulletinCategory>(factory, authorizationService), IBulletinCategoryRepository;

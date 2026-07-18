@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class ContractTypeRepository : EntityRepository<ContractType>, IContractTypeRepository
-{
-    public ContractTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class ContractTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<ContractType>(factory, authorizationService), IContractTypeRepository;

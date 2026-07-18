@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Data;
+using FluentValidation;
+using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
@@ -16,22 +19,15 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Pastoral;
 
-public class RegGroupService : BaseService, IRegGroupService
+public class RegGroupService(
+    IAuthorizationService authorizationService,
+    ILogger<RegGroupService> logger,
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IRegGroupRepository regGroupRepository,
+    IYearGroupRepository yearGroupRepository,
+    IStudentGroupService studentGroupService)
+    : BaseService(authorizationService, logger), IRegGroupService
 {
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-    private readonly IRegGroupRepository _regGroupRepository;
-    private readonly IStudentGroupService _studentGroupService;
-
-    public RegGroupService(IAuthorizationService authorizationService, ILogger<RegGroupService> logger,
-        IUnitOfWorkFactory unitOfWorkFactory, IRegGroupRepository regGroupRepository,
-        IStudentGroupService studentGroupService) : base(
-        authorizationService, logger)
-    {
-        _unitOfWorkFactory = unitOfWorkFactory;
-        _regGroupRepository = regGroupRepository;
-        _studentGroupService = studentGroupService;
-    }
-
     public async Task<PageResult<RegGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
         FilterOptions? filter = null, SortOptions? sort = null,
         PageOptions? paging = null, CancellationToken cancellationToken = default)
@@ -39,7 +35,7 @@ public class RegGroupService : BaseService, IRegGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure, cancellationToken);
 
         var result =
-            await _regGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging, cancellationToken);
+            await regGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging, cancellationToken);
 
         return result;
     }
@@ -48,7 +44,7 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure, cancellationToken);
         
-        var result = await _regGroupRepository.GetDetailsByIdAsync(regGroupId, cancellationToken);
+        var result = await regGroupRepository.GetDetailsByIdAsync(regGroupId, cancellationToken);
 
         if (result == null)
         {
@@ -62,9 +58,12 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure, cancellationToken);
         
-        return await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        return await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
-            var studentGroupId = await _studentGroupService.CreateAsync(model.AcademicYearId, ToCore(model), model.Supervisors, cancellationToken, uow);
+            await EnsureYearGroupInAcademicYearAsync(model.YearGroupId, model.AcademicYearId,
+                cancellationToken, uow.Transaction);
+
+            var studentGroupId = await studentGroupService.CreateAsync(model.AcademicYearId, ToCore(model), model.Supervisors, cancellationToken, uow);
 
             var regGroup = new RegGroup
             {
@@ -74,7 +73,7 @@ public class RegGroupService : BaseService, IRegGroupService
                 RoomId = model.RoomId
             };
 
-            await _regGroupRepository.InsertAsync(regGroup, cancellationToken, uow.Transaction);
+            await regGroupRepository.InsertAsync(regGroup, cancellationToken, uow.Transaction);
 
             return regGroup.Id;
 
@@ -85,17 +84,20 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure, cancellationToken);
         
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             var regGroup = await GetRegGroupAsync(regGroupId, cancellationToken);
 
-            await _studentGroupService.UpdateAsync(regGroup.StudentGroupId, ToCore(model), model.Supervisors,
+            await EnsureYearGroupInAcademicYearAsync(model.YearGroupId, model.AcademicYearId,
+                cancellationToken, uow.Transaction);
+
+            await studentGroupService.UpdateAsync(regGroup.StudentGroupId, ToCore(model), model.Supervisors,
                 cancellationToken, uow);
-            
+
             regGroup.RoomId = model.RoomId;
             regGroup.YearGroupId = model.YearGroupId;
             
-            await _regGroupRepository.UpdateAsync(regGroup, cancellationToken, uow.Transaction);
+            await regGroupRepository.UpdateAsync(regGroup, cancellationToken, uow.Transaction);
         }, cancellationToken);
     }
 
@@ -103,19 +105,39 @@ public class RegGroupService : BaseService, IRegGroupService
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.School.EditPastoralStructure, cancellationToken);
         
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             var regGroup = await GetRegGroupAsync(regGroupId, cancellationToken);
 
-            await _regGroupRepository.DeleteAsync(regGroupId, cancellationToken, transaction: uow.Transaction);
+            await regGroupRepository.DeleteAsync(regGroupId, cancellationToken, transaction: uow.Transaction);
 
-            await _studentGroupService.DeleteAsync(regGroup.StudentGroupId, cancellationToken, uow);
+            await studentGroupService.DeleteAsync(regGroup.StudentGroupId, cancellationToken, uow);
         }, cancellationToken);
     }
     
+    // A reg group's year group must live in the same academic year as the reg group. Without this
+    // a reg group could reference a year group from a different (e.g. prior) academic year, which
+    // the DB FK alone can't prevent.
+    private async Task EnsureYearGroupInAcademicYearAsync(Guid yearGroupId, Guid academicYearId,
+        CancellationToken cancellationToken, IDbTransaction? transaction)
+    {
+        var yearGroupAcademicYearId = await yearGroupRepository.GetAcademicYearIdAsync(yearGroupId,
+                                          cancellationToken, transaction)
+                                      ?? throw new NotFoundException("Year group not found.");
+
+        if (yearGroupAcademicYearId != academicYearId)
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure(nameof(RegGroupUpsertRequest.YearGroupId),
+                    "The selected year group belongs to a different academic year.")
+            });
+        }
+    }
+
     private async Task<RegGroup> GetRegGroupAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await _regGroupRepository.GetByIdAsync(id, cancellationToken)
+        return await regGroupRepository.GetByIdAsync(id, cancellationToken)
                ?? throw new NotFoundException("Year group not found.");
     }
     

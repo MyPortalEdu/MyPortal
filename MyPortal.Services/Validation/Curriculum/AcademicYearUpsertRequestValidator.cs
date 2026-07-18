@@ -38,6 +38,14 @@ public class AcademicYearUpsertRequestValidator : AbstractValidator<AcademicYear
 
         RuleForEach(x => x.SchoolHolidays).SetValidator(new SchoolHolidayUpsertRequestValidator());
 
+        // Holidays must fall within the academic year's span. The year has no explicit start/end —
+        // its terms define its bounds — so a holiday is in range when it sits between the earliest
+        // term start and the latest term end (half-terms, Christmas and Easter breaks all do).
+        RuleFor(x => x.SchoolHolidays)
+            .Must((model, holidays) => AllHolidaysWithinTermSpan(model.AcademicTerms, holidays))
+            .WithMessage("School holidays must fall within the academic year's term dates.")
+            .When(x => x.AcademicTerms is { Length: > 0 } && x.SchoolHolidays is { Length: > 0 });
+
         // Periods are required, but the caller supplies them in one of two ways: by copying from
         // a prior year, or by listing them inline. Exactly one of those must be set — both is
         // ambiguous (the service silently picks copy), neither leaves the year unschedulable.
@@ -86,6 +94,15 @@ public class AcademicYearUpsertRequestValidator : AbstractValidator<AcademicYear
             if (am != 1 || pm != 1) return false;
         }
         return true;
+    }
+
+    private static bool AllHolidaysWithinTermSpan(AcademicTermUpsertRequest[] terms,
+        SchoolHolidayUpsertRequest[] holidays)
+    {
+        var yearStart = terms.Min(t => t.StartDate);
+        var yearEnd = terms.Max(t => t.EndDate);
+
+        return holidays.All(h => h.StartDate >= yearStart && h.EndDate <= yearEnd);
     }
 
     private static bool NotOverlap(AcademicTermUpsertRequest[] terms)

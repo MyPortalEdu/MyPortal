@@ -8,6 +8,7 @@
     "edit": "Edit",
     "copy": "Copy",
     "copied": "Copied",
+    "retry": "Try again",
     "remove": "Remove",
     "select": "Select…",
     "yes": "Yes",
@@ -20,6 +21,12 @@
     "new": "New",
     "discardChanges": "Discard changes?",
     "discardConfirm": "You have unsaved changes. Discard them?",
+    "validation": {
+      "required": "This field is required.",
+      "missingTitle": "Some required details are missing",
+      "missingBody": "Check the highlighted fields, then try saving again.",
+      "missingBlocked": "Save stays unavailable until the highlighted fields are filled in."
+    },
     "gender": {
       "select": "Select gender",
       "M": "Male",
@@ -112,6 +119,12 @@
       "firstName": "First name",
       "lastName": "Last name",
       "empty": "No staff members found."
+    },
+    "personPicker": {
+      "pick": "Link a person…",
+      "searchPlaceholder": "Search by name…",
+      "hint": "Type at least 2 characters to search.",
+      "empty": "No matching people found."
     }
   },
   "topbar": {
@@ -149,6 +162,7 @@
   "nav": {
     "system": "System",
     "users": "Users",
+    "roles": "Roles",
     "bulletinSettings": "Bulletin Settings",
     "school": "School",
     "schoolDetails": "School Details",

@@ -10,23 +10,19 @@ using MyPortal.Services.Interfaces.Lookups;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Read-only catalogue of school types — used by the school-details dropdown.</summary>
-public sealed class SchoolTypesController : BaseApiController
+public sealed class SchoolTypesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<SchoolTypesController> logger,
+    ILookupService lookupService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ILookupService _lookupService;
-
-    public SchoolTypesController(ProblemDetailsFactory problemFactory, ILogger<SchoolTypesController> logger,
-        ILookupService lookupService) : base(problemFactory, logger)
-    {
-        _lookupService = lookupService;
-    }
-
     [HttpGet]
     [UserType(UserType.Staff)]
     [Permission(PermissionMode.RequireAny, Permissions.Agencies.ViewAgencies)]
     [ProducesResponseType(typeof(IList<LookupResponse>), 200)]
     public async Task<IActionResult> GetSchoolTypes()
     {
-        var result = await _lookupService.GetSchoolTypesAsync(CancellationToken);
+        var result = await lookupService.GetSchoolTypesAsync(CancellationToken);
         return Ok(result);
     }
 }

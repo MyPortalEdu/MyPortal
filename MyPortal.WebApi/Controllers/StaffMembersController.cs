@@ -18,40 +18,22 @@ namespace MyPortal.WebApi.Controllers;
 /// <remarks>
 /// Use <c>GET /api/people/staff</c> for the lightweight staff picker.
 /// </remarks>
-public sealed class StaffMembersController : BaseDirectoryEntityController<Person>
+public sealed class StaffMembersController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<StaffMembersController> logger,
+    IStaffMemberService staffMemberService,
+    IStaffContactService staffContactService,
+    IStaffAddressService staffAddressService,
+    IStaffEqualityService staffEqualityService,
+    IStaffProfessionalService staffProfessionalService,
+    IStaffEmploymentService staffEmploymentService,
+    IStaffPreEmploymentService staffPreEmploymentService,
+    IStaffAbsenceService staffAbsenceService,
+    IStaffTimetableService staffTimetableService,
+    IStaffPerformanceService staffPerformanceService,
+    IStaffAttachmentsService staffAttachmentsService)
+    : BaseDirectoryEntityController<Person>(problemFactory, logger, staffAttachmentsService)
 {
-    private readonly IStaffMemberService _staffMemberService;
-    private readonly IStaffContactService _staffContactService;
-    private readonly IStaffAddressService _staffAddressService;
-    private readonly IStaffEqualityService _staffEqualityService;
-    private readonly IStaffProfessionalService _staffProfessionalService;
-    private readonly IStaffEmploymentService _staffEmploymentService;
-    private readonly IStaffPreEmploymentService _staffPreEmploymentService;
-    private readonly IStaffAbsenceService _staffAbsenceService;
-    private readonly IStaffTimetableService _staffTimetableService;
-    private readonly IStaffPerformanceService _staffPerformanceService;
-
-    public StaffMembersController(ProblemDetailsFactory problemFactory, ILogger<StaffMembersController> logger,
-        IStaffMemberService staffMemberService, IStaffContactService staffContactService,
-        IStaffAddressService staffAddressService, IStaffEqualityService staffEqualityService,
-        IStaffProfessionalService staffProfessionalService, IStaffEmploymentService staffEmploymentService,
-        IStaffPreEmploymentService staffPreEmploymentService, IStaffAbsenceService staffAbsenceService,
-        IStaffTimetableService staffTimetableService, IStaffPerformanceService staffPerformanceService,
-        IStaffAttachmentsService staffAttachmentsService)
-        : base(problemFactory, logger, staffAttachmentsService)
-    {
-        _staffMemberService = staffMemberService;
-        _staffContactService = staffContactService;
-        _staffAddressService = staffAddressService;
-        _staffEqualityService = staffEqualityService;
-        _staffProfessionalService = staffProfessionalService;
-        _staffEmploymentService = staffEmploymentService;
-        _staffPreEmploymentService = staffPreEmploymentService;
-        _staffAbsenceService = staffAbsenceService;
-        _staffTimetableService = staffTimetableService;
-        _staffPerformanceService = staffPerformanceService;
-    }
-
     /// <summary>Get the staff profile header.</summary>
     /// <remarks>
     /// Returns identity, status, and the viewer's <c>Relationship</c> to the subject. Returns 403
@@ -63,7 +45,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffMemberHeaderResponse), 200)]
     public async Task<IActionResult> GetHeaderAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffMemberService.GetHeaderAsync(staffMemberId, CancellationToken);
+        var result = await staffMemberService.GetHeaderAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -74,7 +56,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffBasicDetailsResponse), 200)]
     public async Task<IActionResult> GetBasicDetailsAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffMemberService.GetBasicDetailsAsync(staffMemberId, CancellationToken);
+        var result = await staffMemberService.GetBasicDetailsAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -88,7 +70,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdateBasicDetailsAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffBasicDetailsUpsertRequest model)
     {
-        await _staffMemberService.UpdateBasicDetailsAsync(staffMemberId, model, CancellationToken);
+        await staffMemberService.UpdateBasicDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -106,7 +88,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
         }
 
         await using var stream = file.OpenReadStream();
-        await _staffMemberService.SetPhotoAsync(staffMemberId, stream, file.ContentType, file.FileName,
+        await staffMemberService.SetPhotoAsync(staffMemberId, stream, file.ContentType, file.FileName,
             CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
@@ -117,7 +99,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [UserType(UserType.Staff)]
     public async Task<IActionResult> GetPhotoAsync([FromRoute] Guid staffMemberId)
     {
-        var content = await _staffMemberService.GetPhotoAsync(staffMemberId, CancellationToken);
+        var content = await staffMemberService.GetPhotoAsync(staffMemberId, CancellationToken);
 
         var typedHeaders = Response.GetTypedHeaders();
         if (!string.IsNullOrWhiteSpace(content.Details.Hash))
@@ -139,7 +121,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> DeletePhotoAsync([FromRoute] Guid staffMemberId)
     {
-        await _staffMemberService.DeletePhotoAsync(staffMemberId, CancellationToken);
+        await staffMemberService.DeletePhotoAsync(staffMemberId, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -150,7 +132,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffContactDetailsResponse), 200)]
     public async Task<IActionResult> GetContactDetailsAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffContactService.GetContactDetailsAsync(staffMemberId, CancellationToken);
+        var result = await staffContactService.GetContactDetailsAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -164,7 +146,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdateContactDetailsAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffContactDetailsUpsertRequest model)
     {
-        await _staffContactService.UpdateContactDetailsAsync(staffMemberId, model, CancellationToken);
+        await staffContactService.UpdateContactDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -175,7 +157,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffEqualityDetailsResponse), 200)]
     public async Task<IActionResult> GetEqualityDetailsAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffEqualityService.GetEqualityDetailsAsync(staffMemberId, CancellationToken);
+        var result = await staffEqualityService.GetEqualityDetailsAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -189,7 +171,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdateEqualityDetailsAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffEqualityDetailsUpsertRequest model)
     {
-        await _staffEqualityService.UpdateEqualityDetailsAsync(staffMemberId, model, CancellationToken);
+        await staffEqualityService.UpdateEqualityDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -200,7 +182,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffProfessionalDetailsResponse), 200)]
     public async Task<IActionResult> GetProfessionalDetailsAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffProfessionalService.GetProfessionalDetailsAsync(staffMemberId, CancellationToken);
+        var result = await staffProfessionalService.GetProfessionalDetailsAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -214,7 +196,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdateProfessionalDetailsAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffProfessionalDetailsUpsertRequest model)
     {
-        await _staffProfessionalService.UpdateProfessionalDetailsAsync(staffMemberId, model, CancellationToken);
+        await staffProfessionalService.UpdateProfessionalDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -225,7 +207,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffEmploymentDetailsResponse), 200)]
     public async Task<IActionResult> GetEmploymentDetailsAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffEmploymentService.GetEmploymentDetailsAsync(staffMemberId, CancellationToken);
+        var result = await staffEmploymentService.GetEmploymentDetailsAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -239,7 +221,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdateEmploymentDetailsAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffEmploymentDetailsUpsertRequest model)
     {
-        await _staffEmploymentService.UpdateEmploymentDetailsAsync(staffMemberId, model, CancellationToken);
+        await staffEmploymentService.UpdateEmploymentDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -250,7 +232,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffPreEmploymentChecksResponse), 200)]
     public async Task<IActionResult> GetPreEmploymentChecksAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffPreEmploymentService.GetPreEmploymentChecksAsync(staffMemberId, CancellationToken);
+        var result = await staffPreEmploymentService.GetPreEmploymentChecksAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -264,7 +246,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdatePreEmploymentChecksAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffPreEmploymentChecksUpsertRequest model)
     {
-        await _staffPreEmploymentService.UpdatePreEmploymentChecksAsync(staffMemberId, model, CancellationToken);
+        await staffPreEmploymentService.UpdatePreEmploymentChecksAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -275,7 +257,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffAbsencesResponse), 200)]
     public async Task<IActionResult> GetAbsencesAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffAbsenceService.GetAbsencesAsync(staffMemberId, CancellationToken);
+        var result = await staffAbsenceService.GetAbsencesAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -289,7 +271,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdateAbsencesAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffAbsencesUpsertRequest model)
     {
-        await _staffAbsenceService.UpdateAbsencesAsync(staffMemberId, model, CancellationToken);
+        await staffAbsenceService.UpdateAbsencesAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -300,7 +282,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(StaffPerformanceResponse), 200)]
     public async Task<IActionResult> GetPerformanceAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffPerformanceService.GetPerformanceAsync(staffMemberId, CancellationToken);
+        var result = await staffPerformanceService.GetPerformanceAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -314,7 +296,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdatePerformanceAsync([FromRoute] Guid staffMemberId,
         [FromBody] StaffPerformanceUpsertRequest model)
     {
-        await _staffPerformanceService.UpdatePerformanceAsync(staffMemberId, model, CancellationToken);
+        await staffPerformanceService.UpdatePerformanceAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -333,7 +315,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> GetTimetableAsync([FromRoute] Guid staffMemberId,
         [FromQuery] DateTime from, [FromQuery] DateTime to)
     {
-        var result = await _staffTimetableService.GetCalendarAsync(staffMemberId, from, to, CancellationToken);
+        var result = await staffTimetableService.GetCalendarAsync(staffMemberId, from, to, CancellationToken);
         return Ok(result);
     }
 
@@ -344,7 +326,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(AddressListResponse), 200)]
     public async Task<IActionResult> GetAddressesAsync([FromRoute] Guid staffMemberId)
     {
-        var result = await _staffAddressService.GetAddressesAsync(staffMemberId, CancellationToken);
+        var result = await staffAddressService.GetAddressesAsync(staffMemberId, CancellationToken);
         return Ok(result);
     }
 
@@ -357,7 +339,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> SearchAddressMatchesAsync([FromRoute] Guid staffMemberId,
         [FromQuery] string? query)
     {
-        var result = await _staffAddressService.SearchAddressesAsync(staffMemberId, query, CancellationToken);
+        var result = await staffAddressService.SearchAddressesAsync(staffMemberId, query, CancellationToken);
         return Ok(result);
     }
 
@@ -371,7 +353,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> AddAddressAsync([FromRoute] Guid staffMemberId,
         [FromBody] PersonAddressUpsertRequest model)
     {
-        var addressPersonId = await _staffAddressService.AddAddressAsync(staffMemberId, model, CancellationToken);
+        var addressPersonId = await staffAddressService.AddAddressAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = addressPersonId });
     }
 
@@ -386,7 +368,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> UpdateAddressAsync([FromRoute] Guid staffMemberId,
         [FromRoute] Guid addressPersonId, [FromBody] PersonAddressUpdateRequest model)
     {
-        await _staffAddressService.UpdateAddressAsync(staffMemberId, addressPersonId, model, CancellationToken);
+        await staffAddressService.UpdateAddressAsync(staffMemberId, addressPersonId, model, CancellationToken);
         return Ok(new IdResponse { Id = addressPersonId });
     }
 
@@ -399,7 +381,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     public async Task<IActionResult> RemoveAddressAsync([FromRoute] Guid staffMemberId,
         [FromRoute] Guid addressPersonId)
     {
-        await _staffAddressService.RemoveAddressAsync(staffMemberId, addressPersonId, CancellationToken);
+        await staffAddressService.RemoveAddressAsync(staffMemberId, addressPersonId, CancellationToken);
         return NoContent();
     }
 
@@ -410,7 +392,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateAsync([FromBody] StaffBasicDetailsUpsertRequest model)
     {
-        var id = await _staffMemberService.CreateAsync(model, CancellationToken);
+        var id = await staffMemberService.CreateAsync(model, CancellationToken);
         return Ok(new IdResponse { Id = id });
     }
 
@@ -425,7 +407,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(IReadOnlyList<PersonMatchResponse>), 200)]
     public async Task<IActionResult> SearchPeopleAsync([FromQuery] string? query)
     {
-        var result = await _staffMemberService.SearchPeopleAsync(query, CancellationToken);
+        var result = await staffMemberService.SearchPeopleAsync(query, CancellationToken);
         return Ok(result);
     }
 
@@ -440,7 +422,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> CreateForPersonAsync([FromBody] StaffMemberCreateForPersonRequest model)
     {
-        var id = await _staffMemberService.CreateForPersonAsync(model, CancellationToken);
+        var id = await staffMemberService.CreateForPersonAsync(model, CancellationToken);
         return Ok(new IdResponse { Id = id });
     }
 
@@ -451,7 +433,7 @@ public sealed class StaffMembersController : BaseDirectoryEntityController<Perso
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteAsync([FromRoute] Guid staffMemberId)
     {
-        await _staffMemberService.DeleteAsync(staffMemberId, CancellationToken);
+        await staffMemberService.DeleteAsync(staffMemberId, CancellationToken);
         return NoContent();
     }
 }

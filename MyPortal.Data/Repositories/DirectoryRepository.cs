@@ -11,13 +11,9 @@ using Directory = MyPortal.Core.Entities.Directory;
 
 namespace MyPortal.Data.Repositories
 {
-    public class DirectoryRepository : EntityRepository<Directory>, IDirectoryRepository
+    public class DirectoryRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+        : EntityRepository<Directory>(factory, authorizationService), IDirectoryRepository
     {
-        public DirectoryRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-            factory, authorizationService)
-        {
-        }
-
         public async Task<DirectoryDetailsResponse?> GetDetailsByIdAsync(Guid directoryId, CancellationToken cancellationToken, IDbTransaction? transaction = null)
         {
             // When a transaction is passed in, we MUST use its own connection — a SqlTransaction

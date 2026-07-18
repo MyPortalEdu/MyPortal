@@ -4,7 +4,7 @@
   "categories": {
     "title": "Categories",
     "description": "Categories appear as filter chips on the feed and as labels on each bulletin.",
-    "add": "New category",
+    "add": "New",
     "edit": "Edit",
     "delete": "Delete",
     "inactive": "Inactive",

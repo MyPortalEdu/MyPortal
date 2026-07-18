@@ -13,15 +13,9 @@ namespace MyPortal.Services.School.Bulletins;
 /// summaries/details SPs. In-memory short-circuits handle the cases the SP would
 /// resolve the same way (staff pinners, staff creators) without a DB round-trip.
 /// </summary>
-public class BulletinAccessPolicy : IAccessPolicy<Bulletin, BulletinVisibilityScope>
+public class BulletinAccessPolicy(IBulletinRepository bulletinRepository)
+    : IAccessPolicy<Bulletin, BulletinVisibilityScope>
 {
-    private readonly IBulletinRepository _bulletinRepository;
-
-    public BulletinAccessPolicy(IBulletinRepository bulletinRepository)
-    {
-        _bulletinRepository = bulletinRepository;
-    }
-
     public Task<bool> CanViewAsync(Bulletin bulletin, BulletinVisibilityScope scope,
         CancellationToken cancellationToken)
     {
@@ -37,7 +31,7 @@ public class BulletinAccessPolicy : IAccessPolicy<Bulletin, BulletinVisibilitySc
             return Task.FromResult(true);
         }
 
-        return _bulletinRepository.IsVisibleToUserAsync(bulletin.Id, scope, cancellationToken);
+        return bulletinRepository.IsVisibleToUserAsync(bulletin.Id, scope, cancellationToken);
     }
 
     public bool CanEdit(Bulletin bulletin, BulletinVisibilityScope scope)

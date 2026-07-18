@@ -14,13 +14,9 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories;
 
-public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupRepository
+public class YearGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<YearGroup>(factory, authorizationService), IYearGroupRepository
 {
-    public YearGroupRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task<IList<YearGroup>> GetYearGroupsByAcademicYear(Guid academicYearId,
         CancellationToken cancellationToken)
     {
@@ -65,5 +61,23 @@ public class YearGroupRepository : EntityRepository<YearGroup>, IYearGroupReposi
         header.Supervisors = supervisors;
 
         return header;
+    }
+
+    public async Task<Guid?> GetAcademicYearIdAsync(Guid yearGroupId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var result = await conn.ExecuteStoredProcedureAsync<Guid?>(
+                "[dbo].[usp_year_group_get_academic_year_id]",
+                new { yearGroupId }, transaction, cancellationToken: cancellationToken);
+
+            return result.FirstOrDefault();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 }

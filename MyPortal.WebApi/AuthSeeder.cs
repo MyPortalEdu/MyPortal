@@ -3,6 +3,7 @@ using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using MyPortal.Auth.Models;
+using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Common.Interfaces;
 using OpenIddict.Abstractions;
@@ -17,7 +18,6 @@ public static class AuthSeeder
         using var scope = sp.CreateScope();
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
         var users   = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roles   = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
         var env     = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
         var config  = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
@@ -67,12 +67,10 @@ public static class AuthSeeder
         }
         
         var connFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
-        
-        var roleNames = new[] { "System Administrator" };
-        foreach (var rn in roleNames)
-            if (!await roles.RoleExistsAsync(rn))
-                await roles.CreateAsync(new ApplicationRole { Id = Guid.NewGuid(), Name = rn, IsSystem = true });
-        
+
+        // The System Administrator role is seeded by 20260717000100_seed_default_roles.sql (verified at
+        // boot by SystemSeedVerifier), so it is not created here — this seeder only owns granting it
+        // every permission and creating the initial admin user.
         var email = "admin@myportal.local";
         var admin = await users.FindByEmailAsync(email);
         if (admin == null)
@@ -121,7 +119,7 @@ public static class AuthSeeder
                     string.Join("; ", createResult.Errors.Select(e => $"{e.Code}: {e.Description}")));
             }
 
-            var addToRoleResult = await users.AddToRoleAsync(admin, "System Administrator");
+            var addToRoleResult = await users.AddToRoleAsync(admin, SystemRoles.SystemAdministratorRoleName);
             if (!addToRoleResult.Succeeded)
             {
                 throw new InvalidOperationException(
@@ -145,7 +143,8 @@ IF @result < 0 THROW 50000, 'Could not acquire seed lock', 1;
 ");
         
         var allPerms = (await conn.QueryAsync<Guid>("SELECT Id FROM Permissions")).ToArray();
-        var adminRoleId = await conn.QuerySingleAsync<Guid>("SELECT Id FROM Roles WHERE Name = @name", new { name = "System Administrator" });
+        var adminRoleId = await conn.QuerySingleAsync<Guid>("SELECT Id FROM Roles WHERE Name = @name",
+            new { name = SystemRoles.SystemAdministratorRoleName });
 
         foreach (var perm in allPerms)
         {

@@ -1,26 +1,30 @@
-﻿@page
+@page
 @model MyPortal.WebApi.Areas.Account.Pages.LoginModel
 @{
     Layout = "/Pages/Shared/_AuthLayout.cshtml";
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Welcome back";
 }
-<form method="post" class="space-y-4">
+<form method="post">
     @Html.AntiForgeryToken()
     <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-    <div>
-        <label class="block text-sm font-medium">Username</label>
-        <input asp-for="Input.Username" class="mt-1 block w-full rounded border px-3 py-2" autofocus />
-    </div>
-    <div>
-        <label class="block text-sm font-medium">Password</label>
-        <input asp-for="Input.Password" type="password" class="mt-1 block w-full rounded border px-3 py-2" />
-    </div>
-    <div class="flex items-center justify-between">
-        <label class="flex items-center gap-2 text-sm">
-            <input asp-for="Input.RememberMe" type="checkbox" /> Remember me
-        </label>
-        <button class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Sign in</button>
+
+    <div asp-validation-summary="All" class="errors" role="alert"></div>
+
+    <div class="field">
+        <label class="field__label" asp-for="Input.Username">Username</label>
+        <input class="field__input" asp-for="Input.Username" autocomplete="username" autofocus placeholder="e.g. j.smith" />
     </div>
 
-    <span asp-validation-summary="All" class="text-red-600 text-sm"></span>
+    <div class="field">
+        <label class="field__label" asp-for="Input.Password">Password</label>
+        <input class="field__input" asp-for="Input.Password" type="password" autocomplete="current-password" placeholder="••••••••" />
+    </div>
+
+    <div class="form__row">
+        <label class="remember">
+            <input asp-for="Input.RememberMe" type="checkbox" /> Keep me signed in
+        </label>
+    </div>
+
+    <button type="submit" class="btn">Sign in</button>
 </form>

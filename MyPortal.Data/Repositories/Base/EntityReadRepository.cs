@@ -10,13 +10,10 @@ using QueryKit.Repositories.Sorting;
 
 namespace MyPortal.Data.Repositories.Base;
 
-public class EntityReadRepository<TEntity> : BaseEntityReadRepository<TEntity, Guid>, IEntityReadRepository<TEntity>
+public class EntityReadRepository<TEntity>(IDbConnectionFactory factory)
+    : BaseEntityReadRepository<TEntity, Guid>(factory), IEntityReadRepository<TEntity>
     where TEntity : class, IEntity
 {
-    public EntityReadRepository(IDbConnectionFactory factory) : base(factory)
-    {
-    }
-
     private SortOptions DefaultSort = new SortOptions
     {
         Criteria = new[] { new SortCriterion { ColumnName = "Id", Direction = SortDirection.Ascending } }

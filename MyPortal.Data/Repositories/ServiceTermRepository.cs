@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class ServiceTermRepository : EntityRepository<ServiceTerm>, IServiceTermRepository
-{
-    public ServiceTermRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class ServiceTermRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<ServiceTerm>(factory, authorizationService), IServiceTermRepository;

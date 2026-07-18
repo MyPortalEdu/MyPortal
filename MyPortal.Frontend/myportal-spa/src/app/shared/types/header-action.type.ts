@@ -4,6 +4,7 @@ export type HeaderAction = {
   label: string;
   icon?: string | undefined;
   outlined?: boolean;
+  text?: boolean;
   severity?: ButtonSeverity;
   disabled?: boolean;
   loading?: boolean;

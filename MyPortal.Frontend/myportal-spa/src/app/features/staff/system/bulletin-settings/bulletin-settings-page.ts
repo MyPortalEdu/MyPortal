@@ -11,6 +11,7 @@ import { Skeleton } from 'primeng/skeleton';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { StudentGroupPicker } from '../../../../shared/components/pickers/student-group-picker/student-group-picker';
 import { BulletinCategoryFormDialog } from './bulletin-category-form-dialog/bulletin-category-form-dialog';
 import { BulletinsDataService } from '../../../../shared/services/bulletins-data.service';
@@ -32,6 +33,7 @@ import { StudentGroupSummaryResponse } from '../../../../shared/types/student-gr
     Button,
     Skeleton,
     PageHeader,
+    EmptyState,
     StudentGroupPicker,
     BulletinCategoryFormDialog,
     TranslocoDirective,

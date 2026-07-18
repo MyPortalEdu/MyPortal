@@ -15,24 +15,19 @@ namespace MyPortal.WebApi.Controllers;
 // Mirrors the dual-route pattern on the base: versioned canonical, unversioned alias.
 [Route("api/bulletins/settings")]
 [Route("api/v{version:apiVersion}/bulletins/settings")]
-public sealed class BulletinSettingsController : BaseApiController
+public sealed class BulletinSettingsController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<BulletinSettingsController> logger,
+    IBulletinSettingsService service)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IBulletinSettingsService _service;
-
-    public BulletinSettingsController(ProblemDetailsFactory problemFactory,
-        ILogger<BulletinSettingsController> logger, IBulletinSettingsService service)
-        : base(problemFactory, logger)
-    {
-        _service = service;
-    }
-
     /// <summary>Get current bulletin settings.</summary>
     [HttpGet]
     [Permission(PermissionMode.RequireAny, Permissions.School.ViewSchoolBulletins)]
     [ProducesResponseType(typeof(BulletinSettingsResponse), 200)]
     public async Task<IActionResult> GetAsync()
     {
-        var result = await _service.GetAsync(CancellationToken);
+        var result = await service.GetAsync(CancellationToken);
         return Ok(result);
     }
 
@@ -45,7 +40,7 @@ public sealed class BulletinSettingsController : BaseApiController
     [ProducesResponseType(204)]
     public async Task<IActionResult> UpdateAsync([FromBody] BulletinSettingsUpdateRequest model)
     {
-        await _service.UpdateAsync(model, CancellationToken);
+        await service.UpdateAsync(model, CancellationToken);
         return NoContent();
     }
 }

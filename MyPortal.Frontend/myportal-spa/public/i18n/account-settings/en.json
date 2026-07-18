@@ -1,0 +1,31 @@
+{
+  "title": "Account settings",
+  "subtitle": "Manage your account and password.",
+  "loadError": "Couldn't load your account details",
+  "account": {
+    "title": "Your account",
+    "description": "These details are managed by your school. Contact an administrator to change them.",
+    "username": "Username",
+    "email": "Email",
+    "noEmail": "No email on file",
+    "portal": "Portal"
+  },
+  "userType": {
+    "staff": "Staff",
+    "student": "Student",
+    "parent": "Parent",
+    "unknown": "—"
+  },
+  "password": {
+    "title": "Change password",
+    "description": "Enter your current password, then choose a new one.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "mismatch": "Passwords don't match.",
+    "sameAsCurrent": "New password must be different from your current one.",
+    "save": "Update password",
+    "savedToast": "Password updated",
+    "error": "Couldn't update your password"
+  }
+}

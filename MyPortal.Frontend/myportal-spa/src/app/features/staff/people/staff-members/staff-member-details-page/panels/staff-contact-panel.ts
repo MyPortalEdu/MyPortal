@@ -8,7 +8,6 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { ProgressSpinner } from 'primeng/progressspinner';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -20,6 +19,8 @@ import { NotificationService } from '../../../../../../core/services/notificatio
 import { Permissions } from '../../../../../../core/constants/permissions';
 import { StaffMembersDataService } from '../../../../../../shared/services/staff-members-data.service';
 import { StaffRelationship } from '../../../../../../shared/types/staff-member-header';
+import { Loading } from '../../../../../../shared/components/loading/loading';
+import { SectionHeader } from '../../../../../../shared/components/section-header/section-header';
 import { PersonEmails } from '../../../../../../shared/components/contact/person-emails/person-emails';
 import { PersonPhones } from '../../../../../../shared/components/contact/person-phones/person-phones';
 import { PersonAddresses } from '../../../../../../shared/components/contact/person-addresses/person-addresses';
@@ -41,7 +42,7 @@ import { StaffAreaPanel } from './staff-area-panel';
   selector: 'mp-staff-contact-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProgressSpinner, PersonEmails, PersonPhones, PersonAddresses, TranslocoDirective],
+  imports: [Loading, SectionHeader, PersonEmails, PersonPhones, PersonAddresses, TranslocoDirective],
   providers: [
     provideTranslocoScope('staff-members'),
     { provide: StaffAreaPanel, useExisting: forwardRef(() => StaffContactPanel) },

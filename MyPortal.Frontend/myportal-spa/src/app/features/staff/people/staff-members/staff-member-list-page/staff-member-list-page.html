@@ -17,7 +17,10 @@
       #dt
       [lazy]="true"
       [paginator]="true"
-      [rows]="25"
+      [first]="initialState.first"
+      [rows]="initialState.rows"
+      [sortField]="initialState.sortField"
+      [sortOrder]="initialState.sortOrder ?? 1"
       [totalRecords]="totalRecords()"
       [loading]="loading()"
       [value]="rows()"
@@ -27,7 +30,6 @@
       [globalFilterFields]="['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code']"
       dataKey="id"
       selectionMode="single"
-      (onRowSelect)="openDetails($any($event).data)"
       [scrollable]="true">
 
       <ng-template pTemplate="caption">
@@ -45,9 +47,19 @@
             <input
               pInputText
               type="text"
-              class="w-full pl-9"
+              class="w-full pl-9 pr-9"
               [placeholder]="t('staff-members.searchPlaceholder')"
-              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+              [value]="searchTerm()"
+              (input)="onSearch($any($event.target).value)" />
+            @if (searchTerm()) {
+              <button
+                type="button"
+                class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                [attr.aria-label]="t('staff-members.clearSearch')"
+                (click)="clearSearch()">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            }
           </span>
         </div>
       </ng-template>
@@ -71,14 +83,16 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-row>
-        <tr [pSelectableRow]="row" class="cursor-pointer">
+        <tr [pSelectableRow]="row" class="cursor-pointer" (click)="onRowClick($event, row)">
           <td>
             <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
               {{ initials(row) }}
             </div>
           </td>
           <td>
-            <div class="font-medium">{{ displayName(row) }}</div>
+            <a
+              [routerLink]="['/staff/people/staff-members', row.id]"
+              class="font-medium hover:underline">{{ displayName(row) }}</a>
             @if (legalName(row); as legal) {
               <div class="text-xs text-muted-color">{{ legal }}</div>
             }
@@ -94,8 +108,31 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="4" class="text-center text-sm text-muted-color py-6">
-            {{ t('staff-members.empty') }}
+          <td [attr.colspan]="4" class="p-4">
+            @if (hasFilter()) {
+              <mp-empty-state
+                icon="fa-solid fa-magnifying-glass"
+                [message]="t('staff-members.emptyFiltered')">
+                <p-button
+                  [label]="t('staff-members.clearFilters')"
+                  icon="fa-solid fa-xmark"
+                  severity="secondary"
+                  size="small"
+                  [outlined]="true"
+                  (click)="clearFilters()"></p-button>
+              </mp-empty-state>
+            } @else {
+              <mp-empty-state icon="fa-solid fa-id-badge" [message]="t('staff-members.emptyNone')">
+                @if (canCreate()) {
+                  <p-button
+                    [label]="t('staff-members.new')"
+                    icon="fa-solid fa-plus"
+                    severity="primary"
+                    size="small"
+                    (click)="createOpen.set(true)"></p-button>
+                }
+              </mp-empty-state>
+            }
           </td>
         </tr>
       </ng-template>

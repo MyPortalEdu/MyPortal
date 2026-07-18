@@ -36,6 +36,7 @@ import { LookupResponse } from '../../types/lookup';
       [placeholder]="placeholder() ?? defaultPlaceholder()"
       [ngModel]="value()"
       (ngModelChange)="value.set($event)"
+      [invalid]="invalid()"
       appendTo="body"
       styleClass="w-full"></p-select>
   `,
@@ -57,6 +58,9 @@ export class LookupSelect {
 
   /** When false (default), a clear affordance lets the user blank the value. */
   readonly required = input<boolean>(false);
+
+  /** Paints the invalid state; drive it from the owning form's validity. */
+  readonly invalid = input<boolean>(false);
 
   protected readonly defaultPlaceholder = computed(() =>
     this.transloco.translate('common.select'),

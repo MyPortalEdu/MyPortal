@@ -7,10 +7,5 @@ using MyPortal.Data.Repositories.Base;
 namespace MyPortal.Data.Repositories;
 
 /// <inheritdoc cref="IPhotoRepository"/>
-public class PhotoRepository : EntityRepository<Photo>, IPhotoRepository
-{
-    public PhotoRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-}
+public class PhotoRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<Photo>(factory, authorizationService), IPhotoRepository;

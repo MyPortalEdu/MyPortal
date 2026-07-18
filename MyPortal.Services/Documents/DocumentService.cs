@@ -21,30 +21,18 @@ using MyPortal.Services.Interfaces.Documents;
 namespace MyPortal.Services.Documents;
 
 /// <inheritdoc cref="IDocumentService"/>
-public class DocumentService : BaseService, IDocumentService
+public class DocumentService(
+    IAuthorizationService authorizationService,
+    ILogger<DocumentService> logger,
+    IDocumentRepository documentRepository,
+    IDocumentTypeRepository documentTypeRepository,
+    IStorageKeyGenerator storageKeyGenerator,
+    IFileStorageProvider storageProvider,
+    IValidationService validationService,
+    IOptions<FileStorageOptions> fileStorageOptions)
+    : BaseService(authorizationService, logger), IDocumentService
 {
-    private readonly IDocumentRepository _documentRepository;
-    private readonly IDocumentTypeRepository _documentTypeRepository;
-    private readonly IStorageKeyGenerator _storageKeyGenerator;
-    private readonly IFileStorageProvider _storageProvider;
-    private readonly IValidationService _validationService;
-    private readonly IOptions<FileStorageOptions> _fileStorageOptions;
-
-    public DocumentService(IAuthorizationService authorizationService, ILogger<DocumentService> logger,
-        IDocumentRepository documentRepository, IDocumentTypeRepository documentTypeRepository,
-        IStorageKeyGenerator storageKeyGenerator, IFileStorageProvider storageProvider,
-        IValidationService validationService, IOptions<FileStorageOptions> fileStorageOptions)
-        : base(authorizationService, logger)
-    {
-        _documentRepository = documentRepository;
-        _documentTypeRepository = documentTypeRepository;
-        _storageKeyGenerator = storageKeyGenerator;
-        _storageProvider = storageProvider;
-        _validationService = validationService;
-        _fileStorageOptions = fileStorageOptions;
-    }
-
-    private long MaxFileSizeBytes => _fileStorageOptions.Value.MaxFileSizeBytes;
+    private long MaxFileSizeBytes => fileStorageOptions.Value.MaxFileSizeBytes;
 
     public async Task<DocumentDetailsResponse> CreateAsync(DocumentUpsertRequest model,
         CancellationToken cancellationToken)
@@ -54,14 +42,14 @@ public class DocumentService : BaseService, IDocumentService
             throw new ArgumentException("Document has no content.", nameof(model.Content));
         }
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
         if (model.IsPrivate && AuthorizationService.GetCurrentUserType() != UserType.Staff)
         {
             throw new ForbiddenException("You do not have permission to create private documents.");
         }
 
-        var storageKey = _storageKeyGenerator.Generate(model.FileName!);
+        var storageKey = storageKeyGenerator.Generate(model.FileName!);
 
         await using var hashedStream =
             await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, MaxFileSizeBytes, cancellationToken);
@@ -71,7 +59,7 @@ public class DocumentService : BaseService, IDocumentService
         // malicious or buggy, and we don't want the DB row to disagree with the blob.
         VerifyContentLength(hashedStream.UsableStream.Length, model.SizeBytes);
 
-        await _storageProvider.SaveFileAsync(storageKey, hashedStream.UsableStream, model.ContentType!,
+        await storageProvider.SaveFileAsync(storageKey, hashedStream.UsableStream, model.ContentType!,
             cancellationToken);
 
         Logger.LogInformation("File {fileName} saved with storage key: {storageKey}", model.FileName, storageKey);
@@ -93,11 +81,11 @@ public class DocumentService : BaseService, IDocumentService
             IsPrivate = model.IsPrivate
         };
 
-        await _documentRepository.InsertAsync(document, cancellationToken);
+        await documentRepository.InsertAsync(document, cancellationToken);
 
         Logger.LogInformation("Document created: {documentId}", id);
 
-        var response = await _documentRepository.GetDetailsByIdAsync(id, cancellationToken)
+        var response = await documentRepository.GetDetailsByIdAsync(id, cancellationToken)
                        ?? throw new InvalidOperationException("Created document, but could not load details.");
 
         return response;
@@ -106,9 +94,9 @@ public class DocumentService : BaseService, IDocumentService
     public async Task<DocumentDetailsResponse> UpdateAsync(Guid documentId, DocumentUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
             
-        var documentInDb = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
+        var documentInDb = await documentRepository.GetByIdAsync(documentId, cancellationToken);
 
         if (documentInDb == null)
         {
@@ -143,14 +131,14 @@ public class DocumentService : BaseService, IDocumentService
 
         if (model.Content != null)
         {
-            newStorageKey = _storageKeyGenerator.Generate(model.FileName!);
+            newStorageKey = storageKeyGenerator.Generate(model.FileName!);
 
             await using var hashedStream =
                 await FileStorageHasher.HashAndPrepareStreamAsync(model.Content, MaxFileSizeBytes, cancellationToken);
 
             VerifyContentLength(hashedStream.UsableStream.Length, model.SizeBytes);
 
-            await _storageProvider.SaveFileAsync(newStorageKey, hashedStream.UsableStream,
+            await storageProvider.SaveFileAsync(newStorageKey, hashedStream.UsableStream,
                 model.ContentType!, cancellationToken);
 
             Logger.LogInformation("New file {fileName} saved with storage key: {storageKey}", model.FileName, newStorageKey);
@@ -165,7 +153,7 @@ public class DocumentService : BaseService, IDocumentService
 
         try
         {
-            await _documentRepository.UpdateAsync(documentInDb, cancellationToken);
+            await documentRepository.UpdateAsync(documentInDb, cancellationToken);
         }
         catch
         {
@@ -173,7 +161,7 @@ public class DocumentService : BaseService, IDocumentService
             {
                 try
                 {
-                    await _storageProvider.DeleteFileAsync(newStorageKey, CancellationToken.None);
+                    await storageProvider.DeleteFileAsync(newStorageKey, CancellationToken.None);
                 }
                 catch (Exception cleanupEx)
                 {
@@ -191,7 +179,7 @@ public class DocumentService : BaseService, IDocumentService
         {
             try
             {
-                await _storageProvider.DeleteFileAsync(oldStorageKey, cancellationToken);
+                await storageProvider.DeleteFileAsync(oldStorageKey, cancellationToken);
                 Logger.LogInformation("Replaced file deleted at storage key: {storageKey}", oldStorageKey);
             }
             catch (Exception cleanupEx)
@@ -202,7 +190,7 @@ public class DocumentService : BaseService, IDocumentService
             }
         }
 
-        var response = await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken)
+        var response = await documentRepository.GetDetailsByIdAsync(documentId, cancellationToken)
                        ?? throw new InvalidOperationException("Updated document, but could not load details.");
 
         return response;
@@ -211,7 +199,7 @@ public class DocumentService : BaseService, IDocumentService
     public async Task DeleteAsync(Guid documentId, CancellationToken cancellationToken, bool softDelete = true,
         IUnitOfWork? uow = null)
     {
-        var document = await _documentRepository.GetByIdAsync(documentId, cancellationToken);
+        var document = await documentRepository.GetByIdAsync(documentId, cancellationToken);
 
         if (document == null)
         {
@@ -225,7 +213,7 @@ public class DocumentService : BaseService, IDocumentService
 
         // Delete the DB row first; only purge the blob on success. Reverse order would orphan
         // the row pointing at a missing blob if storage delete succeeded but DB delete failed.
-        await _documentRepository.DeleteAsync(documentId, cancellationToken, softDelete, uow?.Transaction);
+        await documentRepository.DeleteAsync(documentId, cancellationToken, softDelete, uow?.Transaction);
 
         Logger.LogInformation("Document deleted: {documentId}, soft delete: {softDelete}", documentId, softDelete);
 
@@ -246,7 +234,7 @@ public class DocumentService : BaseService, IDocumentService
             {
                 try
                 {
-                    await _storageProvider.DeleteFileAsync(storageKey, ct);
+                    await storageProvider.DeleteFileAsync(storageKey, ct);
                     Logger.LogInformation("File {fileName} deleted, storage key: {storageKey}", fileName, storageKey);
                 }
                 catch (Exception cleanupEx)
@@ -261,7 +249,7 @@ public class DocumentService : BaseService, IDocumentService
 
         try
         {
-            await _storageProvider.DeleteFileAsync(document.StorageKey, cancellationToken);
+            await storageProvider.DeleteFileAsync(document.StorageKey, cancellationToken);
             Logger.LogInformation("File {fileName} deleted, storage key: {storageKey}", document.FileName,
                 document.StorageKey);
         }
@@ -276,7 +264,7 @@ public class DocumentService : BaseService, IDocumentService
     public async Task<DocumentDetailsResponse> GetDocumentByIdAsync(Guid documentId,
         CancellationToken cancellationToken)
     {
-        var result = await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
+        var result = await documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
 
         if (result == null)
         {
@@ -289,7 +277,7 @@ public class DocumentService : BaseService, IDocumentService
     public async Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid documentId,
         CancellationToken cancellationToken)
     {
-        var documentDetails = await _documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
+        var documentDetails = await documentRepository.GetDetailsByIdAsync(documentId, cancellationToken);
 
         if (documentDetails == null)
         {
@@ -305,7 +293,7 @@ public class DocumentService : BaseService, IDocumentService
         Stream? content = null;
         try
         {
-            content = await _storageProvider.OpenReadFileAsync(documentDetails.StorageKey, cancellationToken);
+            content = await storageProvider.OpenReadFileAsync(documentDetails.StorageKey, cancellationToken);
                 
             var response = new DocumentContentResponse
             {
@@ -329,7 +317,7 @@ public class DocumentService : BaseService, IDocumentService
     public async Task<IList<LookupResponse>> GetDocumentTypesAsync(DocumentTypeFilter filter,
         CancellationToken cancellationToken)
     {
-        var all = await _documentTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var all = await documentTypeRepository.GetListAsync(cancellationToken: cancellationToken);
 
         return all
             .Where(t => t.Active)
@@ -343,13 +331,13 @@ public class DocumentService : BaseService, IDocumentService
     public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsByDirectoryId(Guid directoryId,
         CancellationToken cancellationToken, bool includeDeleted = false)
     {
-        return await _documentRepository.GetDocumentsByDirectoryId(directoryId, cancellationToken, includeDeleted);
+        return await documentRepository.GetDocumentsByDirectoryId(directoryId, cancellationToken, includeDeleted);
     }
 
     public async Task<IReadOnlyList<DocumentDetailsResponse>> GetDocumentsInSubtreeAsync(Guid directoryId,
         CancellationToken cancellationToken, bool includeDeleted = false)
     {
-        return await _documentRepository.GetDocumentsInSubtreeAsync(directoryId, cancellationToken, includeDeleted);
+        return await documentRepository.GetDocumentsInSubtreeAsync(directoryId, cancellationToken, includeDeleted);
     }
 
     private static void VerifyContentLength(long actual, long? claimed)

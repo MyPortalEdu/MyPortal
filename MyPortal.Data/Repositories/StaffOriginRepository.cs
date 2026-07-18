@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class StaffOriginRepository : EntityRepository<StaffOrigin>, IStaffOriginRepository
-{
-    public StaffOriginRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class StaffOriginRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<StaffOrigin>(factory, authorizationService), IStaffOriginRepository;

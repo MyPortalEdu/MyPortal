@@ -4,6 +4,9 @@ import { AuthGuard } from '../../core/guards/auth-guard';
 import { canDeactivateGuard } from '../../core/guards/can-deactivate.guard';
 import { Home } from './home/home';
 import { UserListPage } from './system/users/user-list-page/user-list-page';
+import { UserDetailsPage } from './system/users/user-details-page/user-details-page';
+import { RoleListPage } from './system/roles/role-list-page/role-list-page';
+import { RoleDetailsPage } from './system/roles/role-details-page/role-details-page';
 import { BulletinSettingsPage } from './system/bulletin-settings/bulletin-settings-page';
 import { SchoolDetailsPage } from './school/school-details/school-details-page';
 import { AcademicYearListPage } from './curriculum/academic-years/academic-year-list-page/academic-year-list-page';
@@ -29,6 +32,49 @@ export const STAFF_ROUTES: Routes = [
         data: {
           permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers],
           breadcrumb: 'Users'
+        }
+      },
+      {
+        // Declared before ':id' so 'new' isn't captured as an id.
+        path: 'system/users/new',
+        component: UserDetailsPage,
+        canActivate: [AuthGuard],
+        canDeactivate: [canDeactivateGuard],
+        data: {
+          create: true,
+          permissionsAny: [Permissions.SystemAdmin.EditUsers],
+          breadcrumb: 'New User'
+        }
+      },
+      {
+        path: 'system/users/:id',
+        component: UserDetailsPage,
+        canActivate: [AuthGuard],
+        canDeactivate: [canDeactivateGuard],
+        data: {
+          permissionsAny: [Permissions.SystemAdmin.ViewUsers, Permissions.SystemAdmin.EditUsers],
+          breadcrumb: 'User'
+        }
+      },
+      {
+        path: 'system/roles',
+        component: RoleListPage,
+        canActivate: [AuthGuard],
+        // Gated on View — the listing is read-viewable; create/edit/delete actions within enforce
+        // EditRoles server-side.
+        data: {
+          permissionsAny: [Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles],
+          breadcrumb: 'Roles'
+        }
+      },
+      {
+        path: 'system/roles/:id',
+        component: RoleDetailsPage,
+        canActivate: [AuthGuard],
+        canDeactivate: [canDeactivateGuard],
+        data: {
+          permissionsAny: [Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles],
+          breadcrumb: 'Role'
         }
       },
       {

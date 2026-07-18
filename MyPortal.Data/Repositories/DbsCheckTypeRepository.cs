@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class DbsCheckTypeRepository : EntityRepository<DbsCheckType>, IDbsCheckTypeRepository
-{
-    public DbsCheckTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class DbsCheckTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<DbsCheckType>(factory, authorizationService), IDbsCheckTypeRepository;

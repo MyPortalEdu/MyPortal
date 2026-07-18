@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class EmailAddressTypeRepository : EntityRepository<EmailAddressType>, IEmailAddressTypeRepository
-{
-    public EmailAddressTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class EmailAddressTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<EmailAddressType>(factory, authorizationService), IEmailAddressTypeRepository;

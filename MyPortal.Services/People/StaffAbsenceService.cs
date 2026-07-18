@@ -21,38 +21,25 @@ namespace MyPortal.Services.People;
 /// never sees them, and a Managed editor's whole-area save is scoped to non-confidential rows so it
 /// can never delete or alter the confidential ones it can't see.
 /// </summary>
-public class StaffAbsenceService : BaseService, IStaffAbsenceService
+public class StaffAbsenceService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffAbsenceService> logger,
+    IStaffMemberAccessService accessService,
+    IStaffMemberRepository staffMemberRepository,
+    IStaffAbsenceRepository absenceRepository,
+    IStaffAbsenceTypeRepository absenceTypeRepository,
+    IStaffIllnessTypeRepository illnessTypeRepository,
+    IValidationService validationService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), IStaffAbsenceService
 {
-    private readonly IStaffMemberAccessService _accessService;
-    private readonly IStaffMemberRepository _staffMemberRepository;
-    private readonly IStaffAbsenceRepository _absenceRepository;
-    private readonly IStaffAbsenceTypeRepository _absenceTypeRepository;
-    private readonly IStaffIllnessTypeRepository _illnessTypeRepository;
-    private readonly IValidationService _validationService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public StaffAbsenceService(IAuthorizationService authorizationService, ILogger<StaffAbsenceService> logger,
-        IStaffMemberAccessService accessService, IStaffMemberRepository staffMemberRepository,
-        IStaffAbsenceRepository absenceRepository, IStaffAbsenceTypeRepository absenceTypeRepository,
-        IStaffIllnessTypeRepository illnessTypeRepository, IValidationService validationService,
-        IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
-    {
-        _accessService = accessService;
-        _staffMemberRepository = staffMemberRepository;
-        _absenceRepository = absenceRepository;
-        _absenceTypeRepository = absenceTypeRepository;
-        _illnessTypeRepository = illnessTypeRepository;
-        _validationService = validationService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<StaffAbsencesResponse> GetAbsencesAsync(Guid staffMemberId,
         CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(staffMemberId, StaffArea.Absences,
+        await accessService.RequireAsync(staffMemberId, StaffArea.Absences,
             StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
@@ -61,15 +48,15 @@ public class StaffAbsenceService : BaseService, IStaffAbsenceService
 
         var canSeeConfidential = await CanSeeConfidentialAsync(staffMemberId, cancellationToken);
 
-        var absences = await _absenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
+        var absences = await absenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
 
         if (!canSeeConfidential)
         {
             absences = absences.Where(a => !a.IsConfidential);
         }
 
-        var absenceTypes = await _absenceTypeRepository.GetListAsync(cancellationToken: cancellationToken);
-        var illnessTypes = await _illnessTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var absenceTypes = await absenceTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var illnessTypes = await illnessTypeRepository.GetListAsync(cancellationToken: cancellationToken);
 
         return new StaffAbsencesResponse
         {
@@ -85,12 +72,12 @@ public class StaffAbsenceService : BaseService, IStaffAbsenceService
     public async Task UpdateAbsencesAsync(Guid staffMemberId, StaffAbsencesUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _accessService.RequireAsync(staffMemberId, StaffArea.Absences,
+        await accessService.RequireAsync(staffMemberId, StaffArea.Absences,
             StaffAccess.EditManaged | StaffAccess.EditAll, cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
@@ -98,10 +85,10 @@ public class StaffAbsenceService : BaseService, IStaffAbsenceService
         }
 
         // Only an All-scope (HR) editor manages confidential rows and may set the flag.
-        var isAllScope = await _accessService.CanAsync(staffMemberId, StaffArea.Absences, StaffAccess.EditAll,
+        var isAllScope = await accessService.CanAsync(staffMemberId, StaffArea.Absences, StaffAccess.EditAll,
             cancellationToken);
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             await ReconcileAbsencesAsync(staffMemberId, model.Absences, isAllScope, uow.Transaction, cancellationToken);
         }, cancellationToken);
@@ -110,14 +97,14 @@ public class StaffAbsenceService : BaseService, IStaffAbsenceService
     // HR (All scope) and the staff member themselves see confidential absences; a line manager does not.
     private async Task<bool> CanSeeConfidentialAsync(Guid staffMemberId, CancellationToken cancellationToken)
     {
-        var relationship = await _accessService.GetRelationshipAsync(staffMemberId, cancellationToken);
+        var relationship = await accessService.GetRelationshipAsync(staffMemberId, cancellationToken);
 
         if (relationship == StaffRelationship.Self)
         {
             return true;
         }
 
-        return await _accessService.CanAsync(staffMemberId, StaffArea.Absences,
+        return await accessService.CanAsync(staffMemberId, StaffArea.Absences,
             StaffAccess.ViewAll | StaffAccess.EditAll, cancellationToken);
     }
 
@@ -125,7 +112,7 @@ public class StaffAbsenceService : BaseService, IStaffAbsenceService
         bool isAllScope, IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var existing =
-            (await _absenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction)).ToList();
+            (await absenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction)).ToList();
         var existingById = existing.ToDictionary(x => x.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
 
@@ -136,7 +123,7 @@ public class StaffAbsenceService : BaseService, IStaffAbsenceService
         foreach (var row in deletable.Where(row => !keptIds.Contains(row.Id)))
         {
             // No soft-delete column on StaffAbsences — hard delete.
-            await _absenceRepository.DeleteAsync(row.Id, cancellationToken, false, transaction);
+            await absenceRepository.DeleteAsync(row.Id, cancellationToken, false, transaction);
         }
 
         foreach (var item in incoming)
@@ -150,13 +137,13 @@ public class StaffAbsenceService : BaseService, IStaffAbsenceService
                 }
 
                 ApplyAbsence(entity, item, isAllScope);
-                await _absenceRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await absenceRepository.UpdateAsync(entity, cancellationToken, transaction);
             }
             else
             {
                 var created = new StaffAbsence { Id = SqlConvention.SequentialGuid(), StaffMemberId = staffMemberId };
                 ApplyAbsence(created, item, isAllScope);
-                await _absenceRepository.InsertAsync(created, cancellationToken, transaction);
+                await absenceRepository.InsertAsync(created, cancellationToken, transaction);
             }
         }
     }

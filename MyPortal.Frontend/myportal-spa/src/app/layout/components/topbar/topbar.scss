@@ -45,7 +45,7 @@
 
     &:hover,
     &:focus-visible {
-      background: var(--p-surface-100);
+      background: var(--p-content-hover-background);
     }
 
     i {
@@ -55,7 +55,7 @@
   }
 
   .menu-row--danger {
-    color: rgb(220 38 38); // tailwind red-600
+    color: var(--p-red-600);
 
     i {
       opacity: 1;
@@ -63,7 +63,7 @@
 
     &:hover,
     &:focus-visible {
-      background: rgb(254 242 242); // tailwind red-50
+      background: color-mix(in srgb, var(--p-red-500) 10%, transparent);
     }
   }
 
@@ -108,19 +108,14 @@
 }
 
 ::ng-deep .mp-dark .user-menu-popover {
-  .menu-row {
-    &:hover,
-    &:focus-visible {
-      background: var(--p-surface-800);
-    }
-  }
+  // .menu-row hover flips automatically via --p-content-hover-background.
 
   .menu-row--danger {
-    color: rgb(248 113 113); // tailwind red-400
+    color: var(--p-red-400);
 
     &:hover,
     &:focus-visible {
-      background: rgb(127 29 29 / 0.35); // tailwind red-900 with transparency
+      background: color-mix(in srgb, var(--p-red-500) 22%, transparent);
     }
   }
 

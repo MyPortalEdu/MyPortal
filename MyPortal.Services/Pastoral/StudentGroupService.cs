@@ -1,4 +1,6 @@
 using System.Data;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
@@ -18,25 +20,15 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.Pastoral;
 
-public class StudentGroupService : BaseService, IStudentGroupService
+public class StudentGroupService(
+    IAuthorizationService authorizationService,
+    ILogger<StudentGroupService> logger,
+    IUnitOfWorkFactory unitOfWorkFactory,
+    IStudentGroupRepository studentGroupRepository,
+    IStudentGroupSupervisorRepository studentGroupSupervisorRepository,
+    IAcademicYearRepository academicYearRepository)
+    : BaseService(authorizationService, logger), IStudentGroupService
 {
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-    private readonly IStudentGroupRepository _studentGroupRepository;
-    private readonly IStudentGroupSupervisorRepository _studentGroupSupervisorRepository;
-    private readonly IAcademicYearRepository _academicYearRepository;
-
-    public StudentGroupService(IAuthorizationService authorizationService,
-        ILogger<StudentGroupService> logger, IUnitOfWorkFactory unitOfWorkFactory,
-        IStudentGroupRepository studentGroupRepository,
-        IStudentGroupSupervisorRepository studentGroupSupervisorRepository,
-        IAcademicYearRepository academicYearRepository) : base(authorizationService, logger)
-    {
-        _unitOfWorkFactory = unitOfWorkFactory;
-        _studentGroupRepository = studentGroupRepository;
-        _studentGroupSupervisorRepository = studentGroupSupervisorRepository;
-        _academicYearRepository = academicYearRepository;
-    }
-
     public async Task<PageResult<StudentGroupSummaryResponse>> GetSummariesAsync(Guid academicYearId,
         FilterOptions? filter = null, SortOptions? sort = null, PageOptions? paging = null,
         CancellationToken cancellationToken = default)
@@ -47,7 +39,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
         await AuthorizationService.RequirePermissionAsync(Permissions.School.ViewPastoralStructure,
             cancellationToken);
 
-        return await _studentGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging,
+        return await studentGroupRepository.GetSummariesAsync(academicYearId, filter, sort, paging,
             cancellationToken);
     }
 
@@ -55,10 +47,13 @@ public class StudentGroupService : BaseService, IStudentGroupService
         IList<StudentGroupSupervisorUpsertRequest> supervisors,
         CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        return await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        return await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
             await EnsureAcademicYearNotLockedAsync(academicYearId, "created", cancellationToken,
                 ownedUow.Transaction);
+
+            await EnsureCodeUniqueAsync(academicYearId, core.Code, excludeStudentGroupId: null,
+                cancellationToken, ownedUow.Transaction);
 
             var studentGroup = new StudentGroup
             {
@@ -70,7 +65,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
                 Notes = core.Notes
             };
 
-            await _studentGroupRepository.InsertAsync(studentGroup, cancellationToken, ownedUow.Transaction);
+            await studentGroupRepository.InsertAsync(studentGroup, cancellationToken, ownedUow.Transaction);
 
             var mainSupervisorId = await ReplaceSupervisorsAsync(studentGroup.Id, supervisors,
                 cancellationToken, ownedUow.Transaction);
@@ -78,7 +73,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
             if (mainSupervisorId.HasValue)
             {
                 studentGroup.MainSupervisorId = mainSupervisorId;
-                await _studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
+                await studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
                     ownedUow.Transaction);
             }
 
@@ -90,13 +85,16 @@ public class StudentGroupService : BaseService, IStudentGroupService
         IList<StudentGroupSupervisorUpsertRequest> supervisors,
         CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
             var studentGroup = await GetOrThrowAsync(studentGroupId, cancellationToken,
                 ownedUow.Transaction);
 
             await EnsureAcademicYearNotLockedAsync(studentGroup.AcademicYearId, "edited",
                 cancellationToken, ownedUow.Transaction);
+
+            await EnsureCodeUniqueAsync(studentGroup.AcademicYearId, core.Code,
+                excludeStudentGroupId: studentGroupId, cancellationToken, ownedUow.Transaction);
 
             // StudentGroup.MainSupervisorId -> StudentGroupSupervisor.Id is a circular FK with
             // StudentGroupSupervisor.StudentGroupId -> StudentGroup.Id. Null the back-reference
@@ -105,7 +103,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
             if (studentGroup.MainSupervisorId.HasValue)
             {
                 studentGroup.MainSupervisorId = null;
-                await _studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
+                await studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
                     ownedUow.Transaction);
             }
 
@@ -118,7 +116,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
             studentGroup.Notes = core.Notes;
             studentGroup.MainSupervisorId = mainSupervisorId;
 
-            await _studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
+            await studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
                 ownedUow.Transaction);
         }, cancellationToken);
     }
@@ -126,7 +124,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
     public async Task DeleteAsync(Guid studentGroupId,
         CancellationToken cancellationToken, IUnitOfWork? uow = null)
     {
-        await _unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
+        await unitOfWorkFactory.RunInTransactionAsync(uow, async ownedUow =>
         {
             var studentGroup = await GetOrThrowAsync(studentGroupId, cancellationToken,
                 ownedUow.Transaction);
@@ -137,7 +135,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
             // StudentGroup is not soft-deletable, so any FK reference (memberships, marksheets,
             // curriculum groups, activities, parent-evening groups, result-set releases) would
             // fail the delete. Surface a friendly error before the constraint fires.
-            if (await _studentGroupRepository.HasDownstreamDataAsync(studentGroup.Id,
+            if (await studentGroupRepository.HasDownstreamDataAsync(studentGroup.Id,
                     cancellationToken, ownedUow.Transaction))
             {
                 throw new AcademicYearLockedException(
@@ -149,20 +147,20 @@ public class StudentGroupService : BaseService, IStudentGroupService
             if (studentGroup.MainSupervisorId.HasValue)
             {
                 studentGroup.MainSupervisorId = null;
-                await _studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
+                await studentGroupRepository.UpdateAsync(studentGroup, cancellationToken,
                     ownedUow.Transaction);
             }
 
-            var existingSupervisors = await _studentGroupSupervisorRepository.GetByStudentGroupAsync(
+            var existingSupervisors = await studentGroupSupervisorRepository.GetByStudentGroupAsync(
                 studentGroup.Id, cancellationToken, ownedUow.Transaction);
 
             foreach (var supervisor in existingSupervisors)
             {
-                await _studentGroupSupervisorRepository.DeleteAsync(supervisor.Id, cancellationToken,
+                await studentGroupSupervisorRepository.DeleteAsync(supervisor.Id, cancellationToken,
                     transaction: ownedUow.Transaction);
             }
 
-            await _studentGroupRepository.DeleteAsync(studentGroup.Id, cancellationToken,
+            await studentGroupRepository.DeleteAsync(studentGroup.Id, cancellationToken,
                 transaction: ownedUow.Transaction);
         }, cancellationToken);
     }
@@ -170,7 +168,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
     public async Task EnsureAcademicYearNotLockedAsync(Guid academicYearId, string verb,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {
-        var academicYear = await _academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
+        var academicYear = await academicYearRepository.GetByIdAsync(academicYearId, cancellationToken,
                                transaction)
                            ?? throw new NotFoundException("Academic year not found.");
 
@@ -181,10 +179,27 @@ public class StudentGroupService : BaseService, IStudentGroupService
         }
     }
 
+    // Codes must be unique per academic year across the whole pastoral hierarchy (houses,
+    // year groups and reg groups share the StudentGroups table). The DB has no unique index,
+    // so guard here and surface a friendly error instead of a duplicate row.
+    private async Task EnsureCodeUniqueAsync(Guid academicYearId, string code, Guid? excludeStudentGroupId,
+        CancellationToken cancellationToken, IDbTransaction? transaction)
+    {
+        if (await studentGroupRepository.CodeExistsAsync(academicYearId, code, excludeStudentGroupId,
+                cancellationToken, transaction))
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure("Code",
+                    $"A group with code '{code}' already exists in this academic year.")
+            });
+        }
+    }
+
     private async Task<StudentGroup> GetOrThrowAsync(Guid studentGroupId,
         CancellationToken cancellationToken, IDbTransaction? transaction)
     {
-        return await _studentGroupRepository.GetByIdAsync(studentGroupId, cancellationToken, transaction)
+        return await studentGroupRepository.GetByIdAsync(studentGroupId, cancellationToken, transaction)
                ?? throw new NotFoundException("Student group not found.");
     }
 
@@ -200,12 +215,23 @@ public class StudentGroupService : BaseService, IStudentGroupService
             throw new InvalidOperationException("Only one supervisor can be flagged as the main supervisor.");
         }
 
-        var existing = await _studentGroupSupervisorRepository.GetByStudentGroupAsync(studentGroupId,
+        // The (StudentGroupId, SupervisorId) pair has no unique constraint, so a repeated staff
+        // member would create duplicate supervisor rows. Reject it up front.
+        if (supervisorModels.GroupBy(s => s.StaffMemberId).Any(g => g.Count() > 1))
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure("Supervisors",
+                    "A staff member cannot be added as a supervisor more than once.")
+            });
+        }
+
+        var existing = await studentGroupSupervisorRepository.GetByStudentGroupAsync(studentGroupId,
             cancellationToken, transaction);
 
         foreach (var supervisor in existing)
         {
-            await _studentGroupSupervisorRepository.DeleteAsync(supervisor.Id, cancellationToken,
+            await studentGroupSupervisorRepository.DeleteAsync(supervisor.Id, cancellationToken,
                 transaction: transaction);
         }
 
@@ -221,7 +247,7 @@ public class StudentGroupService : BaseService, IStudentGroupService
                 Title = supervisorModel.Title
             };
 
-            await _studentGroupSupervisorRepository.InsertAsync(supervisor, cancellationToken, transaction);
+            await studentGroupSupervisorRepository.InsertAsync(supervisor, cancellationToken, transaction);
 
             if (supervisorModel.MainSupervisor)
             {

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MyPortal.Common.Enums;
 
 namespace MyPortal.Contracts.Models.System.Permissions
 {
@@ -11,5 +11,7 @@ namespace MyPortal.Contracts.Models.System.Permissions
         public string FriendlyName { get; set; } = null!;
 
         public string Area { get; set; } = null!;
+
+        public UserType UserType { get; set; }
     }
 }

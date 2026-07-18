@@ -15,17 +15,11 @@ namespace MyPortal.WebApi.Controllers;
 [ApiController]
 [AllowAnonymous]
 [Route("connect")]
-public sealed class AuthController : ControllerBase
+public sealed class AuthController(
+    UserManager<ApplicationUser> userManager,
+    SignInManager<ApplicationUser> signInManager)
+    : ControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
-
-    public AuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
-    {
-        _userManager = userManager;
-        _signInManager = signInManager;
-    }
-
     /// <summary>OAuth 2.0 authorization endpoint (GET).</summary>
     /// <remarks>Challenges anonymous callers and resumes the authorize flow after sign-in.</remarks>
     [HttpGet("authorize")]
@@ -50,10 +44,10 @@ public sealed class AuthController : ControllerBase
         var request = HttpContext.GetOpenIddictServerRequest()
                       ?? throw new InvalidOperationException("OIDC request missing.");
 
-        var user = await _userManager.GetUserAsync(User)
+        var user = await userManager.GetUserAsync(User)
                    ?? throw new InvalidOperationException("User not found.");
 
-        var principal = await _signInManager.CreateUserPrincipalAsync(user);
+        var principal = await signInManager.CreateUserPrincipalAsync(user);
 
         if (principal.GetClaim(OpenIddictConstants.Claims.Subject) is null)
             principal.SetClaim(OpenIddictConstants.Claims.Subject, user.Id.ToString());
@@ -94,7 +88,7 @@ public sealed class AuthController : ControllerBase
             if (string.IsNullOrEmpty(subject))
                 return Forbid(oidcScheme);
 
-            var user = await _userManager.FindByIdAsync(subject);
+            var user = await userManager.FindByIdAsync(subject);
 
             if (user is null || !user.IsEnabled)
                 return Forbid(oidcScheme);

@@ -5,11 +5,6 @@ namespace MyPortal.Contracts.Models.System.Users;
 
 public class UserUpsertRequest : IUserPasswordRequest
 {
-    public UserUpsertRequest()
-    {
-        RoleIds = new List<Guid>();
-    }
-    
     public Guid? PersonId { get; set; }
         
     public UserType UserType { get; set; }
@@ -23,5 +18,5 @@ public class UserUpsertRequest : IUserPasswordRequest
     // Only used for user creation
     public string Password { get; set; } = null!;
     
-    public IList<Guid> RoleIds { get; set; }
+    public IList<Guid> RoleIds { get; set; } = new List<Guid>();
 }

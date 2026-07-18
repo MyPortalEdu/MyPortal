@@ -14,16 +14,13 @@ namespace MyPortal.WebApi.Controllers;
 
 
 /// <summary>Shared attachment endpoints for directory-owning entities.</summary>
-public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiController where TDirectoryEntity : IDirectoryEntity
+public abstract class BaseDirectoryEntityController<TDirectoryEntity>(
+    ProblemDetailsFactory problemFactory,
+    ILogger<BaseDirectoryEntityController<TDirectoryEntity>> logger,
+    IDirectoryEntityService<TDirectoryEntity> directoryEntityService)
+    : BaseApiController(problemFactory, logger)
+    where TDirectoryEntity : IDirectoryEntity
 {
-    private readonly IDirectoryEntityService<TDirectoryEntity> _directoryEntityService;
-
-    protected BaseDirectoryEntityController(ProblemDetailsFactory problemFactory, ILogger<BaseDirectoryEntityController<TDirectoryEntity>> logger,
-        IDirectoryEntityService<TDirectoryEntity> directoryEntityService) : base(problemFactory, logger)
-    {
-        _directoryEntityService = directoryEntityService;
-    }
-
     /// <summary>Whether attachment deletes should hard-delete instead of soft-delete.</summary>
     protected virtual bool HardDeleteDocuments => false;
 
@@ -34,7 +31,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     [ProducesResponseType(typeof(DirectoryDetailsResponse), 200)]
     public async Task<IActionResult> GetDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
-        var result = await _directoryEntityService.GetDirectoryByIdAsync(entityId, directoryId, CancellationToken);
+        var result = await directoryEntityService.GetDirectoryByIdAsync(entityId, directoryId, CancellationToken);
 
         return Ok(result);
     }
@@ -46,7 +43,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     [ProducesResponseType(typeof(DirectoryContentsResponse), 200)]
     public async Task<IActionResult> GetDirectoryContentsAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
-        var result = await _directoryEntityService.GetDirectoryContentsAsync(entityId, directoryId, CancellationToken);
+        var result = await directoryEntityService.GetDirectoryContentsAsync(entityId, directoryId, CancellationToken);
 
         return Ok(result);
     }
@@ -58,7 +55,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     [ProducesResponseType(typeof(DirectoryContentsResponse), 200)]
     public async Task<IActionResult> GetRootDirectoryContentsAsync([FromRoute] Guid entityId)
     {
-        var result = await _directoryEntityService.GetRootDirectoryContentsAsync(entityId, CancellationToken);
+        var result = await directoryEntityService.GetRootDirectoryContentsAsync(entityId, CancellationToken);
 
         return Ok(result);
     }
@@ -71,7 +68,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     [ProducesResponseType(typeof(DirectoryTreeResponse), 200)]
     public async Task<IActionResult> GetDirectoryTreeAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
-        var result = await _directoryEntityService.GetDirectoryTreeAsync(entityId, directoryId, CancellationToken);
+        var result = await directoryEntityService.GetDirectoryTreeAsync(entityId, directoryId, CancellationToken);
 
         return Ok(result);
     }
@@ -85,7 +82,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     public async Task<IActionResult> CreateDirectoryAsync([FromRoute] Guid entityId,
         [FromBody] DirectoryUpsertRequest model)
     {
-        var result = await _directoryEntityService.CreateDirectoryAsync(entityId, model, CancellationToken);
+        var result = await directoryEntityService.CreateDirectoryAsync(entityId, model, CancellationToken);
 
         return Ok(result);
     }
@@ -100,7 +97,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     public async Task<IActionResult> UpdateDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId,
         [FromBody] DirectoryUpsertRequest model)
     {
-        var result = await _directoryEntityService.UpdateDirectoryAsync(entityId, directoryId, model, CancellationToken);
+        var result = await directoryEntityService.UpdateDirectoryAsync(entityId, directoryId, model, CancellationToken);
 
         return Ok(result);
     }
@@ -114,7 +111,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteDirectoryAsync([FromRoute] Guid entityId, [FromRoute] Guid directoryId)
     {
-        await _directoryEntityService.DeleteDirectoryAsync(entityId, directoryId, CancellationToken, softDelete: !HardDeleteDocuments);
+        await directoryEntityService.DeleteDirectoryAsync(entityId, directoryId, CancellationToken, softDelete: !HardDeleteDocuments);
 
         return NoContent();
     }
@@ -126,7 +123,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     [ProducesResponseType(typeof(DocumentDetailsResponse), 200)]
     public async Task<IActionResult> GetDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
-        var result = await _directoryEntityService.GetDocumentByIdAsync(entityId, documentId, CancellationToken);
+        var result = await directoryEntityService.GetDocumentByIdAsync(entityId, documentId, CancellationToken);
 
         return Ok(result);
     }
@@ -141,7 +138,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     public async Task<IActionResult> DownloadDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
         var document =
-            await _directoryEntityService.GetDocumentWithContentByIdAsync(entityId, documentId, CancellationToken);
+            await directoryEntityService.GetDocumentWithContentByIdAsync(entityId, documentId, CancellationToken);
 
         var typedHeaders = Response.GetTypedHeaders();
 
@@ -194,7 +191,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
             model.SizeBytes = form.File.Length;
         }
         
-        var result = await _directoryEntityService.CreateDocumentAsync(entityId, model, CancellationToken);
+        var result = await directoryEntityService.CreateDocumentAsync(entityId, model, CancellationToken);
         
         return Ok(result);
     }
@@ -229,7 +226,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
             model.SizeBytes = form.File.Length;
         }
 
-        var result = await _directoryEntityService.UpdateDocumentAsync(entityId, documentId, model, CancellationToken);
+        var result = await directoryEntityService.UpdateDocumentAsync(entityId, documentId, model, CancellationToken);
         
         return Ok(result);
     }
@@ -242,7 +239,7 @@ public abstract class BaseDirectoryEntityController<TDirectoryEntity> : BaseApiC
     [ProducesResponseType(204)]
     public async Task<IActionResult> DeleteDocumentAsync([FromRoute] Guid entityId, [FromRoute] Guid documentId)
     {
-        await _directoryEntityService.DeleteDocumentAsync(entityId, documentId, CancellationToken,
+        await directoryEntityService.DeleteDocumentAsync(entityId, documentId, CancellationToken,
             softDelete: !HardDeleteDocuments);
 
         return NoContent();

@@ -10,23 +10,19 @@ namespace MyPortal.WebApi.Controllers;
 /// Read-only access to the document type catalogue. Used by attachment UI to
 /// populate the type dropdown when uploading a file.
 /// </summary>
-public sealed class DocumentTypesController : BaseApiController
+public sealed class DocumentTypesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<DocumentTypesController> logger,
+    IDocumentService documentService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IDocumentService _documentService;
-
-    public DocumentTypesController(ProblemDetailsFactory problemFactory, ILogger<DocumentTypesController> logger,
-        IDocumentService documentService) : base(problemFactory, logger)
-    {
-        _documentService = documentService;
-    }
-
     /// <summary>List document types matching the given filter.</summary>
     /// <param name="filter">Optional filtering criteria (active flag, content-type prefix, etc.).</param>
     [HttpGet]
     [ProducesResponseType(typeof(IList<LookupResponse>), 200)]
     public async Task<IActionResult> GetDocumentTypes([FromQuery] DocumentTypeFilter filter)
     {
-        var result = await _documentService.GetDocumentTypesAsync(filter, CancellationToken);
+        var result = await documentService.GetDocumentTypesAsync(filter, CancellationToken);
 
         return Ok(result);
     }

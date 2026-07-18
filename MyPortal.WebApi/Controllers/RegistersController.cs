@@ -11,16 +11,12 @@ using MyPortal.WebApi.Infrastructure.Attributes;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Attendance register endpoints.</summary>
-public sealed class RegistersController : BaseApiController
+public sealed class RegistersController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<RegistersController> logger,
+    IRegisterService registerService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IRegisterService _registerService;
-
-    public RegistersController(ProblemDetailsFactory problemFactory, ILogger<RegistersController> logger,
-        IRegisterService registerService) : base(problemFactory, logger)
-    {
-        _registerService = registerService;
-    }
-
     /// <summary>Get the register for a lesson session.</summary>
     /// <remarks>Returns the roster, existing marks, and cell shape for the register grid.</remarks>
     /// <param name="sessionPeriodId">The session period whose register to load.</param>
@@ -31,7 +27,7 @@ public sealed class RegistersController : BaseApiController
     public async Task<IActionResult> GetLessonRegisterAsync([FromRoute] Guid sessionPeriodId,
         [FromRoute] Guid attendanceWeekId)
     {
-        var result = await _registerService.GetLessonRegisterAsync(sessionPeriodId, attendanceWeekId,
+        var result = await registerService.GetLessonRegisterAsync(sessionPeriodId, attendanceWeekId,
             CancellationToken);
 
         return Ok(result);
@@ -48,7 +44,7 @@ public sealed class RegistersController : BaseApiController
     public async Task<IActionResult> GetRegGroupRegisterAsync([FromRoute] Guid regGroupId,
         [FromRoute] Guid attendancePeriodId, [FromRoute] Guid attendanceWeekId)
     {
-        var result = await _registerService.GetRegGroupRegisterAsync(regGroupId, attendancePeriodId,
+        var result = await registerService.GetRegGroupRegisterAsync(regGroupId, attendancePeriodId,
             attendanceWeekId, CancellationToken);
 
         return Ok(result);
@@ -67,7 +63,7 @@ public sealed class RegistersController : BaseApiController
     public async Task<IActionResult> SubmitLessonRegisterAsync([FromRoute] Guid sessionPeriodId,
         [FromRoute] Guid attendanceWeekId, [FromBody] SubmitRegisterRequest model)
     {
-        await _registerService.SubmitLessonRegisterAsync(sessionPeriodId, attendanceWeekId, model,
+        await registerService.SubmitLessonRegisterAsync(sessionPeriodId, attendanceWeekId, model,
             CancellationToken);
 
         return NoContent();
@@ -88,7 +84,7 @@ public sealed class RegistersController : BaseApiController
         [FromRoute] Guid attendancePeriodId, [FromRoute] Guid attendanceWeekId,
         [FromBody] SubmitRegisterRequest model)
     {
-        await _registerService.SubmitRegGroupRegisterAsync(regGroupId, attendancePeriodId, attendanceWeekId,
+        await registerService.SubmitRegGroupRegisterAsync(regGroupId, attendancePeriodId, attendanceWeekId,
             model, CancellationToken);
 
         return NoContent();

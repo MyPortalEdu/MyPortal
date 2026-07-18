@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class SchoolPhaseRepository : EntityRepository<SchoolPhase>, ISchoolPhaseRepository
-{
-    public SchoolPhaseRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class SchoolPhaseRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<SchoolPhase>(factory, authorizationService), ISchoolPhaseRepository;

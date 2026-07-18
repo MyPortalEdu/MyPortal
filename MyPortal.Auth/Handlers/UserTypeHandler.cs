@@ -6,14 +6,11 @@ using MyPortal.Common.Enums;
 
 namespace MyPortal.Auth.Handlers;
 
-public sealed class UserTypeHandler : AuthorizationHandler<UserTypeRequirement>
+public sealed class UserTypeHandler(ICurrentUser me) : AuthorizationHandler<UserTypeRequirement>
 {
-    private readonly ICurrentUser _me;
-    public UserTypeHandler(ICurrentUser me) => _me = me;
-
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UserTypeRequirement req)
     {
-        if (_me.UserType == UserType.Unknown)
+        if (me.UserType == UserType.Unknown)
         {
             return Task.CompletedTask;
         }
@@ -25,7 +22,7 @@ public sealed class UserTypeHandler : AuthorizationHandler<UserTypeRequirement>
             return Task.CompletedTask;
         }
 
-        var ut = _me.UserType.ToString();
+        var ut = me.UserType.ToString();
         if (req.Allowed.Contains(ut, StringComparer.OrdinalIgnoreCase))
             context.Succeed(req);
 

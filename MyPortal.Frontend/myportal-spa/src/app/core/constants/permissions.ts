@@ -5,6 +5,8 @@ export const Permissions = {
   SystemAdmin: {
     ViewUsers:           'System.ViewUsers',
     EditUsers:           'System.EditUsers',
+    ViewRoles:           'System.ViewRoles',
+    EditRoles:           'System.EditRoles',
     ViewGroups:          'System.ViewGroups',
     EditGroups:          'System.EditGroups',
     BulletinSettings:    'System.BulletinSettings'
@@ -57,7 +59,6 @@ export const Permissions = {
     ViewOwnStaffTimetable:               'Staff.ViewOwnStaffTimetable',
     ViewManagedStaffTimetable:           'Staff.ViewManagedStaffTimetable',
     ViewAllStaffTimetable:               'Staff.ViewAllStaffTimetable',
-    EditAllStaffTimetable:               'Staff.EditAllStaffTimetable',
 
     ViewOwnStaffDocuments:               'Staff.ViewOwnStaffDocuments',
     ViewManagedStaffDocuments:           'Staff.ViewManagedStaffDocuments',

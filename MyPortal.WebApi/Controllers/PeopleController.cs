@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Auth.Attributes;
+using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models;
@@ -13,16 +14,13 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>People lookup endpoints.</summary>
-public sealed class PeopleController : BaseApiController
+public sealed class PeopleController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<PeopleController> logger,
+    IStaffMemberService staffMemberService,
+    IPersonService personService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IStaffMemberService _staffMemberService;
-
-    public PeopleController(ProblemDetailsFactory problemFactory, ILogger<PeopleController> logger,
-        IStaffMemberService staffMemberService) : base(problemFactory, logger)
-    {
-        _staffMemberService = staffMemberService;
-    }
-
     /// <summary>Page through staff-member summaries for the picker.</summary>
     /// <remarks>Requires <c>Staff.ViewAllStaffBasicDetails</c>.</remarks>
     /// <param name="page">1-based page number.</param>
@@ -37,8 +35,21 @@ public sealed class PeopleController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _staffMemberService.GetStaffMembersAsync(options.FilterOptions, options.SortOptions,
+        var result = await staffMemberService.GetStaffMembersAsync(options.FilterOptions, options.SortOptions,
             options.PageOptions, CancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>Search People by name to link to a user account.</summary>
+    /// <param name="query">The search term (min 2 characters; shorter returns empty).</param>
+    [HttpGet("search")]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.SystemAdmin.EditUsers)]
+    [ProducesResponseType(typeof(IReadOnlyList<PersonSearchResponse>), 200)]
+    public async Task<IActionResult> SearchPeopleAsync([FromQuery] string query)
+    {
+        var result = await personService.SearchAsync(query, CancellationToken);
 
         return Ok(result);
     }

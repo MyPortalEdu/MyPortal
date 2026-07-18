@@ -6,14 +6,9 @@ using MyPortal.Common.Options;
 
 namespace MyPortal.Data.Factories;
 
-public class SqlConnectionFactory : IDbConnectionFactory
+public class SqlConnectionFactory(IOptions<DatabaseOptions> db) : IDbConnectionFactory
 {
-    private readonly DatabaseOptions _db;
-
-    public SqlConnectionFactory(IOptions<DatabaseOptions> db)
-    {
-        _db = db.Value;
-    }
+    private readonly DatabaseOptions _db = db.Value;
 
 
     public IDbConnection Create()

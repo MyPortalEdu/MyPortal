@@ -8,13 +8,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class AcademicTermRepository : Base.EntityRepository<AcademicTerm>, IAcademicTermRepository
+public class AcademicTermRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : Base.EntityRepository<AcademicTerm>(factory, authorizationService), IAcademicTermRepository
 {
-    public AcademicTermRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-
     public async Task DeleteByAcademicYearAsync(Guid academicYearId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {

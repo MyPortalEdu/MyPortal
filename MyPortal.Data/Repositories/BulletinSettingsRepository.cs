@@ -1,35 +1,20 @@
 using System.Data;
-using Dapper;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Parameters;
+using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
 
-public class BulletinSettingsRepository : IBulletinSettingsRepository
+public class BulletinSettingsRepository(IDbConnectionFactory factory) : IBulletinSettingsRepository
 {
-    private readonly IDbConnectionFactory _factory;
-
-    public BulletinSettingsRepository(IDbConnectionFactory factory)
-    {
-        _factory = factory;
-    }
-
     public async Task<IList<BulletinAllowedGroupResponse>> GetAllowedAudienceGroupsAsync(
         CancellationToken cancellationToken)
     {
-        const string sql = @"
-SELECT
-    SG.Id          AS StudentGroupId,
-    SG.Code        AS Code,
-    SG.Description AS Name
-FROM dbo.BulletinAudienceAllowedGroups AAG
-JOIN dbo.StudentGroups                  SG ON SG.Id = AAG.StudentGroupId
-ORDER BY SG.Description;";
-
-        using var conn = _factory.Create();
-        var rows = await conn.QueryAsync<BulletinAllowedGroupResponse>(
-            new CommandDefinition(sql, cancellationToken: cancellationToken));
+        using var conn = factory.Create();
+        var rows = await conn.ExecuteStoredProcedureAsync<BulletinAllowedGroupResponse>(
+            "[dbo].[usp_bulletin_audience_allowed_group_get_all]", cancellationToken: cancellationToken);
         return rows.ToList();
     }
 
@@ -45,7 +30,7 @@ ORDER BY SG.Description;";
         // No caller-supplied transaction: open a local one so DELETE + INSERT are atomic.
         // Without this, a failure (or cancellation) after the DELETE would leave the
         // allowlist empty.
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
         conn.Open();
         using var localTx = conn.BeginTransaction();
         try
@@ -63,26 +48,12 @@ ORDER BY SG.Description;";
     private static async Task ReplaceCoreAsync(IDbConnection conn, IDbTransaction tx,
         IList<Guid> studentGroupIds, CancellationToken cancellationToken)
     {
-        // Single-tenant assumption: the allowlist is school-wide, so an unscoped DELETE
-        // is correct. If multi-tenancy is added, this table needs a SchoolId column and
-        // the DELETE must be scoped — otherwise saving one school's allowlist will wipe
-        // every other school's.
-        await conn.ExecuteAsync(new CommandDefinition(
-            "DELETE FROM dbo.BulletinAudienceAllowedGroups;",
-            transaction: tx, cancellationToken: cancellationToken));
-
-        if (studentGroupIds.Count == 0)
-        {
-            return;
-        }
-
-        const string insertSql = @"
-INSERT INTO dbo.BulletinAudienceAllowedGroups (StudentGroupId)
-VALUES (@StudentGroupId);";
-
-        var rows = studentGroupIds.Select(id => new { StudentGroupId = id });
-
-        await conn.ExecuteAsync(new CommandDefinition(insertSql, rows,
-            transaction: tx, cancellationToken: cancellationToken));
+        // usp_bulletin_audience_allowed_group_replace clears the allowlist then re-inserts the
+        // supplied ids. The caller's transaction (tx) keeps the DELETE + INSERT atomic. An empty
+        // list correctly clears the allowlist (the SP inserts nothing).
+        await conn.ExecuteStoredProcedureAsync<int>(
+            "[dbo].[usp_bulletin_audience_allowed_group_replace]",
+            new { studentGroupIds = studentGroupIds.ToGuidTvp() }, tx,
+            cancellationToken: cancellationToken);
     }
 }

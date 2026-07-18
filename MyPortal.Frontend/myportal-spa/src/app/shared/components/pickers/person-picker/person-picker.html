@@ -1,0 +1,48 @@
+<ng-container *transloco="let t">
+  <p-button
+    [label]="buttonLabel() ?? t('common.personPicker.pick')"
+    icon="fa-solid fa-magnifying-glass"
+    severity="secondary"
+    (click)="open($event)">
+  </p-button>
+
+  <p-popover #op [style]="{ width: 'min(32rem, 92vw)' }" [dismissable]="true">
+    <div class="flex flex-col gap-3 p-2">
+      <div class="flex items-center gap-2">
+        <input
+          pInputText
+          class="grow"
+          [ngModel]="query()"
+          (ngModelChange)="onQueryChange($event)"
+          [placeholder]="t('common.personPicker.searchPlaceholder')" />
+        <button type="button" class="mp-icon-button" (click)="close()" [attr.aria-label]="'common.close' | transloco">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="text-sm text-muted-color py-4 text-center">{{ 'common.loading' | transloco }}</div>
+      } @else if (results().length > 0) {
+        <ul class="flex flex-col gap-0.5 max-h-72 overflow-auto m-0 p-0 list-none">
+          @for (p of results(); track p.personId) {
+            <li>
+              <button
+                type="button"
+                class="w-full text-left px-3 py-2 rounded-md hover:bg-emphasis flex items-center justify-between gap-2"
+                (click)="select(p)">
+                <span class="text-sm">{{ displayName(p) }}</span>
+                @if (p.dob) {
+                  <span class="text-xs text-muted-color">{{ p.dob | date: 'dd/MM/yyyy' }}</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      } @else if (searched() && query().trim().length >= 2) {
+        <div class="text-sm text-muted-color py-4 text-center">{{ t('common.personPicker.empty') }}</div>
+      } @else {
+        <div class="text-xs text-muted-color py-4 text-center">{{ t('common.personPicker.hint') }}</div>
+      }
+    </div>
+  </p-popover>
+</ng-container>

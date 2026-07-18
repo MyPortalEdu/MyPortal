@@ -65,4 +65,11 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
     /// </summary>
     Task<bool> IsManagedByAsync(Guid subjectStaffMemberId, Guid managerStaffMemberId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// True if another (non-deleted) staff member already uses this code. Pass
+    /// <paramref name="excludeStaffMemberId"/> on update so a member doesn't clash with itself.
+    /// </summary>
+    Task<bool> CodeExistsAsync(string code, Guid? excludeStaffMemberId, CancellationToken cancellationToken,
+        IDbTransaction? transaction = null);
 }

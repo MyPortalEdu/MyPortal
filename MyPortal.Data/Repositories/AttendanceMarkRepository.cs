@@ -7,19 +7,12 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class AttendanceMarkRepository : IAttendanceMarkRepository
+public class AttendanceMarkRepository(IDbConnectionFactory factory) : IAttendanceMarkRepository
 {
-    private readonly IDbConnectionFactory _factory;
-
-    public AttendanceMarkRepository(IDbConnectionFactory factory)
-    {
-        _factory = factory;
-    }
-
     public async Task<BulkAttendanceMarksResponse?> GetBulkAsync(Guid studentGroupId, DateTime from, DateTime to,
         CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
 
         var command = new CommandDefinition("[dbo].[usp_attendance_marks_get_bulk]",
             new { studentGroupId, from, to },
@@ -44,7 +37,7 @@ public class AttendanceMarkRepository : IAttendanceMarkRepository
     public async Task SubmitBulkAsync(Guid studentGroupId, DateTime from, DateTime to,
         IReadOnlyCollection<BulkAttendanceMarkUpsert> marks, CancellationToken cancellationToken)
     {
-        using var conn = _factory.Create();
+        using var conn = factory.Create();
 
         var command = new CommandDefinition("[dbo].[usp_attendance_marks_submit_bulk]",
             new

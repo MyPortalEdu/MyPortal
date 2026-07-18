@@ -20,76 +20,51 @@ namespace MyPortal.Services.People;
 /// enforced under <see cref="StaffArea.PreEmploymentChecks"/> — safeguarding/HR data, All-scope
 /// view and edit only. The save is a whole-area replace, each list reconciled by id.
 /// </summary>
-public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
+public class StaffPreEmploymentService(
+    IAuthorizationService authorizationService,
+    ILogger<StaffPreEmploymentService> logger,
+    IStaffMemberAccessService accessService,
+    IStaffMemberRepository staffMemberRepository,
+    IStaffPreEmploymentChecksRepository checksRepository,
+    IDbsCheckRepository dbsCheckRepository,
+    IDbsCheckTypeRepository dbsCheckTypeRepository,
+    IRightToWorkCheckRepository rightToWorkRepository,
+    IRightToWorkDocumentTypeRepository rightToWorkDocumentTypeRepository,
+    IStaffReferenceRepository referenceRepository,
+    IReferenceTypeRepository referenceTypeRepository,
+    IReferenceStatusRepository referenceStatusRepository,
+    IStaffOverseasCheckRepository overseasRepository,
+    INationalityRepository nationalityRepository,
+    IValidationService validationService,
+    IUnitOfWorkFactory unitOfWorkFactory)
+    : BaseService(authorizationService, logger), IStaffPreEmploymentService
 {
-    private readonly IStaffMemberAccessService _accessService;
-    private readonly IStaffMemberRepository _staffMemberRepository;
-    private readonly IStaffPreEmploymentChecksRepository _checksRepository;
-    private readonly IDbsCheckRepository _dbsCheckRepository;
-    private readonly IDbsCheckTypeRepository _dbsCheckTypeRepository;
-    private readonly IRightToWorkCheckRepository _rightToWorkRepository;
-    private readonly IRightToWorkDocumentTypeRepository _rightToWorkDocumentTypeRepository;
-    private readonly IStaffReferenceRepository _referenceRepository;
-    private readonly IReferenceTypeRepository _referenceTypeRepository;
-    private readonly IReferenceStatusRepository _referenceStatusRepository;
-    private readonly IStaffOverseasCheckRepository _overseasRepository;
-    private readonly INationalityRepository _nationalityRepository;
-    private readonly IValidationService _validationService;
-    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-
-    public StaffPreEmploymentService(IAuthorizationService authorizationService,
-        ILogger<StaffPreEmploymentService> logger, IStaffMemberAccessService accessService,
-        IStaffMemberRepository staffMemberRepository, IStaffPreEmploymentChecksRepository checksRepository,
-        IDbsCheckRepository dbsCheckRepository, IDbsCheckTypeRepository dbsCheckTypeRepository,
-        IRightToWorkCheckRepository rightToWorkRepository,
-        IRightToWorkDocumentTypeRepository rightToWorkDocumentTypeRepository,
-        IStaffReferenceRepository referenceRepository, IReferenceTypeRepository referenceTypeRepository,
-        IReferenceStatusRepository referenceStatusRepository, IStaffOverseasCheckRepository overseasRepository,
-        INationalityRepository nationalityRepository, IValidationService validationService,
-        IUnitOfWorkFactory unitOfWorkFactory) : base(authorizationService, logger)
-    {
-        _accessService = accessService;
-        _staffMemberRepository = staffMemberRepository;
-        _checksRepository = checksRepository;
-        _dbsCheckRepository = dbsCheckRepository;
-        _dbsCheckTypeRepository = dbsCheckTypeRepository;
-        _rightToWorkRepository = rightToWorkRepository;
-        _rightToWorkDocumentTypeRepository = rightToWorkDocumentTypeRepository;
-        _referenceRepository = referenceRepository;
-        _referenceTypeRepository = referenceTypeRepository;
-        _referenceStatusRepository = referenceStatusRepository;
-        _overseasRepository = overseasRepository;
-        _nationalityRepository = nationalityRepository;
-        _validationService = validationService;
-        _unitOfWorkFactory = unitOfWorkFactory;
-    }
-
     public async Task<StaffPreEmploymentChecksResponse> GetPreEmploymentChecksAsync(Guid staffMemberId,
         CancellationToken cancellationToken)
     {
         // Safeguarding/HR data — All-scope view only (no self / line-manager scope).
-        await _accessService.RequireAsync(staffMemberId, StaffArea.PreEmploymentChecks, StaffAccess.ViewAll,
+        await accessService.RequireAsync(staffMemberId, StaffArea.PreEmploymentChecks, StaffAccess.ViewAll,
             cancellationToken);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
             throw new NotFoundException("Staff member not found.");
         }
 
-        var record = await _checksRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
-        var dbsChecks = await _dbsCheckRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
-        var rightToWorkChecks = await _rightToWorkRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
-        var references = await _referenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
-        var overseasChecks = await _overseasRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
+        var record = await checksRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
+        var dbsChecks = await dbsCheckRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
+        var rightToWorkChecks = await rightToWorkRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
+        var references = await referenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
+        var overseasChecks = await overseasRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
 
-        var dbsCheckTypes = await _dbsCheckTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var dbsCheckTypes = await dbsCheckTypeRepository.GetListAsync(cancellationToken: cancellationToken);
         var rightToWorkDocumentTypes =
-            await _rightToWorkDocumentTypeRepository.GetListAsync(cancellationToken: cancellationToken);
-        var referenceTypes = await _referenceTypeRepository.GetListAsync(cancellationToken: cancellationToken);
-        var referenceStatuses = await _referenceStatusRepository.GetListAsync(cancellationToken: cancellationToken);
-        var nationalities = await _nationalityRepository.GetListAsync(cancellationToken: cancellationToken);
+            await rightToWorkDocumentTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var referenceTypes = await referenceTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var referenceStatuses = await referenceStatusRepository.GetListAsync(cancellationToken: cancellationToken);
+        var nationalities = await nationalityRepository.GetListAsync(cancellationToken: cancellationToken);
 
         return new StaffPreEmploymentChecksResponse
         {
@@ -116,12 +91,12 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
         StaffPreEmploymentChecksUpsertRequest model, CancellationToken cancellationToken)
     {
         // Safeguarding/HR data — All-scope edit only.
-        await _accessService.RequireAsync(staffMemberId, StaffArea.PreEmploymentChecks, StaffAccess.EditAll,
+        await accessService.RequireAsync(staffMemberId, StaffArea.PreEmploymentChecks, StaffAccess.EditAll,
             cancellationToken);
 
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
-        var staffMember = await _staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
+        var staffMember = await staffMemberRepository.GetByIdAsync(staffMemberId, cancellationToken);
 
         if (staffMember == null)
         {
@@ -132,10 +107,10 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
         // themselves a staff member (the FK targets StaffMembers); otherwise it stays null.
         var personId = AuthorizationService.GetCurrentUserPersonId();
         var verifierId = personId.HasValue
-            ? await _staffMemberRepository.GetStaffMemberIdByPersonIdAsync(personId.Value, cancellationToken)
+            ? await staffMemberRepository.GetStaffMemberIdByPersonIdAsync(personId.Value, cancellationToken)
             : null;
 
-        await _unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             await UpsertChecksRecordAsync(staffMemberId, model, uow.Transaction, cancellationToken);
             await ReconcileDbsChecksAsync(staffMemberId, model.DbsChecks, uow.Transaction, cancellationToken);
@@ -149,12 +124,12 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
     private async Task UpsertChecksRecordAsync(Guid staffMemberId, StaffPreEmploymentChecksUpsertRequest model,
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
-        var existing = await _checksRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction);
+        var existing = await checksRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction);
 
         if (existing != null)
         {
             ApplyChecksRecord(existing, model);
-            await _checksRepository.UpdateAsync(existing, cancellationToken, transaction);
+            await checksRepository.UpdateAsync(existing, cancellationToken, transaction);
         }
         else
         {
@@ -164,7 +139,7 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
                 StaffMemberId = staffMemberId
             };
             ApplyChecksRecord(record, model);
-            await _checksRepository.InsertAsync(record, cancellationToken, transaction);
+            await checksRepository.InsertAsync(record, cancellationToken, transaction);
         }
     }
 
@@ -182,14 +157,14 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
     private async Task ReconcileDbsChecksAsync(Guid staffMemberId, List<DbsCheckUpsertItem> incoming,
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
-        var existing = (await _dbsCheckRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction))
+        var existing = (await dbsCheckRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction))
             .ToList();
         var existingById = existing.ToDictionary(x => x.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
 
         foreach (var row in existing.Where(row => !keptIds.Contains(row.Id)))
         {
-            await _dbsCheckRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+            await dbsCheckRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
         }
 
         foreach (var item in incoming)
@@ -197,13 +172,13 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
             if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
             {
                 ApplyDbs(entity, item);
-                await _dbsCheckRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await dbsCheckRepository.UpdateAsync(entity, cancellationToken, transaction);
             }
             else
             {
                 var created = new DbsCheck { Id = SqlConvention.SequentialGuid(), StaffMemberId = staffMemberId };
                 ApplyDbs(created, item);
-                await _dbsCheckRepository.InsertAsync(created, cancellationToken, transaction);
+                await dbsCheckRepository.InsertAsync(created, cancellationToken, transaction);
             }
         }
     }
@@ -223,14 +198,14 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
         Guid? verifierId, IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var existing =
-            (await _rightToWorkRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction))
+            (await rightToWorkRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction))
             .ToList();
         var existingById = existing.ToDictionary(x => x.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
 
         foreach (var row in existing.Where(row => !keptIds.Contains(row.Id)))
         {
-            await _rightToWorkRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+            await rightToWorkRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
         }
 
         foreach (var item in incoming)
@@ -238,7 +213,7 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
             if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
             {
                 ApplyRightToWork(entity, item);
-                await _rightToWorkRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await rightToWorkRepository.UpdateAsync(entity, cancellationToken, transaction);
             }
             else
             {
@@ -249,7 +224,7 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
                     VerifiedById = verifierId
                 };
                 ApplyRightToWork(created, item);
-                await _rightToWorkRepository.InsertAsync(created, cancellationToken, transaction);
+                await rightToWorkRepository.InsertAsync(created, cancellationToken, transaction);
             }
         }
     }
@@ -268,13 +243,13 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var existing =
-            (await _referenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction)).ToList();
+            (await referenceRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction)).ToList();
         var existingById = existing.ToDictionary(x => x.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
 
         foreach (var row in existing.Where(row => !keptIds.Contains(row.Id)))
         {
-            await _referenceRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+            await referenceRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
         }
 
         foreach (var item in incoming)
@@ -282,13 +257,13 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
             if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
             {
                 ApplyReference(entity, item);
-                await _referenceRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await referenceRepository.UpdateAsync(entity, cancellationToken, transaction);
             }
             else
             {
                 var created = new StaffReference { Id = SqlConvention.SequentialGuid(), StaffMemberId = staffMemberId };
                 ApplyReference(created, item);
-                await _referenceRepository.InsertAsync(created, cancellationToken, transaction);
+                await referenceRepository.InsertAsync(created, cancellationToken, transaction);
             }
         }
     }
@@ -309,13 +284,13 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
         var existing =
-            (await _overseasRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction)).ToList();
+            (await overseasRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction)).ToList();
         var existingById = existing.ToDictionary(x => x.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
 
         foreach (var row in existing.Where(row => !keptIds.Contains(row.Id)))
         {
-            await _overseasRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+            await overseasRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
         }
 
         foreach (var item in incoming)
@@ -323,7 +298,7 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
             if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
             {
                 ApplyOverseas(entity, item);
-                await _overseasRepository.UpdateAsync(entity, cancellationToken, transaction);
+                await overseasRepository.UpdateAsync(entity, cancellationToken, transaction);
             }
             else
             {
@@ -333,7 +308,7 @@ public class StaffPreEmploymentService : BaseService, IStaffPreEmploymentService
                     StaffMemberId = staffMemberId
                 };
                 ApplyOverseas(created, item);
-                await _overseasRepository.InsertAsync(created, cancellationToken, transaction);
+                await overseasRepository.InsertAsync(created, cancellationToken, transaction);
             }
         }
     }

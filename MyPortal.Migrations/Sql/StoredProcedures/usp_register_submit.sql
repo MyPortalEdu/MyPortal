@@ -23,6 +23,7 @@ BEGIN
     DECLARE @periodId       UNIQUEIDENTIFIER;
     DECLARE @studentGroupId UNIQUEIDENTIFIER;
     DECLARE @sessionId      UNIQUEIDENTIFIER;
+    DECLARE @academicYearId UNIQUEIDENTIFIER;
 
     IF @sessionPeriodId IS NOT NULL
     BEGIN
@@ -31,6 +32,7 @@ BEGIN
             @actualEnd      = API.ActualEndTime,
             @periodId       = API.PeriodId,
             @studentGroupId = CG.StudentGroupId,
+            @academicYearId = API.AcademicYearId,
             @sessionId      = S.Id
         FROM dbo.SessionPeriods                  AS SP
         JOIN dbo.Sessions                        AS S   ON S.Id = SP.SessionId
@@ -48,7 +50,8 @@ BEGIN
             @actualStart    = API.ActualStartTime,
             @actualEnd      = API.ActualEndTime,
             @periodId       = API.PeriodId,
-            @studentGroupId = RG.StudentGroupId
+            @studentGroupId = RG.StudentGroupId,
+            @academicYearId = API.AcademicYearId
         FROM dbo.RegGroups                       AS RG
         JOIN dbo.vw_attendance_period_instances  AS API ON API.PeriodId = @attendancePeriodId
                                                        AND API.AttendanceWeekId = @attendanceWeekId
@@ -60,6 +63,13 @@ BEGIN
     IF @actualStart IS NULL
     BEGIN
         THROW 50002, 'No attendance-period instance for the supplied register / week.', 1;
+    END
+
+    -- A locked academic year is read-only. Every other write path enforces this; attendance must too,
+    -- or a register could be taken/changed in an archived/finalised year.
+    IF EXISTS (SELECT 1 FROM dbo.AcademicYears WHERE Id = @academicYearId AND IsLocked = 1)
+    BEGIN
+        THROW 50005, 'This academic year is locked; attendance cannot be changed.', 1;
     END
 
     -- Materialise the date-effective roster once. For lesson registers this is the

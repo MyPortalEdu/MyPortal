@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Data;
+using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.School;
@@ -10,13 +11,10 @@ using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Data.Repositories;
 
-public class SchoolRepository : EntityRepository<School>, ISchoolRepository
+public class SchoolRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<School>(factory,
+        authorizationService), ISchoolRepository
 {
-    public SchoolRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(factory,
-        authorizationService)
-    {
-    }
-
     public async Task<SchoolDetailsResponse?> GetLocalSchoolAsync(CancellationToken cancellationToken)
     {
         using var conn = _factory.Create();
@@ -44,9 +42,28 @@ public class SchoolRepository : EntityRepository<School>, ISchoolRepository
     {
         using var conn = _factory.Create();
 
-        const string sql = "SELECT TOP 1 [PayZoneId] FROM [dbo].[Schools] WHERE [IsLocal] = 1;";
-        var command = new CommandDefinition(sql, cancellationToken: cancellationToken);
+        var sql = @"[dbo].[usp_school_get_local_pay_zone_id]";
+        var result =
+            await conn.ExecuteStoredProcedureAsync<Guid?>(sql, cancellationToken: cancellationToken);
 
-        return await conn.QuerySingleOrDefaultAsync<Guid?>(command);
+        return result.FirstOrDefault();
+    }
+
+    public async Task<bool> UrnExistsAsync(string urn, Guid? excludeSchoolId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+        try
+        {
+            var result = await conn.ExecuteStoredProcedureAsync<bool>(
+                "[dbo].[usp_school_urn_exists]",
+                new { urn, excludeSchoolId }, transaction, cancellationToken: cancellationToken);
+
+            return result.FirstOrDefault();
+        }
+        finally
+        {
+            if (owns) conn.Dispose();
+        }
     }
 }

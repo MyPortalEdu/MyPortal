@@ -4,23 +4,17 @@ using MyPortal.Common.Interfaces;
 
 namespace MyPortal.Data.UnitOfWork;
 
-public sealed class UnitOfWorkFactory : IUnitOfWorkFactory
+public sealed class UnitOfWorkFactory(IDbConnectionFactory connectionFactory, ILoggerFactory loggerFactory)
+    : IUnitOfWorkFactory
 {
-    private readonly IDbConnectionFactory _connectionFactory;
-    private readonly ILogger<UnitOfWork> _logger;
-
-    public UnitOfWorkFactory(IDbConnectionFactory connectionFactory, ILoggerFactory loggerFactory)
-    {
-        _connectionFactory = connectionFactory;
-        _logger = loggerFactory.CreateLogger<UnitOfWork>();
-    }
+    private readonly ILogger<UnitOfWork> _logger = loggerFactory.CreateLogger<UnitOfWork>();
 
     public Task<IUnitOfWork> BeginAsync(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted,
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var connection = _connectionFactory.Create();
+        var connection = connectionFactory.Create();
         try
         {
             connection.Open();

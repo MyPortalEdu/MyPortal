@@ -8,17 +8,9 @@ using QueryKit.Repositories.Exceptions;
 
 namespace MyPortal.WebApi.Infrastructure.Middleware;
 
-public class ExceptionMiddleware : IMiddleware
+public class ExceptionMiddleware(ILogger<ExceptionMiddleware> logger, ProblemDetailsFactory problemFactory)
+    : IMiddleware
 {
-    private readonly ILogger<ExceptionMiddleware> _logger;
-    private readonly ProblemDetailsFactory _problemFactory;
-
-    public ExceptionMiddleware(ILogger<ExceptionMiddleware> logger, ProblemDetailsFactory problemFactory)
-    {
-        _logger = logger;
-        _problemFactory = problemFactory;
-    }
-    
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
@@ -34,7 +26,7 @@ public class ExceptionMiddleware : IMiddleware
                 modelState.AddModelError(error.PropertyName, error.ErrorMessage);
             }
 
-            var problem = _problemFactory.CreateValidationProblemDetails(
+            var problem = problemFactory.CreateValidationProblemDetails(
                 context,
                 modelState,
                 statusCode: StatusCodes.Status400BadRequest,
@@ -50,7 +42,7 @@ public class ExceptionMiddleware : IMiddleware
             {
                 modelState.AddModelError(aex.ParamName, aex.Message);
                 
-                var problem = _problemFactory.CreateValidationProblemDetails(
+                var problem = problemFactory.CreateValidationProblemDetails(
                     context,
                     modelState,
                     statusCode: StatusCodes.Status400BadRequest,
@@ -61,7 +53,7 @@ public class ExceptionMiddleware : IMiddleware
             else
             {
                 await WriteProblemAsync(context,
-                    _problemFactory.CreateProblemDetails(context,
+                    problemFactory.CreateProblemDetails(context,
                         statusCode: StatusCodes.Status400BadRequest,
                         title: "Validation failed.",
                         detail: aex.Message));
@@ -70,7 +62,7 @@ public class ExceptionMiddleware : IMiddleware
         catch (AuthenticationException aex)
         {
             await WriteProblemAsync(context,
-                _problemFactory.CreateProblemDetails(context,
+                problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status401Unauthorized,
                     title: "Not authenticated.",
                     detail: aex.Message));
@@ -78,7 +70,7 @@ public class ExceptionMiddleware : IMiddleware
         catch (ForbiddenException pex)
         {
             await WriteProblemAsync(context,
-                _problemFactory.CreateProblemDetails(context,
+                problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status403Forbidden,
                     title: "Forbidden.",
                     detail: pex.Message));
@@ -86,7 +78,7 @@ public class ExceptionMiddleware : IMiddleware
         catch (AcademicYearLockedException aex)
         {
             await WriteProblemAsync(context,
-                _problemFactory.CreateProblemDetails(context,
+                problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status409Conflict,
                     title: "Academic year locked.",
                     detail: aex.Message));
@@ -94,7 +86,7 @@ public class ExceptionMiddleware : IMiddleware
         catch (ConcurrencyException cex)
         {
             await WriteProblemAsync(context,
-                _problemFactory.CreateProblemDetails(context,
+                problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status409Conflict,
                     title: "Entity version mismatch.",
                     detail: cex.Message));
@@ -102,7 +94,7 @@ public class ExceptionMiddleware : IMiddleware
         catch (NotFoundException nex)
         {
             await WriteProblemAsync(context,
-                _problemFactory.CreateProblemDetails(context,
+                problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status404NotFound,
                     title: "Not found.",
                     detail: nex.Message));
@@ -110,7 +102,7 @@ public class ExceptionMiddleware : IMiddleware
         catch (SystemEntityException sex)
         {
             await WriteProblemAsync(context,
-                _problemFactory.CreateProblemDetails(context,
+                problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status400BadRequest,
                     title: "Invalid operation.",
                     detail: sex.Message));
@@ -118,7 +110,7 @@ public class ExceptionMiddleware : IMiddleware
         catch (EntityInUseException iuex)
         {
             await WriteProblemAsync(context,
-                _problemFactory.CreateProblemDetails(context,
+                problemFactory.CreateProblemDetails(context,
                     statusCode: StatusCodes.Status409Conflict,
                     title: "Entity in use.",
                     detail: iuex.Message));
@@ -129,8 +121,8 @@ public class ExceptionMiddleware : IMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception");
-            var pd = _problemFactory.CreateProblemDetails(
+            logger.LogError(ex, "Unhandled exception");
+            var pd = problemFactory.CreateProblemDetails(
                 context,
                 statusCode: StatusCodes.Status500InternalServerError,
                 title: "Server error",

@@ -10,7 +10,10 @@ using MyPortal.Migrations.Interfaces;
 
 namespace MyPortal.Migrations.Services;
 
-public class DbUpdateService : IDbUpdateService
+public class DbUpdateService(
+    string connectionString,
+    ILogger<DbUpdateService> logger)
+    : IDbUpdateService
 {
     private static readonly Regex GoSplitter = new(
         pattern: @"(?im)^\s*GO(?:\s+\d+)?\s*(?:--[^\r\n]*)?$",
@@ -20,18 +23,9 @@ public class DbUpdateService : IDbUpdateService
         pattern: @"\b(?:CREATE|ALTER)\s+DATABASE\b|\bUSE\s+\[",
         options: RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    private readonly string _connectionString;
-    private readonly ILogger<DbUpdateService> _log;
-    private readonly Assembly _assembly;
-
-    public DbUpdateService(
-        string connectionString,
-        ILogger<DbUpdateService> logger)
-    {
-        _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
-        _log = logger ?? throw new ArgumentNullException(nameof(logger));
-        _assembly = typeof(DbUpdateService).Assembly;
-    }
+    private readonly string _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
+    private readonly ILogger<DbUpdateService> _log = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly Assembly _assembly = typeof(DbUpdateService).Assembly;
 
     public async Task CreateOrUpdateDatabaseAsync(CancellationToken cancellationToken)
     {

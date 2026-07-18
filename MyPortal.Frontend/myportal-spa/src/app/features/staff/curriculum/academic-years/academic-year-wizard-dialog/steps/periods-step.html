@@ -37,7 +37,7 @@
         }
       </section>
     } @else {
-      @if (amPmIssues().length > 0) {
+      @if (!readOnly() && amPmIssues().length > 0) {
         <div class="text-sm rounded-lg border border-amber-300 bg-amber-50 text-amber-900 p-3 flex items-start gap-2">
           <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
           <div class="flex flex-col gap-1">
@@ -68,24 +68,26 @@
           <h4 class="text-sm font-semibold m-0">
             {{ t('periodsFor', { day: displayedDayLabel() }) }}
           </h4>
-          <div class="flex items-center gap-2">
-            <p-button
-              icon="fa-solid fa-copy"
-              [label]="t('copyToAllDays')"
-              size="small"
-              severity="secondary"
-              [outlined]="true"
-              [disabled]="!canCopyToAllDays()"
-              (click)="copyToAllDays()">
-            </p-button>
-            <p-button
-              icon="fa-solid fa-plus"
-              [label]="t('addPeriod')"
-              size="small"
-              severity="secondary"
-              (click)="addPeriod()">
-            </p-button>
-          </div>
+          @if (!readOnly()) {
+            <div class="flex items-center gap-2">
+              <p-button
+                icon="fa-solid fa-copy"
+                [label]="t('copyToAllDays')"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                [disabled]="!canCopyToAllDays()"
+                (click)="copyToAllDays()">
+              </p-button>
+              <p-button
+                icon="fa-solid fa-plus"
+                [label]="t('addPeriod')"
+                size="small"
+                severity="secondary"
+                (click)="addPeriod()">
+              </p-button>
+            </div>
+          }
         </div>
 
         @if (periodsForDay().length === 0) {
@@ -101,6 +103,7 @@
                   <input pInputText type="text"
                     [ngModel]="entry.period.name"
                     (ngModelChange)="updatePeriod(entry.fullIndex, { name: $event })"
+                    [disabled]="readOnly()"
                     [placeholder]="t('periodNamePlaceholder')" />
                 </div>
                 <div class="flex flex-col gap-1">
@@ -110,6 +113,7 @@
                     (ngModelChange)="updatePeriod(entry.fullIndex, { startTime: $event })"
                     [timeOnly]="true"
                     hourFormat="24"
+                    [disabled]="readOnly()"
                     appendTo="body">
                   </p-datepicker>
                 </div>
@@ -120,42 +124,51 @@
                     (ngModelChange)="updatePeriod(entry.fullIndex, { endTime: $event })"
                     [timeOnly]="true"
                     hourFormat="24"
+                    [disabled]="readOnly()"
                     appendTo="body">
                   </p-datepicker>
                 </div>
                 <div class="flex items-center gap-3 self-end pb-2">
-                  <label class="flex items-center gap-1 text-xs cursor-pointer">
+                  <label class="flex items-center gap-1 text-xs"
+                         [class.cursor-pointer]="!readOnly()">
                     <p-checkbox
                       [binary]="true"
                       [ngModel]="entry.period.isAmReg"
-                      (ngModelChange)="updatePeriod(entry.fullIndex, { isAmReg: $event })">
+                      (ngModelChange)="updatePeriod(entry.fullIndex, { isAmReg: $event })"
+                      [disabled]="readOnly()">
                     </p-checkbox>
                     {{ t('amReg') }}
                   </label>
-                  <label class="flex items-center gap-1 text-xs cursor-pointer">
+                  <label class="flex items-center gap-1 text-xs"
+                         [class.cursor-pointer]="!readOnly()">
                     <p-checkbox
                       [binary]="true"
                       [ngModel]="entry.period.isPmReg"
-                      (ngModelChange)="updatePeriod(entry.fullIndex, { isPmReg: $event })">
+                      (ngModelChange)="updatePeriod(entry.fullIndex, { isPmReg: $event })"
+                      [disabled]="readOnly()">
                     </p-checkbox>
                     {{ t('pmReg') }}
                   </label>
-                  <label class="flex items-center gap-1 text-xs cursor-pointer">
+                  <label class="flex items-center gap-1 text-xs"
+                         [class.cursor-pointer]="!readOnly()">
                     <p-checkbox
                       [binary]="true"
                       [ngModel]="entry.period.isLesson"
-                      (ngModelChange)="updatePeriod(entry.fullIndex, { isLesson: $event })">
+                      (ngModelChange)="updatePeriod(entry.fullIndex, { isLesson: $event })"
+                      [disabled]="readOnly()">
                     </p-checkbox>
                     {{ t('lesson') }}
                   </label>
                 </div>
-                <p-button
-                  icon="fa-solid fa-trash-can"
-                  severity="danger"
-                  [text]="true"
-                  [attr.aria-label]="t('removePeriod')"
-                  (click)="removePeriod(entry.fullIndex)">
-                </p-button>
+                @if (!readOnly()) {
+                  <p-button
+                    icon="fa-solid fa-trash-can"
+                    severity="danger"
+                    [text]="true"
+                    [attr.aria-label]="t('removePeriod')"
+                    (click)="removePeriod(entry.fullIndex)">
+                  </p-button>
+                }
               </li>
             }
           </ul>

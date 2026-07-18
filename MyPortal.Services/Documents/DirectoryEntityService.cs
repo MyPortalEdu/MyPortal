@@ -9,22 +9,16 @@ using MyPortal.Services.Interfaces.Documents;
 
 namespace MyPortal.Services.Documents;
 
-public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, IDirectoryEntityService<TDirectoryEntity> where TDirectoryEntity : IDirectoryEntity
+public abstract class DirectoryEntityService<TDirectoryEntity>(
+    IAuthorizationService authorizationService,
+    ILogger<DirectoryEntityService<TDirectoryEntity>> logger,
+    IDirectoryService directoryService,
+    IDocumentService documentService,
+    IValidationService validationService)
+    : BaseService(authorizationService, logger), IDirectoryEntityService<TDirectoryEntity>
+    where TDirectoryEntity : IDirectoryEntity
 {
-    private readonly IDocumentService _documentService;
-    private readonly IValidationService _validationService;
-
-    protected IDirectoryService DirectoryService { get; }
-
-    protected DirectoryEntityService(IAuthorizationService authorizationService, 
-        ILogger<DirectoryEntityService<TDirectoryEntity>> logger,
-        IDirectoryService directoryService, IDocumentService documentService,
-        IValidationService validationService) : base(authorizationService, logger)
-    {
-        DirectoryService = directoryService;
-        _documentService = documentService;
-        _validationService = validationService;
-    }
+    protected IDirectoryService DirectoryService { get; } = directoryService;
 
     public abstract Task<TDirectoryEntity> GetByIdAsync(Guid entityId, CancellationToken cancellationToken);
 
@@ -156,7 +150,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task<DirectoryDetailsResponse> CreateDirectoryAsync(Guid entityId, DirectoryUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
         if (!await CanEditDirectoryAsync(entityId, model.ParentId!.Value, cancellationToken))
         {
@@ -170,7 +164,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
         DirectoryUpsertRequest model,
         CancellationToken cancellationToken)
     {
-        await _validationService.ValidateAsync(model);
+        await validationService.ValidateAsync(model);
 
         if (!await CanEditDirectoryAsync(entityId, directoryId, cancellationToken))
         {
@@ -244,7 +238,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     {
         if (await CanUploadToDirectoryAsync(entityId, model.DirectoryId, cancellationToken))
         {
-            return await _documentService.CreateAsync(model, cancellationToken);
+            return await documentService.CreateAsync(model, cancellationToken);
         }
         
         throw new ForbiddenException("You do not have permission to create documents here.");
@@ -253,7 +247,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task<DocumentDetailsResponse> UpdateDocumentAsync(
         Guid entityId, Guid documentId, DocumentUpsertRequest model, CancellationToken cancellationToken)
     {
-        var document = await _documentService.GetDocumentByIdAsync(documentId, cancellationToken);
+        var document = await documentService.GetDocumentByIdAsync(documentId, cancellationToken);
 
         if (!await CanEditDocumentAsync(entityId, document, cancellationToken))
             throw new ForbiddenException("You do not have permission to edit this document.");
@@ -263,17 +257,17 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
             !await CanUploadToDirectoryAsync(entityId, model.DirectoryId, cancellationToken))
             throw new ForbiddenException("You do not have permission to edit the destination directory.");
 
-        return await _documentService.UpdateAsync(documentId, model, cancellationToken);
+        return await documentService.UpdateAsync(documentId, model, cancellationToken);
     }
 
     public async Task DeleteDocumentAsync(Guid entityId, Guid documentId, CancellationToken cancellationToken,
         bool softDelete = true)
     {
-        var document = await _documentService.GetDocumentByIdAsync(documentId, cancellationToken);
+        var document = await documentService.GetDocumentByIdAsync(documentId, cancellationToken);
 
         if (await CanEditDocumentAsync(entityId, document, cancellationToken))
         {
-            await _documentService.DeleteAsync(documentId, cancellationToken, softDelete);
+            await documentService.DeleteAsync(documentId, cancellationToken, softDelete);
         }
         else
         {
@@ -284,7 +278,7 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task<DocumentDetailsResponse> GetDocumentByIdAsync(Guid entityId, Guid documentId,
         CancellationToken cancellationToken)
     {
-        var document = await _documentService.GetDocumentByIdAsync(documentId, cancellationToken);
+        var document = await documentService.GetDocumentByIdAsync(documentId, cancellationToken);
 
         if (await CanViewDocumentAsync(entityId, document, cancellationToken))
         {
@@ -297,11 +291,11 @@ public abstract class DirectoryEntityService<TDirectoryEntity> : BaseService, ID
     public async Task<DocumentContentResponse> GetDocumentWithContentByIdAsync(Guid entityId, Guid documentId,
         CancellationToken cancellationToken)
     {
-        var document = await _documentService.GetDocumentByIdAsync(documentId, cancellationToken);
+        var document = await documentService.GetDocumentByIdAsync(documentId, cancellationToken);
 
         if (await CanViewDocumentAsync(entityId, document, cancellationToken))
         {
-            return await _documentService.GetDocumentWithContentByIdAsync(documentId, cancellationToken);
+            return await documentService.GetDocumentWithContentByIdAsync(documentId, cancellationToken);
         }
 
         throw new ForbiddenException("You do not have permission to view this document.");

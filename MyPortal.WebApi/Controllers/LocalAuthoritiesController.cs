@@ -14,16 +14,12 @@ using QueryKit.Repositories.Sorting;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Local-authority lookup endpoints.</summary>
-public sealed class LocalAuthoritiesController : BaseApiController
+public sealed class LocalAuthoritiesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<LocalAuthoritiesController> logger,
+    ILocalAuthorityService service)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly ILocalAuthorityService _service;
-
-    public LocalAuthoritiesController(ProblemDetailsFactory problemFactory, ILogger<LocalAuthoritiesController> logger,
-        ILocalAuthorityService service) : base(problemFactory, logger)
-    {
-        _service = service;
-    }
-
     /// <summary>Page through local-authority summaries.</summary>
     /// <param name="page">1-based page number.</param>
     /// <param name="pageSize">Items per page (clamped 1..100).</param>
@@ -38,7 +34,7 @@ public sealed class LocalAuthoritiesController : BaseApiController
     {
         var options = GetListingOptions(page, pageSize, filter, sort);
 
-        var result = await _service.GetSummariesAsync(options.FilterOptions, options.SortOptions, options.PageOptions,
+        var result = await service.GetSummariesAsync(options.FilterOptions, options.SortOptions, options.PageOptions,
             CancellationToken);
 
         return Ok(result);

@@ -9,13 +9,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Data.Repositories;
 
-public class AttendanceWeekRepository : EntityRepository<AttendanceWeek>, IAttendanceWeekRepository
+public class AttendanceWeekRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<AttendanceWeek>(factory, authorizationService), IAttendanceWeekRepository
 {
-    public AttendanceWeekRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
-        : base(factory, authorizationService)
-    {
-    }
-
     public async Task DeleteByAcademicYearAsync(Guid academicYearId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {

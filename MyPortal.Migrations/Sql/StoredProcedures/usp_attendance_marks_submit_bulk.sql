@@ -32,6 +32,13 @@ BEGIN
         THROW 50020, 'Student group not found.', 1;
     END
 
+    -- A locked academic year is read-only. Every other write path enforces this; attendance must too,
+    -- or marks could be altered in an archived/finalised year.
+    IF EXISTS (SELECT 1 FROM dbo.AcademicYears WHERE Id = @academicYearId AND IsLocked = 1)
+    BEGIN
+        THROW 50023, 'This academic year is locked; attendance cannot be changed.', 1;
+    END
+
     -- Empty payload is a no-op; saves us materialising scope tables for nothing.
     IF NOT EXISTS (SELECT 1 FROM @marks)
     BEGIN

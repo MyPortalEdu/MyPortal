@@ -9,17 +9,12 @@ using MyPortal.Services.Interfaces.Attendance;
 namespace MyPortal.WebApi.Controllers;
 
 /// <summary>Read-only attendance-code catalogue.</summary>
-public sealed class AttendanceCodesController : BaseApiController
+public sealed class AttendanceCodesController(
+    ProblemDetailsFactory problemFactory,
+    ILogger<AttendanceCodesController> logger,
+    IAttendanceCodeService attendanceCodeService)
+    : BaseApiController(problemFactory, logger)
 {
-    private readonly IAttendanceCodeService _attendanceCodeService;
-
-    public AttendanceCodesController(ProblemDetailsFactory problemFactory,
-        ILogger<AttendanceCodesController> logger, IAttendanceCodeService attendanceCodeService)
-        : base(problemFactory, logger)
-    {
-        _attendanceCodeService = attendanceCodeService;
-    }
-
     /// <summary>List active attendance codes.</summary>
     /// <remarks>Restricted codes are included; inactive codes are excluded.</remarks>
     [HttpGet("active")]
@@ -27,7 +22,7 @@ public sealed class AttendanceCodesController : BaseApiController
     [ProducesResponseType(typeof(IList<AttendanceCodeResponse>), 200)]
     public async Task<IActionResult> GetActiveAsync()
     {
-        var result = await _attendanceCodeService.GetActiveAsync(CancellationToken);
+        var result = await attendanceCodeService.GetActiveAsync(CancellationToken);
 
         return Ok(result);
     }

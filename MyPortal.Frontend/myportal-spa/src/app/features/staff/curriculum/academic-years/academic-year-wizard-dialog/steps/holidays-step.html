@@ -8,13 +8,15 @@
     <section class="flex flex-col gap-3">
       <div class="flex items-center justify-between">
         <h4 class="text-sm font-semibold m-0">{{ t('listTitle') }}</h4>
-        <p-button
-          icon="fa-solid fa-plus"
-          [label]="t('addHoliday')"
-          size="small"
-          severity="secondary"
-          (click)="addHoliday()">
-        </p-button>
+        @if (!readOnly()) {
+          <p-button
+            icon="fa-solid fa-plus"
+            [label]="t('addHoliday')"
+            size="small"
+            severity="secondary"
+            (click)="addHoliday()">
+          </p-button>
+        }
       </div>
 
       @if (!hasHolidays()) {
@@ -30,6 +32,7 @@
                 <input pInputText type="text"
                   [ngModel]="holiday.name"
                   (ngModelChange)="updateHoliday(i, { name: $event })"
+                  [disabled]="readOnly()"
                   [placeholder]="t('holidayNamePlaceholder')" />
               </div>
               <div class="flex flex-col gap-1 min-w-[10rem]">
@@ -40,6 +43,7 @@
                   [options]="holidayTypes"
                   optionLabel="label"
                   optionValue="value"
+                  [disabled]="readOnly()"
                   appendTo="body">
                 </p-select>
               </div>
@@ -49,6 +53,7 @@
                   [ngModel]="holiday.startDate"
                   (ngModelChange)="updateHoliday(i, { startDate: $event })"
                   dateFormat="dd/mm/yy"
+                  [disabled]="readOnly()"
                   appendTo="body">
                 </p-datepicker>
               </div>
@@ -58,16 +63,19 @@
                   [ngModel]="holiday.endDate"
                   (ngModelChange)="updateHoliday(i, { endDate: $event })"
                   dateFormat="dd/mm/yy"
+                  [disabled]="readOnly()"
                   appendTo="body">
                 </p-datepicker>
               </div>
-              <p-button
-                icon="fa-solid fa-trash-can"
-                severity="danger"
-                [text]="true"
-                [attr.aria-label]="t('removeHoliday')"
-                (click)="removeHoliday(i)">
-              </p-button>
+              @if (!readOnly()) {
+                <p-button
+                  icon="fa-solid fa-trash-can"
+                  severity="danger"
+                  [text]="true"
+                  [attr.aria-label]="t('removeHoliday')"
+                  (click)="removeHoliday(i)">
+                </p-button>
+              }
             </li>
           }
         </ul>

@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class ReferenceStatusRepository : EntityRepository<ReferenceStatus>, IReferenceStatusRepository
-{
-    public ReferenceStatusRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class ReferenceStatusRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<ReferenceStatus>(factory, authorizationService), IReferenceStatusRepository;

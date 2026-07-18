@@ -9,13 +9,9 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class AddressRepository : EntityRepository<Address>, IAddressRepository
+public class AddressRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<Address>(factory, authorizationService), IAddressRepository
 {
-    public AddressRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-
     public async Task<IReadOnlyList<PersonAddressResponse>> GetByPersonIdAsync(Guid personId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {

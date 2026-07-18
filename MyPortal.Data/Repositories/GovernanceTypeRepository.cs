@@ -6,10 +6,5 @@ using MyPortal.Data.Repositories.Base;
 
 namespace MyPortal.Data.Repositories;
 
-public class GovernanceTypeRepository : EntityRepository<GovernanceType>, IGovernanceTypeRepository
-{
-    public GovernanceTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService) : base(
-        factory, authorizationService)
-    {
-    }
-}
+public class GovernanceTypeRepository(IDbConnectionFactory factory, IAuthorizationService authorizationService)
+    : EntityRepository<GovernanceType>(factory, authorizationService), IGovernanceTypeRepository;
