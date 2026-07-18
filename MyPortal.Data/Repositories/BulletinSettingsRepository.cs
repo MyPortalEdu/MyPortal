@@ -1,8 +1,8 @@
 using System.Data;
-using Dapper;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Bulletins;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Parameters;
 using QueryKit.Extensions;
 
 namespace MyPortal.Data.Repositories;
@@ -48,26 +48,12 @@ public class BulletinSettingsRepository(IDbConnectionFactory factory) : IBulleti
     private static async Task ReplaceCoreAsync(IDbConnection conn, IDbTransaction tx,
         IList<Guid> studentGroupIds, CancellationToken cancellationToken)
     {
-        // Single-tenant assumption: the allowlist is school-wide, so an unscoped DELETE
-        // is correct. If multi-tenancy is added, this table needs a SchoolId column and
-        // the DELETE must be scoped — otherwise saving one school's allowlist will wipe
-        // every other school's.
-        await conn.ExecuteAsync(new CommandDefinition(
-            "DELETE FROM dbo.BulletinAudienceAllowedGroups;",
-            transaction: tx, cancellationToken: cancellationToken));
-
-        if (studentGroupIds.Count == 0)
-        {
-            return;
-        }
-
-        const string insertSql = @"
-INSERT INTO dbo.BulletinAudienceAllowedGroups (StudentGroupId)
-VALUES (@StudentGroupId);";
-
-        var rows = studentGroupIds.Select(id => new { StudentGroupId = id });
-
-        await conn.ExecuteAsync(new CommandDefinition(insertSql, rows,
-            transaction: tx, cancellationToken: cancellationToken));
+        // usp_bulletin_audience_allowed_group_replace clears the allowlist then re-inserts the
+        // supplied ids. The caller's transaction (tx) keeps the DELETE + INSERT atomic. An empty
+        // list correctly clears the allowlist (the SP inserts nothing).
+        await conn.ExecuteStoredProcedureAsync<int>(
+            "[dbo].[usp_bulletin_audience_allowed_group_replace]",
+            new { studentGroupIds = studentGroupIds.ToGuidTvp() }, tx,
+            cancellationToken: cancellationToken);
     }
 }

@@ -83,66 +83,17 @@ public class TimetableRepository(IDbConnectionFactory factory, IAuthorizationSer
 
         try
         {
-            // Capture the IDs of timetables we're about to supersede — we need them after the
-            // status flip to truncate downstream Sessions / NonContactAllocations.
-            var supersededIds = (await conn.QueryAsync<Guid>(new CommandDefinition(
-                @"SELECT Id FROM dbo.Timetables
-                   WHERE AcademicYearId = @academicYearId
-                     AND Status = @active
-                     AND Id <> @timetableId;",
-                new { academicYearId, timetableId, active = (int)TimetableStatus.Active },
-                transaction: activeTx, cancellationToken: cancellationToken))).ToArray();
-
-            // Close out any currently-active timetable for this academic year. EffectiveTo gets the
-            // day before applyDate so there's no overlap window where two timetables claim Active.
-            await conn.ExecuteAsync(new CommandDefinition(
-                @"UPDATE dbo.Timetables
-                      SET Status = @superseded,
-                          EffectiveTo = DATEADD(DAY, -1, @effectiveFrom),
-                          LastModifiedAt = SYSUTCDATETIME()
-                    WHERE AcademicYearId = @academicYearId
-                      AND Status = @active
-                      AND Id <> @timetableId;",
+            await conn.ExecuteStoredProcedureAsync<int>(
+                "[dbo].[usp_timetable_apply]",
                 new
                 {
-                    academicYearId,
                     timetableId,
+                    academicYearId,
                     effectiveFrom,
+                    effectiveTo,
                     active = (int)TimetableStatus.Active,
                     superseded = (int)TimetableStatus.Superseded,
-                }, transaction: activeTx, cancellationToken: cancellationToken));
-
-            // Truncate prior Sessions and NonContactAllocations so the date-range filter in the
-            // register query doesn't see two timetables overlapping after the cutover. Only shrink
-            // — never extend — and skip rows already ended before applyDate (untouched history).
-            if (supersededIds.Length > 0)
-            {
-                await conn.ExecuteAsync(new CommandDefinition(
-                    @"UPDATE dbo.Sessions
-                          SET EndDate = DATEADD(DAY, -1, @effectiveFrom)
-                        WHERE TimetableId IN @supersededIds
-                          AND EndDate >= @effectiveFrom;",
-                    new { effectiveFrom, supersededIds },
-                    transaction: activeTx, cancellationToken: cancellationToken));
-
-                await conn.ExecuteAsync(new CommandDefinition(
-                    @"UPDATE dbo.StaffNonContactAllocations
-                          SET EndDate = DATEADD(DAY, -1, @effectiveFrom)
-                        WHERE TimetableId IN @supersededIds
-                          AND EndDate >= @effectiveFrom;",
-                    new { effectiveFrom, supersededIds },
-                    transaction: activeTx, cancellationToken: cancellationToken));
-            }
-
-            await conn.ExecuteAsync(new CommandDefinition(
-                @"UPDATE dbo.Timetables
-                      SET Status = @active,
-                          EffectiveFrom = @effectiveFrom,
-                          EffectiveTo = @effectiveTo,
-                          LastModifiedAt = SYSUTCDATETIME()
-                    WHERE Id = @timetableId;",
-                new { timetableId, active = (int)TimetableStatus.Active, effectiveFrom, effectiveTo },
-                transaction: activeTx, cancellationToken: cancellationToken));
+                }, activeTx, cancellationToken: cancellationToken);
 
             if (ownsTransaction)
             {

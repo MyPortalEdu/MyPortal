@@ -370,6 +370,12 @@
     <EmbeddedResource Include="Sql\StoredProcedures\usp_timetable_update_status.sql" />
     <None Remove="Sql\StoredProcedures\usp_training_certificate_get_by_staff_member_id.sql" />
     <EmbeddedResource Include="Sql\StoredProcedures\usp_training_certificate_get_by_staff_member_id.sql" />
+    <None Remove="Sql\StoredProcedures\usp_bulletin_audience_allowed_group_replace.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_bulletin_audience_allowed_group_replace.sql" />
+    <None Remove="Sql\StoredProcedures\usp_staff_contract_get_by_employment_ids.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_staff_contract_get_by_employment_ids.sql" />
+    <None Remove="Sql\StoredProcedures\usp_timetable_apply.sql" />
+    <EmbeddedResource Include="Sql\StoredProcedures\usp_timetable_apply.sql" />
   </ItemGroup>
 
   <ItemGroup>
