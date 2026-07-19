@@ -30,6 +30,7 @@ import { LookupResponse } from '../../types/lookup';
       [ngModel]="value()"
       (ngModelChange)="value.set($event)"
       [invalid]="invalid()"
+      [touched]="touched()"
       class="w-full"></mp-select>
   `,
 })
@@ -47,6 +48,8 @@ export class LookupSelect {
   readonly required = input<boolean>(false);
 
   readonly invalid = input<boolean>(false);
+
+  readonly touched = input<boolean>(true);
 
   protected readonly defaultPlaceholder = computed(() =>
     this.transloco.translate('common.select'),
