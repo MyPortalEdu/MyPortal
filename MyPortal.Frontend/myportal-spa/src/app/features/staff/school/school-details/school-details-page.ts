@@ -7,7 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormField, disabled, form, maxLength, required, submit, validate } from '@angular/forms/signals';
+import { FormField, disabled, form, maxLength, required, submit, validate, validateHttp } from '@angular/forms/signals';
 import { MpButton, MpSelect, MpDatePicker, MpFormField, MpInput, MpInputNumber, MpCheckbox } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -164,6 +164,24 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     validate(path.urn, ({ value }) =>
       value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
     );
+    validateHttp(path.urn, {
+      request: ({ value }) => {
+        const excludeId = this.current()?.id;
+        return `/api/v1/schools/urn-available?urn=${encodeURIComponent(value().trim())}${
+          excludeId ? `&excludeId=${excludeId}` : ''
+        }`;
+      },
+      onSuccess: (result: unknown) =>
+        (result as { available: boolean }).available
+          ? undefined
+          : { kind: 'taken', message: 'school-details.fields.urnTaken' },
+      onError: () => undefined,
+      when: ({ value }) => {
+        const urn = value().trim();
+        return urn.length > 0 && urn !== (this.current()?.urn ?? '').trim();
+      },
+      debounce: 400,
+    });
     required(path.uprn);
     validate(path.uprn, ({ value }) =>
       value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },

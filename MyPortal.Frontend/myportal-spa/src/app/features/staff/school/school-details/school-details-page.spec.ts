@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { createSpyObj, type SpyObj } from '@testing/spy';
@@ -211,5 +213,79 @@ describe('SchoolDetailsPage', () => {
     await component.save();
 
     expect(schools.saveLocalDetails).not.toHaveBeenCalled();
+  });
+});
+
+interface UrnField {
+  errors(): ReadonlyArray<{ kind: string }>;
+  pending(): boolean;
+}
+interface AsyncInternals {
+  model: { update(fn: (m: { urn: string }) => { urn: string }): void };
+  f: { urn: () => UrnField };
+}
+
+describe('SchoolDetailsPage URN availability (validateHttp)', () => {
+  function setup() {
+    const schools = createSpyObj<SchoolsDataService>(['getLocalDetails', 'saveLocalDetails']);
+    const lookups = createSpyObj<LookupsDataService>([
+      'governanceTypes', 'intakeTypes', 'schoolPhases', 'schoolTypes',
+      'payZones', 'specialSchoolOrganisations', 'specialSchoolTypes',
+    ]);
+    schools.getLocalDetails.mockReturnValue(of(makeSchool({ id: 's1', urn: '' })));
+    schools.saveLocalDetails.mockReturnValue(of({ id: 's1' }));
+    for (const key of [
+      'governanceTypes', 'intakeTypes', 'schoolPhases', 'schoolTypes',
+      'payZones', 'specialSchoolOrganisations', 'specialSchoolTypes',
+    ] as const) {
+      lookups[key].mockReturnValue(of([]));
+    }
+    const me$ = createSpyObj<MeService>(['me']);
+    me$.me.mockReturnValue(of(makeMe()));
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: SchoolsDataService, useValue: schools },
+        { provide: LookupsDataService, useValue: lookups },
+        { provide: SchoolService, useValue: createSpyObj<SchoolService>(['clearCache']) },
+        { provide: NotificationService, useValue: createSpyObj<NotificationService>(['success', 'apiError']) },
+        { provide: MeService, useValue: me$ },
+        { provide: ConfirmationDialog, useValue: createSpyObj<ConfirmationDialog>(['confirm']) },
+        { provide: TranslocoService, useValue: { translate: (k: string) => k, getActiveLang: () => 'en' } },
+      ],
+    });
+    TestBed.overrideComponent(SchoolDetailsPage, { set: { template: '' } });
+    const fixture = TestBed.createComponent(SchoolDetailsPage);
+    fixture.detectChanges();
+    return {
+      fixture,
+      internals: fixture.componentInstance as unknown as AsyncInternals,
+      http: TestBed.inject(HttpTestingController),
+    };
+  }
+
+  it('checks the URN (excluding the local school) and flags a taken URN', async () => {
+    const { fixture, internals, http } = setup();
+    vi.useFakeTimers();
+    try {
+      internals.model.update(m => ({ ...m, urn: '999999' }));
+      fixture.detectChanges();
+      await vi.advanceTimersByTimeAsync(500);
+      fixture.detectChanges();
+
+      const req = http.expectOne(r => r.url.includes('/api/v1/schools/urn-available'));
+      expect(req.request.urlWithParams).toContain('urn=999999');
+      expect(req.request.urlWithParams).toContain('excludeId=s1');
+      req.flush({ available: false });
+      await vi.advanceTimersByTimeAsync(1);
+      fixture.detectChanges();
+
+      expect(internals.f.urn().errors().some(e => e.kind === 'taken')).toBe(true);
+      http.verify();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

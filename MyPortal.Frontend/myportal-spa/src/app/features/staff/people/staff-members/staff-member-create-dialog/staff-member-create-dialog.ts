@@ -10,9 +10,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { FormField, applyWhen, form, required, submit, validate } from '@angular/forms/signals';
+import { FormField, applyWhen, form, required, submit, validate, validateHttp } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
-import { MpDatePicker, MpDialog, MpDialogFooter, MpButton, MpInput, MpSpinner } from '@myportal/ui';
+import { MpDatePicker, MpDialog, MpDialogFooter, MpButton, MpFormField, MpInput, MpSpinner } from '@myportal/ui';
 import {
   catchError,
   debounceTime,
@@ -58,6 +58,7 @@ interface CreateModel {
     MpDatePicker,
     MpDialog,
     MpDialogFooter,
+    MpFormField,
     MpInput,
     GenderSelect,
     MpSpinner,
@@ -100,6 +101,17 @@ export class StaffMemberCreateDialog {
     validate(path.code, ({ value }) =>
       value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
     );
+    validateHttp(path.code, {
+      request: ({ value }) =>
+        `/api/v1/staffmembers/code-available?code=${encodeURIComponent(value().trim())}`,
+      onSuccess: (result: unknown) =>
+        (result as { available: boolean }).available
+          ? undefined
+          : { kind: 'taken', message: 'staff-members.create.codeTaken' },
+      onError: () => undefined,
+      when: ({ value }) => value().trim().length > 0,
+      debounce: 400,
+    });
     applyWhen(path, () => this.step() === 'search', p => {
       for (const field of [p.firstName, p.lastName, p.gender]) {
         required(field);

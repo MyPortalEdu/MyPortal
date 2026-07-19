@@ -119,6 +119,7 @@ export class BulletinCategoryFormDialog {
 
   readonly visible = input.required<boolean>();
   readonly existing = input<BulletinCategoryResponse | null>(null);
+  readonly existingNames = input<string[]>([]);
 
   readonly closed = output<void>();
   readonly saved = output<void>();
@@ -138,6 +139,12 @@ export class BulletinCategoryFormDialog {
     validate(path.name, ({ value }) =>
       value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
     );
+    validate(path.name, ({ value }) => {
+      const name = value().trim().toLowerCase();
+      return name && this.existingNames().some(n => n.trim().toLowerCase() === name)
+        ? { kind: 'taken', message: 'bulletin-settings.form.nameTaken' }
+        : undefined;
+    });
   });
 
   setIcon(icon: string): void {

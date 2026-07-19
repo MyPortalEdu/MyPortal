@@ -78,14 +78,10 @@
         }
 
         <div class="grid gap-3 md:grid-cols-2">
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="create-code">
-              {{ t('staff-members.fields.code') }}
-            </label>
-            <input mpInput id="create-code"
-                   [formField]="f.code"
-                   (keydown.enter)="save()" />
-          </div>
+          <mp-form-field [label]="t('staff-members.fields.code')" for="create-code"
+            [hint]="f.code().pending() ? t('staff-members.create.checkingCode') : undefined">
+            <input mpInput id="create-code" [formField]="f.code" (keydown.enter)="save()" />
+          </mp-form-field>
 
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-title">
@@ -173,14 +169,10 @@
           </div>
         }
 
-        <div class="flex flex-col gap-1 max-w-[18rem]">
-          <label class="text-sm font-medium" for="attach-code">
-            {{ t('staff-members.fields.code') }}
-          </label>
-          <input mpInput id="attach-code"
-                 [formField]="f.code"
-                 (keydown.enter)="attach()" />
-        </div>
+        <mp-form-field class="max-w-[18rem]" [label]="t('staff-members.fields.code')" for="attach-code"
+          [hint]="f.code().pending() ? t('staff-members.create.checkingCode') : undefined">
+          <input mpInput id="attach-code" [formField]="f.code" (keydown.enter)="attach()" />
+        </mp-form-field>
       </div>
     }
 

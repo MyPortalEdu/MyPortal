@@ -47,7 +47,9 @@
     "attachHint": "This person is already on file. Adding a staff code creates their staff record — their existing details are reused, not duplicated.",
     "attachSubmit": "Create",
     "hint": "Capture the joiner data — name, code, gender, optional DOB. Employment, pay, pre-employment checks and other areas are filled in afterwards from the staff profile page.",
-    "submit": "Create"
+    "submit": "Create",
+    "codeTaken": "This staff code is already in use.",
+    "checkingCode": "Checking availability…"
   },
   "columns": {
     "name": "Name",

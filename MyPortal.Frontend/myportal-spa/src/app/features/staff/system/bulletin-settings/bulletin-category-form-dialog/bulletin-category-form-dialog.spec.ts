@@ -125,6 +125,15 @@ describe('BulletinCategoryFormDialog', () => {
     expect(internals.model().colour).toBe(CATEGORY_COLOURS[0]);
   });
 
+  it('rejects a name that duplicates another category (case-insensitive)', () => {
+    open(null);
+    fixture.componentRef.setInput('existingNames', ['Notices', 'Sports']);
+    internals.model.update(m => ({ ...m, name: '  notices  ' }));
+    expect(internals.f().invalid()).toBe(true);
+    internals.model.update(m => ({ ...m, name: 'Events' }));
+    expect(internals.f().valid()).toBe(true);
+  });
+
   it('form is invalid when the name is empty or whitespace', () => {
     open(null);
     expect(internals.f().invalid()).toBe(true);

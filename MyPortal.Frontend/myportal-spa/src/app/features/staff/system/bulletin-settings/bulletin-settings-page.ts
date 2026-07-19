@@ -55,6 +55,13 @@ export class BulletinSettingsPage implements OnInit {
   readonly categoryFormOpen = signal(false);
   readonly editingCategory = signal<BulletinCategoryResponse | null>(null);
 
+  readonly otherCategoryNames = computed(() => {
+    const editingId = this.editingCategory()?.id;
+    return this.categories()
+      .filter(c => c.id !== editingId)
+      .map(c => c.name);
+  });
+
   readonly allowedGroups = signal<BulletinAllowedGroupResponse[]>([]);
   readonly allowedGroupsLoading = signal(false);
 

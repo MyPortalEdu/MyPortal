@@ -21,6 +21,8 @@
     "website": "Website",
     "websitePlaceholder": "https://…",
     "urn": "URN",
+    "urnTaken": "This URN is already used by another school.",
+    "checkingUrn": "Checking availability…",
     "uprn": "UPRN",
     "ukprn": "UKPRN",
     "ukprnPlaceholder": "8 digits",

@@ -55,4 +55,41 @@ public class StaffMemberServiceTests
         _staffMemberRepository.Verify(r => r.InsertAsync(It.IsAny<MyPortal.Core.Entities.StaffMember>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
+
+    [Test]
+    public async Task IsCodeAvailableAsync_ReturnsTrue_ForBlankCode_WithoutHittingRepo()
+    {
+        var available = await _service.IsCodeAvailableAsync("   ", null, CancellationToken.None);
+
+        Assert.That(available, Is.True);
+        _staffMemberRepository.Verify(r => r.CodeExistsAsync(It.IsAny<string>(), It.IsAny<Guid?>(),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
+    }
+
+    [Test]
+    public async Task IsCodeAvailableAsync_ReturnsFalse_WhenCodeExists()
+    {
+        _staffMemberRepository
+            .Setup(r => r.CodeExistsAsync("ABC123", null, It.IsAny<CancellationToken>(), null))
+            .ReturnsAsync(true);
+
+        var available = await _service.IsCodeAvailableAsync("ABC123", null, CancellationToken.None);
+
+        Assert.That(available, Is.False);
+    }
+
+    [Test]
+    public async Task IsCodeAvailableAsync_TrimsAndPassesExcludeId()
+    {
+        var excludeId = Guid.NewGuid();
+        _staffMemberRepository
+            .Setup(r => r.CodeExistsAsync("ABC123", excludeId, It.IsAny<CancellationToken>(), null))
+            .ReturnsAsync(false);
+
+        var available = await _service.IsCodeAvailableAsync("  ABC123  ", excludeId, CancellationToken.None);
+
+        Assert.That(available, Is.True);
+        _staffMemberRepository.Verify(
+            r => r.CodeExistsAsync("ABC123", excludeId, It.IsAny<CancellationToken>(), null), Times.Once);
+    }
 }

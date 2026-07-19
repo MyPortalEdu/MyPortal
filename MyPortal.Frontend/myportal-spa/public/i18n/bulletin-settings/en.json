@@ -29,6 +29,7 @@
     "titleEdit": "Edit Category",
     "name": "Name",
     "namePlaceholder": "e.g. Safeguarding",
+    "nameTaken": "A category with this name already exists.",
     "icon": "Icon",
     "colour": "Colour",
     "displayOrder": "Display order",

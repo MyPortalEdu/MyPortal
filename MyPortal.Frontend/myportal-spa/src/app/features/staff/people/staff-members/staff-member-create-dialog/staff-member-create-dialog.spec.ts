@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { createSpyObj, type SpyObj } from '@testing/spy';
@@ -145,5 +147,85 @@ describe('StaffMemberCreateDialog (applyWhen step-conditional)', () => {
     await api.save();
 
     expect(notify.apiError).toHaveBeenCalled();
+  });
+});
+
+interface CodeField {
+  errors(): ReadonlyArray<{ kind: string }>;
+  pending(): boolean;
+}
+interface AsyncApi {
+  model: { (): CreateModel; update(fn: (m: CreateModel) => CreateModel): void };
+  f: (() => { valid(): boolean }) & { code: () => CodeField };
+}
+
+describe('StaffMemberCreateDialog code availability (validateHttp)', () => {
+  function setup() {
+    const dataSpy = createSpyObj<StaffMembersDataService>(['searchPeople', 'create', 'createForPerson']);
+    dataSpy.searchPeople.mockReturnValue(of([]));
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: StaffMembersDataService, useValue: dataSpy },
+        { provide: NotificationService, useValue: createSpyObj<NotificationService>(['success', 'apiError']) },
+        { provide: TranslocoService, useValue: { translate: (k: string) => k, getActiveLang: () => 'en' } },
+      ],
+    });
+    TestBed.overrideComponent(StaffMemberCreateDialog, { set: { template: '' } });
+
+    const fixture = TestBed.createComponent(StaffMemberCreateDialog);
+    fixture.componentRef.setInput('open', false);
+    fixture.componentRef.setInput('open', true);
+    fixture.detectChanges();
+    return {
+      fixture,
+      api: fixture.componentInstance as unknown as AsyncApi,
+      http: TestBed.inject(HttpTestingController),
+    };
+  }
+
+  async function fillValidCode(fixture: ComponentFixture<StaffMemberCreateDialog>, api: AsyncApi, code: string) {
+    api.model.update(m => ({ ...m, code, firstName: 'A', lastName: 'B', gender: 'F' }));
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(500);
+    fixture.detectChanges();
+  }
+
+  it('calls the availability endpoint and flags a taken code', async () => {
+    const { fixture, api, http } = setup();
+    vi.useFakeTimers();
+    try {
+      await fillValidCode(fixture, api, 'ABC123');
+
+      const req = http.expectOne(r => r.url.includes('/api/v1/staffmembers/code-available'));
+      expect(req.request.urlWithParams).toContain('code=ABC123');
+      req.flush({ available: false });
+      await vi.advanceTimersByTimeAsync(1);
+      fixture.detectChanges();
+
+      expect(api.f.code().errors().some(e => e.kind === 'taken')).toBe(true);
+      http.verify();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('leaves an available code with no taken error', async () => {
+    const { fixture, api, http } = setup();
+    vi.useFakeTimers();
+    try {
+      await fillValidCode(fixture, api, 'FREE99');
+
+      http.expectOne(r => r.url.includes('/code-available')).flush({ available: true });
+      await vi.advanceTimersByTimeAsync(1);
+      fixture.detectChanges();
+
+      expect(api.f.code().errors().some(e => e.kind === 'taken')).toBe(false);
+      http.verify();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

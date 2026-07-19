@@ -34,7 +34,8 @@
         <mp-section-header [title]="t('sections.school')"></mp-section-header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <mp-form-field [label]="t('fields.urn')" for="urn">
+          <mp-form-field [label]="t('fields.urn')" for="urn"
+            [hint]="f.urn().pending() ? t('fields.checkingUrn') : undefined">
             <input mpInput id="urn" [formField]="f.urn" />
           </mp-form-field>
 

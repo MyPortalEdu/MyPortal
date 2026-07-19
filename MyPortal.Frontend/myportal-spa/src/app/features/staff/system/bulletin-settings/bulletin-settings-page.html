@@ -126,6 +126,7 @@
 <mp-bulletin-category-form-dialog
   [visible]="categoryFormOpen()"
   [existing]="editingCategory()"
+  [existingNames]="otherCategoryNames()"
   (closed)="closeCategoryForm()"
   (saved)="onCategorySaved()">
 </mp-bulletin-category-form-dialog>

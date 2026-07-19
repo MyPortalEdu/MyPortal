@@ -194,6 +194,17 @@ public class SchoolService(
         }
     }
 
+    public async Task<bool> IsUrnAvailableAsync(string? urn, Guid? excludeSchoolId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(urn))
+        {
+            return true;
+        }
+
+        return !await schoolRepository.UrnExistsAsync(urn.Trim(), excludeSchoolId, cancellationToken, null);
+    }
+
     // Schools are always backed by an agency of type "Educational Provider" — the
     // SPA doesn't pick a type, so the server fixes it here rather than trusting
     // an inbound AgencyTypeId.
