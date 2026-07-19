@@ -151,7 +151,7 @@ describe('BulletinCategoryFormDialog', () => {
   });
 
   it('save() guards against invalid input', () => {
-    open(null); // name empty
+    open(null);
     component.save();
     expect(data.createCategory).not.toHaveBeenCalled();
   });

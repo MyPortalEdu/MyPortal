@@ -2,11 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Avatar — the design-system equivalent of `p-avatar`. Shows an image, or a text label (initials)
- * on a muted circle/square. Size presets mirror p-avatar (`normal`/`large`/`xlarge`); override
- * colour/size with utility classes via `class` (e.g. `!bg-primary-500 !text-white`).
- */
 @Component({
   selector: 'mp-avatar',
   standalone: true,

@@ -12,12 +12,6 @@ import { MpSelect } from '@myportal/ui';
 
 import { GENDER_CODES } from '../../constants/gender';
 
-/**
- * Reusable gender dropdown for any Person form (staff, students, contacts…).
- * Two-way bind the single-char code via `[value]`/`(valueChange)`. Options and
- * placeholder come from the shared `common.gender.*` i18n keys. For read-only
- * display use the `genderLabel` pipe instead.
- */
 @Component({
   selector: 'mp-gender-select',
   standalone: true,
@@ -39,16 +33,12 @@ import { GENDER_CODES } from '../../constants/gender';
 export class GenderSelect {
   private readonly transloco = inject(TranslocoService);
 
-  /** The selected single-char gender code (M/F/X), two-way bound. */
   readonly value = model<string | null>(null);
 
-  /** Forwarded to the native control for label association. */
   readonly inputId = input<string>();
 
-  /** Optional placeholder override; defaults to "Select gender". */
   readonly placeholder = input<string>();
 
-  /** Paints the invalid state; drive it from the owning form's validity. */
   readonly invalid = input<boolean>(false);
 
   protected readonly defaultPlaceholder = computed(() =>

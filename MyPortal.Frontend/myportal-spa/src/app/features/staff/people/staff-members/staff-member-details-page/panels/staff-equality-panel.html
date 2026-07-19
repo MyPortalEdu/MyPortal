@@ -82,7 +82,6 @@
             }
           </div>
 
-          <!-- Disability type and details only apply once a disability is declared. -->
           @if (hasDisability()) {
             <mp-field [label]="t('staff-members.equality.disabilities')" for="disabilities">
               @if (editing()) {

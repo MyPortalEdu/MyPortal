@@ -18,11 +18,6 @@ import { CanComponentDeactivate } from '../../../core/guards/can-deactivate.guar
 import { Me } from '../../../core/types/me';
 import { UserType } from '../../../core/types/user-type';
 
-/**
- * Self-service account settings for the signed-in user: read-only identity fields
- * plus a change-password form backed by PUT /api/me/password (which verifies the
- * current password server-side). Reachable by every user type via /portal/settings.
- */
 @Component({
   selector: 'mp-account-settings-page',
   standalone: true,
@@ -45,8 +40,6 @@ export class AccountSettingsPage implements OnInit, CanComponentDeactivate {
   readonly confirm = signal('');
   readonly submitting = signal(false);
 
-  // Relative to the template's `account-settings` transloco prefix — the `t()` in
-  // the template prepends the scope, so returning a fully-qualified key would double it.
   readonly userTypeKey = computed(() => {
     switch (this.me()?.userType) {
       case UserType.Staff: return 'userType.staff';
@@ -59,7 +52,6 @@ export class AccountSettingsPage implements OnInit, CanComponentDeactivate {
   readonly mismatch = computed(
     () => this.confirm().length > 0 && this.newPassword() !== this.confirm());
 
-  // New password can't equal the current one — a no-op change that Identity would reject anyway.
   readonly sameAsCurrent = computed(
     () => this.newPassword().length > 0 && this.newPassword() === this.currentPassword());
 

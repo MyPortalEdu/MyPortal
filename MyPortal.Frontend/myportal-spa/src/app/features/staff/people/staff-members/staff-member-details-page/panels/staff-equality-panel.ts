@@ -30,10 +30,6 @@ import {
 } from '../../../../../../shared/types/staff-equality-details';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Equality & Diversity area of the staff profile. Special-category data: HR-edit-only (no self or
- * line-manager edit). Self-loads on mount; every field is optional so the form is always valid.
- */
 @Component({
   selector: 'mp-staff-equality-panel',
   standalone: true,
@@ -71,7 +67,6 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
   protected readonly disabilityIds = signal<string[]>([]);
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the equality payload so the editor is self-contained.
   protected readonly ethnicities = computed(() => this.equality()?.ethnicities ?? []);
   protected readonly nationalities = computed(() => this.equality()?.nationalities ?? []);
   protected readonly languages = computed(() => this.equality()?.languages ?? []);
@@ -81,15 +76,12 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
   protected readonly genderIdentities = computed(() => this.equality()?.genderIdentities ?? []);
   protected readonly disabilities = computed(() => this.equality()?.disabilities ?? []);
 
-  // Equality is HR-edit-only — no self/managed edit.
   override readonly canEdit = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffEqualityDetails),
   );
 
-  // Every equality field is optional — nothing to invalidate.
   override readonly valid = computed(() => true);
 
-  // Serialised edit state for the dirty check; disability ids sorted so reorder alone isn't a change.
   private readonly form = computed(() =>
     JSON.stringify({
       ethnicityId: this.ethnicityId(),
@@ -158,7 +150,6 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
       await firstValueFrom(this.data.updateEqualityDetails(this.staffMemberId(), payload));
       this.notify.success(this.transloco.translate('staff-members.savedEqualityToast'));
       this.editing.set(false);
-      // Refetch so the snapshot (and any server normalisation) is the new baseline.
       this.load();
     } catch (err) {
       this.notify.apiError(err, this.transloco.translate('staff-members.saveEqualityError'));
@@ -181,8 +172,6 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
     this.snapshot.set(this.form());
   }
 
-  // Disability detail (type + free text) only applies once a disability is declared; clearing the
-  // declaration discards those values so nothing stale is saved.
   protected onHasDisability(value: boolean): void {
     this.hasDisability.set(value);
     if (!value) {

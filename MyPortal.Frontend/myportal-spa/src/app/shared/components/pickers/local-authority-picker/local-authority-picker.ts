@@ -17,16 +17,8 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 
 import { LocalAuthoritiesDataService } from '../../../services/local-authorities-data.service';
 import { LocalAuthoritySummaryResponse } from '../../../types/school';
-import { toQueryKitParams } from '../../../utils/primeng-querykit';
+import { toQueryKitParams } from '../../../utils/querykit';
 
-/**
- * Single-select local-authority browser. Trigger button opens a popover with
- * a lazy-loaded p-table backed by /api/localauthorities, with column filters
- * on LeaCode and Name. Modelled on StudentGroupPicker but always single-pick:
- * a school has at most one LA so the multi-select branch is unnecessary.
- *
- * Translation keys live under `common.localAuthorityPicker.*` in the root scope.
- */
 @Component({
   selector: 'mp-local-authority-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,7 +28,6 @@ import { toQueryKitParams } from '../../../utils/primeng-querykit';
 export class LocalAuthorityPicker {
   private readonly data = inject(LocalAuthoritiesDataService);
 
-  /** Optional override for the trigger button label. Defaults to "Pick a local authority…". */
   readonly buttonLabel = input<string | undefined>(undefined);
 
   readonly picked = output<LocalAuthoritySummaryResponse>();

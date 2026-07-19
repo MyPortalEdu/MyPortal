@@ -3,12 +3,6 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Button styling as a directive applied to a native `<button>`/`<a>` — the Spartan/shadcn
- * "helm" pattern. Keeping the native element means type, disabled, form submission and a11y
- * come for free; we only own the look. Variants/sizes read from the design tokens
- * (`--color-primary`, `--radius-control`, …) so the whole app tracks one source of truth.
- */
 export const mpButtonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control text-sm font-medium ' +
     'transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ' +
@@ -49,11 +43,7 @@ export class MpButton {
 
   readonly variant = input<MpButtonVariant>('default');
   readonly size = input<MpButtonSize>('default');
-  // Mirrors p-button: a native <button> defaults to type="button" so it never submits an enclosing
-  // form by accident. An explicit `type` (e.g. "submit") is respected; anchors get no type attr.
   readonly type = input<string | null>(null);
-  // Captures any static/bound `class` on the host so callers can extend styling; merged last
-  // via `cn` so caller utilities win over variant defaults.
   readonly userClass = input<ClassValue>('', { alias: 'class' });
 
   protected readonly resolvedType = computed(() => {

@@ -4,11 +4,6 @@ import { MpSelectionHost } from './mp-selectable-row';
 
 const BOX = 'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border align-middle transition-colors';
 
-/**
- * Per-row selection checkbox for `selectionMode="multiple"` — the design-system equivalent of
- * `<p-tableCheckbox [value]="row">`. Toggles the row in MpTable's `selection`. `disabled` (or the
- * table's `rowDisabled` predicate) makes it un-selectable.
- */
 @Component({
   selector: 'mp-table-checkbox',
   standalone: true,
@@ -43,16 +38,11 @@ export class MpTableCheckbox {
   );
 
   protected toggle(event: Event): void {
-    // Stop the click reaching an mpSelectableRow on the same row (which would toggle it again).
     event.stopPropagation();
     if (!this.disabled()) this.host.toggleRow(this.row());
   }
 }
 
-/**
- * Header "select all" checkbox — the design-system equivalent of `<p-tableHeaderCheckbox>`. Toggles
- * all selectable (non-disabled) rows; shows an indeterminate dash when only some are selected.
- */
 @Component({
   selector: 'mp-table-header-checkbox',
   standalone: true,

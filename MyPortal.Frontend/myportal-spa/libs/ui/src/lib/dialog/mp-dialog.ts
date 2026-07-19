@@ -2,7 +2,9 @@ import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  Directive,
   computed,
+  contentChild,
   effect,
   inject,
   input,
@@ -13,18 +15,9 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Modal dialog — the design-system equivalent of `p-dialog` for the app's controlled pattern
- * (`[(visible)]` two-way, own header/content/footer projected as children). A fixed backdrop +
- * centered panel, toggled by `visible`; CDK's `cdkTrapFocus` handles the focus trap and restores
- * focus to the trigger on close, and the body scroll is locked while open.
- *
- * Projected content IS the dialog chrome — the panel adds only the surface (border/rounded/shadow)
- * and clips it, so consumers keep full control of header/body/footer layout.
- *
- * Migrating from p-dialog: `[(visible)]` stays; `dismissableMask`→`dismissable`, `(onHide)`→`(closed)`,
- * width via `panelClass` (e.g. `panelClass="w-[min(32rem,94vw)]"`). `[modal]`/`[closeOnEscape]` map 1:1.
- */
+@Directive({ selector: '[mpDialogFooter]', standalone: true })
+export class MpDialogFooter {}
+
 @Component({
   selector: 'mp-dialog',
   standalone: true,
@@ -35,39 +28,41 @@ import { cn } from '../utils/cn';
 export class MpDialog {
   private readonly doc = inject(DOCUMENT);
 
-  /** Two-way visibility. Use `[(visible)]` (or `[visible]` + `(visibleChange)`). */
   readonly visible = model<boolean>(false);
-  /** Render the dimmed backdrop (p-dialog `modal`). */
   readonly modal = input(true);
-  /** Clicking the backdrop closes the dialog (p-dialog `dismissableMask`). */
   readonly dismissable = input(true);
   readonly closeOnEscape = input(true);
-  /** Extra classes for the panel — width and any per-dialog overrides. */
   readonly panelClass = input<ClassValue>('');
   readonly ariaLabel = input<string | undefined>(undefined);
 
-  /** Fires when the user dismisses the dialog via the backdrop or Escape (p-dialog `onHide`). */
+  readonly title = input<string | undefined>(undefined);
+  readonly titleIcon = input<string | undefined>(undefined);
+  readonly showClose = input(true);
+  readonly closeDisabled = input(false);
+  readonly closeAriaLabel = input('Close');
+  readonly bodyClass = input<ClassValue>('');
+
   readonly closed = output<void>();
+
+  protected readonly footerRef = contentChild(MpDialogFooter);
 
   protected readonly panelClasses = computed(() =>
     cn(
-      // Width defaults to full (viewport-capped); consumers set the real width via `panelClass`
-      // (e.g. w-[min(64rem,95vw)]). NOT max-w-lg — a fixed max would clamp a wider panelClass width
-      // (tailwind-merge can't reconcile max-w-* against a w-[...] utility).
       'relative z-[1101] flex max-h-[90vh] w-full max-w-[95vw] flex-col overflow-hidden rounded-surface ' +
         'border border-border bg-background shadow-overlay outline-none',
       this.panelClass(),
     ),
   );
 
+  protected readonly bodyClasses = computed(() =>
+    cn('min-h-0 flex-1 overflow-auto p-4', this.bodyClass()),
+  );
+
   constructor() {
-    // Lock body scroll while a dialog is open (restored on close/destroy).
     effect(() => (this.doc.body.style.overflow = this.visible() ? 'hidden' : ''));
   }
 
-  private dismiss(): void {
-    // Set the model (two-way `[(visible)]` closes directly) AND emit closed so owners of a one-way
-    // `[visible]` binding can flip their own source (mirrors p-dialog's internal-hide + onHide).
+  protected dismiss(): void {
     this.visible.set(false);
     this.closed.emit();
   }

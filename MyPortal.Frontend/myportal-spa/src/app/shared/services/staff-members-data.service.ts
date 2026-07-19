@@ -47,7 +47,7 @@ import {
   PersonMatchResponse,
   StaffMemberCreateForPersonRequest,
 } from '../types/person-match';
-import { QueryKitParams } from '../utils/primeng-querykit';
+import { QueryKitParams } from '../utils/querykit';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -86,9 +86,6 @@ export class StaffMembersDataService {
     );
   }
 
-  // Same-origin, cookie-authed URL for an <img src> — bypasses HttpClient, so it mirrors the
-  // api-base rewrite off environment.apiUrl. `photoId` busts the browser cache when the photo is
-  // replaced or removed (each new photo mints a fresh id; null → the caller shows initials instead).
   photoUrl(staffMemberId: string, photoId: string): string {
     return `${environment.apiUrl}/v1/staffmembers/${staffMemberId}/photo?v=${photoId}`;
   }
@@ -183,8 +180,6 @@ export class StaffMembersDataService {
     );
   }
 
-  // Read-only timetable feed for a visible window. `from`/`to` are ISO datetimes (the
-  // calendar's current range); the server clamps an over-wide window.
   getTimetable(
     staffMemberId: string,
     from: string,
@@ -197,8 +192,6 @@ export class StaffMembersDataService {
     );
   }
 
-  // The current user's own timetable feed for the home dashboard. Resolves the staff member
-  // server-side from the session; degrades to public diary events when there's no staff record.
   getMyTimetable(from: string, to: string): Observable<StaffCalendarResponse> {
     const params = new HttpParams().set('from', from).set('to', to);
     return this.http.get<StaffCalendarResponse>('/api/v1/me/timetable', { params });
@@ -269,16 +262,10 @@ export class StaffMembersDataService {
     );
   }
 
-  // Create takes the same basic-details shape as the update — joiner record
-  // carries identity + Code only; equality / employment / professional / etc.
-  // are populated post-creation via their area PUTs.
   create(payload: StaffBasicDetailsUpsertRequest): Observable<IdResponse> {
     return this.http.post<IdResponse>('/api/v1/staffmembers', payload);
   }
 
-  // Search existing People for the create flow so a joiner already on file gets a
-  // staff role attached to their existing Person rather than a duplicate. Blank /
-  // too-short queries return [] server-side.
   searchPeople(query: string): Observable<PersonMatchResponse[]> {
     const params = new HttpParams().set('query', query);
     return this.http.get<PersonMatchResponse[]>('/api/v1/staffmembers/person-matches', {
@@ -286,8 +273,6 @@ export class StaffMembersDataService {
     });
   }
 
-  // Attach a staff role to an existing Person — supplies only the staff code; the
-  // person's bio is left untouched.
   createForPerson(payload: StaffMemberCreateForPersonRequest): Observable<IdResponse> {
     return this.http.post<IdResponse>('/api/v1/staffmembers/for-person', payload);
   }

@@ -28,15 +28,11 @@ export class SidebarComponent implements OnInit {
       this.items.set(items);
       this.autoExpandActiveGroup();
     } catch (err) {
-      // Menu fetch ultimately depends on /api/me; a transient failure shouldn't
-      // crash the shell — just log and render an empty nav.
       console.error('Sidebar: failed to build menu', err);
       this.items.set([]);
     }
   }
 
-  // In rail mode the group button has no room for sub-items, so clicking it asks
-  // the shell to expand the sidebar and pre-opens the group the user clicked.
   toggle(item: NavItem): void {
     const key = item.label!;
     if (this.collapsed()) {
@@ -56,15 +52,10 @@ export class SidebarComponent implements OnInit {
     return this.expanded().has(item.label!);
   }
 
-  // Items can opt into exact-match via `state.exact` (set by buildMenu for the Home
-  // row). Without it, RouterLinkActive does prefix matching, which would highlight
-  // Home whenever any deeper portal route is active.
   isExactMatch(item: NavItem): boolean {
     return item.state?.['exact'] === true;
   }
 
-  // Whether any child of a group matches the current URL. Used in rail mode to
-  // highlight the parent icon since the active child isn't visible.
   hasActiveChild(item: NavItem): boolean {
     if (!item.items?.length) return false;
     const url = this.router.url;
@@ -74,8 +65,6 @@ export class SidebarComponent implements OnInit {
     });
   }
 
-  // Open the group whose children contain the current URL on load, so the active
-  // sub-item is visible without the user having to click to expand.
   private autoExpandActiveGroup(): void {
     const url = this.router.url;
     const next = new Set<string>();

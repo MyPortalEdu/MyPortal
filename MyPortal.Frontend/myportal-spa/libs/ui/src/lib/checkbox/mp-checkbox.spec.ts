@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { MpCheckbox } from './mp-checkbox';
 
-// Host exercises the real forms integration: [ngModel] + (ngModelChange), the pattern the app uses.
 @Component({
   standalone: true,
   imports: [MpCheckbox, FormsModule],
@@ -34,6 +33,7 @@ describe('MpCheckbox', () => {
     host.value.set(true);
     fixture.detectChanges();
     await fixture.whenStable();
+    fixture.detectChanges();
     expect(input().checked).toBeTrue();
   });
 

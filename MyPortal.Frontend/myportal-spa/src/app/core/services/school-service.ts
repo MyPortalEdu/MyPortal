@@ -7,9 +7,6 @@ export class SchoolService {
   private readonly http = inject(HttpClient);
   private localName$?: Observable<string | null>;
 
-  // Reads as text so it works whether ASP.NET responds with JSON (`"Name"`) or
-  // plain text (`Name`). Returns null for an empty or missing name so callers do
-  // one null check.
   getLocalName(): Observable<string | null> {
     if (!this.localName$) {
       this.localName$ = this.http
@@ -19,7 +16,7 @@ export class SchoolService {
             if (!raw) return null;
             let value = raw.trim();
             if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
-              try { value = JSON.parse(value) as string; } catch { /* leave as-is */ }
+              try { value = JSON.parse(value) as string; } catch { }
             }
             return value.length > 0 ? value : null;
           }),

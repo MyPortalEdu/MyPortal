@@ -8,9 +8,6 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      // <mp-toast>/<mp-confirm-dialog> use root-provided MpToastStore/MpConfirmStore (no providers
-      // needed). provideRouter satisfies <router-outlet>; the HTTP testing providers are needed
-      // because App's constructor subscribes to SchoolService (which needs HttpClient) for the title.
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
   });

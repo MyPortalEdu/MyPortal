@@ -25,7 +25,6 @@
         </div>
       }
 
-      <!-- Account -->
       <mp-card>
         <div class="flex flex-col gap-4">
           <mp-section-header [title]="t('form.account')" icon="fa-solid fa-id-card"></mp-section-header>
@@ -86,7 +85,6 @@
         </div>
       </mp-card>
 
-      <!-- Linked person -->
       <mp-card>
         <div class="flex flex-col gap-2">
           <mp-section-header [title]="t('form.person')" icon="fa-solid fa-user"></mp-section-header>
@@ -106,7 +104,6 @@
         </div>
       </mp-card>
 
-      <!-- Roles -->
       <mp-card>
         <div class="flex flex-col gap-2">
           <mp-section-header [title]="t('form.roles')" icon="fa-solid fa-user-shield"></mp-section-header>
@@ -135,7 +132,6 @@
         </div>
       </mp-card>
 
-      <!-- Effective permissions (edit only) -->
       @if (!isCreate()) {
         <mp-card>
           <div class="flex flex-col gap-2">

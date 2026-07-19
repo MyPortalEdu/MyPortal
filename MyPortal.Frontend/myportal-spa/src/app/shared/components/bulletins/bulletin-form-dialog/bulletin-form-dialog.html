@@ -5,19 +5,12 @@
   [dismissable]="false"
   [closeOnEscape]="!isDirty()"
   panelClass="w-[min(44rem,94vw)]"
-  (closed)="onHide()">
+  (closed)="onHide()"
+  [title]="isEdit() ? t('form.titleEdit') : t('form.titleCreate')"
+  titleIcon="fa-regular fa-bell text-primary"
+  [closeAriaLabel]="t('detail.close')">
 
-  <div class="flex items-center justify-between p-4 border-b border-surface">
-    <div class="flex items-center gap-2">
-      <i class="fa-regular fa-bell text-primary"></i>
-      <h3 class="text-base font-semibold m-0">{{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}</h3>
-    </div>
-    <button type="button" class="mp-icon-button" (click)="onCancel()" [attr.aria-label]="t('detail.close')">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-
-  <div class="p-4 flex flex-col gap-3">
+  <div class="flex flex-col gap-3">
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.titleLabel') }}</label>
       <input
@@ -65,8 +58,6 @@
       }
     </div>
 
-    <!-- Audience. Active state is fixed primary tint (unlike the feed's
-         category chips which use per-category colours). -->
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.audienceLabel') }}</label>
       <div class="flex flex-wrap gap-2">
@@ -86,9 +77,6 @@
       </div>
     </div>
 
-    <!-- Expiry. Optional: when set, the bulletin disappears from feeds after
-         this instant (creator still sees it). Server validator rejects past
-         instants, so the picker's minDate matches. -->
     <div class="flex flex-col gap-1 max-w-[18rem]">
       <label class="text-xs font-medium text-muted-color">{{ t('form.expiresLabel') }}</label>
       <mp-date-picker
@@ -118,9 +106,6 @@
       </textarea>
     </div>
 
-    <!-- Attachments. In create mode the widget stages files in memory and the
-         publish() handler flushes them via uploadStaged() after the bulletin
-         exists. In edit mode it talks to the API directly. -->
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-color">{{ t('form.attachmentsLabel') }}</label>
       <mp-bulletin-attachments
@@ -131,13 +116,7 @@
     </div>
   </div>
 
-  <!-- Footer. On mobile the checkbox label + Cancel + Publish get cramped
-       in one row, so we stack: checkbox row on top, then a button row
-       beneath with each button taking half the width for big tap targets.
-       sm: and up returns to the desktop "checkbox left, buttons right" layout.
-       bg-emphasis + rounded-b-xl anchors the actions strip as a distinct
-       "modal footer" zone, matched on every dialog footer in the app. -->
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+  <div mpDialogFooter class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <label class="flex items-center gap-2 text-sm">
       <mp-checkbox
         [ngModel]="requiresAck()"

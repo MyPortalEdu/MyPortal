@@ -2,11 +2,6 @@ import { Directive, computed, input } from '@angular/core';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Textarea styling — the design-system equivalent of pTextarea. Apply to a native `<textarea>`.
- * Note: PrimeNG's `autoResize` isn't reimplemented; use the `rows` attribute (autosize can be
- * added via a small resize observer directive later if needed).
- */
 @Directive({
   selector: 'textarea[mpTextarea]',
   standalone: true,
@@ -16,7 +11,6 @@ import { cn } from '../utils/cn';
   },
 })
 export class MpTextarea {
-  // Accepts null/undefined so it can bind straight from an NgModel's `invalid` (boolean | null).
   readonly invalid = input<boolean | null | undefined>(false);
   readonly userClass = input<ClassValue>('', { alias: 'class' });
 

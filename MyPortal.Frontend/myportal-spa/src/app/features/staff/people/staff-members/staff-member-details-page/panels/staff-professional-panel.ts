@@ -34,11 +34,6 @@ import {
 } from '../../../../../../shared/types/staff-professional-details';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Professional Details area: teaching status, QTS, statutory induction and qualifications.
- * Relationship-scoped edit (HR All or line-manager Managed) — self can view but never edit.
- * Self-loads on mount.
- */
 @Component({
   selector: 'mp-staff-professional-panel',
   standalone: true,
@@ -94,14 +89,11 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
   protected readonly qualifications = signal<StaffQualificationUpsertItem[]>([]);
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the professional payload so the editor is self-contained.
   protected readonly qtsRoutes = computed(() => this.professional()?.qtsRoutes ?? []);
   protected readonly inductionStatuses = computed(() => this.professional()?.inductionStatuses ?? []);
   protected readonly qualificationLevels = computed(() => this.professional()?.qualificationLevels ?? []);
   protected readonly classesOfDegree = computed(() => this.professional()?.classesOfDegree ?? []);
 
-  // The teaching-status checkboxes, driven by a small descriptor list so the template doesn't
-  // repeat the same get/set block six times. The i18n key is the field name.
   protected readonly professionalFlags: {
     key: string;
     get: () => boolean;
@@ -115,7 +107,6 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     { key: 'isSeniorLeadership', get: () => this.isSeniorLeadership(), set: v => this.isSeniorLeadership.set(v) },
   ];
 
-  // Professional edit: HR (All) or the line manager (Managed) — no self-edit.
   override readonly canEdit = computed(() => {
     const perms = this.permissions();
     const rel = this.relationship();
@@ -124,15 +115,12 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  // A 7-digit TRN when provided, and every qualification row needs a title.
   override readonly valid = computed(() => {
     const trn = (this.teacherReferenceNumber() ?? '').trim();
     if (trn.length > 0 && !/^\d{7}$/.test(trn)) return false;
     return this.qualifications().every(q => q.title.trim().length > 0);
   });
 
-  // Serialised edit state for the dirty check. Dates normalised to ISO so a Date vs string doesn't
-  // read as a change.
   private readonly form = computed(() =>
     JSON.stringify({
       isTeachingStaff: this.isTeachingStaff(),
@@ -218,7 +206,6 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
       await firstValueFrom(this.data.updateProfessionalDetails(this.staffMemberId(), payload));
       this.notify.success(this.transloco.translate('staff-members.savedProfessionalToast'));
       this.editing.set(false);
-      // Refetch so server-assigned ids (new rows) and any normalisation become the baseline.
       this.load();
     } catch (err) {
       this.notify.apiError(err, this.transloco.translate('staff-members.saveProfessionalError'));
@@ -258,8 +245,6 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     this.snapshot.set(this.form());
   }
 
-  // Qualifications grid — a new row has no id (the server inserts it); editing a field rewrites the
-  // array immutably so the dirty check and OnPush both fire.
   protected addQualification(): void {
     this.qualifications.update(rows => [
       ...rows,
@@ -280,8 +265,6 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     this.qualifications.update(rows => rows.filter((_, i) => i !== index));
   }
 
-  // One-line read-only summary of a qualification's secondary fields (level, subject, grade, class,
-  // awarding body, year) — empty fields dropped.
   protected qualificationLine(q: StaffQualificationUpsertItem): string {
     const parts = [
       this.lookupLabel(this.qualificationLevels(), q.qualificationLevelId),
@@ -305,9 +288,6 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     );
   }
 
-  // "Teaching staff" means qualified/unqualified teachers — not teaching assistants, who are support
-  // staff even as HLTAs. QTS and statutory induction only apply to teachers, so clear and hide those
-  // fields when the teaching-staff flag is off.
   protected onIsTeachingStaff(value: boolean): void {
     this.isTeachingStaff.set(value);
     if (!value) {
@@ -319,8 +299,6 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     }
   }
 
-  // Route to QTS and award date are meaningless without QTS; clear them when the QTS flag is turned
-  // off so the hidden fields don't persist stale data.
   protected onHasQts(value: boolean): void {
     this.hasQts.set(value);
     if (!value) {

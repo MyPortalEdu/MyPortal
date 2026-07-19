@@ -34,13 +34,10 @@ function makeDoc(overrides: Partial<DocumentDetailsResponse> = {}): DocumentDeta
 }
 
 function makeFile(name: string, size: number, type = 'application/pdf'): File {
-  // jsdom/karma File ctor honours the second arg as content, not size; build a
-  // sized buffer so f.size reflects what the component will see.
   return new File([new ArrayBuffer(size)], name, { type });
 }
 
 function fileInputEvent(files: File[]): Event {
-  // Build a FileList-shaped object — indexed access + length + item().
   const list = Object.assign(
     Object.fromEntries(files.map((f, i) => [i, f])),
     { length: files.length, item: (i: number) => files[i] ?? null },
@@ -93,8 +90,6 @@ describe('BulletinAttachments', () => {
 
     fixture = TestBed.createComponent(BulletinAttachments);
     component = fixture.componentInstance;
-    // `mode` is required; we set it lazily via setMode() per test so the
-    // configure-then-render path matches the production usage of [mode]=...
   });
 
   function setMode(mode: 'view' | 'edit' | 'stage', bulletinId: string | null = null, directoryId: string | null = null) {
@@ -115,7 +110,7 @@ describe('BulletinAttachments', () => {
 
     expect(component.staged().map(f => f.name)).toEqual(['a.pdf', 'b.png']);
     expect(component.hasStaged()).toBeTrue();
-    expect(data.upload).not.toHaveBeenCalled(); // no immediate upload in stage mode
+    expect(data.upload).not.toHaveBeenCalled();
   });
 
   it('removeStaged() drops the entry at the given index', () => {
@@ -145,8 +140,8 @@ describe('BulletinAttachments', () => {
     const ok = await component.uploadStaged('b1', 'd1');
 
     expect(ok).toBeFalse();
-    expect(data.upload).toHaveBeenCalledTimes(1); // stopped after first failure
-    expect(component.staged().length).toBe(2);    // queue preserved for retry
+    expect(data.upload).toHaveBeenCalledTimes(1);
+    expect(component.staged().length).toBe(2);
     expect(notify.apiError).toHaveBeenCalled();
   });
 
@@ -162,7 +157,6 @@ describe('BulletinAttachments', () => {
     expect(component.documents().map(d => d.id)).toEqual(['existing']);
 
     component.onFileInputChange(fileInputEvent([makeFile('new.pdf', 10)]));
-    // The edit-mode upload path is now sequential async — yield until it resolves.
     await Promise.resolve();
     await Promise.resolve();
 
@@ -225,11 +219,6 @@ describe('BulletinAttachments', () => {
 
     expect(component.documents()).toEqual([]);
   });
-
-  // The mode is bound once when the component renders; downstream computeds
-  // capture it at first read. We use separate fixtures (one per mode) rather
-  // than mutating mode after init, which would mirror production usage but
-  // wouldn't reliably re-trigger the computeds in a test harness.
 
   it('isEditable is false in view mode', () => {
     setMode('view', 'b1', 'd1');

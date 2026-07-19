@@ -3,15 +3,6 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Numeric input — the design-system equivalent of `p-inputNumber`. CVA over `number | null`.
- *
- * Shows an Intl-formatted value (decimal or currency, with grouping + fraction digits) while idle,
- * and the raw editable number while focused; commits (parse → clamp to min/max → reformat) on blur.
- * Optional `showButtons` renders +/- steppers. Inputs mirror p-inputNumber so migrations are
- * mechanical (`mode`, `currency`, `locale`, `useGrouping`, `min`/`max`, `minFractionDigits`/
- * `maxFractionDigits`, `showButtons`, `step`, `invalid`, `inputId`, `disabled`).
- */
 @Component({
   selector: 'mp-input-number',
   standalone: true,
@@ -57,7 +48,6 @@ export class MpInputNumber implements ControlValueAccessor {
       }),
   );
 
-  // Formatted while idle; raw editable number while focused.
   private syncText(): void {
     const v = this.value();
     if (this.focused()) this.text.set(v == null ? '' : String(v));
@@ -71,7 +61,6 @@ export class MpInputNumber implements ControlValueAccessor {
 
   protected onInput(event: Event): void {
     this.text.set((event.target as HTMLInputElement).value);
-    // Live-update the model as the user types (parsed, unclamped) so forms react immediately.
     this.commit(false);
   }
 
@@ -138,7 +127,6 @@ export class MpInputNumber implements ControlValueAccessor {
   }
 }
 
-/** Strip grouping/currency/symbols, keep a signed decimal; return null for empty/unparseable. */
 function parseNumber(text: string): number | null {
   const cleaned = text.replace(/[^0-9.,-]/g, '').replace(/,/g, '');
   if (cleaned === '' || cleaned === '-' || cleaned === '.') return null;

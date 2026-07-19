@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/** Loading placeholder — equivalent of p-skeleton. `width`/`height` are CSS lengths (e.g. '2rem'). */
 @Component({
   selector: 'mp-skeleton',
   standalone: true,

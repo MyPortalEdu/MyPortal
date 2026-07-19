@@ -2,7 +2,6 @@ import { Directive, computed, input } from '@angular/core';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/** Text-input styling — the design-system equivalent of pInputText. Apply to a native `<input>`. */
 @Directive({
   selector: 'input[mpInput]',
   standalone: true,
@@ -12,7 +11,6 @@ import { cn } from '../utils/cn';
   },
 })
 export class MpInput {
-  // Accepts null/undefined so it can bind straight from an NgModel's `invalid` (boolean | null).
   readonly invalid = input<boolean | null | undefined>(false);
   readonly userClass = input<ClassValue>('', { alias: 'class' });
 

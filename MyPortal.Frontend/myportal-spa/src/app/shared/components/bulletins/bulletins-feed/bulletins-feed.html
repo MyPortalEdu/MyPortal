@@ -1,8 +1,6 @@
 <ng-container *transloco="let t; prefix: 'bulletins'">
 <section class="mp-surface flex flex-col p-4 gap-3">
-  <!-- Header. New button lives here (right-aligned) rather than in a footer
-       strip — always visible, no awkward divider when the list is empty,
-       and matches the common "card title + primary action" pattern. -->
+
   <div class="flex items-center gap-3">
     <i class="fa-regular fa-bell text-primary text-xl"></i>
     <h3 class="text-base font-semibold m-0">{{ t('feed.title') }}</h3>
@@ -16,9 +14,6 @@
     }
   </div>
 
-  <!-- Category filter chips. "All" uses primary tint when active; per-category
-       chips use their own colourCode via inline styles so each category gets
-       its own active treatment. -->
   <div class="flex flex-wrap gap-2">
     <button
       type="button"
@@ -41,16 +36,9 @@
     }
   </div>
 
-  <!-- Items. Capped to ~5 tiles before scroll so the widget doesn't grow
-       indefinitely on busy weeks — the card header/filters/footer stay in
-       place; only the list scrolls. pr-1 keeps the scrollbar from sitting
-       on top of each tile's right edge. -->
   <div class="flex flex-col gap-2 max-h-[26rem] overflow-y-auto pr-1">
     @if (loading()) {
-      <!-- Skeleton tiles mirror the real tile shape (icon square + meta line
-           + title line + body line) so the panel doesn't reflow when data
-           lands. Three is enough to read as "list pending" without dominating
-           the widget. aria-busy on the list container is announced once. -->
+
       <div class="flex flex-col gap-2" aria-busy="true">
         @for (_ of [0, 1, 2]; track $index) {
           <div class="flex gap-3 px-3.5 py-3 rounded-lg border border-surface border-l-4 border-l-transparent">
@@ -78,12 +66,7 @@
             <i [class]="b.categoryIcon" [style.color]="b.categoryColourCode"></i>
           </div>
           <div class="flex-1 min-w-0 flex flex-col gap-0.5">
-            <!-- Meta row: category · time · author, with status badges (ack +
-                 pin) right-aligned. Author folded in here so each tile is one
-                 line shorter — saves vertical mass when the widget shows many
-                 bulletins. The right-side wrapper only renders when there's a
-                 badge to show, so the parent flex's gap doesn't leave a blank
-                 trailing slot. -->
+
             <div class="flex items-center gap-2 text-xs min-w-0">
               <span class="font-semibold uppercase tracking-wide shrink-0" [style.color]="b.categoryColourCode">
                 {{ b.categoryName }}
@@ -100,8 +83,7 @@
                     </span>
                   }
                   @if (isExpired(b)) {
-                    <!-- Expired takes precedence: hides ack state and the pin marker since
-                         the bulletin is no longer visible to its audience. -->
+
                     <span class="inline-flex items-center gap-1 font-medium text-muted-color">
                       <i class="fa-regular fa-clock"></i>{{ t('feed.expired') }}
                     </span>

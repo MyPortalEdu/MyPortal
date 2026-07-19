@@ -1,6 +1,3 @@
-// Mirrors MyPortal.Contracts.Models.People.* for the Contact Details area —
-// a staff member's owned emails and phone numbers, plus the type options the
-// editor's dropdowns need. Addresses are shared and land in a later slice.
 import { LookupResponse } from './lookup';
 
 export interface PersonEmailResponse {
@@ -25,8 +22,6 @@ export interface StaffContactDetailsResponse {
   phoneTypes: LookupResponse[];
 }
 
-// Write payloads. A null/absent `id` is a new row; the server diffs the lists
-// against what's stored (insert / update / soft-delete the dropped ones).
 export interface PersonEmailUpsertItem {
   id?: string | null;
   typeId: string;

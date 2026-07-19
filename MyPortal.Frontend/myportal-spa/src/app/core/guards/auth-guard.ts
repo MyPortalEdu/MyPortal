@@ -53,8 +53,6 @@ export class AuthGuard implements CanActivate, CanMatch {
     } catch (e: unknown) {
       if (e instanceof HttpErrorResponse) {
         if (e.status === 401) {
-          // 401 is also handled by auth-error-interceptor; keep this path as a fallback
-          // for callers that don't go through the interceptor.
           const candidate = returnUrl || (location.pathname + location.search + location.hash);
           const safe = AuthGuard.sanitizeReturnUrl(candidate);
           location.href = `/account/login?returnUrl=${encodeURIComponent(safe)}`;
@@ -62,21 +60,15 @@ export class AuthGuard implements CanActivate, CanMatch {
         }
 
         if (e.status === 403) {
-          // Server says we're authenticated but not authorized. Bounce home.
           return this.router.parseUrl('/');
         }
       }
 
-      // Network blip, 5xx, or anything else — log and bounce home rather than silently
-      // collapsing into a login redirect (which would mask transient backend issues).
       console.error('AuthGuard: unexpected error while checking access', e);
       return this.router.parseUrl('/');
     }
   }
 
-  // Reject anything that isn't a same-origin path (must start with a single '/'),
-  // and refuse to bounce back into the server-rendered /account/* pages, which
-  // would loop after login.
   private static sanitizeReturnUrl(value: string): string {
     if (!value.startsWith('/')) return '/';
     if (value.startsWith('//') || value.startsWith('/\\')) return '/';

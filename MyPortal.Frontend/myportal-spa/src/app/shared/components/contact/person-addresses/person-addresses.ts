@@ -11,14 +11,6 @@ import { PersonAddressResponse } from '../../../types/staff-address';
 import { AddressFormDialog } from '../address-form-dialog/address-form-dialog';
 import { CopyButton } from '../../copy-button/copy-button';
 
-/**
- * Addresses section of the Contact Details panel. Self-contained: loads the staff member's
- * addresses and commits each add/edit/remove immediately (shared-address semantics don't stage
- * cleanly behind a panel-level Save). Hosts the search-before-add / warn-and-choose dialog.
- *
- * Staff-specific today (uses StaffMembersDataService). Generalise via a data-access input when
- * the student/parent portals need it.
- */
 @Component({
   selector: 'mp-person-addresses',
   standalone: true,
@@ -75,7 +67,6 @@ export class PersonAddresses implements OnInit {
       .join(', ');
   }
 
-  // Google Maps search link for the formatted address (opens in a new tab).
   protected mapHref(a: PersonAddressResponse): string {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(this.formatAddress(a))}`;
   }

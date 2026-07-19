@@ -9,11 +9,6 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { UsersDataService } from '../../../services/users-data.service';
 import { PersonSearchResponse } from '../../../types/user';
 
-/**
- * General Person search + picker for linking a Person to a user account. Trigger button opens a
- * popover with a debounced search box backed by /api/people/search (all person types). Emits the
- * chosen Person. Translation keys live under `common.personPicker.*` in the root scope.
- */
 @Component({
   selector: 'mp-person-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,

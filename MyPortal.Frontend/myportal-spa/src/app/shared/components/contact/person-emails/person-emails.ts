@@ -7,10 +7,6 @@ import { LookupResponse } from '../../../types/lookup';
 import { PersonEmailUpsertItem } from '../../../types/staff-contact-details';
 import { CopyButton } from '../../copy-button/copy-button';
 
-/**
- * Presentational list-editor for a person's email addresses. Owner-agnostic — the host owns
- * the model and persistence; this just renders/edits the list and enforces one-main-per-list.
- */
 @Component({
   selector: 'mp-person-emails',
   standalone: true,
@@ -33,7 +29,7 @@ export class PersonEmails {
       id: null,
       typeId: this.types()[0]?.id ?? '',
       address: '',
-      isMain: list.length === 0, // first one in defaults to main
+      isMain: list.length === 0,
       notes: null,
     });
     this.emails.set(list);
@@ -41,7 +37,6 @@ export class PersonEmails {
 
   protected removeEmail(index: number): void {
     const list = this.emails().filter((_, i) => i !== index);
-    // Lost the main? Promote the first remaining so a non-empty list always has one.
     if (list.length && !list.some(e => e.isMain)) {
       list[0] = { ...list[0], isMain: true };
     }

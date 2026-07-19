@@ -25,10 +25,6 @@
     </mp-callout>
   }
 
-  <!-- Step indicator strip. Each chip shows its position and label; the active
-       chip is filled, completed chips show a check, and upcoming chips are
-       muted. Click-to-jump is intentionally disabled — the wizard validates
-       step-by-step, so users have to walk through in order. -->
   <ol class="list-none m-0 p-0 flex flex-wrap items-center gap-2 text-sm">
     @for (key of stepKeys; track key; let i = $index) {
       <li class="flex items-center gap-2"
@@ -46,8 +42,7 @@
             {{ i + 1 }}
           }
         </span>
-        <!-- On mobile only the current step keeps its label (space is tight);
-             every step shows its label from sm up. -->
+
         <span class="sm:inline"
               [class.hidden]="i !== currentStep()"
               [class.font-semibold]="i === currentStep()">
@@ -60,11 +55,6 @@
     }
   </ol>
 
-  <!-- Active step body. One component visible at a time keeps each step's
-       state scoped to its own component instance — bookkeeping like "did the
-       user touch this field" doesn't leak across steps. In edit mode the
-       wizard is briefly empty while the GET fires; show a spinner so the
-       user doesn't see an unprefilled form for the round-trip. -->
   <div class="min-h-[18rem]">
     @if (loading()) {
       <div class="flex flex-col items-center justify-center min-h-[18rem] gap-3">
@@ -107,12 +97,6 @@
 
   </div>
 
-  <!-- Footer is inlined rather than projected via pTemplate="footer" because
-       PrimeNG 20 stopped honouring pTemplate-based slot projection on p-dialog.
-       Mirrors the bulletin-form-dialog footer: bg-emphasis + top border +
-       rounded-b-xl anchor it as a distinct actions strip flush against the
-       dialog's bottom edge (needs the mp-flush-dialog styleClass above to
-       cancel the default content padding). -->
   <div class="flex items-center justify-between gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
     <button mpButton
       variant="ghost"

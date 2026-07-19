@@ -60,21 +60,16 @@ describe('BulletinsFeed', () => {
     notify = jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'apiError']);
     meService = jasmine.createSpyObj<MeService>('MeService', ['me', 'clearCache']);
 
-    // Default refresh() inputs: empty page + empty categories.
     data.list.and.returnValue(of({ items: [], totalItems: 0 } as PageResult<BulletinSummaryResponse>));
     data.listCategories.and.returnValue(of([]));
     data.delete.and.returnValue(of(void 0));
     meService.me.and.returnValue(of(makeMe()));
 
-    // Stub TranslocoService so .translate() returns the key, avoiding the JSON loader.
     const translocoStub = {
       translate: (key: string) => key,
       getActiveLang: () => 'en',
     } as Partial<TranslocoService> as TranslocoService;
 
-    // Skip template compilation: we only care about the component's class logic
-    // (signals + methods). The real template pulls in PrimeNG, transloco directives,
-    // and two child dialog components — none of which add value to these tests.
     TestBed.overrideComponent(BulletinsFeed, { set: { template: '' } });
 
     await TestBed.configureTestingModule({
@@ -89,7 +84,7 @@ describe('BulletinsFeed', () => {
 
     const fixture = TestBed.createComponent(BulletinsFeed);
     component = fixture.componentInstance;
-    fixture.detectChanges(); // triggers ngOnInit → refresh()
+    fixture.detectChanges();
   });
 
   it('refresh() loads bulletins and categories and clears the loading flag', () => {
@@ -162,10 +157,6 @@ describe('BulletinsFeed', () => {
     component.selectCategory(null);
     expect(component.filteredBulletins().length).toBe(3);
   });
-
-  // `me` is private — poke it directly so we don't have to recreate the
-  // fixture per variation. Server still enforces; this is just so non-editors
-  // don't see a button that would 403.
 
   type MePoke = { me: { set: (v: Me) => void } };
 
@@ -258,7 +249,6 @@ describe('BulletinsFeed', () => {
     expect(data.delete).toHaveBeenCalledWith('b1');
     expect(component.detailId()).toBeNull();
     expect(notify.success).toHaveBeenCalled();
-    // refresh() = one initial + one post-delete = two calls to list/listCategories.
     expect(data.list).toHaveBeenCalledTimes(2);
   });
 
@@ -270,15 +260,12 @@ describe('BulletinsFeed', () => {
 
     expect(notify.apiError).toHaveBeenCalled();
     expect(component.detailId()).toBe('b1');
-    // No second refresh on error.
     expect(data.list).toHaveBeenCalledTimes(1);
   });
 
   it('tint() appends the alpha suffix only when the value is a 6-digit hex', () => {
     expect(component.tint('#6366F1')).toBe('#6366F122');
     expect(component.tint('#6366F1', '1A')).toBe('#6366F11A');
-    // 8-digit hex (#RRGGBBAA) is returned as-is — backend validator allows it,
-    // and appending another alpha would yield an invalid colour string.
     expect(component.tint('#6366F1FF')).toBe('#6366F1FF');
     expect(component.tint('')).toBe('');
   });

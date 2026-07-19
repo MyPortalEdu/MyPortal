@@ -33,7 +33,6 @@
         <span class="text-muted-color">{{ formatDateTime(b.createdAt) }}</span>
       </div>
 
-      <!-- Body. Plain text for now; renderer is a follow-up. -->
       <div class="whitespace-pre-wrap text-sm leading-relaxed">{{ b.detail }}</div>
 
       <mp-bulletin-attachments
@@ -55,12 +54,9 @@
       </div>
     </div>
 
-    <!-- Footer. bg-emphasis + rounded-b-xl matches the rest of the app's
-         modal footers for a consistent "actions zone" treatment. -->
     <div class="flex items-center justify-between gap-3 p-4 border-t border-surface bg-emphasis rounded-b-xl">
       @if (isExpired()) {
-        <!-- Expired wins: no Acknowledge button (pointless) and no
-             "Acknowledged" badge (irrelevant once the bulletin's gone). -->
+
         <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-color">
           <i class="fa-regular fa-clock"></i> {{ t('detail.expired') }}
         </span>

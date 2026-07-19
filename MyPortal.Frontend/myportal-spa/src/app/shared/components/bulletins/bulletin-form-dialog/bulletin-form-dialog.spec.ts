@@ -113,9 +113,6 @@ describe('BulletinFormDialog', () => {
 
     fixture = TestBed.createComponent(BulletinFormDialog);
     component = fixture.componentInstance;
-    // Required input; setting it before the first CD avoids a "Required input
-    // not provided" error. We start hidden so the open() helper drives the
-    // effect that re-runs reset()/loadDependencies().
     fixture.componentRef.setInput('visible', false);
     fixture.componentRef.setInput('existing', null);
     fixture.detectChanges();
@@ -172,8 +169,6 @@ describe('BulletinFormDialog', () => {
   });
 
   it('audienceChoices surfaces groups from the existing bulletin even when not in the allowlist', () => {
-    // Admin removed the group from the allowlist after the bulletin was created;
-    // we still need to render it so the editor can untick it.
     open(makeDetail({
       audiences: [
         { id: 'a1', audienceKind: BulletinAudienceKind.StudentGroup, studentGroupId: 'g-removed', studentGroupName: 'Old Group' },
@@ -181,8 +176,8 @@ describe('BulletinFormDialog', () => {
     }));
 
     const keys = component.audienceChoices().map(c => c.key);
-    expect(keys).toContain('sg-g-allowed');  // from allowlist
-    expect(keys).toContain('sg-g-removed');  // surfaced from bulletin
+    expect(keys).toContain('sg-g-allowed');
+    expect(keys).toContain('sg-g-removed');
   });
 
   it('audienceChoices de-duplicates a group present in both the allowlist and the bulletin', () => {
@@ -198,10 +193,10 @@ describe('BulletinFormDialog', () => {
 
   it('isValid is false when title is blank, detail is blank, no category, or no audience', () => {
     open();
-    expect(component.isValid()).toBeFalse(); // title and detail blank
+    expect(component.isValid()).toBeFalse();
 
     component.title.set('   ');
-    expect(component.isValid()).toBeFalse(); // whitespace doesn't count
+    expect(component.isValid()).toBeFalse();
 
     component.title.set('T');
     component.detail.set('D');
@@ -238,7 +233,6 @@ describe('BulletinFormDialog', () => {
     expect(payload.audiences.map(a => a.audienceKind).sort()).toEqual(
       [BulletinAudienceKind.AllStaff, BulletinAudienceKind.AllPupils].sort(),
     );
-    // No attachments component instance in the overridden template → straight to finish.
     expect(component.submitting()).toBeFalse();
     expect(notify.success).toHaveBeenCalled();
     expect(saved).toHaveBeenCalled();
@@ -256,8 +250,6 @@ describe('BulletinFormDialog', () => {
     const [id, payload] = data.update.calls.mostRecent().args;
     expect(id).toBe(existing.id);
     expect(payload.expectedVersion).toBe(9);
-    // Compare instants rather than literal strings: the form parses the ISO to
-    // a Date and serializes back via toISOString(), which normalizes to .000Z.
     expect(new Date(payload.expiresAt!).getTime())
       .toBe(new Date('2026-12-31T00:00:00Z').getTime());
     expect(data.create).not.toHaveBeenCalled();
@@ -281,7 +273,6 @@ describe('BulletinFormDialog', () => {
 
   it('publish() guards against being invoked when invalid', () => {
     open();
-    // No title/detail set, so isValid is false.
     component.publish();
     expect(data.create).not.toHaveBeenCalled();
     expect(component.submitting()).toBeFalse();
@@ -313,16 +304,11 @@ describe('BulletinFormDialog', () => {
     component.title.set('T'); component.detail.set('D');
 
     const uploadStaged = jasmine.createSpy('uploadStaged').and.resolveTo(undefined);
-    // The ViewChild is now a signal query; replace it with a function that
-    // returns a fake instance, since the test template is empty and no real
-    // child component exists. Class fields are writable at runtime despite the
-    // TS `readonly` modifier.
     const fake = { hasStaged: () => true, uploadStaged };
     (component as unknown as { attachments: () => unknown }).attachments = () => fake;
 
     component.publish();
 
-    // Microtask flush.
     await Promise.resolve();
     await Promise.resolve();
 
@@ -340,7 +326,6 @@ describe('BulletinFormDialog', () => {
 
     component.publish();
 
-    // Bulletin was published; failure to fetch the new id just skips the upload step.
     expect(notify.success).toHaveBeenCalled();
     expect(component.submitting()).toBeFalse();
   });

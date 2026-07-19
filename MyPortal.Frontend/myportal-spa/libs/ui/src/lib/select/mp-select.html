@@ -15,8 +15,7 @@
         <span brnSelectValue class="truncate text-left" [placeholder]="placeholder() ?? ''"></span>
         <span class="ml-2 flex shrink-0 items-center gap-1">
           @if (showClear() && hasValue() && !disabled()) {
-            <!-- span (not a nested <button>) so it's valid inside the trigger button; stop the event
-                 reaching the trigger so clearing doesn't also toggle the panel. -->
+
             <span
               role="button"
               tabindex="-1"
@@ -31,8 +30,6 @@
         </span>
       </button>
 
-      <!-- *brnPopoverContent teleports this into a positioned CDK overlay that opens/closes with
-           the trigger (this is what Spartan's helm select does under the hood). -->
       <div *brnPopoverContent brnSelectContent [class]="contentClass">
         @if (filter()) {
           <div class="mb-1 px-0.5 pt-0.5">

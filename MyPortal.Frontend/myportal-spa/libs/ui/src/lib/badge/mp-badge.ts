@@ -3,14 +3,6 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Small pill/label — the design-system equivalent of `p-tag`.
- *
- * Two ways to colour it: the design-system `variant` (default/secondary/outline/destructive), or
- * p-tag's `severity` (success/info/warn/danger/secondary/contrast) for status pills — `severity`
- * wins when set, so `[severity]="fn()"` migrations from p-tag are mechanical. `icon` + `value`
- * mirror p-tag; extra content can also be projected.
- */
 const BADGE_BASE =
   'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap';
 
@@ -29,8 +21,6 @@ export const mpBadgeVariants = cva(BADGE_BASE, {
 export type MpBadgeVariant = NonNullable<VariantProps<typeof mpBadgeVariants>['variant']>;
 export type MpBadgeSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
 
-// p-tag severities → status colours. Semantic status hues (not the theme primary); `dark:` maps to
-// the app's `.mp-dark` custom variant.
 const SEVERITY_CLASSES: Record<MpBadgeSeverity, string> = {
   success: 'border-transparent bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400',
   info: 'border-transparent bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',

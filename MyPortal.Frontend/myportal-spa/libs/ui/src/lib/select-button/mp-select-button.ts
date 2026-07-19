@@ -1,11 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
-/**
- * Segmented single-select toggle — the design-system equivalent of `p-selectButton`. Data-driven
- * (`[options]`/`optionLabel`/`optionValue`), CVA over the selected value. `allowEmpty` (default
- * true, like p-selectButton) lets clicking the active option clear the selection.
- */
 @Component({
   selector: 'mp-select-button',
   standalone: true,

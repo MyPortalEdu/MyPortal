@@ -37,11 +37,6 @@ import {
 } from '../../../../../../shared/types/staff-pre-employment-checks';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Pre-Employment Checks (SCR) area: summary check-date flags plus DBS, right-to-work, reference and
- * overseas-check lists. Safeguarding/HR — All-scope only (references are confidential; no self or
- * line-manager view). Self-loads on mount.
- */
 @Component({
   selector: 'mp-staff-pre-employment-panel',
   standalone: true,
@@ -82,7 +77,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
 
   protected readonly preEmployment = signal<StaffPreEmploymentChecksResponse | null>(null);
 
-  // Summary SCR flag dates (held as Date for the pickers; serialised on save).
   protected readonly identityCheckedDate = signal<Date | null>(null);
   protected readonly prohibitionFromTeachingCheckedDate = signal<Date | null>(null);
   protected readonly prohibitionFromManagementCheckedDate = signal<Date | null>(null);
@@ -91,14 +85,12 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
   protected readonly qualificationsVerifiedDate = signal<Date | null>(null);
   protected readonly preEmploymentNotes = signal<string | null>(null);
 
-  // Record lists (dates kept as ISO strings, bound via toDate() like contracts).
   protected readonly dbsChecks = signal<DbsCheckUpsertItem[]>([]);
   protected readonly rightToWorkChecks = signal<RightToWorkCheckUpsertItem[]>([]);
   protected readonly references = signal<StaffReferenceUpsertItem[]>([]);
   protected readonly overseasChecks = signal<StaffOverseasCheckUpsertItem[]>([]);
   private readonly snapshot = signal<string>('');
 
-  // Option lists for the pickers.
   protected readonly dbsCheckTypes = computed(() => this.preEmployment()?.dbsCheckTypes ?? []);
   protected readonly rightToWorkDocumentTypes = computed(
     () => this.preEmployment()?.rightToWorkDocumentTypes ?? [],
@@ -107,8 +99,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
   protected readonly referenceStatuses = computed(() => this.preEmployment()?.referenceStatuses ?? []);
   protected readonly countries = computed(() => this.preEmployment()?.countries ?? []);
 
-  // The summary SCR flags rendered as a uniform date-field grid. Each entry pairs an i18n key with a
-  // get/set over its signal so the template can loop rather than repeat.
   protected readonly summaryFlags: { key: string; get: () => Date | null; set: (v: Date | null) => void }[] = [
     { key: 'identityChecked', get: () => this.identityCheckedDate(), set: v => this.identityCheckedDate.set(v) },
     {
@@ -138,13 +128,10 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
     },
   ];
 
-  // Pre-employment edit is HR-only (All scope).
   override readonly canEdit = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffPreEmploymentChecks),
   );
 
-  // Each DBS row needs a type, certificate number and issue date; each right-to-work row a document
-  // type and check date; each reference a referee name; each overseas check a country.
   override readonly valid = computed(
     () =>
       this.dbsChecks().every(
@@ -155,8 +142,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
       this.overseasChecks().every(o => !!o.nationalityId),
   );
 
-  // Serialised edit state for the dirty check. Flag dates normalised to ISO so a Date vs string
-  // doesn't read as a change.
   private readonly form = computed(() =>
     JSON.stringify({
       identityCheckedDate: this.identityCheckedDate()?.toISOString() ?? null,
@@ -262,7 +247,6 @@ export class StaffPreEmploymentPanel extends StaffAreaPanel implements OnInit {
       await firstValueFrom(this.data.updatePreEmploymentChecks(this.staffMemberId(), payload));
       this.notify.success(this.transloco.translate('staff-members.savedPreEmploymentToast'));
       this.editing.set(false);
-      // Refetch so server-assigned ids (new rows) become the baseline.
       this.load();
     } catch (err) {
       this.notify.apiError(err, this.transloco.translate('staff-members.savePreEmploymentError'));

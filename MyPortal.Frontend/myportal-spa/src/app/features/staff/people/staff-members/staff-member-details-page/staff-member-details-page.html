@@ -60,7 +60,6 @@
       </div>
     </mp-card>
 
-    <!-- max-w-7xl on the row so the content card beside the 18rem nav lands near the 64rem form width. -->
     <div class="flex flex-col gap-4 md:flex-row max-w-7xl">
       <mp-card class="md:w-72 md:flex-shrink-0">
         <div class="flex flex-col gap-1 text-sm">
@@ -104,7 +103,7 @@
               }
 
               <div class="flex flex-col gap-6 md:flex-row md:gap-8">
-                <!-- Photo record card (portrait; doubles as the add/replace/remove control) -->
+
                 <div class="md:w-40 md:shrink-0">
                   <div class="relative aspect-[3/4] w-full overflow-hidden rounded-md border border-surface bg-emphasis">
                     @if (current()?.photoId; as pid) {
@@ -242,7 +241,7 @@
                   <section>
                     <mp-section-header icon="fa-solid fa-circle-info" [title]="t('staff-members.details.groups.personal')"></mp-section-header>
                     <div class="grid gap-4 md:grid-cols-2">
-                      <!-- Gender — stored as a single-char code (M/F/X), shown as a friendly label -->
+
                       <mp-field
                         [label]="t('staff-members.fields.gender')"
                         for="gender"

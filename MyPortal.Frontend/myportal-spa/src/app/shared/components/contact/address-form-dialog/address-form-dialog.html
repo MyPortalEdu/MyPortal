@@ -17,7 +17,7 @@
 
     <div class="flex flex-col gap-4 p-4">
       @if (confirmShared()) {
-        <!-- Warn-and-choose for a shared address -->
+
         <div class="flex flex-col gap-3">
           <p class="text-sm">
             {{ t('common.contact.address.sharedWarning', { count: editTarget()?.sharedCount }) }}

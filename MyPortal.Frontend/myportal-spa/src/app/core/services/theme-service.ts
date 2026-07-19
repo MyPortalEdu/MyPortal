@@ -2,9 +2,6 @@ import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angul
 
 export type Theme = 'light' | 'dark' | 'system';
 
-// Keep in sync with the inline pre-bootstrap script in index.html. That script
-// applies the dark class before Angular boots to avoid a light → dark flash and
-// can't import from here because it runs before the bundle loads.
 const STORAGE_KEY = 'mp:theme';
 const DARK_CLASS = 'mp-dark';
 
@@ -35,7 +32,7 @@ export class ThemeService {
     this._theme.set(next);
     try {
       localStorage.setItem(STORAGE_KEY, next);
-    } catch { /* private mode / disabled storage — preference applies for the session only */ }
+    } catch { }
   }
 
   private readStored(): Theme {

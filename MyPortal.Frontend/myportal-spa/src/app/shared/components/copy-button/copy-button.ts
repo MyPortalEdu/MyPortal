@@ -1,11 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 
-/**
- * Small icon button that copies a string to the clipboard and briefly flips to a check mark for
- * confirmation. Reusable wherever a value is worth copying (emails, phones, addresses…). Styled as
- * an {@link .mp-icon-button} so it sits alongside the other row actions.
- */
 @Component({
   selector: 'mp-copy-button',
   standalone: true,
@@ -38,7 +33,6 @@ export class CopyButton {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 1500);
     } catch {
-      // Clipboard API unavailable (insecure context / permission denied) — silently no-op.
     }
   }
 }

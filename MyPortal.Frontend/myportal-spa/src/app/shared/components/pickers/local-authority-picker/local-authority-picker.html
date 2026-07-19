@@ -40,9 +40,7 @@
           </tr>
           <tr>
             <th>
-              <!-- text+contains rather than numeric+equals so users can find e.g. all 8** codes
-                   by typing "8". The field IS numeric on the wire but QueryKit happily filters
-                   it as a string via LIKE — no BE change needed. -->
+
               <mp-column-filter field="leaCode" matchMode="contains"></mp-column-filter>
             </th>
             <th>

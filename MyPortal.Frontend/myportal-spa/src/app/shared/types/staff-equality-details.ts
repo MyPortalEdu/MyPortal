@@ -1,8 +1,5 @@
 import { LookupResponse } from './lookup';
 
-// Mirrors MyPortal.Contracts.Models.People.StaffEqualityDetailsResponse — the
-// Equality & Diversity area: person equality single-selects + the staff
-// disability declaration, plus the option lists for every picker.
 export interface StaffEqualityDetailsResponse {
   ethnicityId?: string | null;
   nationalityId?: string | null;
@@ -26,8 +23,6 @@ export interface StaffEqualityDetailsResponse {
   disabilities: LookupResponse[];
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffEqualityDetailsUpsertRequest —
-// the write payload (no option lists).
 export interface StaffEqualityDetailsUpsertRequest {
   ethnicityId?: string | null;
   nationalityId?: string | null;

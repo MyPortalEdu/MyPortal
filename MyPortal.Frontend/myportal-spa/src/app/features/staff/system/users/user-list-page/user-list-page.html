@@ -6,16 +6,16 @@
       #dt
       [lazy]="true"
       [paginator]="true"
-      [first]="initialState.first"
-      [rows]="initialState.rows"
-      [sortField]="initialState.sortField ?? null"
-      [sortOrder]="initialState.sortOrder ?? 1"
-      [totalRecords]="totalRecords()"
-      [loading]="loading()"
-      [value]="rows()"
-      (lazyLoad)="load($event)"
+      [first]="grid.initialState.first"
+      [rows]="grid.initialState.rows"
+      [sortField]="grid.initialState.sortField ?? null"
+      [sortOrder]="grid.initialState.sortOrder ?? 1"
+      [totalRecords]="grid.totalRecords()"
+      [loading]="grid.loading()"
+      [value]="grid.rows()"
+      (lazyLoad)="grid.load($event)"
       [filterDelay]="300"
-      [filters]="initialFilters"
+      [filters]="grid.initialFilters"
       [globalFilterFields]="['username', 'email', 'personFullName']"
       dataKey="id"
       selectionMode="single"
@@ -30,14 +30,14 @@
               type="text"
               class="w-full pl-9 pr-9"
               [placeholder]="t('searchPlaceholder')"
-              [value]="searchTerm()"
-              (input)="onSearch($any($event.target).value)" />
-            @if (searchTerm()) {
+              [value]="grid.searchTerm()"
+              (input)="grid.onSearch($any($event.target).value)" />
+            @if (grid.searchTerm()) {
               <button
                 type="button"
                 class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                 [attr.aria-label]="t('clearSearch')"
-                (click)="clearSearch()">
+                (click)="grid.clearSearch()">
                 <i class="fa-solid fa-xmark text-xs"></i>
               </button>
             }
@@ -92,9 +92,9 @@
       <ng-template mpTableEmpty>
         <tr>
           <td [attr.colspan]="5" class="p-4">
-            @if (hasFilter()) {
+            @if (grid.hasFilter()) {
               <mp-empty-state icon="fa-solid fa-magnifying-glass" [message]="t('emptyFiltered')">
-                <button mpButton variant="outline" size="sm" (click)="clearSearch()"><i class="fa-solid fa-xmark"></i> {{ t('clearSearch') }}</button>
+                <button mpButton variant="outline" size="sm" (click)="grid.clearSearch()"><i class="fa-solid fa-xmark"></i> {{ t('clearSearch') }}</button>
               </mp-empty-state>
             } @else {
               <mp-empty-state icon="fa-solid fa-users" [message]="t('emptyNone')">

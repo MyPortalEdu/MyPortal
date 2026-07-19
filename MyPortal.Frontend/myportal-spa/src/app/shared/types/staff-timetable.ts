@@ -1,5 +1,3 @@
-// Mirrors MyPortal.Contracts.Models.People.StaffCalendarEventResponse — one flattened,
-// read-only calendar entry. `category` is the source bucket used for colour/legend.
 export type StaffCalendarCategory =
   | 'Lesson'
   | 'Cover'
@@ -21,7 +19,6 @@ export interface StaffCalendarEvent {
   colourCode?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffCalendarResponse.
 export interface StaffCalendarResponse {
   events: StaffCalendarEvent[];
 }

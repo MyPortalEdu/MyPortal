@@ -48,9 +48,6 @@ export class BulletinSettingsPage implements OnInit {
   protected readonly bp = inject(BreakpointService);
   private readonly selectedYear = inject(SelectedAcademicYearService);
 
-  // Mirrors the user's selected AY (defaults to calendar-current via the
-  // service's init flow). Switching years from the topbar refreshes the
-  // picker's results automatically because the input is a signal read.
   readonly academicYearId = this.selectedYear.selectedId;
 
   readonly categories = signal<BulletinCategoryResponse[]>([]);
@@ -61,20 +58,15 @@ export class BulletinSettingsPage implements OnInit {
   readonly allowedGroups = signal<BulletinAllowedGroupResponse[]>([]);
   readonly allowedGroupsLoading = signal(false);
 
-  // Ids already in the allowlist — passed into the picker so they're hidden
-  // from "Add" results.
   readonly excludeIds = computed(() => this.allowedGroups().map(g => g.studentGroupId));
 
   ngOnInit(): void {
     this.refreshCategories();
     this.refreshSettings();
-    // academicYearId is now driven directly by SelectedAcademicYearService —
-    // its init runs in AppShell and the signal reads through transparently.
   }
 
   refreshCategories(): void {
     this.categoriesLoading.set(true);
-    // includeInactive=true so admins can see / re-activate stale ones from here.
     this.data.listCategories(true).subscribe({
       next: cats => {
         this.categories.set(cats ?? []);
@@ -140,9 +132,6 @@ export class BulletinSettingsPage implements OnInit {
   }
 
   onGroupsPicked(groups: StudentGroupSummaryResponse[]): void {
-    // The picker dims already-added rows rather than filtering them, so a
-    // re-pick is technically possible. Dedup defensively here so the API
-    // doesn't see duplicate ids in the same allowlist payload.
     const existing = this.allowedGroups().map(g => g.studentGroupId);
     const additions = groups.map(g => g.id).filter(id => !existing.includes(id));
     if (additions.length === 0) return;

@@ -2,11 +2,6 @@ import { DOCUMENT } from '@angular/common';
 import { A11yModule } from '@angular/cdk/a11y';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, model, output } from '@angular/core';
 
-/**
- * Slide-in panel — the design-system equivalent of `p-drawer` (headless mode). Content is projected;
- * `visible` (two-way) controls it, `position` picks the edge. Modal backdrop + Escape/backdrop
- * dismiss (respecting `dismissable`), focus-trapped, body scroll locked.
- */
 @Component({
   selector: 'mp-drawer',
   standalone: true,

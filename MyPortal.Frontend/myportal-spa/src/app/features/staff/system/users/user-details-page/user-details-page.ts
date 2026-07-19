@@ -84,7 +84,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
 
   private readonly form = viewChild<NgForm>('f');
 
-  // The route admits ViewUsers holders too, so the page decides its own mode.
   private readonly canEditUsers = signal(false);
 
   readonly isCreate = signal(false);
@@ -118,7 +117,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
     { label: this.transloco.translate('users.userType.parent'), value: UserType.Parent },
   ]);
 
-  // Only roles of the user's own portal can be assigned (mirrors the server-side audience check).
   readonly audienceRoles = computed(() =>
     this.allRoles()
       .filter(r => r.userType === this.userType())
@@ -141,7 +139,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   readonly headerActions = computed<HeaderAction[]>(() => {
     if (this.loading()) return [];
 
-    // Back is always available (subtle text button), even for read-only / not-found.
     const back: HeaderAction = {
       label: this.transloco.translate('common.back'),
       icon: 'fa-solid fa-arrow-left',
@@ -165,8 +162,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
     actions.push({
       label: this.isCreate() ? this.transloco.translate('users.form.create') : this.transloco.translate('users.form.save'),
       icon: 'fa-solid fa-check',
-      // Only "nothing to save" disables Save; an invalid form lets the click through so save()
-      // can mark the fields touched and point at what's missing.
       disabled: !this.isCreate() && !this.isDirty(),
       loading: this.saving(),
       command: () => this.save(),
@@ -200,7 +195,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
 
   onUserTypeChange(userType: UserType): void {
     this.userType.set(userType);
-    // Drop any selected roles that no longer match the new audience.
     const valid = new Set(this.audienceRoles().map(r => r.id));
     this.selectedRoleIds.update(set => new Set([...set].filter(id => valid.has(id))));
   }
@@ -252,7 +246,7 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
       this.usersData.create(payload).subscribe({
         next: res => {
           this.saving.set(false);
-          this.snapshot.set(this.currentForm()); // re-baseline so the redirect doesn't re-prompt
+          this.snapshot.set(this.currentForm());
           this.notify.success(this.transloco.translate('users.form.createdToast'));
           void this.router.navigate(['/staff/system/users', res.id]);
         },
@@ -360,9 +354,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   private loadEffectivePermissions(): void {
-    // The effective set is server-computed from the user's SAVED roles, so it refreshes on load and
-    // after each save (not live while editing role checkboxes). Built against the audience catalogue
-    // so the viewer shows the whole space with the granted subset checked.
     this.rolesData.permissions(this.userType()).subscribe({
       next: catalogue => {
         this.effectiveTreeNodes.set(buildPermissionTree(catalogue ?? []));

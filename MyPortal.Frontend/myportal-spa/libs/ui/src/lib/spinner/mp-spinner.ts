@@ -2,14 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Indeterminate loading spinner — the design-system equivalent of `p-progressSpinner`. A simple
- * CSS ring spun with `animate-spin`, coloured by `currentColor` (defaults to the primary colour;
- * override with a text-colour utility via `class`). Size with the `size` input (any CSS length).
- *
- * Migrating from p-progressSpinner: `[style]="{ width: 'W', height: 'W' }"` / `styleClass` sizing
- * → `size="W"`; `ariaLabel` → `ariaLabel`; `strokeWidth` has no equivalent (fixed 2px ring).
- */
 @Component({
   selector: 'mp-spinner',
   standalone: true,

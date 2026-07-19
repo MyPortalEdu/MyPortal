@@ -4,12 +4,6 @@ import { BrnPopoverImports } from '@spartan-ng/brain/popover';
 import { cn } from '../utils/cn';
 import { MpPopover } from '../popover/mp-popover';
 
-/**
- * Multi-select dropdown — the design-system equivalent of `p-multiSelect` with `display="chip"`.
- * Data-driven (`[options]`/`optionLabel`/`optionValue`), CVA over an array of selected values.
- * Selected items show as removable chips in the trigger; the panel is a checkable list, opened in
- * the edge-aware MpPopover overlay.
- */
 @Component({
   selector: 'mp-multi-select',
   standalone: true,

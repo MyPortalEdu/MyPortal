@@ -41,8 +41,6 @@ describe('BulletinAttachmentsDataService', () => {
     const body = req.request.body as FormData;
     expect(body.get('TypeId')).toBe(OTHER_DOCUMENT_TYPE_ID);
     expect(body.get('DirectoryId')).toBe('d1');
-    // The form uses the filename as the title — there's no separate title input
-    // in the bulletin attachments UI.
     expect(body.get('Title')).toBe('pic.png');
     expect(body.get('IsPrivate')).toBe('false');
     expect(body.get('File')).toEqual(file);
@@ -60,6 +58,5 @@ describe('BulletinAttachmentsDataService', () => {
   it('downloadUrl() composes the download path without hitting the network', () => {
     expect(service.downloadUrl('b1', 'doc-1'))
       .toBe('/api/v1/bulletins/b1/attachments/documents/doc-1/download');
-    // No HTTP traffic for url helpers — http.verify() in afterEach asserts this.
   });
 });

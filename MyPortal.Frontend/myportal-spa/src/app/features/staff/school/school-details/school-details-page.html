@@ -15,7 +15,6 @@
       </div>
     }
 
-    <!-- Detail forms cap at max-w-5xl (64rem) so a 2-col field grid reads at a sane scan width. -->
     <form class="flex flex-col gap-4 max-w-5xl" (ngSubmit)="save()">
       <section class="mp-surface p-4 flex flex-col gap-3">
         <mp-section-header [title]="t('sections.agency')"></mp-section-header>
@@ -108,8 +107,6 @@
           </mp-field>
         </div>
 
-        <!-- Local authority via picker. Show the picked LA's name; null state
-             reads as "Not set". The picker is hidden in read-only mode. -->
         <mp-field [label]="t('fields.localAuthority')">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-sm">

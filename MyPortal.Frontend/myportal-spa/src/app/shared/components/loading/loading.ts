@@ -1,10 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { MpSpinner } from '@myportal/ui';
 
-/**
- * Centred loading spinner at one canonical size, with an optional label. Replaces the several bespoke
- * spinner sizes (`2rem`, `2.5rem`, `!w-12`, `!w-5`…) scattered across pages, panels, and dialogs.
- */
 @Component({
   selector: 'mp-loading',
   standalone: true,

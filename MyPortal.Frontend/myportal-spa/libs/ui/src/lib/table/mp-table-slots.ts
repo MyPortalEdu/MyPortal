@@ -1,15 +1,5 @@
 import { Directive, TemplateRef, inject } from '@angular/core';
 
-/**
- * Template-slot directives — the design-system equivalent of p-table's `pTemplate="…"`. Each just
- * captures its `<ng-template>`'s TemplateRef; MpTable queries them by type and renders them in the
- * right place (caption toolbar, thead, per-row tbody, empty state).
- *
- *   <ng-template mpTableCaption> … </ng-template>
- *   <ng-template mpTableHeader> <tr><th>…</th></tr> </ng-template>
- *   <ng-template mpTableBody let-row let-i="index"> <tr>…</tr> </ng-template>
- *   <ng-template mpTableEmpty> <tr><td [attr.colspan]>…</td></tr> </ng-template>
- */
 @Directive({ selector: '[mpTableCaption]', standalone: true })
 export class MpTableCaption {
   readonly template = inject<TemplateRef<unknown>>(TemplateRef);

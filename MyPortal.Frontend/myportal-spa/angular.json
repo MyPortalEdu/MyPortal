@@ -88,6 +88,10 @@
               "zone.js",
               "zone.js/testing"
             ],
+            "include": [
+              "**/*.spec.ts",
+              "../libs/ui/src/**/*.spec.ts"
+            ],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [

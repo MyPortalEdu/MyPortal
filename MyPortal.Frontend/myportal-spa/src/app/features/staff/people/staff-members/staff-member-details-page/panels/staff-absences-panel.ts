@@ -33,11 +33,6 @@ import {
 } from '../../../../../../shared/types/staff-absences';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Absences & Leave area of the staff profile. Self-loads on mount (the shell only renders it while
- * its tab is active). Absences are relationship-scoped: HR (All) sees/edits everyone, a line manager
- * their reports (Managed), and only HR may mark a row confidential.
- */
 @Component({
   selector: 'mp-staff-absences-panel',
   standalone: true,
@@ -78,11 +73,9 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
   protected readonly absenceRows = signal<StaffAbsenceUpsertItem[]>([]);
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the absence payload so the editor is self-contained.
   protected readonly absenceTypes = computed(() => this.absences()?.absenceTypes ?? []);
   protected readonly illnessTypes = computed(() => this.absences()?.illnessTypes ?? []);
 
-  // Absence edit: HR (All) or the line manager (Managed) — no self-edit (the record is HR/manager-owned).
   override readonly canEdit = computed(() => {
     const perms = this.permissions();
     const rel = this.relationship();
@@ -91,12 +84,10 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  // Only HR (All scope) may mark an absence confidential; a line manager never sees or sets the flag.
   protected readonly canManageConfidential = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffAbsences),
   );
 
-  // Each absence row needs a type, a start date and an end date no earlier than it.
   override readonly valid = computed(() =>
     this.absenceRows().every(
       a => !!a.absenceTypeId && !!a.startDate && !!a.endDate && a.endDate >= a.startDate,
@@ -157,7 +148,6 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
       await firstValueFrom(this.data.updateAbsences(this.staffMemberId(), payload));
       this.notify.success(this.transloco.translate('staff-members.savedAbsencesToast'));
       this.editing.set(false);
-      // Refetch so server-assigned ids (new rows) become the baseline.
       this.load();
     } catch (err) {
       this.notify.apiError(err, this.transloco.translate('staff-members.saveAbsencesError'));
@@ -208,7 +198,6 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
     this.absenceRows.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
-  // Whole days inclusive of both ends — the simple span a school cares about.
   protected absenceDays(a: StaffAbsenceUpsertItem): number | null {
     if (!a.startDate || !a.endDate) return null;
     const start = new Date(a.startDate);

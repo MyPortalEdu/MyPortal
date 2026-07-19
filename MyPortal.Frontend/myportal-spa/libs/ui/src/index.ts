@@ -1,6 +1,3 @@
-// @myportal/ui — the MyPortal design system. Wrapper components/directives over Spartan
-// (spartan-ng) helm primitives + design tokens, exposing a stable internal API so feature
-// code never imports the underlying library directly.
 export { cn } from './lib/utils/cn';
 export { MpButton, mpButtonVariants, type MpButtonVariant, type MpButtonSize } from './lib/button/mp-button';
 export { MpCard } from './lib/card/mp-card';
@@ -23,7 +20,7 @@ export { MpTextarea } from './lib/textarea/mp-textarea';
 export { MpCheckbox } from './lib/checkbox/mp-checkbox';
 export { MpSelect } from './lib/select/mp-select';
 export { MpPopover } from './lib/popover/mp-popover';
-export { MpDialog } from './lib/dialog/mp-dialog';
+export { MpDialog, MpDialogFooter } from './lib/dialog/mp-dialog';
 export { MpTable } from './lib/table/mp-table';
 export { MpTableCaption, MpTableHeader, MpTableBody, MpTableEmpty } from './lib/table/mp-table-slots';
 export { MpSortable, MpSortIcon, MpSortHost } from './lib/table/mp-sortable';

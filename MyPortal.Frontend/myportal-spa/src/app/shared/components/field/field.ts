@@ -1,14 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/**
- * Labelled form-field wrapper: a canonical `text-sm font-medium` label above a projected control,
- * with an optional hint below. Replaces the hand-rolled `flex flex-col gap-1` + label blocks and the
- * three-way label-class drift (`text-sm font-medium` vs `text-xs … text-muted-color` vs weightless).
- *
- * `required` renders the marker only — put the `required` attribute on the projected control too, so
- * assistive tech gets it from the control rather than from a decorative asterisk. `error` replaces
- * the hint while it's set.
- */
 @Component({
   selector: 'mp-field',
   standalone: true,

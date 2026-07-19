@@ -10,22 +10,17 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MpButton, MpDialog, MpInput } from '@myportal/ui';
+import { MpButton, MpDialog, MpDialogFooter, MpInput } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { UsersDataService } from '../../../../../shared/services/users-data.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
 
-/**
- * Admin password reset for another user. Distinct from the self-service change-password (which lives
- * on /api/me and requires the current password); this bypasses the old password via the admin
- * set-password endpoint.
- */
 @Component({
   selector: 'mp-user-set-password-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpButton, MpDialog, MpInput, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, MpButton, MpDialog, MpDialogFooter, MpInput, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('users')],
   templateUrl: './user-set-password-dialog.html',
 })

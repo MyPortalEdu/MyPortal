@@ -2,10 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Bordered surface container — the design-system equivalent of PrimeNG's p-card. Border-defined
- * (no shadow) with `p-4` body padding and the surface radius, matching the app's card treatment.
- */
 @Component({
   selector: 'mp-card',
   standalone: true,

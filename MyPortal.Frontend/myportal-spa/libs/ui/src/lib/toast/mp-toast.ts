@@ -1,10 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MpToastSeverity, MpToastStore } from './mp-toast-store';
 
-/**
- * Toast host — the design-system equivalent of `<p-toast>`. Mount ONCE at the app root; it renders
- * whatever the NotificationService queues into MpToastStore, top-right, above dialogs/overlays.
- */
 @Component({
   selector: 'mp-toast',
   standalone: true,

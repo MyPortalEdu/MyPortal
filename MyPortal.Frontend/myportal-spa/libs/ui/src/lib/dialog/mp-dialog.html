@@ -10,9 +10,37 @@
       [cdkTrapFocusAutoCapture]="true"
       role="dialog"
       aria-modal="true"
-      [attr.aria-label]="ariaLabel() ?? null"
+      [attr.aria-label]="ariaLabel() ?? title() ?? null"
       [class]="panelClasses()">
-      <ng-content />
+      @if (title()) {
+        <div class="flex shrink-0 items-center justify-between gap-4 border-b border-border p-4">
+          <div class="flex min-w-0 items-center gap-2">
+            @if (titleIcon()) {
+              <i [class]="titleIcon()" class="shrink-0"></i>
+            }
+            <h3 class="m-0 truncate text-base font-semibold">{{ title() }}</h3>
+          </div>
+          @if (showClose()) {
+            <button
+              type="button"
+              (click)="dismiss()"
+              [disabled]="closeDisabled()"
+              [attr.aria-label]="closeAriaLabel()"
+              class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          }
+        </div>
+      }
+
+      <div [class]="title() ? bodyClasses() : 'contents'">
+        <ng-content />
+      </div>
+      @if (footerRef()) {
+        <div class="shrink-0 border-t border-border bg-muted p-4">
+          <ng-content select="[mpDialogFooter]" />
+        </div>
+      }
     </div>
   </div>
 }

@@ -127,7 +127,7 @@ describe('BulletinDetailDialog', () => {
 
   it('initials uses the first two name parts', () => {
     setBulletinId('b1');
-    expect(component.initials()).toBe('AL'); // "Ada Lovelace"
+    expect(component.initials()).toBe('AL');
   });
 
   it('initials handles single-word names', () => {
@@ -164,9 +164,6 @@ describe('BulletinDetailDialog', () => {
 
     expect(component.audienceSummary()).toBe('bulletins.audience.group');
   });
-
-  // The `me` signal is private — tests poke it directly via cast rather than
-  // re-stubbing MeService and re-creating the fixture for each variation.
 
   type MePoke = { me: { set: (v: Me) => void } };
 

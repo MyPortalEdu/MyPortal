@@ -7,10 +7,6 @@ import { LookupResponse } from '../../../types/lookup';
 import { PersonPhoneUpsertItem } from '../../../types/staff-contact-details';
 import { CopyButton } from '../../copy-button/copy-button';
 
-/**
- * Presentational list-editor for a person's phone numbers. Owner-agnostic — the host owns the
- * model and persistence; this just renders/edits the list and enforces one-main-per-list.
- */
 @Component({
   selector: 'mp-person-phones',
   standalone: true,
@@ -27,7 +23,6 @@ export class PersonPhones {
     return this.types().find(t => t.id === typeId)?.description ?? '';
   }
 
-  // tel: URIs shouldn't contain spaces; keep digits and a leading +/() dashes.
   protected telHref(number: string): string {
     return 'tel:' + number.replace(/[^\d+]/g, '');
   }

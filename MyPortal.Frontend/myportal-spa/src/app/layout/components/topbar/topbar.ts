@@ -25,9 +25,6 @@ import { AcademicYearSwitcherDialog } from './academic-year-switcher-dialog/acad
   templateUrl: './topbar.html',
 })
 export class Topbar implements OnInit {
-  // Shared styling for the user-menu rows (links + buttons). Uses design-system
-  // tokens so it renders correctly in the CDK-portaled overlay (global utilities,
-  // no view-encapsulation scoping needed).
   protected readonly menuRowClass =
     'flex items-center gap-3 w-full px-4 py-2 rounded-control text-sm text-inherit no-underline ' +
     'bg-transparent border-0 cursor-pointer text-left outline-none transition-colors ' +
@@ -49,10 +46,6 @@ export class Topbar implements OnInit {
   readonly switcherOpen = signal(false);
   readonly UserType = UserType;
 
-  // Topbar avatar inverts with the theme so it pops against the bar: white disc /
-  // indigo initials on the light (indigo) bar, indigo disc / white initials on
-  // the dark bar. Driven by the theme signal rather than `dark:` utilities to
-  // sidestep !important/variant ordering ambiguity for this one element.
   readonly topbarAvatarClass = computed(
     () =>
       (this.themeService.isDark()
@@ -60,19 +53,11 @@ export class Topbar implements OnInit {
         : '!bg-white !text-primary-600') + ' !w-9 !h-9 !text-sm font-medium',
   );
 
-  // School name as a signal — toSignal must be called in injection context, so
-  // the bridge sits here as a field initializer rather than in ngOnInit.
-  // School can 403 for users without view permission; fall back to null so the
-  // label just hides that segment.
   private readonly schoolName = toSignal(
     this.schools.getLocalName().pipe(catchError(() => of<string | null>(null))),
     { initialValue: null as string | null },
   );
 
-  // The AY segment reflects the user's *selected* AY (defaults to calendar-
-  // current via SelectedAcademicYearService.init) rather than always showing
-  // the calendar-current year — once a staff user switches, the topbar
-  // reflects their choice.
   readonly siteLabel = computed(() => ({
     school: this.schoolName(),
     year: this.selectedYear.selected()?.name ?? null,
@@ -111,9 +96,6 @@ export class Topbar implements OnInit {
 
   logout(): void {
     this.me.clearCache();
-    // Wipe the persisted AY selection — next sign-in (even same user) seeds
-    // from calendar-current. Token refresh / silent re-auth doesn't pass
-    // through here, so a long-running session keeps the user's choice.
     this.selectedYear.clear();
     location.href = '/account/logout';
   }

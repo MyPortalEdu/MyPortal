@@ -12,11 +12,6 @@ describe('Shell', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      // Topbar transitively depends on MeService → HttpClient, and the template
-      // hosts a <router-outlet>. Both are application-level concerns; the test
-      // only cares that the component renders without crashing. Transloco is
-      // pulled in by TranslocoDirective in the template — TranslocoTestingModule
-      // wires a no-op transpiler/loader so the directive resolves.
       imports: [AppShell, TranslocoTestingModule.forRoot({ langs: { en: {} } })],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     })

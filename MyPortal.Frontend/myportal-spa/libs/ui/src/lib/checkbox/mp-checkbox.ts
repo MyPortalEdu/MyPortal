@@ -3,16 +3,6 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { type ClassValue } from 'clsx';
 import { cn } from '../utils/cn';
 
-/**
- * Binary checkbox — the design-system equivalent of `p-checkbox [binary]`. A native `<input>` (kept
- * in the tab order via `sr-only`, so it stays fully keyboard/screen-reader accessible) drives a
- * styled box. Implements ControlValueAccessor, so it works with `[(ngModel)]` / reactive forms and
- * the app's `[ngModel]` + `(ngModelChange)` pattern, plus a direct `[disabled]` input.
- *
- * A binary checkbox needs no headless machinery, so this is self-contained rather than wrapping
- * Spartan's brain checkbox — brain is reserved for the genuinely-headless components (select,
- * dialog, popover, datepicker).
- */
 @Component({
   selector: 'mp-checkbox',
   standalone: true,

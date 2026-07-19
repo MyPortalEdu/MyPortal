@@ -96,7 +96,6 @@
                   }
                 </mp-field>
 
-                <!-- Leaving details only apply once the employment has an end date. -->
                 @if (e.endDate) {
                   <mp-field [label]="t('staff-members.employment.leavingReason')">
                     @if (editing()) {

@@ -1,6 +1,5 @@
 import { LookupResponse } from './lookup';
 
-// Mirrors MyPortal.Contracts.Models.People.PerformanceReviewResponse / UpsertItem.
 export interface PerformanceReviewResponse {
   id: string;
   cycleName?: string | null;
@@ -23,7 +22,6 @@ export interface PerformanceReviewUpsertItem {
   summary?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffObjectiveResponse / UpsertItem.
 export interface StaffObjectiveResponse {
   id: string;
   reviewId?: string | null;
@@ -48,7 +46,6 @@ export interface StaffObjectiveUpsertItem {
   progressNotes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffObservationResponse / UpsertItem.
 export interface StaffObservationResponse {
   id: string;
   date: string;
@@ -73,7 +70,6 @@ export interface StaffObservationUpsertItem {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffTrainingRecordResponse / UpsertItem.
 export interface StaffTrainingRecordResponse {
   id: string;
   trainingCourseId: string;
@@ -96,7 +92,6 @@ export interface StaffTrainingRecordUpsertItem {
   certificateReference?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffPerformanceResponse.
 export interface StaffPerformanceResponse {
   reviews: PerformanceReviewResponse[];
   objectives: StaffObjectiveResponse[];
@@ -112,7 +107,6 @@ export interface StaffPerformanceResponse {
   trainingStatuses: LookupResponse[];
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffPerformanceUpsertRequest.
 export interface StaffPerformanceUpsertRequest {
   reviews: PerformanceReviewUpsertItem[];
   objectives: StaffObjectiveUpsertItem[];

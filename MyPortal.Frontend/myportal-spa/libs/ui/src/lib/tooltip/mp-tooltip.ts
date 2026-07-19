@@ -2,7 +2,6 @@ import { Overlay, OverlayPositionBuilder, OverlayRef, type ConnectedPosition } f
 import { ComponentPortal } from '@angular/cdk/portal';
 import { ChangeDetectionStrategy, Component, Directive, ElementRef, inject, input } from '@angular/core';
 
-/** The floating bubble MpTooltip attaches into a CDK overlay. */
 @Component({
   selector: 'mp-tooltip-bubble',
   standalone: true,
@@ -22,11 +21,6 @@ const POSITIONS: Record<MpTooltipPosition, ConnectedPosition> = {
   right: { originX: 'end', originY: 'center', overlayX: 'start', overlayY: 'center', offsetX: 6 },
 };
 
-/**
- * Hover/focus tooltip — the design-system equivalent of PrimeNG's `pTooltip` directive. Apply
- * `[mpTooltip]="text"` (+ optional `tooltipPosition`). An empty/blank text shows nothing, so the
- * common `[mpTooltip]="cond ? msg : ''"` pattern works unchanged.
- */
 @Directive({
   selector: '[mpTooltip]',
   standalone: true,

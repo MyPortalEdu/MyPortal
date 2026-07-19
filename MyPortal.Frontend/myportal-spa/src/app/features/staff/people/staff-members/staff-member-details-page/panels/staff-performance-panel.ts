@@ -38,11 +38,6 @@ import {
 } from '../../../../../../shared/types/staff-performance';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Performance (appraisal) area: review cycles, objectives, lesson observations and CPD/training.
- * Manager (Managed) or HR (All) — no self scope (staff don't see their own appraisal data here).
- * Self-loads on mount.
- */
 @Component({
   selector: 'mp-staff-performance-panel',
   standalone: true,
@@ -84,32 +79,26 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
 
   protected readonly performance = signal<StaffPerformanceResponse | null>(null);
 
-  // Record lists (item dates kept as ISO strings, bound via toDate()).
   protected readonly reviews = signal<PerformanceReviewUpsertItem[]>([]);
   protected readonly objectives = signal<StaffObjectiveUpsertItem[]>([]);
   protected readonly observations = signal<StaffObservationUpsertItem[]>([]);
   protected readonly trainingRecords = signal<StaffTrainingRecordUpsertItem[]>([]);
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the performance payload so the editor is self-contained.
   protected readonly reviewStatuses = computed(() => this.performance()?.reviewStatuses ?? []);
   protected readonly objectiveStatuses = computed(() => this.performance()?.objectiveStatuses ?? []);
   protected readonly objectiveCategories = computed(() => this.performance()?.objectiveCategories ?? []);
   protected readonly observationOutcomes = computed(() => this.performance()?.outcomes ?? []);
-  // All staff, backing both the reviewer and observer pickers.
   protected readonly staff = computed(() => this.performance()?.staff ?? []);
   protected readonly trainingCourses = computed(() => this.performance()?.trainingCourses ?? []);
   protected readonly trainingStatuses = computed(() => this.performance()?.trainingStatuses ?? []);
 
-  // Persisted review cycles as options for linking an objective. Only saved reviews (with a cycle
-  // name) appear — a brand-new review must be saved before objectives can reference it.
   protected readonly reviewOptions = computed(() =>
     (this.performance()?.reviews ?? [])
       .filter(r => !!r.cycleName)
       .map(r => ({ id: r.id, description: r.cycleName as string })),
   );
 
-  // Performance edit: HR (All) or the line manager (Managed) — no self-edit.
   override readonly canEdit = computed(() => {
     const perms = this.permissions();
     const rel = this.relationship();
@@ -118,8 +107,6 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  // Each objective needs a title; each observation a date, observer and outcome; each training record
-  // a course and status.
   override readonly valid = computed(
     () =>
       this.objectives().every(o => o.title.trim().length > 0) &&
@@ -221,7 +208,6 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
       await firstValueFrom(this.data.updatePerformance(this.staffMemberId(), payload));
       this.notify.success(this.transloco.translate('staff-members.savedPerformanceToast'));
       this.editing.set(false);
-      // Refetch so server-assigned ids (new rows) become the baseline.
       this.load();
     } catch (err) {
       this.notify.apiError(err, this.transloco.translate('staff-members.savePerformanceError'));

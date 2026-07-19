@@ -71,7 +71,6 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
 
   private roleId = '';
 
-  // The route admits ViewRoles holders too, so the page decides its own mode.
   private readonly canEditRoles = signal(false);
 
   readonly name = signal('');
@@ -123,8 +122,6 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
       {
         label: this.transloco.translate('roles.form.save'),
         icon: 'fa-solid fa-check',
-        // Only "nothing to save" disables Save; an invalid form lets the click through so save()
-        // can mark the fields touched and point at what's missing.
         disabled: !this.isDirty(),
         loading: this.saving(),
         command: () => this.save(),
@@ -172,7 +169,6 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
     this.data.update(this.roleId, payload).subscribe({
       next: () => {
         this.saving.set(false);
-        // Re-baseline so leaving the page doesn't re-prompt.
         this.snapshot.set(this.currentForm());
         this.notify.success(this.transloco.translate('roles.form.updatedToast'));
       },
@@ -184,7 +180,6 @@ export class RoleDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   goBack(): void {
-    // The canDeactivate guard handles the dirty prompt during navigation.
     void this.router.navigate(['/staff/system/roles']);
   }
 

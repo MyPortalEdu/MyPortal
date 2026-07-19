@@ -42,8 +42,6 @@ export class AcademicYearSwitcherDialog {
   readonly selectedId = computed(() => this.selectedService.selectedId());
 
   constructor() {
-    // Refetch each open — list can change between sessions (a colleague creates
-    // a new year while this user has the app open) and we want fresh data.
     effect(() => {
       if (this.visible()) {
         untracked(() => this.refresh());
@@ -55,8 +53,6 @@ export class AcademicYearSwitcherDialog {
     this.loading.set(true);
     this.years.list().subscribe({
       next: rows => {
-        // Sort by start date desc so the most recent/future year sits at the
-        // top — that's the year users most often want to switch to.
         const sorted = [...(rows ?? [])].sort((a, b) => {
           const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
           const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;

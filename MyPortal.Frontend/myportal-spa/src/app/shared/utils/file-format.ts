@@ -1,5 +1,3 @@
-// Pretty file size — 1.2 KB / 3.4 MB. Locale-agnostic; the unit suffixes are
-// short enough that translation isn't worth the i18n weight.
 export function formatFileSize(bytes?: number | null): string {
   if (bytes == null) return '';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -12,7 +10,6 @@ export function formatFileSize(bytes?: number | null): string {
   return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
 
-// Map a MIME type to a Font Awesome icon. Falls back to a generic file icon.
 export function fileIcon(contentType: string): string {
   if (!contentType) return 'fa-solid fa-file';
   if (contentType.startsWith('image/')) return 'fa-solid fa-file-image';

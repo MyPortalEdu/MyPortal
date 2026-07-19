@@ -1,10 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/**
- * Placeholder for an empty list or result set: a dashed-bordered box with an icon, a message, and an
- * optional projected action. Standardises the several ad-hoc empty treatments (bare muted spans,
- * differing paddings) onto one look.
- */
 @Component({
   selector: 'mp-empty-state',
   standalone: true,

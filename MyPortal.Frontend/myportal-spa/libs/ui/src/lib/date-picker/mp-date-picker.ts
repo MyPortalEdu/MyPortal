@@ -5,16 +5,6 @@ import { MpInput } from '../input/mp-input';
 import { MpPopover } from '../popover/mp-popover';
 import { MpCalendar } from './mp-calendar';
 
-/**
- * Data-entry date picker — the design-system equivalent of `p-datePicker`. A typeable input shows/
- * accepts the value; a trailing button opens MpCalendar (and/or a time picker) in a CDK overlay via
- * MpPopover.
- *
- * Modes: date-only (default), `showTime` (calendar + 24h time selects, value = date & time), and
- * `timeOnly` (just the time selects, no calendar). Values are native `Date | null`, matching
- * p-datePicker. Display/parse uses jQuery-UI date tokens (`dd`/`mm`/`yy`=4-digit year) plus `HH:mm`
- * for the time part.
- */
 @Component({
   selector: 'mp-date-picker',
   standalone: true,
@@ -62,14 +52,12 @@ export class MpDatePicker implements ControlValueAccessor {
 
   protected onDatePicked(date: Date | undefined, popover: { toggle: () => void }): void {
     let next = date ?? null;
-    // In showTime mode, keep the currently-selected time when a new day is picked.
     if (next && this.showTime() && this.value()) {
       const prev = this.value() as Date;
       next = new Date(next);
       next.setHours(prev.getHours(), prev.getMinutes(), 0, 0);
     }
     this.emit(next);
-    // Date-only auto-closes; showTime stays open so the user can still set the time.
     if (!this.showTime()) popover.toggle();
   }
 
@@ -99,7 +87,6 @@ export class MpDatePicker implements ControlValueAccessor {
     this.emit(parsed);
   }
 
-  // --- formatting / parsing (mode-aware) ---
   private formatValue(date: Date): string {
     if (this.timeOnly()) return formatTime(date);
     if (this.showTime()) return `${formatDate(date, this.dateFormat())} ${formatTime(date)}`;
@@ -158,7 +145,6 @@ const pad2 = (n: number): string => String(n).padStart(2, '0');
 
 const formatTime = (date: Date): string => `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
 
-/** Compare to the minute (time-picker granularity), so no-op edits don't churn the model. */
 const sameInstant = (a: Date | null, b: Date | null): boolean =>
   a !== null &&
   b !== null &&
@@ -168,7 +154,6 @@ const sameInstant = (a: Date | null, b: Date | null): boolean =>
   a.getHours() === b.getHours() &&
   a.getMinutes() === b.getMinutes();
 
-/** `HH:mm` → {h, m}, validated; null if unparseable. */
 function parseTime(text: string): { h: number; m: number } | null {
   const match = text.trim().match(/^(\d{1,2}):(\d{2})$/);
   if (!match) return null;
@@ -177,10 +162,6 @@ function parseTime(text: string): { h: number; m: number } | null {
   return h <= 23 && m <= 59 ? { h, m } : null;
 }
 
-/**
- * Format a Date with p-datePicker's jQuery-UI tokens. `yy` is a 4-digit year (PrimeNG semantics),
- * `y` is 2-digit; `dd`/`mm` are zero-padded, `d`/`m` are not. Longest tokens are replaced first.
- */
 function formatDate(date: Date, format: string): string {
   const day = date.getDate();
   const month = date.getMonth() + 1;
@@ -195,10 +176,6 @@ function formatDate(date: Date, format: string): string {
     .replace(/m/g, String(month));
 }
 
-/**
- * Parse typed text against a format's token order (which of d/m/y comes first). Returns a Date on
- * success, `null` for empty input, or `undefined` when the text can't be parsed to a valid date.
- */
 function parseDate(text: string, format: string): Date | null | undefined {
   const trimmed = text.trim();
   if (!trimmed) return null;

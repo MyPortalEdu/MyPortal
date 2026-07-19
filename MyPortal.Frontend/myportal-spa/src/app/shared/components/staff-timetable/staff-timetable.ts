@@ -23,26 +23,19 @@ import {
   StaffCalendarEvent,
 } from '../../types/staff-timetable';
 
-// Colour per source bucket. A diary event may override this with its own type colour; everything
-// else is keyed here so lessons, cover, detentions etc. stay visually distinct and consistent.
 const CATEGORY_COLOUR: Record<StaffCalendarCategory, string> = {
-  Lesson: '#4f46e5', // indigo — the app's brand colour; lessons fill most of the grid
-  Cover: '#7c3aed', // violet — a covered lesson reads as "not your usual"
-  Detention: '#dc2626', // red
-  Event: '#0891b2', // cyan
-  Holiday: '#16a34a', // green
-  NonContact: '#64748b', // slate
-  ParentEvening: '#d97706', // amber
-  Absence: '#9ca3af', // grey, rendered as a background band
+  Lesson: '#4f46e5',
+  Cover: '#7c3aed',
+  Detention: '#dc2626',
+  Event: '#0891b2',
+  Holiday: '#16a34a',
+  NonContact: '#64748b',
+  ParentEvening: '#d97706',
+  Absence: '#9ca3af',
 };
 
 const MOBILE_MAX = 639;
 
-/**
- * Read-only week calendar for a staff member, built directly on the FullCalendar core API (no
- * Angular wrapper, so it's free of the wrapper's Angular-version peer constraints). Defaults to
- * the current week; FullCalendar refetches the feed on every navigation via the events callback.
- */
 @Component({
   selector: 'mp-staff-timetable',
   standalone: true,
@@ -140,11 +133,8 @@ export class StaffTimetable implements AfterViewInit, OnDestroy {
   private readonly data = inject(StaffMembersDataService);
   private readonly zone = inject(NgZone);
 
-  // Profile mode: the staff member whose timetable to show. Ignored in self mode.
   readonly staffMemberId = input<string>();
 
-  // Self mode: show the *current user's* own calendar via /me/timetable instead of a specific
-  // member. Used on the home dashboard, where the viewer may not even be a staff member.
   readonly self = input<boolean>(false);
 
   @ViewChild('cal', { static: true }) private readonly calEl!: ElementRef<HTMLDivElement>;
@@ -154,16 +144,13 @@ export class StaffTimetable implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     const isMobile = window.innerWidth <= MOBILE_MAX;
-    // FullCalendar churns the DOM outside Angular — keep it out of change detection.
     this.zone.runOutsideAngular(() => {
       this.calendar = new Calendar(this.calEl.nativeElement, {
         plugins: [timeGridPlugin, dayGridPlugin, listPlugin],
-        // Follow the browser locale so date formats match the user's region
-        // (e.g. en-GB renders D/M, not FullCalendar's default American M/D).
         locales: allLocales,
         locale: navigator.language,
         initialView: isMobile ? 'listWeek' : 'timeGridWeek',
-        firstDay: 1, // Monday
+        firstDay: 1,
         nowIndicator: true,
         weekends: true,
         allDaySlot: true,
@@ -185,7 +172,6 @@ export class StaffTimetable implements AfterViewInit, OnDestroy {
         },
         noEventsContent: () => this.transloco.translate('common.timetable.noEvents'),
         events: (arg, success, failure) => this.loadEvents(arg, success, failure),
-        // Drop to the list view on small screens, back to the week grid when there's room.
         windowResize: () => {
           const next = window.innerWidth <= MOBILE_MAX ? 'listWeek' : 'timeGridWeek';
           if (this.calendar && this.calendar.view.type !== next) {
@@ -211,7 +197,6 @@ export class StaffTimetable implements AfterViewInit, OnDestroy {
     const id = this.staffMemberId();
 
     if (!this.self() && !id) {
-      // Profile mode with no id yet — nothing to fetch.
       success([]);
       return;
     }
@@ -242,7 +227,6 @@ export class StaffTimetable implements AfterViewInit, OnDestroy {
       allDay: e.allDay,
       backgroundColor: colour,
       borderColor: colour,
-      // Absences sit behind the day as a context band rather than a solid block.
       display: e.category === 'Absence' ? 'background' : 'auto',
       extendedProps: { category: e.category },
     };

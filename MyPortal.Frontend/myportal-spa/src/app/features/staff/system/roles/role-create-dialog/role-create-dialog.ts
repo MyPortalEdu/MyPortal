@@ -10,7 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MpButton, MpDialog, MpInput, MpSelect } from '@myportal/ui';
+import { MpButton, MpDialog, MpDialogFooter, MpInput, MpSelect } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { RolesDataService } from '../../../../../shared/services/roles-data.service';
@@ -26,7 +26,7 @@ interface AudienceOption {
 @Component({
   selector: 'mp-role-create-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpButton, MpDialog, MpInput, MpSelect, TranslocoDirective, TranslocoPipe],
+  imports: [FormsModule, MpButton, MpDialog, MpDialogFooter, MpInput, MpSelect, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('roles')],
   templateUrl: './role-create-dialog.html',
 })
@@ -38,7 +38,6 @@ export class RoleCreateDialog {
 
   readonly visible = input.required<boolean>();
   readonly closed = output<void>();
-  // Emits the new role's id; the parent navigates to its details page to assign permissions.
   readonly created = output<string>();
 
   readonly name = signal('');
@@ -79,7 +78,6 @@ export class RoleCreateDialog {
       .subscribe({
         next: res => {
           this.submitting.set(false);
-          // Clear so the parent-driven close (after navigation) doesn't see a dirty form.
           this.name.set('');
           this.notify.success(this.transloco.translate('roles.form.createdToast'));
           this.created.emit(res.id);

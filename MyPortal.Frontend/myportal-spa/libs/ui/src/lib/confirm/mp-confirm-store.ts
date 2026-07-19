@@ -10,19 +10,13 @@ export interface MpConfirmRequest {
   readonly acceptVariant: MpButtonVariant;
 }
 
-/**
- * Signal-backed confirm-dialog state — the design-system replacement for PrimeNG's
- * ConfirmationService. A single `<mp-confirm-dialog>` host (app root) renders `request()`. App code
- * goes through the app's ConfirmationDialog wrapper (promise-based), which calls `confirm`.
- */
 @Injectable({ providedIn: 'root' })
 export class MpConfirmStore {
   readonly request = signal<MpConfirmRequest | null>(null);
   private resolver: ((accepted: boolean) => void) | null = null;
 
-  /** Show a prompt; resolves true on accept, false on reject/dismiss. */
   confirm(request: MpConfirmRequest): Promise<boolean> {
-    this.resolver?.(false); // a new prompt supersedes any open one
+    this.resolver?.(false);
     this.request.set(request);
     return new Promise<boolean>((resolve) => (this.resolver = resolve));
   }

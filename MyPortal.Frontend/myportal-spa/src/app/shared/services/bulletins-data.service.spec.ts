@@ -119,7 +119,6 @@ describe('BulletinsDataService', () => {
     const first = http.expectOne(r => r.url === '/api/v1/bulletincategories' && !r.params.has('includeInactive'));
     first.flush(categories);
 
-    // Second subscriber must replay the cached value without a fresh HTTP call.
     let second: BulletinCategoryResponse[] | undefined;
     service.listCategories().subscribe(r => (second = r));
     http.expectNone('/api/v1/bulletincategories');
@@ -135,7 +134,6 @@ describe('BulletinsDataService', () => {
   });
 
   it('createCategory() POSTs and invalidates the active-categories cache', () => {
-    // Prime the cache.
     service.listCategories().subscribe();
     http.expectOne('/api/v1/bulletincategories').flush([]);
 
@@ -149,7 +147,6 @@ describe('BulletinsDataService', () => {
     expect(post.request.body).toEqual(model);
     post.flush({ id: 'new' });
 
-    // Next active-only call must re-fetch.
     service.listCategories().subscribe();
     http.expectOne('/api/v1/bulletincategories').flush([]);
   });

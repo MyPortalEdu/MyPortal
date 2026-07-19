@@ -3,7 +3,6 @@ import { TemplatePortal } from '@angular/cdk/portal';
 import { ChangeDetectionStrategy, Component, TemplateRef, ViewContainerRef, inject, input, viewChild } from '@angular/core';
 import { cn } from '../utils/cn';
 
-/** A menu entry — structurally compatible with the subset of PrimeNG's MenuItem the app uses. */
 export interface MpMenuItem {
   label?: string;
   icon?: string;
@@ -13,11 +12,6 @@ export interface MpMenuItem {
   styleClass?: string;
 }
 
-/**
- * Popup menu — the design-system equivalent of `<p-menu [popup]="true">`. Give it `[model]` and
- * call `toggle($event)` from a trigger button (via a template ref). Renders in a CDK overlay
- * anchored to the trigger; a transparent backdrop closes it on outside click.
- */
 @Component({
   selector: 'mp-menu',
   standalone: true,

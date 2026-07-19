@@ -9,7 +9,6 @@ import {
 } from '../types/document';
 import { LookupResponse } from '../types/lookup';
 
-/** Which document-type facets to include — maps to DocumentTypeFilter on the API. */
 export interface DocumentTypeFacets {
   general?: boolean;
   staff?: boolean;
@@ -18,27 +17,12 @@ export interface DocumentTypeFacets {
   send?: boolean;
 }
 
-// DirectoryUploadPolicy.StaffOnly. The enum has no JSON string converter on the
-// server, so it's wire-serialised as its numeric value.
 const UPLOAD_POLICY_STAFF_ONLY = 0;
 
-/**
- * Generic HTTP wrapper for the attachments endpoints exposed by any
- * BaseDirectoryEntityController subclass. The route shape is identical across
- * entities (`{base}/attachments/...`), so a single service serves staff,
- * students, bulletins, etc. — callers pass the entity's attachments base URL
- * (e.g. `/api/v1/staffmembers/{id}/attachments`).
- */
 @Injectable({ providedIn: 'root' })
 export class DirectoryDataService {
   private readonly http = inject(HttpClient);
 
-  /**
-   * Document type catalogue, narrowed to the facets the caller cares about.
-   * The API's DocumentTypeFilter is OR-based, so passing `{ staff: true }`
-   * returns every type tagged Staff (plus the all-purpose "Other", which is
-   * flagged on every facet). Always Active-filtered server-side.
-   */
   getDocumentTypes(facets: DocumentTypeFacets): Observable<LookupResponse[]> {
     let params = new HttpParams();
     if (facets.general) params = params.set('General', 'true');
@@ -77,8 +61,6 @@ export class DirectoryDataService {
     });
   }
 
-  /** Rename and/or move a folder. The server treats Name + ParentId on one PUT;
-   *  privacy / upload policy are preserved from the existing folder. */
   updateFolder(
     baseUrl: string,
     dir: DirectoryDetailsResponse,
@@ -113,8 +95,6 @@ export class DirectoryDataService {
     return this.http.post<DocumentDetailsResponse>(`${baseUrl}/documents`, form);
   }
 
-  /** Re-classify an existing document. Re-sends required metadata (no File =
-   *  content preserved server-side), changing only TypeId. */
   changeDocumentType(
     baseUrl: string,
     doc: DocumentDetailsResponse,
@@ -130,8 +110,6 @@ export class DirectoryDataService {
     return this.http.put<DocumentDetailsResponse>(`${baseUrl}/documents/${doc.id}`, form);
   }
 
-  /** Move a document to another directory. Re-sends required metadata; no File =
-   *  content is preserved server-side. */
   moveDocument(
     baseUrl: string,
     doc: DocumentDetailsResponse,
@@ -151,8 +129,6 @@ export class DirectoryDataService {
     return this.http.delete<void>(`${baseUrl}/documents/${documentId}`);
   }
 
-  /** Same-origin URL the browser navigates to for download (cookie auth +
-   *  Content-Disposition: attachment on the server). */
   downloadUrl(baseUrl: string, documentId: string): string {
     return `${baseUrl}/documents/${documentId}/download`;
   }

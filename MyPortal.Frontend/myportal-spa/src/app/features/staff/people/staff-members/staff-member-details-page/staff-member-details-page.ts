@@ -74,9 +74,6 @@ type BasicFormSnapshot = {
   dob: string | null;
 };
 
-// The 10 sidebar areas the staff profile will eventually surface. Only Basic
-// details is wired up in this slice; the rest render as disabled placeholders
-// so the layout reads right and adding a section is a focused follow-up.
 type AreaKey =
   | 'basicDetails'
   | 'contactDetails'
@@ -156,8 +153,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly directoryData = inject(DirectoryDataService);
   private readonly host = inject(ElementRef<HTMLElement>);
 
-  // A couple of areas gate their own tab on the viewer's access rather than the
-  // static flag: equality (special-category, no Managed scope) and professional.
   protected readonly areas = computed<AreaTab[]>(() =>
     AREAS.map(a => {
       if (a.key === 'equalityDetails') return { ...a, enabled: this.canViewEquality() };
@@ -172,10 +167,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   );
   protected readonly activeArea = signal<AreaKey>('basicDetails');
 
-  // Areas extracted into their own <StaffAreaPanel> child components. Exactly one panel is mounted
-  // at a time (the template `@switch` only renders the active area), so `activePanel` resolves to
-  // whichever extracted area is open. For these the shell delegates the edit lifecycle to the panel;
-  // the rest still use the inline signals/switches below.
   private static readonly EXTRACTED_AREAS: ReadonlySet<AreaKey> = new Set<AreaKey>([
     'contactDetails',
     'absences',
@@ -197,13 +188,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly header = signal<StaffMemberHeaderResponse | null>(null);
   protected readonly current = signal<StaffBasicDetailsResponse | null>(null);
 
-  // Basic details is the one area edited inline in the shell rather than extracted into a panel:
-  // it's the identity backbone. The always-visible header card derives the avatar initials() from
-  // firstName/lastName here (not header.displayName, which leads with the title), so basic details
-  // must load page-wide on init regardless of the active tab — a self-loading panel couldn't feed
-  // the shell's header. It's also the default tab. Everything else is a StaffAreaPanel under panels/.
-  //
-  // Form-field signals for basic details. Mirror the upsert request.
   protected readonly code = signal('');
   protected readonly title = signal<string | null>(null);
   protected readonly firstName = signal('');
@@ -214,8 +198,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly gender = signal('');
   protected readonly dob = signal<Date | null>(null);
 
-  // Held permissions claim, used (with Relationship) to compute canEdit. Also passed to extracted
-  // area panels so they can derive their own edit gate.
   protected readonly heldPerms = signal<Set<string>>(new Set());
 
   protected readonly canEditBasic = computed(() => {
@@ -226,19 +208,13 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Attachments endpoints are inherited on the staff-members controller; the
-  // directory browser keys off this base URL (entityId = staff member id).
   protected readonly documentsBaseUrl = computed(
     () => `/api/v1/staffmembers/${this.staffMemberId()}/attachments`,
   );
 
-  // Staff-facet document types for the upload/classify picker (lazy-loaded the
-  // first time the Documents area is opened).
   protected readonly documentTypes = signal<LookupResponse[]>([]);
   private documentTypesLoaded = false;
 
-  // Documents edit gate — same relationship-scoped shape as basic details, but on
-  // the Staff Documents permission domain.
   protected readonly canEditDocuments = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
@@ -248,7 +224,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Equality is special-category: HR (All) or the person themselves (view-own). No Managed.
   protected readonly canViewEquality = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
@@ -258,8 +233,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Professional details: relationship-scoped view (Own/Managed/All); an edit grant
-  // implies view. Self can view-own but never edit (HR-verified data).
   protected readonly canViewProfessional = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
@@ -278,7 +251,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Employment is the "crown jewels": HR (All) or self (view-own) — no line-manager scope.
   protected readonly canViewEmployment = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
@@ -291,8 +263,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Pre-employment checks are safeguarding/HR — All-scope only, no self or
-  // line-manager view (references are confidential).
   protected readonly canViewPreEmployment = computed(() => {
     const perms = this.heldPerms();
     return (
@@ -301,9 +271,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     );
   });
 
-  // Absences are relationship-scoped: HR (All) sees everyone, a line manager sees
-  // their reports (Managed), and the person sees their own (Own). An edit grant
-  // implies view.
   protected readonly canViewAbsences = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
@@ -322,8 +289,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Timetable is read-only here: relationship-scoped view (Own/Managed/All). There's no
-  // self/managed edit — timetabling is a central scheduling action handled elsewhere.
   protected readonly canViewTimetable = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
@@ -333,8 +298,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Performance: line-manager (Managed) or HR (All) — no self scope (staff don't see
-  // their own appraisal data here). An edit grant implies view.
   protected readonly canViewPerformance = computed(() => {
     const perms = this.heldPerms();
     const rel = this.header()?.relationship;
@@ -352,21 +315,16 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return false;
   });
 
-  // Basic details is the only area still edited inline in the shell; every other area is an
-  // extracted panel that owns its own edit gate.
   protected readonly canEditActiveArea = computed(() =>
     this.activeArea() === 'basicDetails' ? this.canEditBasic() : false,
   );
 
-  // Deleting a staff record is HR-only (All scope) — the kebab doesn't render otherwise.
   protected readonly canDelete = computed(() =>
     this.heldPerms().has(Permissions.Staff.EditAllStaffBasicDetails),
   );
 
   protected readonly deleting = signal(false);
 
-  // Single destructive action tucked behind the kebab. styleClass paints it
-  // danger-red so it reads as destructive even inside the menu.
   protected readonly deleteMenuItems = computed<MpMenuItem[]>(() => [
     {
       label: this.transloco.translate('staff-members.delete.menuItem'),
@@ -386,8 +344,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected readonly isValid = computed(() => this.basicValid());
 
-  // Set when Save is pressed on an incomplete form. Basic details has no wrapping NgForm to
-  // markAllAsTouched, so this stands in for "touched" on every required field at once.
   protected readonly basicSubmitAttempted = signal(false);
 
   protected basicFieldError(value: string | null): string | undefined {
@@ -417,9 +373,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected readonly isDirty = computed(() => this.basicDirty());
 
-  // Unifies the active area's edit lifecycle so the header actions and dirty guard don't have to
-  // care whether the area is an extracted panel or still inline. Extracted areas read from the
-  // mounted panel; the rest fall back to the shell's own signals/methods.
   private readonly activeEdit = computed(() => {
     const panel = this.activePanel();
     if (panel && StaffMemberDetailsPage.EXTRACTED_AREAS.has(this.activeArea())) {
@@ -429,8 +382,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
         dirty: panel.dirty(),
         valid: panel.valid(),
         saving: panel.saving(),
-        // Extracted panels can't yet explain an invalid form, so their Save stays disabled on
-        // invalid rather than dead-clicking.
         explainsInvalid: false,
         start: () => panel.startEdit(),
         cancel: () => panel.cancel(),
@@ -533,7 +484,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     if (!area.enabled || area.key === this.activeArea()) return;
     if (area.key === 'documents') this.loadDocumentTypes();
     if (this.activeEdit().dirty) {
-      // Don't lose edits on accidental tab switch.
       this.confirmDiscard().then(ok => {
         if (ok) {
           this.activeEdit().cancel();
@@ -543,13 +493,10 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       });
       return;
     }
-    // Leaving edit mode behind when switching to a fresh, clean area.
     this.editing.set(false);
     this.activeArea.set(area.key);
   }
 
-  // Staff-facet types only (plus the catch-all "Other", which is flagged on
-  // every facet). Failure is non-fatal — the picker just stays hidden.
   private loadDocumentTypes(): void {
     if (this.documentTypesLoaded) return;
     this.documentTypesLoaded = true;
@@ -574,9 +521,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     }
   }
 
-  // Initials for the avatar. Use the actual first/last name rather than parsing
-  // displayName — that leads with the title (e.g. "Ms Jessica … Pearson"), which
-  // would yield "MP" instead of "JP". Empty until basic details load.
   protected initials(): string {
     const first = this.firstName().trim().charAt(0);
     const last = this.lastName().trim().charAt(0);
@@ -587,11 +531,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return this.transloco.translate(`staff-members.relationship.${rel}`);
   }
 
-  // Photo (part of basic details, shown in the identity strip + a record card). True while an
-  // upload/remove is in flight.
   protected readonly photoUploading = signal(false);
 
-  // Same-origin, cookie-authed <img src>; photoId doubles as the cache-buster.
   protected photoSrc(photoId: string): string {
     return this.data.photoUrl(this.staffMemberId(), photoId);
   }
@@ -599,7 +540,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   protected async onPhotoSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    input.value = ''; // let the same file be re-selected after an error
+    input.value = '';
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -617,7 +558,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     try {
       await firstValueFrom(this.data.uploadPhoto(this.staffMemberId(), file));
       this.notify.success(this.transloco.translate('staff-members.photo.savedToast'));
-      // Refresh header + basic so the new photoId (cache-buster) flows to the avatar and card.
       this.loadHeader();
       this.loadBasic();
     } catch (err) {
@@ -655,7 +595,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   protected cancelEdit(): void {
-    // Basic details is the only area still edited inline in the shell.
     this.applyToForm(this.current());
     this.basicSubmitAttempted.set(false);
     this.editing.set(false);
@@ -664,7 +603,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   async save(): Promise<void> {
     if (!this.canEditBasic() || this.saving()) return;
     if (!this.basicValid()) {
-      // Flag every required field at once, then take the user to the first one.
       this.basicSubmitAttempted.set(true);
       focusFirstInvalid(this.host.nativeElement);
       return;
@@ -677,8 +615,6 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     this.saving.set(true);
 
     const c = this.current();
-    // Preserve fields we don't render an input for (PhotoId / Deceased) by echoing
-    // their existing values. Equality fields are owned by the Equality area now.
     const payload: StaffBasicDetailsUpsertRequest = {
       title: this.normalise(this.title()),
       firstName: this.firstName().trim(),

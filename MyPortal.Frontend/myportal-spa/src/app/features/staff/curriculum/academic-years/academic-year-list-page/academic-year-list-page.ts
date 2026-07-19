@@ -57,13 +57,7 @@ export class AcademicYearListPage implements OnInit {
   readonly years = signal<AcademicYearSummary[]>([]);
   readonly loading = signal(false);
   readonly wizardOpen = signal(false);
-  // Non-null when the wizard is open for editing an existing year. The wizard
-  // reads this on open to decide whether to fetch+prefill (edit) or start
-  // blank (create).
   readonly editYearId = signal<string | null>(null);
-  // A year that can't be mutated is still viewable — the wizard is the only
-  // place terms/periods/holidays are surfaced. These carry that state (and the
-  // reason to show in the dialog's banner) into the wizard.
   readonly wizardReadOnly = signal(false);
   readonly wizardReadOnlyReason = signal('');
 
@@ -114,9 +108,6 @@ export class AcademicYearListPage implements OnInit {
     this.wizardReadOnly.set(false);
     this.wizardReadOnlyReason.set('');
     this.refresh();
-    // Rename / date change on the selected year wouldn't otherwise reach the
-    // topbar — its label is bound to the cached summary. A newly-created year
-    // that happens to cover today should also surface there.
     this.selectedYear.revalidate();
   }
 
@@ -127,17 +118,11 @@ export class AcademicYearListPage implements OnInit {
     this.wizardOpen.set(true);
   }
 
-  // Row click is a convenience over the row's action button; ignore clicks that
-  // started on a link or a row action so they aren't handled twice.
   onRowClick(event: MouseEvent, year: AcademicYearSummary): void {
     if ((event.target as HTMLElement).closest('a,button')) return;
     this.openYear(year);
   }
 
-  // Mirror of the BE rule in AcademicYearService.UpdateAcademicYear / Delete:
-  // a locked year is permanently frozen, and a year that has already started
-  // (earliest term start ≤ today) is also frozen. Gates mutation only — such a
-  // year still opens read-only.
   canMutate(year: AcademicYearSummary): boolean {
     if (year.isLocked) return false;
     if (!year.startDate) return true;
@@ -165,11 +150,7 @@ export class AcademicYearListPage implements OnInit {
     this.data.delete(year.id).subscribe({
       next: () => {
         this.notify.success(this.transloco.translate('academic-years.deletedToast'));
-        // Bust the cached current-AY lookup — deleting the current year
-        // changes what /api/academicyears/current returns.
         this.currentYearCache.clearCache();
-        // If the deleted year is the topbar's selected year, fall back to the
-        // calendar-current year instead of leaving a dangling label.
         this.selectedYear.revalidate();
         this.refresh();
       },

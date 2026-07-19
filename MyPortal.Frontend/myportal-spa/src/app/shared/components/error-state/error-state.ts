@@ -1,10 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-/**
- * Inline error panel for a failed load: a centred icon + message with an optional projected retry
- * action. Pages should render this on load failure instead of relying only on a transient toast —
- * several pages currently show nothing at all when their initial GET fails.
- */
 @Component({
   selector: 'mp-error-state',
   standalone: true,

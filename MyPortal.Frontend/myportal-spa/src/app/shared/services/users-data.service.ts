@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PageResult, IdResponse } from '../types/bulletin';
-import { QueryKitParams } from '../utils/primeng-querykit';
+import { QueryKitParams } from '../utils/querykit';
 import { PermissionResponse } from '../types/role';
 import {
   UserSummaryResponse,
@@ -42,12 +42,10 @@ export class UsersDataService {
     return this.http.delete<void>(`/api/users/${id}`);
   }
 
-  // Admin password reset (distinct from the self-service change-password on /api/me).
   setPassword(id: string, model: UserSetPasswordRequest): Observable<void> {
     return this.http.put<void>(`/api/users/${id}/password`, model);
   }
 
-  // The user's effective permissions — the union across their assigned roles.
   effectivePermissions(id: string): Observable<PermissionResponse[]> {
     return this.http.get<PermissionResponse[]>(`/api/users/${id}/permissions`);
   }

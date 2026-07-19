@@ -2,15 +2,6 @@ import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angu
 import { MpInput } from '../input/mp-input';
 import { MpTable } from './mp-table';
 
-/**
- * Inline column filter — the design-system equivalent of `<p-columnFilter type="text" display="row">`.
- * Drop it in a header filter cell; typing sets that column's filter on the parent table (debounced by
- * the table's `filterDelay`) and re-fires `lazyLoad`.
- *
- * Injects MpTable directly (resolved through the projected-header content injector, like mpSortable).
- * Only the text/row variant is implemented — the menu/popover and custom-template variants aren't
- * needed by the current screens.
- */
 @Component({
   selector: 'mp-column-filter',
   standalone: true,

@@ -11,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MpSelect, MpDialog, MpButton, MpInput, MpTextarea, MpCheckbox, MpDatePicker } from '@myportal/ui';
+import { MpSelect, MpDialog, MpDialogFooter, MpButton, MpInput, MpTextarea, MpCheckbox, MpDatePicker } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
@@ -31,9 +31,9 @@ import {
 } from '../../../types/bulletin';
 
 interface AudienceChoice {
-  key: string;            // dedup key
-  labelKey: string;       // bulletins.audience.<key>
-  fallbackLabel?: string; // for student groups whose names come from the API
+  key: string;
+  labelKey: string;
+  fallbackLabel?: string;
   kind: BulletinAudienceKind;
   studentGroupId?: string;
 }
@@ -44,18 +44,14 @@ type FormSnapshot = {
   categoryId: string | null;
   isPinned: boolean;
   requiresAck: boolean;
-  // ISO string rather than Date so JSON.stringify is deterministic across
-  // re-renders without relying on Date instance identity.
   expiresAt: string | null;
-  // Sets aren't JSON-stringifiable (serialise as {}); flatten to a sorted
-  // array so the snapshot compare is stable regardless of insertion order.
   audienceKeys: string[];
 };
 
 @Component({
   selector: 'mp-bulletin-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpDialog, MpButton, MpInput, MpTextarea, MpSelect, MpCheckbox, MpDatePicker, TranslocoDirective, TranslocoPipe, BulletinAttachments],
+  imports: [FormsModule, MpDialog, MpDialogFooter, MpButton, MpInput, MpTextarea, MpSelect, MpCheckbox, MpDatePicker, TranslocoDirective, TranslocoPipe, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-form-dialog.html',
 })
@@ -68,18 +64,11 @@ export class BulletinFormDialog {
 
   readonly visible = input.required<boolean>();
 
-  /**
-   * When set, the dialog opens in edit mode: fields pre-fill from this bulletin,
-   * the submit calls update() instead of create(), and ExpectedVersion is sent
-   * so optimistic concurrency catches racing edits. Leave null for create mode.
-   */
   readonly existing = input<BulletinDetailsResponse | null>(null);
 
   readonly closed = output<void>();
   readonly saved = output<void>();
 
-  // Used to flush staged attachments after a create succeeds, or to read its
-  // existing-attachments state in edit mode (it manages that itself).
   readonly attachments = viewChild(BulletinAttachments);
 
   readonly title = signal('');
@@ -91,25 +80,10 @@ export class BulletinFormDialog {
   readonly selectedAudienceKeys = signal<Set<string>>(new Set());
   readonly submitting = signal(false);
   readonly canPin = signal(false);
-  // Server validator rejects past dates — mirror that on the picker so users
-  // can't pick an instant we'd reject anyway. Refreshed each open() so the
-  // floor tracks real time across long-lived sessions.
   readonly minExpiryDate = signal<Date>(new Date());
-  // Categories live inside the dialog now rather than as an @Input. With OnPush
-  // and the parent's signal-fed binding, the Select could latch onto an empty
-  // array on first render and the "No results found" message stayed visible.
-  // Owning the fetch here means the options array is always live when the panel
-  // opens — and the shared shareReplay() in the data service avoids a second
-  // round-trip when the feed has already loaded them.
   readonly categories = signal<BulletinCategoryResponse[]>([]);
   readonly allowedGroups = signal<BulletinAllowedGroupResponse[]>([]);
 
-  // Manually track which fields the user has blurred. We can't rely on
-  // ngModel's touched state for invalid styling because some PrimeNG inputs
-  // (e.g. p-select) call onModelChange inside writeValue, which Angular
-  // interprets as a user change and flips ng-dirty on mount — making the
-  // field look invalid before the user has touched it. Reset on each dialog
-  // open via reset().
   readonly touchedFields = signal<ReadonlySet<string>>(new Set());
 
   markTouched(field: string): void {
@@ -124,18 +98,12 @@ export class BulletinFormDialog {
   readonly isEdit = computed(() => this.existing() !== null);
 
   readonly audienceChoices = computed<AudienceChoice[]>(() => {
-    // Fixed audiences come first so they read like a sentence: "all staff / all
-    // pupils / all parents", then any allowlisted student groups.
     const choices: AudienceChoice[] = [
       { key: 'all-staff',   labelKey: 'allStaff',   kind: BulletinAudienceKind.AllStaff },
       { key: 'all-pupils',  labelKey: 'allPupils',  kind: BulletinAudienceKind.AllPupils },
       { key: 'all-parents', labelKey: 'allParents', kind: BulletinAudienceKind.AllParents },
     ];
 
-    // De-dup student-group entries by id: the allowlist is the canonical source,
-    // but when editing we also surface any group the bulletin currently targets
-    // even if the admin has since removed it from the allowlist — otherwise the
-    // editor couldn't see (or untick) it.
     const groups = new Map<string, AudienceChoice>();
     for (const g of this.allowedGroups()) {
       groups.set(g.studentGroupId, {
@@ -192,9 +160,6 @@ export class BulletinFormDialog {
   });
 
   constructor() {
-    // Watch the open transition. Reads of `existing()` happen inside `untracked`
-    // so an edit-mode parent that updates `existing` while the dialog is open
-    // doesn't re-trigger the reset (matches the old ngOnChanges semantics).
     effect(() => {
       if (this.visible()) {
         untracked(() => {
@@ -219,9 +184,6 @@ export class BulletinFormDialog {
   }
 
   audienceLabel(choice: AudienceChoice): string {
-    // Student groups use the live name from the API rather than a translation
-    // (group names are tenant data, not UI copy). Fixed audiences resolve to
-    // the per-locale "All staff/pupils/parents" string.
     return choice.fallbackLabel ?? this.transloco.translate(`bulletins.audience.${choice.labelKey}`);
   }
 
@@ -230,11 +192,6 @@ export class BulletinFormDialog {
   }
 
   onHide(): void {
-    // PrimeNG fires onHide both when the user triggers a close (Escape) and
-    // when the parent flips `visible` to false in response to our own
-    // `closed`/`saved` events. We can't re-prompt here without re-asking the
-    // user who just clicked Discard — and Escape is gated by closeOnEscape so
-    // it only fires on a clean form anyway. Just keep the parent in sync.
     this.closed.emit();
   }
 
@@ -271,8 +228,6 @@ export class BulletinFormDialog {
       requiresAcknowledgement: this.requiresAck(),
       audiences,
       expiresAt: this.expiresAt()?.toISOString() ?? null,
-      // ExpectedVersion is irrelevant on create (server ignores it on POST)
-      // but required on update for the optimistic-concurrency guard.
       expectedVersion: existing?.version ?? 0,
     };
 
@@ -280,8 +235,6 @@ export class BulletinFormDialog {
     const t = (key: string) => this.transloco.translate(`bulletins.form.${key}`);
     const finishOk = () => {
       this.submitting.set(false);
-      // Re-baseline before emitting saved so the parent-driven close doesn't
-      // see isDirty=true and prompt the user.
       this.snapshot.set(this.currentForm());
       this.notify.success(t(isEdit ? 'updatedToast' : 'publishedToast'));
       this.saved.emit();
@@ -299,10 +252,6 @@ export class BulletinFormDialog {
       return;
     }
 
-    // Create path: post the bulletin, then if files were staged we need the
-    // new bulletin's directoryId to upload them — fetch the details and
-    // hand the queue to the attachments component. The bulletin is already
-    // published either way; failed attachment uploads don't roll it back.
     this.data.create(payload).subscribe({
       next: ({ id }) => {
         const attachments = this.attachments();
@@ -325,7 +274,6 @@ export class BulletinFormDialog {
     this.minExpiryDate.set(new Date());
     const existing = this.existing();
     if (existing) {
-      // Edit mode: hydrate every field from the bulletin we're editing.
       this.title.set(existing.title);
       this.detail.set(existing.detail);
       this.categoryId.set(existing.categoryId);
@@ -334,18 +282,12 @@ export class BulletinFormDialog {
       this.expiresAt.set(existing.expiresAt ? new Date(existing.expiresAt) : null);
       this.selectedAudienceKeys.set(audienceKeysFor(existing.audiences));
     } else {
-      // Create mode.
       this.title.set('');
       this.detail.set('');
       this.isPinned.set(false);
       this.requiresAck.set(false);
       this.expiresAt.set(null);
-      // Default audience: All staff. Matches the mockup's pre-selected chip.
       this.selectedAudienceKeys.set(new Set(['all-staff']));
-      // categoryId default is set after the categories call resolves (see
-      // loadDependencies); setting it here from a possibly-empty cache would
-      // leave the Select blank. loadDependencies re-baselines the snapshot
-      // once the default lands.
       this.categoryId.set(null);
     }
     this.touchedFields.set(new Set());
@@ -353,31 +295,21 @@ export class BulletinFormDialog {
   }
 
   private loadDependencies(): void {
-    // Check pin permission once per open. Cheap — MeService caches.
     this.meService.me().subscribe(me => {
       this.canPin.set(!!me.permissions?.includes(Permissions.School.PinSchoolBulletins));
     });
 
-    // Categories: the data service shareReplays this, so the feed's earlier call
-    // serves the dialog without an extra round-trip. We still resubscribe here
-    // because we own the dialog's category default (create mode only — edit
-    // already has a categoryId set from the existing bulletin).
     this.data.listCategories(false).subscribe({
       next: cats => {
         this.categories.set(cats ?? []);
         if (cats?.length && this.categoryId() === null) {
           this.categoryId.set(cats[0].id);
-          // Re-baseline now that the async default has landed; otherwise the
-          // snapshot taken in reset() would see categoryId=null and the form
-          // would read as dirty before the user touched anything.
           this.snapshot.set(this.currentForm());
         }
       },
       error: () => this.categories.set([]),
     });
 
-    // Fetch the allowlist on every open in case the admin changed it since last
-    // render. One extra request per dialog open — acceptable.
     this.data.getSettings().subscribe({
       next: s => this.allowedGroups.set(s.allowedAudienceGroups ?? []),
       error: () => this.allowedGroups.set([]),

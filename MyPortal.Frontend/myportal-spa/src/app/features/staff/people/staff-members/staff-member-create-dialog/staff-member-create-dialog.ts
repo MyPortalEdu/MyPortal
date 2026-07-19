@@ -12,7 +12,7 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { MpDatePicker, MpDialog, MpButton, MpInput, MpSpinner } from '@myportal/ui';
+import { MpDatePicker, MpDialog, MpDialogFooter, MpButton, MpInput, MpSpinner } from '@myportal/ui';
 import {
   catchError,
   debounceTime,
@@ -34,20 +34,6 @@ import { StaffMembersDataService } from '../../../../../shared/services/staff-me
 import { StaffBasicDetailsUpsertRequest } from '../../../../../shared/types/staff-basic-details';
 import { PersonMatchResponse } from '../../../../../shared/types/person-match';
 
-/**
- * "New staff member" flow. Because this is a thin joiner form (not the full staff
- * record), it searches existing People as you type — a person may already be on file
- * as a contact/agent/former student, and the shared Person record should be reused
- * rather than duplicated.
- *
- * The create-new form is the default: with no matches the user just fills it in. When
- * the search turns up people, they're listed above the form so the user can pick an
- * existing person (→ attach a staff role, code only) instead of creating a duplicate.
- * Picking someone who is already staff jumps to their profile via `openExisting`.
- *
- * Emits `created` with the new StaffMember id (both create-new and attach paths). The
- * listing page owns navigation.
- */
 @Component({
   selector: 'mp-staff-member-create-dialog',
   standalone: true,
@@ -58,6 +44,7 @@ import { PersonMatchResponse } from '../../../../../shared/types/person-match';
     MpButton,
     MpDatePicker,
     MpDialog,
+    MpDialogFooter,
     MpInput,
     GenderSelect,
     MpSpinner,
@@ -76,8 +63,6 @@ export class StaffMemberCreateDialog {
   readonly created = output<string>();
   readonly openExisting = output<string>();
 
-  /** 'search' shows the live search + create-new form; 'attach' captures the code for
-   *  a picked existing person. */
   protected readonly step = signal<'search' | 'attach'>('search');
   protected readonly saving = signal(false);
 
@@ -96,7 +81,6 @@ export class StaffMemberCreateDialog {
   protected readonly gender = signal('');
   protected readonly dob = signal<Date | null>(null);
 
-  // Staff code — shared by the create-new form and the attach step.
   protected readonly code = signal('');
 
   protected readonly newPersonValid = computed(
@@ -110,17 +94,12 @@ export class StaffMemberCreateDialog {
   protected readonly attachValid = computed(() => this.code().trim().length > 0);
 
   constructor() {
-    // Reset the whole flow whenever the dialog reopens so a previous draft doesn't
-    // bleed into a fresh create.
     effect(() => {
       if (this.open()) {
         untracked(() => this.reset());
       }
     });
 
-    // Debounced live search. Terms shorter than 2 chars clear the list without hitting
-    // the server (mirrors the service-side guard). No results simply means "nothing to
-    // reuse" — the create-new form stays on screen, no warning shown.
     toObservable(this.searchTerm)
       .pipe(
         map(term => term.trim()),
@@ -158,7 +137,6 @@ export class StaffMemberCreateDialog {
 
   protected pickPerson(person: PersonMatchResponse): void {
     if (person.isStaffMember) {
-      // Already staff — don't duplicate; jump to the existing profile instead.
       if (person.existingStaffMemberId) {
         this.openExisting.emit(person.existingStaffMemberId);
       }

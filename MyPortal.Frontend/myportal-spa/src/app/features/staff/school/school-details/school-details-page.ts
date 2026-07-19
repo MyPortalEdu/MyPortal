@@ -61,15 +61,6 @@ type FormSnapshot = {
   email: string | null;
 };
 
-/**
- * School details edit page. Single-tenant — there's only ever one local school.
- *
- * Permission model:
- *   • Agencies.ViewAgencies → read-only render (every input disabled, no Save).
- *   • Agencies.EditAgencies → editable form with Save.
- * The route guard accepts either; the page itself decides which mode it's in
- * by inspecting the user's permissions on load.
- */
 @Component({
   selector: 'mp-school-details-page',
   standalone: true,
@@ -106,10 +97,8 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   readonly loading = signal(false);
   readonly saving = signal(false);
 
-  // Existing school payload (null on first run, before any school is configured).
   readonly current = signal<SchoolDetailsResponse | null>(null);
 
-  // Lookup catalogues — loaded once via the cached LookupsDataService.
   readonly governanceTypes = signal<LookupResponse[]>([]);
   readonly intakeTypes = signal<LookupResponse[]>([]);
   readonly schoolPhases = signal<LookupResponse[]>([]);
@@ -118,7 +107,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   readonly specialSchoolOrganisations = signal<LookupResponse[]>([]);
   readonly specialSchoolTypes = signal<LookupResponse[]>([]);
 
-  // Form-field signals. Mirror SchoolUpsertRequest 1:1 so save() is a flat copy.
   readonly name = signal('');
   readonly website = signal<string | null>(null);
   readonly urn = signal('');
@@ -156,9 +144,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     !!this.intakeTypeId(),
   );
 
-  // Snapshot of the form as last loaded/saved. isDirty compares the live signals
-  // against this so we can disable Save when nothing's changed and prompt the
-  // user before they navigate away with unsaved edits.
   private readonly snapshot = signal<FormSnapshot | null>(null);
 
   private readonly currentForm = computed<FormSnapshot>(() => ({
@@ -247,7 +232,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   onHeadTeacherPicked(s: StaffMemberSummaryResponse): void {
-    // HeadTeacherId is a person FK — use personId, not the picker row's StaffMember id.
     this.headTeacherId.set(s.personId);
     this.headTeacherFullName.set(this.formatName(s));
   }
@@ -264,11 +248,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     const payload: SchoolUpsertRequest = {
       name: this.name().trim(),
       website: this.normalise(this.website()),
-      // Agency carries an optimistic-concurrency version. Backend ignores it on
-      // first-create; on update it must equal the row's current Version.
-      // The school details payload doesn't surface Agency.Version yet, so we
-      // send 0 — the server's update path doesn't enforce a non-zero check
-      // (UpdateAsync is non-versioned in AgencyService.UpdateAsync).
       expectedVersion: 0,
       urn: this.urn().trim(),
       uprn: this.uprn().trim(),
@@ -286,7 +265,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
       netCapacity: this.netCapacity(),
       netCapacityAssessmentDate: this.netCapacityAssessmentDate()?.toISOString() ?? null,
       isSpecialSchool: this.isSpecialSchool(),
-      // Special-school facts only travel when the flag is set; the server clears them otherwise.
       specialSchoolOrganisationId: this.isSpecialSchool() ? this.specialSchoolOrganisationId() : null,
       specialSchoolTypeId: this.isSpecialSchool() ? this.specialSchoolTypeId() : null,
       maxBoarders: this.isSpecialSchool() ? this.maxBoarders() : null,
@@ -296,8 +274,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
 
     try {
       await firstValueFrom(this.schools.saveLocalDetails(payload));
-      // Bust the shared local-school-name cache so the topbar title and the
-      // home page's setup banner reflect the new state without a page reload.
       this.schoolNameCache.clearCache();
       this.notify.success(this.transloco.translate('school-details.savedToast'));
       this.refresh();
@@ -377,9 +353,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     });
   }
 
-  // Browser-level guard for refresh/close/back-to-non-Angular. Setting
-  // returnValue triggers the browser's generic "leave site?" prompt; the
-  // string isn't displayed (modern browsers ignore it for safety).
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.isDirty()) {

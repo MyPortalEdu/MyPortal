@@ -2,11 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 type CalloutSeverity = 'info' | 'warn' | 'success' | 'danger';
 
-/**
- * Inline banner for page-level notices — setup prompts, warnings, confirmations. Severity picks the
- * tint + default icon; the body is projected, with an optional action slot (`[calloutAction]`) on the
- * right. Extracted from the copy-pasted setup banners on the home dashboard.
- */
 @Component({
   selector: 'mp-callout',
   standalone: true,

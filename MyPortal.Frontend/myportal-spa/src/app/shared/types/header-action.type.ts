@@ -1,5 +1,3 @@
-// Kept independent of any UI library. page-header maps `severity`/`outlined`/`text` onto the
-// design-system button variant (see PageHeader.variantFor).
 export type HeaderActionSeverity =
   | 'primary' | 'secondary' | 'success' | 'info' | 'warn' | 'danger' | 'error' | 'help' | 'contrast';
 

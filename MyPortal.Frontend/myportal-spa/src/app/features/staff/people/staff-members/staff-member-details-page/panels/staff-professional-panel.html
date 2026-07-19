@@ -25,7 +25,6 @@
         </div>
       </section>
 
-      <!-- QTS and statutory induction only apply to teachers, not support staff (incl. HLTAs). -->
       @if (isTeachingStaff()) {
       <section>
         <mp-section-header icon="fa-solid fa-certificate" [title]="t('staff-members.professional.qtsHeading')"></mp-section-header>
@@ -39,7 +38,6 @@
             }
           </mp-field>
 
-          <!-- Route and award date only apply once QTS is held. -->
           @if (hasQts()) {
             <mp-field [label]="t('staff-members.professional.qtsRoute')" for="qtsRoute">
               @if (editing()) {

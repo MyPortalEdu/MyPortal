@@ -58,7 +58,6 @@ describe('BulletinSettingsPage', () => {
         { provide: NotificationService, useValue: notify },
         { provide: ConfirmationDialog, useValue: confirm },
         { provide: AcademicYearService, useValue: academic },
-        // academicYearId is driven by SelectedAcademicYearService.selectedId (a signal), not getCurrent.
         { provide: SelectedAcademicYearService, useValue: { selectedId: signal('ay-current') } },
         { provide: TranslocoService, useValue: translocoStub },
       ],
@@ -66,7 +65,7 @@ describe('BulletinSettingsPage', () => {
 
     const fixture = TestBed.createComponent(BulletinSettingsPage);
     component = fixture.componentInstance;
-    fixture.detectChanges(); // triggers ngOnInit
+    fixture.detectChanges();
   });
 
   it('ngOnInit loads categories (including inactive), settings, and current academic year', () => {
@@ -136,8 +135,6 @@ describe('BulletinSettingsPage', () => {
 
     component.onGroupsPicked(picks);
 
-    // g1 is already in the allowlist; only g2 is genuinely new — but the payload
-    // is the FULL list, not a diff, so both ids end up in the update.
     expect(data.updateSettings).toHaveBeenCalledWith({ allowedAudienceGroupIds: ['g1', 'g2'] });
   });
 

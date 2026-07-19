@@ -57,12 +57,6 @@ const EMPTY_FORM: AddressForm = {
   isMain: false,
 };
 
-/**
- * Add/edit dialog for a person's address. Add mode is a search-before-add flow (find an existing
- * shared address to link, or enter a new one). Edit mode pre-fills the form and, when the address
- * is shared, asks whether the change applies to everyone (FixInPlace) or forks a new address
- * (Moved). Self-contained: commits via the staff data service and emits `saved` on success.
- */
 @Component({
   selector: 'mp-address-form-dialog',
   standalone: true,
@@ -108,8 +102,6 @@ export class AddressFormDialog {
     );
   });
 
-  // Re-baselined whenever a step begins, so the search term itself never reads as dirty —
-  // only the address the user has actually composed (or the match they picked) does.
   private readonly snapshot = signal<string | null>(null);
 
   private readonly currentForm = computed(() =>
@@ -122,7 +114,6 @@ export class AddressFormDialog {
   });
 
   constructor() {
-    // Reset whenever the dialog opens (track only `open`, not the form inputs).
     effect(() => {
       if (this.open()) {
         untracked(() => this.reset());
@@ -199,7 +190,6 @@ export class AddressFormDialog {
     if (this.isEdit()) {
       const t = this.editTarget()!;
       if (t.sharedCount > 1) {
-        // Shared — let the user choose how the edit applies.
         this.confirmShared.set(true);
         return;
       }
@@ -233,7 +223,6 @@ export class AddressFormDialog {
 
     try {
       await firstValueFrom(this.data.updateAddress(this.staffMemberId(), t.addressPersonId, payload));
-      // Re-baseline before emitting so the parent-driven close doesn't prompt.
       this.snapshot.set(this.currentForm());
       this.notify.success(this.transloco.translate('common.contact.address.savedToast'));
       this.saved.emit();
@@ -291,8 +280,6 @@ export class AddressFormDialog {
     this.closed.emit();
   }
 
-  // Escape is gated by closeOnEscape, so this only fires on a clean form or on a
-  // parent-driven close — just keep the parent in sync.
   protected onHide(): void {
     this.closed.emit();
   }

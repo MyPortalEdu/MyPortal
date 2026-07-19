@@ -56,8 +56,7 @@
     [class.border-surface-200]="!dragOver()"
     [class.dark:border-surface-700]="!dragOver()"
     [class.border-primary]="dragOver()"
-    [class.bg-primary-50]="dragOver()"
-    [class.dark:bg-primary-900\/20]="dragOver()"
+    [class]="dragOver() ? 'bg-primary-50 dark:bg-primary-900/20' : ''"
     (dragover)="onDragOver($event)"
     (dragleave)="onDragLeave($event)"
     (drop)="onDrop($event)">
@@ -168,8 +167,9 @@
     (visibleChange)="nameDialogOpen.set($event)"
     [modal]="true"
     panelClass="w-[min(24rem,94vw)]"
-    [dismissable]="false">
-    <div class="flex items-center justify-between p-4 border-b border-surface"><h3 class="text-base font-semibold m-0">{{ nameDialogMode() === 'new' ? t('documents.newFolder.header') : t('documents.rename.header') }}</h3></div>
+    [dismissable]="false"
+    [title]="nameDialogMode() === 'new' ? t('documents.newFolder.header') : t('documents.rename.header')"
+    [closeAriaLabel]="t('common.close')">
     <div class="flex flex-col gap-1">
       <label class="text-sm font-medium" for="dirName">
         {{ nameDialogMode() === 'new' ? t('documents.newFolder.nameLabel') : t('documents.rename.nameLabel') }}
@@ -197,8 +197,9 @@
     (visibleChange)="moveDialogOpen.set($event)"
     [modal]="true"
     panelClass="w-[min(26rem,94vw)]"
-    [dismissable]="false">
-    <div class="flex items-center justify-between p-4 border-b border-surface"><h3 class="text-base font-semibold m-0">{{ t('documents.move.header', { name: moveTargetName() }) }}</h3></div>
+    [dismissable]="false"
+    [title]="t('documents.move.header', { name: moveTargetName() })"
+    [closeAriaLabel]="t('common.close')">
     <p class="text-sm text-muted-color mb-2">{{ t('documents.move.hint') }}</p>
     @if (moveTree().length) {
       <div class="flex flex-col max-h-72 overflow-auto rounded border border-surface-200 dark:border-surface-700">
@@ -215,8 +216,7 @@
             <button
               type="button"
               class="flex items-center gap-2 px-2 py-1.5 text-sm text-left hover:bg-surface-100 dark:hover:bg-surface-800"
-              [class.bg-primary-50]="moveSelectedId() === flat.dir.id"
-              [class.dark:bg-primary-900\/30]="moveSelectedId() === flat.dir.id"
+              [class]="moveSelectedId() === flat.dir.id ? 'bg-primary-50 dark:bg-primary-900/30' : ''"
               [style.padding-left.rem]="0.5 + flat.depth * 1.25"
               (click)="moveSelectedId.set(flat.dir.id)">
               <i class="fa-solid fa-folder text-amber-400 shrink-0"></i>
@@ -243,8 +243,9 @@
     (visibleChange)="uploadDialogOpen.set($event)"
     [modal]="true"
     panelClass="w-[min(32rem,94vw)]"
-    [dismissable]="false">
-    <div class="flex items-center justify-between p-4 border-b border-surface"><h3 class="text-base font-semibold m-0">{{ t('documents.upload.header') }}</h3></div>
+    [dismissable]="false"
+    [title]="t('documents.upload.header')"
+    [closeAriaLabel]="t('common.close')">
     @if (hasTypes()) {
       <div class="flex flex-col gap-1 mb-3">
         <label class="text-sm font-medium" for="uploadType">{{ t('documents.upload.typeLabel') }}</label>
@@ -265,8 +266,7 @@
       [class.border-surface-300]="!dragOver()"
       [class.dark:border-surface-600]="!dragOver()"
       [class.border-primary]="dragOver()"
-      [class.bg-primary-50]="dragOver()"
-      [class.dark:bg-primary-900\/20]="dragOver()"
+      [class]="dragOver() ? 'bg-primary-50 dark:bg-primary-900/20' : ''"
       (click)="onBrowseClick()"
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave($event)"
@@ -310,8 +310,9 @@
     (visibleChange)="typeDialogOpen.set($event)"
     [modal]="true"
     panelClass="w-[min(24rem,94vw)]"
-    [dismissable]="false">
-    <div class="flex items-center justify-between p-4 border-b border-surface"><h3 class="text-base font-semibold m-0">{{ t('documents.changeType.header', { name: typeTargetName() }) }}</h3></div>
+    [dismissable]="false"
+    [title]="t('documents.changeType.header', { name: typeTargetName() })"
+    [closeAriaLabel]="t('common.close')">
     <div class="flex flex-col gap-1">
       <label class="text-sm font-medium" for="changeType">
         {{ t('documents.changeType.label') }}
