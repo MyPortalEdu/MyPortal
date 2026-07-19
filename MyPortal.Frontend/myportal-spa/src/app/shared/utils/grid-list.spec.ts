@@ -15,13 +15,13 @@ function setup(
   queryParams: Record<string, string> = {},
   listImpl?: () => Observable<PageResult<Row>>,
 ) {
-  const navigate = jasmine.createSpy('navigate').and.resolveTo(true);
-  const filterGlobal = jasmine.createSpy('filterGlobal');
+  const navigate = vi.fn().mockResolvedValue(true);
+  const filterGlobal = vi.fn();
   const table = signal<{ filterGlobal: typeof filterGlobal } | undefined>({ filterGlobal });
-  const list = jasmine
-    .createSpy('list')
-    .and.callFake(listImpl ?? (() => of<PageResult<Row>>({ items: [{ id: '1' }], totalItems: 1 })));
-  const onError = jasmine.createSpy('onError');
+  const list = vi
+    .fn()
+    .mockImplementation(listImpl ?? (() => of<PageResult<Row>>({ items: [{ id: '1' }], totalItems: 1 })));
+  const onError = vi.fn();
 
   TestBed.configureTestingModule({
     providers: [
@@ -54,7 +54,7 @@ describe('injectGridList', () => {
     expect(list).toHaveBeenCalledWith({ page: 1, pageSize: 25 });
     expect(grid.rows()).toEqual([{ id: '1' }]);
     expect(grid.totalRecords()).toBe(1);
-    expect(grid.loading()).toBeFalse();
+    expect(grid.loading()).toBe(false);
     expect(navigate).toHaveBeenCalled();
   });
 
@@ -62,7 +62,7 @@ describe('injectGridList', () => {
     const { grid, filterGlobal } = setup();
     grid.onSearch('smith');
     expect(grid.searchTerm()).toBe('smith');
-    expect(grid.hasFilter()).toBeTrue();
+    expect(grid.hasFilter()).toBe(true);
     expect(filterGlobal).toHaveBeenCalledWith('smith', 'contains');
   });
 
@@ -82,7 +82,7 @@ describe('injectGridList', () => {
   it('seeds searchTerm + initialFilters from the URL `q` param', () => {
     const { grid } = setup({ q: 'smith' });
     expect(grid.searchTerm()).toBe('smith');
-    expect(grid.hasFilter()).toBeTrue();
+    expect(grid.hasFilter()).toBe(true);
     expect(grid.initialFilters).toEqual({ global: { value: 'smith', matchMode: 'contains' } });
   });
 
@@ -90,7 +90,7 @@ describe('injectGridList', () => {
     const { grid, onError } = setup({}, () => throwError(() => new Error('boom')));
     grid.load(EVENT);
     expect(onError).toHaveBeenCalled();
-    expect(grid.loading()).toBeFalse();
+    expect(grid.loading()).toBe(false);
     expect(grid.rows()).toEqual([]);
   });
 });

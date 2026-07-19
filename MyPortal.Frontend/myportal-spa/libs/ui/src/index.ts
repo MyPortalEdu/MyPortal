@@ -16,6 +16,7 @@ export { MpDrawer } from './lib/drawer/mp-drawer';
 export { MpMenu, type MpMenuItem } from './lib/menu/mp-menu';
 export { MpMultiSelect } from './lib/multi-select/mp-multi-select';
 export { MpInput } from './lib/input/mp-input';
+export { MpFormField } from './lib/form-field/mp-form-field';
 export { MpTextarea } from './lib/textarea/mp-textarea';
 export { MpCheckbox } from './lib/checkbox/mp-checkbox';
 export { MpSelect } from './lib/select/mp-select';

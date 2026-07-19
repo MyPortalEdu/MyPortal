@@ -85,10 +85,10 @@ describe('MpDialog', () => {
     host.closeDisabled.set(true);
     fixture.detectChanges();
     const btn = query('button[aria-label="Close"]') as HTMLButtonElement;
-    expect(btn.disabled).toBeTrue();
+    expect(btn.disabled).toBe(true);
     btn.click();
     fixture.detectChanges();
-    expect(host.open()).toBeTrue();
+    expect(host.open()).toBe(true);
     expect(host.closedCount).toBe(0);
   });
 

@@ -8,7 +8,7 @@
           [value]="text()"
           [placeholder]="placeholder() ?? (timeOnly() ? 'HH:mm' : dateFormat())"
           [disabled]="disabled()"
-          [invalid]="invalid()"
+          [invalid]="showInvalid()"
           (input)="text.set($any($event.target).value)"
           (blur)="commitTyped()"
           (keydown.enter)="commitTyped(); $event.preventDefault()"

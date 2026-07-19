@@ -1,3 +1,4 @@
+import { createSpyObj, type SpyObj } from '@testing/spy';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
@@ -26,23 +27,22 @@ const allowed: BulletinAllowedGroupResponse[] = [
 
 describe('BulletinSettingsPage', () => {
   let component: BulletinSettingsPage;
-  let data: jasmine.SpyObj<BulletinsDataService>;
-  let notify: jasmine.SpyObj<NotificationService>;
-  let confirm: jasmine.SpyObj<ConfirmationDialog>;
-  let academic: jasmine.SpyObj<AcademicYearService>;
+  let data: SpyObj<BulletinsDataService>;
+  let notify: SpyObj<NotificationService>;
+  let confirm: SpyObj<ConfirmationDialog>;
+  let academic: SpyObj<AcademicYearService>;
 
   beforeEach(async () => {
-    data = jasmine.createSpyObj<BulletinsDataService>('BulletinsDataService',
-      ['listCategories', 'deleteCategory', 'getSettings', 'updateSettings']);
-    notify = jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'apiError']);
-    confirm = jasmine.createSpyObj<ConfirmationDialog>('ConfirmationDialog', ['danger']);
-    academic = jasmine.createSpyObj<AcademicYearService>('AcademicYearService', ['getCurrent']);
+    data = createSpyObj<BulletinsDataService>(['listCategories', 'deleteCategory', 'getSettings', 'updateSettings']);
+    notify = createSpyObj<NotificationService>(['success', 'apiError']);
+    confirm = createSpyObj<ConfirmationDialog>(['danger']);
+    academic = createSpyObj<AcademicYearService>(['getCurrent']);
 
-    data.listCategories.and.returnValue(of(categories));
-    data.getSettings.and.returnValue(of({ allowedAudienceGroups: allowed } as BulletinSettingsResponse));
-    data.updateSettings.and.returnValue(of(void 0));
-    data.deleteCategory.and.returnValue(of(void 0));
-    academic.getCurrent.and.returnValue(of({ id: 'ay-current', name: '2026/27', startDate: '', endDate: '' } as any));
+    data.listCategories.mockReturnValue(of(categories));
+    data.getSettings.mockReturnValue(of({ allowedAudienceGroups: allowed } as BulletinSettingsResponse));
+    data.updateSettings.mockReturnValue(of(void 0));
+    data.deleteCategory.mockReturnValue(of(void 0));
+    academic.getCurrent.mockReturnValue(of({ id: 'ay-current', name: '2026/27', startDate: '', endDate: '' } as any));
 
     const translocoStub = {
       translate: (key: string) => key,
@@ -84,26 +84,26 @@ describe('BulletinSettingsPage', () => {
     component.editingCategory.set(categories[0]);
     component.openNewCategory();
     expect(component.editingCategory()).toBeNull();
-    expect(component.categoryFormOpen()).toBeTrue();
+    expect(component.categoryFormOpen()).toBe(true);
   });
 
   it('openEditCategory selects a category and opens the form', () => {
     component.openEditCategory(categories[0]);
     expect(component.editingCategory()).toBe(categories[0]);
-    expect(component.categoryFormOpen()).toBeTrue();
+    expect(component.categoryFormOpen()).toBe(true);
   });
 
   it('onCategorySaved closes the form and re-fetches categories', () => {
-    data.listCategories.calls.reset();
+    data.listCategories.mockClear();
     component.onCategorySaved();
-    expect(component.categoryFormOpen()).toBeFalse();
+    expect(component.categoryFormOpen()).toBe(false);
     expect(component.editingCategory()).toBeNull();
     expect(data.listCategories).toHaveBeenCalledWith(true);
   });
 
   it('deleteCategory prompts to confirm, deletes, toasts, and refreshes', async () => {
-    confirm.danger.and.resolveTo(true);
-    data.listCategories.calls.reset();
+    confirm.danger.mockResolvedValue(true);
+    data.listCategories.mockClear();
 
     await component.deleteCategory(categories[0]);
 
@@ -113,14 +113,14 @@ describe('BulletinSettingsPage', () => {
   });
 
   it('deleteCategory does nothing when the user cancels the confirm prompt', async () => {
-    confirm.danger.and.resolveTo(false);
+    confirm.danger.mockResolvedValue(false);
     await component.deleteCategory(categories[0]);
     expect(data.deleteCategory).not.toHaveBeenCalled();
   });
 
   it('deleteCategory surfaces an apiError toast on failure', async () => {
-    confirm.danger.and.resolveTo(true);
-    data.deleteCategory.and.returnValue(throwError(() => new Error('boom')));
+    confirm.danger.mockResolvedValue(true);
+    data.deleteCategory.mockReturnValue(throwError(() => new Error('boom')));
 
     await component.deleteCategory(categories[0]);
 
@@ -147,7 +147,7 @@ describe('BulletinSettingsPage', () => {
   });
 
   it('removeGroup prompts to confirm and posts the allowlist minus the removed id', async () => {
-    confirm.danger.and.resolveTo(true);
+    confirm.danger.mockResolvedValue(true);
 
     await component.removeGroup({ studentGroupId: 'g1', code: '7A', name: 'Year 7A' });
 
@@ -155,7 +155,7 @@ describe('BulletinSettingsPage', () => {
   });
 
   it('removeGroup does nothing when the user cancels the confirm prompt', async () => {
-    confirm.danger.and.resolveTo(false);
+    confirm.danger.mockResolvedValue(false);
 
     await component.removeGroup({ studentGroupId: 'g1', code: '7A', name: 'Year 7A' });
 
@@ -163,7 +163,7 @@ describe('BulletinSettingsPage', () => {
   });
 
   it('saveAllowlist (via onGroupsPicked) toasts success and refreshes after a save', () => {
-    data.getSettings.calls.reset();
+    data.getSettings.mockClear();
 
     component.onGroupsPicked([
       { id: 'g2', code: '7B', description: 'Year 7B', studentCount: 0, academicYearId: 'ay-current', isSystem: false, isActive: true, version: 1 } as unknown as StudentGroupSummaryResponse,
@@ -174,7 +174,7 @@ describe('BulletinSettingsPage', () => {
   });
 
   it('saveAllowlist toasts apiError when the server rejects', () => {
-    data.updateSettings.and.returnValue(throwError(() => new Error('boom')));
+    data.updateSettings.mockReturnValue(throwError(() => new Error('boom')));
 
     component.onGroupsPicked([
       { id: 'g2', code: '7B', description: 'Year 7B', studentCount: 0, academicYearId: 'ay-current', isSystem: false, isActive: true, version: 1 } as unknown as StudentGroupSummaryResponse,

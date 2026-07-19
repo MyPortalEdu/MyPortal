@@ -18,6 +18,7 @@ export class MpDatePicker implements ControlValueAccessor {
   readonly placeholder = input<string | undefined>(undefined);
   readonly disabledInput = input(false, { alias: 'disabled' });
   readonly invalid = input<boolean | null | undefined>(false);
+  readonly touched = input<boolean>(true);
   readonly inputId = input<string | undefined>(undefined);
   readonly dateFormat = input('dd/mm/yy');
   readonly showIcon = input(true);
@@ -30,6 +31,7 @@ export class MpDatePicker implements ControlValueAccessor {
   protected readonly text = signal('');
   private readonly cvaDisabled = signal(false);
   protected readonly disabled = computed(() => this.disabledInput() || this.cvaDisabled());
+  protected readonly showInvalid = computed(() => !!this.invalid() && this.touched());
 
   protected readonly hours = Array.from({ length: 24 }, (_, i) => i);
   protected readonly minutes = Array.from({ length: 60 }, (_, i) => i);

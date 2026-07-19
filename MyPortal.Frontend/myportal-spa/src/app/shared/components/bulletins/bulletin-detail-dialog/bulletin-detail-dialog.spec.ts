@@ -1,3 +1,4 @@
+import { createSpyObj, type SpyObj } from '@testing/spy';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
@@ -61,10 +62,10 @@ function makeMe(overrides: Partial<Me> = {}): Me {
 describe('BulletinDetailDialog', () => {
   let fixture: ComponentFixture<BulletinDetailDialog>;
   let component: BulletinDetailDialog;
-  let data: jasmine.SpyObj<BulletinsDataService>;
-  let notify: jasmine.SpyObj<NotificationService>;
-  let confirm: jasmine.SpyObj<ConfirmationDialog>;
-  let me$: jasmine.SpyObj<MeService>;
+  let data: SpyObj<BulletinsDataService>;
+  let notify: SpyObj<NotificationService>;
+  let confirm: SpyObj<ConfirmationDialog>;
+  let me$: SpyObj<MeService>;
 
   function setBulletinId(value: string | null) {
     fixture.componentRef.setInput('bulletinId', value);
@@ -72,14 +73,14 @@ describe('BulletinDetailDialog', () => {
   }
 
   beforeEach(async () => {
-    data = jasmine.createSpyObj<BulletinsDataService>('BulletinsDataService', ['getById', 'acknowledge']);
-    notify = jasmine.createSpyObj<NotificationService>('NotificationService', ['apiError', 'success']);
-    confirm = jasmine.createSpyObj<ConfirmationDialog>('ConfirmationDialog', ['danger']);
-    me$ = jasmine.createSpyObj<MeService>('MeService', ['me']);
+    data = createSpyObj<BulletinsDataService>(['getById', 'acknowledge']);
+    notify = createSpyObj<NotificationService>(['apiError', 'success']);
+    confirm = createSpyObj<ConfirmationDialog>(['danger']);
+    me$ = createSpyObj<MeService>(['me']);
 
-    me$.me.and.returnValue(of(makeMe()));
-    data.getById.and.returnValue(of(makeDetail()));
-    data.acknowledge.and.returnValue(of(void 0));
+    me$.me.mockReturnValue(of(makeMe()));
+    data.getById.mockReturnValue(of(makeDetail()));
+    data.acknowledge.mockReturnValue(of(void 0));
 
     const translocoStub = {
       translate: (key: string, params?: Record<string, unknown>) =>
@@ -108,7 +109,7 @@ describe('BulletinDetailDialog', () => {
   it('setting bulletinId triggers a fetch and opens the dialog', () => {
     setBulletinId('b1');
     expect(data.getById).toHaveBeenCalledWith('b1');
-    expect(component.visible()).toBeTrue();
+    expect(component.visible()).toBe(true);
     expect(component.bulletin()?.id).toBe('b1');
   });
 
@@ -116,13 +117,13 @@ describe('BulletinDetailDialog', () => {
     setBulletinId('b1');
     setBulletinId(null);
     expect(component.bulletin()).toBeNull();
-    expect(component.visible()).toBeFalse();
+    expect(component.visible()).toBe(false);
   });
 
   it('clears the loading flag on fetch error', () => {
-    data.getById.and.returnValue(throwError(() => new Error('boom')));
+    data.getById.mockReturnValue(throwError(() => new Error('boom')));
     setBulletinId('b1');
-    expect(component.loading()).toBeFalse();
+    expect(component.loading()).toBe(false);
   });
 
   it('initials uses the first two name parts', () => {
@@ -131,13 +132,13 @@ describe('BulletinDetailDialog', () => {
   });
 
   it('initials handles single-word names', () => {
-    data.getById.and.returnValue(of(makeDetail({ createdByName: 'Cher' })));
+    data.getById.mockReturnValue(of(makeDetail({ createdByName: 'Cher' })));
     setBulletinId('b1');
     expect(component.initials()).toBe('C');
   });
 
   it('initials handles empty name', () => {
-    data.getById.and.returnValue(of(makeDetail({ createdByName: '' })));
+    data.getById.mockReturnValue(of(makeDetail({ createdByName: '' })));
     setBulletinId('b1');
     expect(component.initials()).toBe('');
   });
@@ -148,7 +149,7 @@ describe('BulletinDetailDialog', () => {
       { id: 'a2', audienceKind: BulletinAudienceKind.AllPupils, studentGroupId: null, studentGroupName: null },
       { id: 'a3', audienceKind: BulletinAudienceKind.StudentGroup, studentGroupId: 'g1', studentGroupName: 'Year 7A' },
     ];
-    data.getById.and.returnValue(of(makeDetail({ audiences })));
+    data.getById.mockReturnValue(of(makeDetail({ audiences })));
 
     setBulletinId('b1');
 
@@ -156,7 +157,7 @@ describe('BulletinDetailDialog', () => {
   });
 
   it('audienceSummary falls back to translated "group" when student-group has no name', () => {
-    data.getById.and.returnValue(of(makeDetail({
+    data.getById.mockReturnValue(of(makeDetail({
       audiences: [{ id: 'a1', audienceKind: BulletinAudienceKind.StudentGroup, studentGroupId: 'g1', studentGroupName: null }],
     })));
 
@@ -172,49 +173,49 @@ describe('BulletinDetailDialog', () => {
     (component as unknown as MePoke).me.set(
       makeMe({ userType: UserType.Student, permissions: ['School.PinSchoolBulletins'] }),
     );
-    expect(component.canEdit()).toBeFalse();
+    expect(component.canEdit()).toBe(false);
   });
 
   it('canEdit is true for staff pinners regardless of authorship', () => {
-    data.getById.and.returnValue(of(makeDetail({ createdById: 'someone-else' })));
+    data.getById.mockReturnValue(of(makeDetail({ createdById: 'someone-else' })));
     setBulletinId('b1');
     (component as unknown as MePoke).me.set(
       makeMe({ id: 'me', permissions: ['School.PinSchoolBulletins'] }),
     );
-    expect(component.canEdit()).toBeTrue();
+    expect(component.canEdit()).toBe(true);
   });
 
   it('canEdit is true for staff editors who authored the bulletin', () => {
-    data.getById.and.returnValue(of(makeDetail({ createdById: 'me' })));
+    data.getById.mockReturnValue(of(makeDetail({ createdById: 'me' })));
     setBulletinId('b1');
     (component as unknown as MePoke).me.set(
       makeMe({ id: 'me', permissions: ['School.EditSchoolBulletins'] }),
     );
-    expect(component.canEdit()).toBeTrue();
+    expect(component.canEdit()).toBe(true);
   });
 
   it('canEdit is false for staff editors viewing someone else\'s bulletin', () => {
-    data.getById.and.returnValue(of(makeDetail({ createdById: 'someone-else' })));
+    data.getById.mockReturnValue(of(makeDetail({ createdById: 'someone-else' })));
     setBulletinId('b1');
     (component as unknown as MePoke).me.set(
       makeMe({ id: 'me', permissions: ['School.EditSchoolBulletins'] }),
     );
-    expect(component.canEdit()).toBeFalse();
+    expect(component.canEdit()).toBe(false);
   });
 
   it('acknowledge() calls the API, flips local state, and emits acknowledged', () => {
-    data.getById.and.returnValue(of(makeDetail({
+    data.getById.mockReturnValue(of(makeDetail({
       requiresAcknowledgement: true, hasAcknowledged: false,
     })));
-    const emitted = jasmine.createSpy('acknowledged');
+    const emitted = vi.fn();
     component.acknowledged.subscribe(emitted);
 
     setBulletinId('b1');
     component.acknowledge();
 
     expect(data.acknowledge).toHaveBeenCalledWith('b1');
-    expect(component.bulletin()!.hasAcknowledged).toBeTrue();
-    expect(component.acknowledging()).toBeFalse();
+    expect(component.bulletin()!.hasAcknowledged).toBe(true);
+    expect(component.acknowledging()).toBe(false);
     expect(emitted).toHaveBeenCalled();
   });
 
@@ -229,18 +230,18 @@ describe('BulletinDetailDialog', () => {
 
   it('acknowledge() toasts on error and clears the in-flight flag', () => {
     setBulletinId('b1');
-    data.acknowledge.and.returnValue(throwError(() => new Error('boom')));
+    data.acknowledge.mockReturnValue(throwError(() => new Error('boom')));
 
     component.acknowledge();
 
     expect(notify.apiError).toHaveBeenCalled();
-    expect(component.acknowledging()).toBeFalse();
+    expect(component.acknowledging()).toBe(false);
   });
 
   it('requestEdit() emits the full bulletin', () => {
     const detail = makeDetail();
-    data.getById.and.returnValue(of(detail));
-    const emitted = jasmine.createSpy('editRequested');
+    data.getById.mockReturnValue(of(detail));
+    const emitted = vi.fn();
     component.editRequested.subscribe(emitted);
 
     setBulletinId('b1');
@@ -250,8 +251,8 @@ describe('BulletinDetailDialog', () => {
   });
 
   it('requestDelete() emits the id only when the confirm prompt resolves true', async () => {
-    confirm.danger.and.resolveTo(true);
-    const emitted = jasmine.createSpy('deleteRequested');
+    confirm.danger.mockResolvedValue(true);
+    const emitted = vi.fn();
     component.deleteRequested.subscribe(emitted);
     setBulletinId('b1');
 
@@ -261,8 +262,8 @@ describe('BulletinDetailDialog', () => {
   });
 
   it('requestDelete() does not emit when the user cancels the prompt', async () => {
-    confirm.danger.and.resolveTo(false);
-    const emitted = jasmine.createSpy('deleteRequested');
+    confirm.danger.mockResolvedValue(false);
+    const emitted = vi.fn();
     component.deleteRequested.subscribe(emitted);
     setBulletinId('b1');
 
@@ -278,25 +279,25 @@ describe('BulletinDetailDialog', () => {
   });
 
   it('onHide emits closed', () => {
-    const emitted = jasmine.createSpy('closed');
+    const emitted = vi.fn();
     component.closed.subscribe(emitted);
     component.onHide();
     expect(emitted).toHaveBeenCalled();
   });
 
   it('isExpired reflects the bulletin expiresAt vs. now', () => {
-    expect(component.isExpired()).toBeFalse();
+    expect(component.isExpired()).toBe(false);
 
-    data.getById.and.returnValue(of(makeDetail({
+    data.getById.mockReturnValue(of(makeDetail({
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     })));
     setBulletinId('future');
-    expect(component.isExpired()).toBeFalse();
+    expect(component.isExpired()).toBe(false);
 
-    data.getById.and.returnValue(of(makeDetail({
+    data.getById.mockReturnValue(of(makeDetail({
       expiresAt: new Date(Date.now() - 60_000).toISOString(),
     })));
     setBulletinId('past');
-    expect(component.isExpired()).toBeTrue();
+    expect(component.isExpired()).toBe(true);
   });
 });

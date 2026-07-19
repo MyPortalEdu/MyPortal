@@ -17,7 +17,7 @@
       <div class="py-12 text-center text-muted-foreground">{{ t('form.errorLoad') }}</div>
     </mp-card>
   } @else {
-    <form class="flex flex-col gap-4 max-w-5xl" #f="ngForm">
+    <form class="flex flex-col gap-4 max-w-5xl">
       @if (readOnly()) {
         <div class="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm text-muted-foreground">
           <i class="fa-solid fa-lock mt-0.5"></i>
@@ -29,49 +29,23 @@
         <div class="flex flex-col gap-4">
           <mp-section-header [title]="t('form.account')" icon="fa-solid fa-id-card"></mp-section-header>
           <div class="grid gap-4 md:grid-cols-2">
-            <mp-field
-              [label]="t('form.username')"
-              [required]="!readOnly()"
-              [error]="usernameRef.touched && usernameRef.invalid ? ('common.validation.required' | transloco) : undefined">
-              <input
-                mpInput
-                name="username"
-                [ngModel]="username()"
-                (ngModelChange)="username.set($event)"
-                [disabled]="readOnly()"
-                required
-                #usernameRef="ngModel"
-                [invalid]="usernameRef.touched && usernameRef.invalid" />
-            </mp-field>
-            <mp-field [label]="t('form.email')">
-              <input mpInput [ngModel]="email()" (ngModelChange)="email.set($event)" [disabled]="readOnly()" [ngModelOptions]="{ standalone: true }" />
-            </mp-field>
-            <mp-field [label]="t('form.userType')">
+            <mp-form-field [label]="t('form.username')">
+              <input mpInput [formField]="f.username" />
+            </mp-form-field>
+            <mp-form-field [label]="t('form.email')">
+              <input mpInput [formField]="f.email" />
+            </mp-form-field>
+            <mp-form-field [label]="t('form.userType')">
               <mp-select
-                [ngModel]="userType()"
-                (ngModelChange)="onUserTypeChange($event)"
-                [ngModelOptions]="{ standalone: true }"
+                [formField]="f.userType"
                 [options]="audienceOptions()"
                 optionLabel="label"
-                optionValue="value"
-                [disabled]="readOnly()"></mp-select>
-            </mp-field>
+                optionValue="value"></mp-select>
+            </mp-form-field>
             @if (isCreate()) {
-              <mp-field
-                [label]="t('form.password')"
-                [required]="true"
-                [error]="passwordRef.touched && passwordRef.invalid ? ('common.validation.required' | transloco) : undefined">
-                <input
-                  mpInput
-                  type="password"
-                  name="password"
-                  [ngModel]="password()"
-                  (ngModelChange)="password.set($event)"
-                  autocomplete="new-password"
-                  required
-                  #passwordRef="ngModel"
-                  [invalid]="passwordRef.touched && passwordRef.invalid" />
-              </mp-field>
+              <mp-form-field [label]="t('form.password')">
+                <input mpInput type="password" [formField]="f.password" autocomplete="new-password" />
+              </mp-form-field>
             } @else {
               <mp-field [label]="t('form.created')">
                 <span class="text-sm py-2">{{ createdAt() | date: 'dd/MM/yyyy' }}</span>
@@ -79,7 +53,7 @@
             }
           </div>
           <label class="flex items-center gap-2 cursor-pointer">
-            <mp-checkbox [ngModel]="isEnabled()" (ngModelChange)="isEnabled.set($event)" [ngModelOptions]="{ standalone: true }" [disabled]="readOnly()"></mp-checkbox>
+            <mp-checkbox [formField]="f.isEnabled"></mp-checkbox>
             <span class="text-sm">{{ t('form.enabled') }}</span>
           </label>
         </div>
@@ -154,7 +128,7 @@
     <mp-user-set-password-dialog
       [visible]="setPasswordOpen()"
       [userId]="userId"
-      [username]="username()"
+      [username]="model().username"
       (closed)="closeSetPassword()"></mp-user-set-password-dialog>
   }
 </ng-container>

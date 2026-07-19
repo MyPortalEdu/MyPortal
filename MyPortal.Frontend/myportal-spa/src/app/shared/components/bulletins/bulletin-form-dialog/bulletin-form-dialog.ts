@@ -10,8 +10,9 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MpSelect, MpDialog, MpDialogFooter, MpButton, MpInput, MpTextarea, MpCheckbox, MpDatePicker } from '@myportal/ui';
+import { FormField, form, required, submit, validate } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
+import { MpSelect, MpDialog, MpDialogFooter, MpButton, MpFormField, MpInput, MpTextarea, MpCheckbox, MpDatePicker } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
@@ -48,10 +49,20 @@ type FormSnapshot = {
   audienceKeys: string[];
 };
 
+interface BulletinFormModel {
+  title: string;
+  detail: string;
+  categoryId: string | null;
+  isPinned: boolean;
+  requiresAck: boolean;
+  expiresAt: Date | null;
+  audienceKeys: string[];
+}
+
 @Component({
   selector: 'mp-bulletin-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpDialog, MpDialogFooter, MpButton, MpInput, MpTextarea, MpSelect, MpCheckbox, MpDatePicker, TranslocoDirective, TranslocoPipe, BulletinAttachments],
+  imports: [FormField, MpDialog, MpDialogFooter, MpButton, MpFormField, MpInput, MpTextarea, MpSelect, MpCheckbox, MpDatePicker, TranslocoDirective, TranslocoPipe, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-form-dialog.html',
 })
@@ -71,29 +82,34 @@ export class BulletinFormDialog {
 
   readonly attachments = viewChild(BulletinAttachments);
 
-  readonly title = signal('');
-  readonly detail = signal('');
-  readonly categoryId = signal<string | null>(null);
-  readonly isPinned = signal(false);
-  readonly requiresAck = signal(false);
-  readonly expiresAt = signal<Date | null>(null);
-  readonly selectedAudienceKeys = signal<Set<string>>(new Set());
-  readonly submitting = signal(false);
   readonly canPin = signal(false);
   readonly minExpiryDate = signal<Date>(new Date());
   readonly categories = signal<BulletinCategoryResponse[]>([]);
   readonly allowedGroups = signal<BulletinAllowedGroupResponse[]>([]);
 
-  readonly touchedFields = signal<ReadonlySet<string>>(new Set());
-
-  markTouched(field: string): void {
-    if (this.touchedFields().has(field)) return;
-    this.touchedFields.update(s => new Set(s).add(field));
-  }
-
-  wasTouched(field: string): boolean {
-    return this.touchedFields().has(field);
-  }
+  protected readonly model = signal<BulletinFormModel>({
+    title: '',
+    detail: '',
+    categoryId: null,
+    isPinned: false,
+    requiresAck: false,
+    expiresAt: null,
+    audienceKeys: ['all-staff'],
+  });
+  protected readonly f = form(this.model, path => {
+    required(path.title);
+    validate(path.title, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+    required(path.detail);
+    validate(path.detail, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+    required(path.categoryId);
+    validate(path.audienceKeys, ({ value }) =>
+      value().length ? undefined : { kind: 'required', message: 'common.validation.required' },
+    );
+  });
 
   readonly isEdit = computed(() => this.existing() !== null);
 
@@ -134,29 +150,25 @@ export class BulletinFormDialog {
     return [...choices, ...groups.values()];
   });
 
-  readonly isValid = computed(() =>
-    this.title().trim().length > 0 &&
-    this.detail().trim().length > 0 &&
-    this.categoryId() !== null &&
-    this.selectedAudienceKeys().size > 0,
-  );
-
   private readonly snapshot = signal<FormSnapshot | null>(null);
 
-  private readonly currentForm = computed<FormSnapshot>(() => ({
-    title: this.title(),
-    detail: this.detail(),
-    categoryId: this.categoryId(),
-    isPinned: this.isPinned(),
-    requiresAck: this.requiresAck(),
-    expiresAt: this.expiresAt()?.toISOString() ?? null,
-    audienceKeys: [...this.selectedAudienceKeys()].sort(),
-  }));
+  private readonly formSnapshot = computed<FormSnapshot>(() => {
+    const m = this.model();
+    return {
+      title: m.title,
+      detail: m.detail,
+      categoryId: m.categoryId,
+      isPinned: m.isPinned,
+      requiresAck: m.requiresAck,
+      expiresAt: m.expiresAt?.toISOString() ?? null,
+      audienceKeys: [...m.audienceKeys].sort(),
+    };
+  });
 
   readonly isDirty = computed(() => {
     const s = this.snapshot();
     if (!s) return false;
-    return JSON.stringify(s) !== JSON.stringify(this.currentForm());
+    return JSON.stringify(s) !== JSON.stringify(this.formSnapshot());
   });
 
   constructor() {
@@ -171,16 +183,16 @@ export class BulletinFormDialog {
   }
 
   isSelected(key: string): boolean {
-    return this.selectedAudienceKeys().has(key);
+    return this.model().audienceKeys.includes(key);
   }
 
   toggleAudience(key: string): void {
-    this.selectedAudienceKeys.update(set => {
-      const next = new Set(set);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    this.model.update(m => ({
+      ...m,
+      audienceKeys: m.audienceKeys.includes(key)
+        ? m.audienceKeys.filter(k => k !== key)
+        : [...m.audienceKeys, key],
+    }));
   }
 
   audienceLabel(choice: AudienceChoice): string {
@@ -208,90 +220,79 @@ export class BulletinFormDialog {
     this.closed.emit();
   }
 
-  publish(): void {
-    if (!this.isValid() || this.submitting()) return;
-    this.submitting.set(true);
+  publish(): Promise<boolean> {
+    return submit(this.f, async () => {
+      const m = this.model();
+      const existing = this.existing();
+      const isEdit = existing !== null;
+      const t = (key: string) => this.transloco.translate(`bulletins.form.${key}`);
 
-    const audiences: BulletinAudienceRequest[] = this.audienceChoices()
-      .filter(c => this.selectedAudienceKeys().has(c.key))
-      .map(c => ({
-        audienceKind: c.kind,
-        studentGroupId: c.studentGroupId ?? null,
-      }));
+      const audiences: BulletinAudienceRequest[] = this.audienceChoices()
+        .filter(c => m.audienceKeys.includes(c.key))
+        .map(c => ({
+          audienceKind: c.kind,
+          studentGroupId: c.studentGroupId ?? null,
+        }));
 
-    const existing = this.existing();
-    const payload: BulletinUpsertRequest = {
-      title: this.title().trim(),
-      detail: this.detail().trim(),
-      categoryId: this.categoryId()!,
-      isPinned: this.isPinned(),
-      requiresAcknowledgement: this.requiresAck(),
-      audiences,
-      expiresAt: this.expiresAt()?.toISOString() ?? null,
-      expectedVersion: existing?.version ?? 0,
-    };
+      const payload: BulletinUpsertRequest = {
+        title: m.title.trim(),
+        detail: m.detail.trim(),
+        categoryId: m.categoryId!,
+        isPinned: m.isPinned,
+        requiresAcknowledgement: m.requiresAck,
+        audiences,
+        expiresAt: m.expiresAt?.toISOString() ?? null,
+        expectedVersion: existing?.version ?? 0,
+      };
 
-    const isEdit = existing !== null;
-    const t = (key: string) => this.transloco.translate(`bulletins.form.${key}`);
-    const finishOk = () => {
-      this.submitting.set(false);
-      this.snapshot.set(this.currentForm());
+      try {
+        if (existing) {
+          await firstValueFrom(this.data.update(existing.id, payload));
+        } else {
+          const { id } = await firstValueFrom(this.data.create(payload));
+          const attachments = this.attachments();
+          if (attachments?.hasStaged()) {
+            const details = await firstValueFrom(this.data.getById(id)).catch(() => null);
+            if (details) await attachments.uploadStaged(id, details.directoryId);
+          }
+        }
+      } catch {
+        this.notify.error(t(isEdit ? 'errorUpdate' : 'errorPublish'), t('errorBody'));
+        return;
+      }
+
+      this.snapshot.set(this.formSnapshot());
       this.notify.success(t(isEdit ? 'updatedToast' : 'publishedToast'));
       this.saved.emit();
-    };
-    const onError = () => {
-      this.submitting.set(false);
-      this.notify.error(
-        t(isEdit ? 'errorUpdate' : 'errorPublish'),
-        t('errorBody'),
-      );
-    };
-
-    if (existing) {
-      this.data.update(existing.id, payload).subscribe({ next: finishOk, error: onError });
-      return;
-    }
-
-    this.data.create(payload).subscribe({
-      next: ({ id }) => {
-        const attachments = this.attachments();
-        if (attachments?.hasStaged()) {
-          this.data.getById(id).subscribe({
-            next: details => {
-              attachments.uploadStaged(id, details.directoryId).finally(() => finishOk());
-            },
-            error: () => finishOk(),
-          });
-        } else {
-          finishOk();
-        }
-      },
-      error: onError,
     });
   }
 
   private reset(): void {
     this.minExpiryDate.set(new Date());
     const existing = this.existing();
-    if (existing) {
-      this.title.set(existing.title);
-      this.detail.set(existing.detail);
-      this.categoryId.set(existing.categoryId);
-      this.isPinned.set(existing.pinnedAt !== null);
-      this.requiresAck.set(existing.requiresAcknowledgement);
-      this.expiresAt.set(existing.expiresAt ? new Date(existing.expiresAt) : null);
-      this.selectedAudienceKeys.set(audienceKeysFor(existing.audiences));
-    } else {
-      this.title.set('');
-      this.detail.set('');
-      this.isPinned.set(false);
-      this.requiresAck.set(false);
-      this.expiresAt.set(null);
-      this.selectedAudienceKeys.set(new Set(['all-staff']));
-      this.categoryId.set(null);
-    }
-    this.touchedFields.set(new Set());
-    this.snapshot.set(this.currentForm());
+    this.model.set(
+      existing
+        ? {
+            title: existing.title,
+            detail: existing.detail,
+            categoryId: existing.categoryId,
+            isPinned: existing.pinnedAt !== null,
+            requiresAck: existing.requiresAcknowledgement,
+            expiresAt: existing.expiresAt ? new Date(existing.expiresAt) : null,
+            audienceKeys: [...audienceKeysFor(existing.audiences)],
+          }
+        : {
+            title: '',
+            detail: '',
+            categoryId: null,
+            isPinned: false,
+            requiresAck: false,
+            expiresAt: null,
+            audienceKeys: ['all-staff'],
+          },
+    );
+    this.f().reset();
+    this.snapshot.set(this.formSnapshot());
   }
 
   private loadDependencies(): void {
@@ -302,9 +303,9 @@ export class BulletinFormDialog {
     this.data.listCategories(false).subscribe({
       next: cats => {
         this.categories.set(cats ?? []);
-        if (cats?.length && this.categoryId() === null) {
-          this.categoryId.set(cats[0].id);
-          this.snapshot.set(this.currentForm());
+        if (cats?.length && this.model().categoryId === null) {
+          this.model.update(m => ({ ...m, categoryId: cats[0].id }));
+          this.snapshot.set(this.formSnapshot());
         }
       },
       error: () => this.categories.set([]),

@@ -1,7 +1,9 @@
 const CONTROL_SELECTOR = 'input, textarea, select';
 
 export function focusFirstInvalid(root: HTMLElement): void {
-  const flagged = root.querySelector<HTMLElement>('.ng-invalid:not(form)');
+  const flagged =
+    root.querySelector<HTMLElement>('[aria-invalid="true"]') ??
+    root.querySelector<HTMLElement>('.ng-invalid:not(form)');
   if (!flagged) return;
 
   const control = flagged.matches(CONTROL_SELECTOR)

@@ -23,6 +23,15 @@
     "discardConfirm": "You have unsaved changes. Discard them?",
     "validation": {
       "required": "This field is required.",
+      "invalid": "This value is not valid.",
+      "minLength": "Must be at least {{ minLength }} characters.",
+      "maxLength": "Must be no more than {{ maxLength }} characters.",
+      "min": "Must be at least {{ min }}.",
+      "max": "Must be no more than {{ max }}.",
+      "email": "Enter a valid email address.",
+      "pattern": "This value is not in the expected format.",
+      "minDate": "Choose a later date.",
+      "maxDate": "Choose an earlier date.",
       "missingTitle": "Some required details are missing",
       "missingBody": "Check the highlighted fields, then try saving again.",
       "missingBlocked": "Save stays unavailable until the highlighted fields are filled in."

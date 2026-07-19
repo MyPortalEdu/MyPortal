@@ -3,7 +3,7 @@
     type="text"
     inputmode="decimal"
     [attr.id]="inputId() ?? null"
-    [attr.aria-invalid]="invalid() || null"
+    [attr.aria-invalid]="showInvalid() || null"
     [value]="text()"
     [placeholder]="placeholder() ?? ''"
     [disabled]="disabled()"

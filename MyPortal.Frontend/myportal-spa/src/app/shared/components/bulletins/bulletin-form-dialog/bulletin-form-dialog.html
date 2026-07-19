@@ -11,46 +11,27 @@
   [closeAriaLabel]="t('detail.close')">
 
   <div class="flex flex-col gap-3">
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">{{ t('form.titleLabel') }}</label>
-      <input
-        mpInput
-        [placeholder]="t('form.titlePlaceholder')"
-        [ngModel]="title()"
-        (ngModelChange)="title.set($event)"
-        (blur)="markTouched('title')"
-        required
-        name="title"
-        #titleRef="ngModel"
-        [invalid]="wasTouched('title') && titleRef.invalid" />
-    </div>
+    <mp-form-field [label]="t('form.titleLabel')">
+      <input mpInput [placeholder]="t('form.titlePlaceholder')" [formField]="f.title" />
+    </mp-form-field>
 
     <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-foreground">{{ t('form.category') }}</label>
+      <mp-form-field [label]="t('form.category')">
         <mp-select
           [options]="categories()"
           optionLabel="name"
           optionValue="id"
           [placeholder]="t('form.categoryPlaceholder')"
-          [ngModel]="categoryId()"
-          (ngModelChange)="categoryId.set($event)"
-          (onBlur)="markTouched('categoryId')"
-          [style]="{ width: '100%' }"
-          required
-          name="categoryId"
-          #categoryRef="ngModel"
-          [invalid]="wasTouched('categoryId') && categoryRef.invalid">
+          [formField]="f.categoryId"
+          class="w-full">
         </mp-select>
-      </div>
+      </mp-form-field>
 
       @if (canPin()) {
         <div class="flex flex-col gap-1">
           <label class="text-xs font-medium text-muted-foreground">{{ t('form.pinLabel') }}</label>
           <label class="flex items-start gap-2 text-sm">
-            <mp-checkbox
-              [ngModel]="isPinned()"
-              (ngModelChange)="isPinned.set($event)">
+            <mp-checkbox [formField]="f.isPinned">
             </mp-checkbox>
             <span class="text-muted-foreground text-xs leading-snug">{{ t('form.pinHint') }}</span>
           </label>
@@ -80,8 +61,7 @@
     <div class="flex flex-col gap-1 max-w-[18rem]">
       <label class="text-xs font-medium text-muted-foreground">{{ t('form.expiresLabel') }}</label>
       <mp-date-picker
-        [ngModel]="expiresAt()"
-        (ngModelChange)="expiresAt.set($event)"
+        [formField]="f.expiresAt"
         [showTime]="true"
         [minDate]="minExpiryDate()"
         [placeholder]="t('form.expiresPlaceholder')"
@@ -90,21 +70,10 @@
       <span class="text-xs text-muted-foreground leading-snug">{{ t('form.expiresHint') }}</span>
     </div>
 
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">{{ t('form.bodyLabel') }}</label>
-      <textarea
-        mpTextarea
-        rows="5"
-        [placeholder]="t('form.bodyPlaceholder')"
-        [ngModel]="detail()"
-        (ngModelChange)="detail.set($event)"
-        (blur)="markTouched('detail')"
-        required
-        name="detail"
-        #detailRef="ngModel"
-        [invalid]="wasTouched('detail') && detailRef.invalid">
+    <mp-form-field [label]="t('form.bodyLabel')">
+      <textarea mpTextarea rows="5" [placeholder]="t('form.bodyPlaceholder')" [formField]="f.detail">
       </textarea>
-    </div>
+    </mp-form-field>
 
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-foreground">{{ t('form.attachmentsLabel') }}</label>
@@ -118,9 +87,7 @@
 
   <div mpDialogFooter class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <label class="flex items-center gap-2 text-sm">
-      <mp-checkbox
-        [ngModel]="requiresAck()"
-        (ngModelChange)="requiresAck.set($event)">
+      <mp-checkbox [formField]="f.requiresAck">
       </mp-checkbox>
       <span>{{ t('form.requireAck') }}</span>
     </label>
@@ -132,8 +99,8 @@
         (click)="onCancel()">{{ 'common.cancel' | transloco }}</button>
       <button mpButton
         class="flex-1 sm:flex-initial w-full sm:w-auto"
-        [disabled]="(!isValid() || !isDirty()) || submitting()"
-        (click)="publish()"><i class="fa-solid" [class.fa-check]="!submitting() && isEdit()" [class.fa-paper-plane]="!submitting() && !isEdit()" [class.fa-spinner]="submitting()" [class.fa-spin]="submitting()"></i> {{ isEdit() ? t('form.saveChanges') : t('form.publish') }}</button>
+        [disabled]="!isDirty() || f().submitting()"
+        (click)="publish()"><i class="fa-solid" [class.fa-check]="!f().submitting() && isEdit()" [class.fa-paper-plane]="!f().submitting() && !isEdit()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ isEdit() ? t('form.saveChanges') : t('form.publish') }}</button>
     </div>
   </div>
 </mp-dialog>

@@ -1,6 +1,6 @@
 <ng-container *transloco="let t; prefix: 'roles'">
   <mp-page-header
-    [title]="loading() ? t('form.loading') : (name() || t('form.titleView'))"
+    [title]="loading() ? t('form.loading') : (model().name || t('form.titleView'))"
     icon="fa-solid fa-user-shield"
     [actions]="headerActions()"></mp-page-header>
 
@@ -17,7 +17,7 @@
       <div class="py-12 text-center text-muted-foreground">{{ t('form.errorLoad') }}</div>
     </mp-card>
   } @else {
-    <form class="flex flex-col gap-4 max-w-5xl" #f="ngForm">
+    <form class="flex flex-col gap-4 max-w-5xl">
       @if (readOnly()) {
         <div class="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm text-muted-foreground">
           <i class="fa-solid fa-lock mt-0.5"></i>
@@ -28,33 +28,15 @@
       <mp-card>
         <div class="flex flex-col gap-4">
           <mp-section-header [title]="t('form.details')" icon="fa-solid fa-circle-info"></mp-section-header>
-          <mp-field
+          <mp-form-field
             [label]="t('form.name')"
-            [required]="!readOnly()"
-            [error]="nameRef.touched && nameRef.invalid ? ('common.validation.required' | transloco) : undefined">
-            <input
-              mpInput
-              name="name"
-              [ngModel]="name()"
-              (ngModelChange)="name.set($event)"
-              [disabled]="nameLocked()"
-              required
-              #nameRef="ngModel"
-              [invalid]="nameRef.touched && nameRef.invalid" />
-            @if (nameLocked() && !readOnly()) {
-              <small class="text-muted-foreground">{{ t('form.defaultNameLocked') }}</small>
-            }
-          </mp-field>
+            [hint]="nameLocked() && !readOnly() ? t('form.defaultNameLocked') : undefined">
+            <input mpInput [formField]="f.name" />
+          </mp-form-field>
 
-          <mp-field [label]="t('form.description')">
-            <textarea
-              mpTextarea
-              name="description"
-              [ngModel]="description()"
-              (ngModelChange)="description.set($event)"
-              rows="2"
-              [disabled]="readOnly()"></textarea>
-          </mp-field>
+          <mp-form-field [label]="t('form.description')">
+            <textarea mpTextarea [formField]="f.description" rows="2"></textarea>
+          </mp-form-field>
 
           <mp-field [label]="t('form.audience')">
             <div><mp-badge [value]="audienceLabel()"></mp-badge></div>

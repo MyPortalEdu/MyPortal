@@ -13,7 +13,8 @@
     "target": "ES2022",
     "module": "preserve",
     "paths": {
-      "@myportal/ui": ["./libs/ui/src/index.ts"]
+      "@myportal/ui": ["./libs/ui/src/index.ts"],
+      "@testing/*": ["./src/testing/*"]
     }
   },
   "angularCompilerOptions": {

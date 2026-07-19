@@ -19,6 +19,7 @@ export class MpMultiSelect implements ControlValueAccessor {
   readonly optionValue = input<string | undefined>(undefined);
   readonly placeholder = input<string | undefined>(undefined);
   readonly invalid = input<boolean | null | undefined>(false);
+  readonly touched = input<boolean>(true);
   readonly inputId = input<string | undefined>(undefined);
   readonly disabledInput = input(false, { alias: 'disabled' });
 
@@ -66,12 +67,14 @@ export class MpMultiSelect implements ControlValueAccessor {
     this.onTouched();
   }
 
+  protected readonly showInvalid = computed(() => !!this.invalid() && this.touched());
+
   protected readonly triggerClass = computed(() =>
     cn(
       'flex min-h-8 w-full flex-wrap items-center gap-1 rounded-control border border-input bg-background ' +
         'px-2 py-1 text-sm outline-none transition-colors hover:border-input-hover ' +
         'focus:border-ring focus:ring-2 focus:ring-ring/40 aria-expanded:border-ring aria-expanded:ring-2 aria-expanded:ring-ring/40',
-      this.invalid() ? 'border-destructive' : '',
+      this.showInvalid() ? 'border-destructive' : '',
       this.disabled() ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
     ),
   );

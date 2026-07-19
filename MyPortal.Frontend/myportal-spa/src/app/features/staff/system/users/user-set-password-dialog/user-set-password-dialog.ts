@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   effect,
   inject,
   input,
@@ -9,8 +8,9 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MpButton, MpDialog, MpDialogFooter, MpInput } from '@myportal/ui';
+import { FormField, form, required, submit, validate } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
+import { MpButton, MpDialog, MpDialogFooter, MpFormField, MpInput } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { UsersDataService } from '../../../../../shared/services/users-data.service';
@@ -20,7 +20,7 @@ import { ConfirmationDialog } from '../../../../../core/services/confirmation.se
 @Component({
   selector: 'mp-user-set-password-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpButton, MpDialog, MpDialogFooter, MpInput, TranslocoDirective, TranslocoPipe],
+  imports: [FormField, MpButton, MpDialog, MpDialogFooter, MpFormField, MpInput, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('users')],
   templateUrl: './user-set-password-dialog.html',
 })
@@ -36,13 +36,16 @@ export class UserSetPasswordDialog {
 
   readonly closed = output<void>();
 
-  readonly password = signal('');
-  readonly confirm = signal('');
-  readonly submitting = signal(false);
-
-  readonly isValid = computed(() => this.password().length > 0 && this.password() === this.confirm());
-  readonly mismatch = computed(() => this.confirm().length > 0 && this.password() !== this.confirm());
-  readonly isDirty = computed(() => this.password().length > 0 || this.confirm().length > 0);
+  protected readonly model = signal({ password: '', confirm: '' });
+  protected readonly f = form(this.model, path => {
+    required(path.password);
+    required(path.confirm);
+    validate(path.confirm, ({ value, valueOf }) =>
+      !value() || value() === valueOf(path.password)
+        ? undefined
+        : { kind: 'mismatch', message: 'users.password.mismatch' },
+    );
+  });
 
   constructor() {
     effect(() => {
@@ -53,7 +56,7 @@ export class UserSetPasswordDialog {
   }
 
   async onCancel(): Promise<void> {
-    if (this.isDirty()) {
+    if (this.f().dirty()) {
       const ok = await this.confirmDialog.confirm({
         header: this.transloco.translate('common.discardChanges'),
         message: this.transloco.translate('common.discardConfirm'),
@@ -69,27 +72,21 @@ export class UserSetPasswordDialog {
     this.closed.emit();
   }
 
-  save(): void {
-    if (!this.isValid() || this.submitting()) return;
-    this.submitting.set(true);
-    this.data.setPassword(this.userId(), { password: this.password() }).subscribe({
-      next: () => {
-        this.submitting.set(false);
-        this.password.set('');
-        this.confirm.set('');
-        this.notify.success(this.transloco.translate('users.password.savedToast'));
-        this.closed.emit();
-      },
-      error: err => {
-        this.submitting.set(false);
+  save(): Promise<boolean> {
+    return submit(this.f, async () => {
+      try {
+        await firstValueFrom(this.data.setPassword(this.userId(), { password: this.model().password }));
+      } catch (err) {
         this.notify.apiError(err, this.transloco.translate('users.password.error'));
-      },
+        return;
+      }
+      this.notify.success(this.transloco.translate('users.password.savedToast'));
+      this.closed.emit();
     });
   }
 
   private reset(): void {
-    this.password.set('');
-    this.confirm.set('');
-    this.submitting.set(false);
+    this.model.set({ password: '', confirm: '' });
+    this.f().reset();
   }
 }

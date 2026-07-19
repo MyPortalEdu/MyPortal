@@ -3,7 +3,7 @@
     brnPopoverTrigger
     type="button"
     [attr.id]="inputId() ?? null"
-    [attr.aria-invalid]="invalid() || null"
+    [attr.aria-invalid]="showInvalid() || null"
     [disabled]="disabled()"
     [class]="triggerClass()">
     @if (selectedOptions().length) {

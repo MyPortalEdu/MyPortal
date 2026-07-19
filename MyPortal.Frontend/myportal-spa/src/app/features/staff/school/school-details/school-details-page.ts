@@ -7,8 +7,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MpButton, MpSelect, MpDatePicker, MpInput, MpInputNumber, MpCheckbox } from '@myportal/ui';
+import { FormField, disabled, form, maxLength, required, submit, validate } from '@angular/forms/signals';
+import { MpButton, MpSelect, MpDatePicker, MpFormField, MpInput, MpInputNumber, MpCheckbox } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
@@ -61,18 +61,43 @@ type FormSnapshot = {
   email: string | null;
 };
 
+interface SchoolFormModel {
+  name: string;
+  website: string;
+  urn: string;
+  uprn: string;
+  establishmentNumber: number | null;
+  schoolPhaseId: string | null;
+  schoolTypeId: string | null;
+  governanceTypeId: string | null;
+  intakeTypeId: string | null;
+  ukprn: string;
+  payZoneId: string | null;
+  lowestAge: number | null;
+  highestAge: number | null;
+  netCapacity: number | null;
+  netCapacityAssessmentDate: Date | null;
+  isSpecialSchool: boolean;
+  specialSchoolOrganisationId: string | null;
+  specialSchoolTypeId: string | null;
+  maxBoarders: number | null;
+  telephone: string;
+  email: string;
+}
+
 @Component({
   selector: 'mp-school-details-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
+    FormField,
     MpButton,
     MpInput,
     MpInputNumber,
     MpSelect,
     MpCheckbox,
     MpDatePicker,
+    MpFormField,
     PageHeader,
     Loading,
     SectionHeader,
@@ -95,7 +120,6 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
 
   readonly canEdit = signal(false);
   readonly loading = signal(false);
-  readonly saving = signal(false);
 
   readonly current = signal<SchoolDetailsResponse | null>(null);
 
@@ -107,70 +131,88 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
   readonly specialSchoolOrganisations = signal<LookupResponse[]>([]);
   readonly specialSchoolTypes = signal<LookupResponse[]>([]);
 
-  readonly name = signal('');
-  readonly website = signal<string | null>(null);
-  readonly urn = signal('');
-  readonly uprn = signal('');
-  readonly establishmentNumber = signal<number | null>(null);
+  protected readonly model = signal<SchoolFormModel>({
+    name: '',
+    website: '',
+    urn: '',
+    uprn: '',
+    establishmentNumber: null,
+    schoolPhaseId: null,
+    schoolTypeId: null,
+    governanceTypeId: null,
+    intakeTypeId: null,
+    ukprn: '',
+    payZoneId: null,
+    lowestAge: null,
+    highestAge: null,
+    netCapacity: null,
+    netCapacityAssessmentDate: null,
+    isSpecialSchool: false,
+    specialSchoolOrganisationId: null,
+    specialSchoolTypeId: null,
+    maxBoarders: null,
+    telephone: '',
+    email: '',
+  });
+  protected readonly f = form(this.model, path => {
+    disabled(path, () => !this.canEdit());
+    required(path.name);
+    validate(path.name, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+    required(path.urn);
+    validate(path.urn, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+    required(path.uprn);
+    validate(path.uprn, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+    required(path.establishmentNumber);
+    required(path.schoolPhaseId);
+    required(path.schoolTypeId);
+    required(path.governanceTypeId);
+    required(path.intakeTypeId);
+    maxLength(path.ukprn, 8);
+    maxLength(path.telephone, 30);
+    maxLength(path.email, 256);
+  });
+
   readonly localAuthorityId = signal<string | null>(null);
   readonly localAuthorityName = signal<string | null>(null);
-  readonly schoolPhaseId = signal<string | null>(null);
-  readonly schoolTypeId = signal<string | null>(null);
-  readonly governanceTypeId = signal<string | null>(null);
-  readonly intakeTypeId = signal<string | null>(null);
   readonly headTeacherId = signal<string | null>(null);
   readonly headTeacherFullName = signal<string | null>(null);
-  readonly ukprn = signal<string | null>(null);
-  readonly payZoneId = signal<string | null>(null);
-  readonly lowestAge = signal<number | null>(null);
-  readonly highestAge = signal<number | null>(null);
-  readonly netCapacity = signal<number | null>(null);
-  readonly netCapacityAssessmentDate = signal<Date | null>(null);
-  readonly isSpecialSchool = signal<boolean>(false);
-  readonly specialSchoolOrganisationId = signal<string | null>(null);
-  readonly specialSchoolTypeId = signal<string | null>(null);
-  readonly maxBoarders = signal<number | null>(null);
-  readonly telephone = signal<string | null>(null);
-  readonly email = signal<string | null>(null);
-
-  readonly isValid = computed(() =>
-    this.name().trim().length > 0 &&
-    this.urn().trim().length > 0 &&
-    this.uprn().trim().length > 0 &&
-    this.establishmentNumber() != null &&
-    !!this.schoolPhaseId() &&
-    !!this.schoolTypeId() &&
-    !!this.governanceTypeId() &&
-    !!this.intakeTypeId(),
-  );
 
   private readonly snapshot = signal<FormSnapshot | null>(null);
 
-  private readonly currentForm = computed<FormSnapshot>(() => ({
-    name: this.name(),
-    website: this.website(),
-    urn: this.urn(),
-    uprn: this.uprn(),
-    establishmentNumber: this.establishmentNumber(),
-    localAuthorityId: this.localAuthorityId(),
-    schoolPhaseId: this.schoolPhaseId(),
-    schoolTypeId: this.schoolTypeId(),
-    governanceTypeId: this.governanceTypeId(),
-    intakeTypeId: this.intakeTypeId(),
-    headTeacherId: this.headTeacherId(),
-    ukprn: this.ukprn(),
-    payZoneId: this.payZoneId(),
-    lowestAge: this.lowestAge(),
-    highestAge: this.highestAge(),
-    netCapacity: this.netCapacity(),
-    netCapacityAssessmentDate: this.netCapacityAssessmentDate()?.toISOString() ?? null,
-    isSpecialSchool: this.isSpecialSchool(),
-    specialSchoolOrganisationId: this.specialSchoolOrganisationId(),
-    specialSchoolTypeId: this.specialSchoolTypeId(),
-    maxBoarders: this.maxBoarders(),
-    telephone: this.telephone(),
-    email: this.email(),
-  }));
+  private readonly currentForm = computed<FormSnapshot>(() => {
+    const m = this.model();
+    return {
+      name: m.name,
+      website: m.website,
+      urn: m.urn,
+      uprn: m.uprn,
+      establishmentNumber: m.establishmentNumber,
+      localAuthorityId: this.localAuthorityId(),
+      schoolPhaseId: m.schoolPhaseId,
+      schoolTypeId: m.schoolTypeId,
+      governanceTypeId: m.governanceTypeId,
+      intakeTypeId: m.intakeTypeId,
+      headTeacherId: this.headTeacherId(),
+      ukprn: m.ukprn,
+      payZoneId: m.payZoneId,
+      lowestAge: m.lowestAge,
+      highestAge: m.highestAge,
+      netCapacity: m.netCapacity,
+      netCapacityAssessmentDate: m.netCapacityAssessmentDate?.toISOString() ?? null,
+      isSpecialSchool: m.isSpecialSchool,
+      specialSchoolOrganisationId: m.specialSchoolOrganisationId,
+      specialSchoolTypeId: m.specialSchoolTypeId,
+      maxBoarders: m.maxBoarders,
+      telephone: m.telephone,
+      email: m.email,
+    };
+  });
 
   readonly isDirty = computed(() => {
     const s = this.snapshot();
@@ -183,8 +225,8 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
       ? [{
           label: this.transloco.translate('school-details.save'),
           icon: 'fa-solid fa-check',
-          disabled: !this.isValid() || !this.isDirty(),
-          loading: this.saving(),
+          disabled: !this.isDirty(),
+          loading: this.f().submitting(),
           command: () => this.save(),
         }]
       : []
@@ -241,105 +283,80 @@ export class SchoolDetailsPage implements OnInit, CanComponentDeactivate {
     this.headTeacherFullName.set(null);
   }
 
-  async save(): Promise<void> {
-    if (!this.canEdit() || !this.isValid() || this.saving()) return;
-    this.saving.set(true);
+  save(): Promise<boolean> | void {
+    if (!this.canEdit() || !this.isDirty()) return;
+    return submit(this.f, async () => {
+      const m = this.model();
+      const payload: SchoolUpsertRequest = {
+        name: m.name.trim(),
+        website: this.normalise(m.website),
+        expectedVersion: 0,
+        urn: m.urn.trim(),
+        uprn: m.uprn.trim(),
+        establishmentNumber: m.establishmentNumber ?? 0,
+        localAuthorityId: this.localAuthorityId(),
+        schoolPhaseId: m.schoolPhaseId!,
+        schoolTypeId: m.schoolTypeId!,
+        governanceTypeId: m.governanceTypeId!,
+        intakeTypeId: m.intakeTypeId!,
+        headTeacherId: this.headTeacherId(),
+        ukprn: this.normalise(m.ukprn),
+        payZoneId: m.payZoneId,
+        lowestAge: m.lowestAge,
+        highestAge: m.highestAge,
+        netCapacity: m.netCapacity,
+        netCapacityAssessmentDate: m.netCapacityAssessmentDate?.toISOString() ?? null,
+        isSpecialSchool: m.isSpecialSchool,
+        specialSchoolOrganisationId: m.isSpecialSchool ? m.specialSchoolOrganisationId : null,
+        specialSchoolTypeId: m.isSpecialSchool ? m.specialSchoolTypeId : null,
+        maxBoarders: m.isSpecialSchool ? m.maxBoarders : null,
+        telephone: this.normalise(m.telephone),
+        email: this.normalise(m.email),
+      };
 
-    const payload: SchoolUpsertRequest = {
-      name: this.name().trim(),
-      website: this.normalise(this.website()),
-      expectedVersion: 0,
-      urn: this.urn().trim(),
-      uprn: this.uprn().trim(),
-      establishmentNumber: this.establishmentNumber() ?? 0,
-      localAuthorityId: this.localAuthorityId(),
-      schoolPhaseId: this.schoolPhaseId()!,
-      schoolTypeId: this.schoolTypeId()!,
-      governanceTypeId: this.governanceTypeId()!,
-      intakeTypeId: this.intakeTypeId()!,
-      headTeacherId: this.headTeacherId(),
-      ukprn: this.normalise(this.ukprn()),
-      payZoneId: this.payZoneId(),
-      lowestAge: this.lowestAge(),
-      highestAge: this.highestAge(),
-      netCapacity: this.netCapacity(),
-      netCapacityAssessmentDate: this.netCapacityAssessmentDate()?.toISOString() ?? null,
-      isSpecialSchool: this.isSpecialSchool(),
-      specialSchoolOrganisationId: this.isSpecialSchool() ? this.specialSchoolOrganisationId() : null,
-      specialSchoolTypeId: this.isSpecialSchool() ? this.specialSchoolTypeId() : null,
-      maxBoarders: this.isSpecialSchool() ? this.maxBoarders() : null,
-      telephone: this.normalise(this.telephone()),
-      email: this.normalise(this.email()),
-    };
-
-    try {
-      await firstValueFrom(this.schools.saveLocalDetails(payload));
+      try {
+        await firstValueFrom(this.schools.saveLocalDetails(payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('school-details.saveError'));
+        return;
+      }
       this.schoolNameCache.clearCache();
       this.notify.success(this.transloco.translate('school-details.savedToast'));
       this.refresh();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('school-details.saveError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   private applyToForm(school: SchoolDetailsResponse | null): void {
-    if (!school) {
-      this.name.set('');
-      this.website.set(null);
-      this.urn.set('');
-      this.uprn.set('');
-      this.establishmentNumber.set(null);
-      this.localAuthorityId.set(null);
-      this.localAuthorityName.set(null);
-      this.schoolPhaseId.set(null);
-      this.schoolTypeId.set(null);
-      this.governanceTypeId.set(null);
-      this.intakeTypeId.set(null);
-      this.headTeacherId.set(null);
-      this.headTeacherFullName.set(null);
-      this.ukprn.set(null);
-      this.payZoneId.set(null);
-      this.lowestAge.set(null);
-      this.highestAge.set(null);
-      this.netCapacity.set(null);
-      this.netCapacityAssessmentDate.set(null);
-      this.isSpecialSchool.set(false);
-      this.specialSchoolOrganisationId.set(null);
-      this.specialSchoolTypeId.set(null);
-      this.maxBoarders.set(null);
-      this.telephone.set(null);
-      this.email.set(null);
-    } else {
-      this.name.set(school.name ?? '');
-      this.website.set(school.website ?? null);
-      this.urn.set(school.urn ?? '');
-      this.uprn.set(school.uprn ?? '');
-      this.establishmentNumber.set(school.establishmentNumber ?? null);
-      this.localAuthorityId.set(school.localAuthorityId ?? null);
-      this.localAuthorityName.set(school.localAuthorityName ?? null);
-      this.schoolPhaseId.set(school.schoolPhaseId ?? null);
-      this.schoolTypeId.set(school.schoolTypeId ?? null);
-      this.governanceTypeId.set(school.governanceTypeId ?? null);
-      this.intakeTypeId.set(school.intakeTypeId ?? null);
-      this.headTeacherId.set(school.headTeacherId ?? null);
-      this.headTeacherFullName.set(school.headTeacherFullName ?? null);
-      this.ukprn.set(school.ukprn ?? null);
-      this.payZoneId.set(school.payZoneId ?? null);
-      this.lowestAge.set(school.lowestAge ?? null);
-      this.highestAge.set(school.highestAge ?? null);
-      this.netCapacity.set(school.netCapacity ?? null);
-      this.netCapacityAssessmentDate.set(
-        school.netCapacityAssessmentDate ? new Date(school.netCapacityAssessmentDate) : null,
-      );
-      this.isSpecialSchool.set(school.isSpecialSchool ?? false);
-      this.specialSchoolOrganisationId.set(school.specialSchoolOrganisationId ?? null);
-      this.specialSchoolTypeId.set(school.specialSchoolTypeId ?? null);
-      this.maxBoarders.set(school.maxBoarders ?? null);
-      this.telephone.set(school.telephone ?? null);
-      this.email.set(school.email ?? null);
-    }
+    this.model.set({
+      name: school?.name ?? '',
+      website: school?.website ?? '',
+      urn: school?.urn ?? '',
+      uprn: school?.uprn ?? '',
+      establishmentNumber: school?.establishmentNumber ?? null,
+      schoolPhaseId: school?.schoolPhaseId ?? null,
+      schoolTypeId: school?.schoolTypeId ?? null,
+      governanceTypeId: school?.governanceTypeId ?? null,
+      intakeTypeId: school?.intakeTypeId ?? null,
+      ukprn: school?.ukprn ?? '',
+      payZoneId: school?.payZoneId ?? null,
+      lowestAge: school?.lowestAge ?? null,
+      highestAge: school?.highestAge ?? null,
+      netCapacity: school?.netCapacity ?? null,
+      netCapacityAssessmentDate: school?.netCapacityAssessmentDate
+        ? new Date(school.netCapacityAssessmentDate)
+        : null,
+      isSpecialSchool: school?.isSpecialSchool ?? false,
+      specialSchoolOrganisationId: school?.specialSchoolOrganisationId ?? null,
+      specialSchoolTypeId: school?.specialSchoolTypeId ?? null,
+      maxBoarders: school?.maxBoarders ?? null,
+      telephone: school?.telephone ?? '',
+      email: school?.email ?? '',
+    });
+    this.localAuthorityId.set(school?.localAuthorityId ?? null);
+    this.localAuthorityName.set(school?.localAuthorityName ?? null);
+    this.headTeacherId.set(school?.headTeacherId ?? null);
+    this.headTeacherFullName.set(school?.headTeacherFullName ?? null);
+    this.f().reset();
     this.snapshot.set(this.currentForm());
   }
 

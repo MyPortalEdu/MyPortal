@@ -1,3 +1,4 @@
+import { createSpyObj, type SpyObj } from '@testing/spy';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
@@ -49,27 +50,25 @@ function fileInputEvent(files: File[]): Event {
 describe('BulletinAttachments', () => {
   let fixture: ComponentFixture<BulletinAttachments>;
   let component: BulletinAttachments;
-  let data: jasmine.SpyObj<BulletinAttachmentsDataService>;
-  let notify: jasmine.SpyObj<NotificationService>;
-  let confirm: jasmine.SpyObj<ConfirmationDialog>;
+  let data: SpyObj<BulletinAttachmentsDataService>;
+  let notify: SpyObj<NotificationService>;
+  let confirm: SpyObj<ConfirmationDialog>;
 
   beforeEach(async () => {
-    data = jasmine.createSpyObj<BulletinAttachmentsDataService>('BulletinAttachmentsDataService',
-      ['listContents', 'upload', 'delete', 'downloadUrl']);
-    notify = jasmine.createSpyObj<NotificationService>('NotificationService',
-      ['success', 'error', 'warn', 'apiError']);
-    confirm = jasmine.createSpyObj<ConfirmationDialog>('ConfirmationDialog', ['danger']);
+    data = createSpyObj<BulletinAttachmentsDataService>(['listContents', 'upload', 'delete', 'downloadUrl']);
+    notify = createSpyObj<NotificationService>(['success', 'error', 'warn', 'apiError']);
+    confirm = createSpyObj<ConfirmationDialog>(['danger']);
 
-    data.listContents.and.returnValue(of({
+    data.listContents.mockReturnValue(of({
       directory: { id: 'd1', name: 'root', parentId: null },
       directories: [],
       documents: [],
     }));
-    data.upload.and.callFake((_b, _d, f) =>
+    data.upload.mockImplementation((_b, _d, f) =>
       of(makeDoc({ id: `doc-${f.name}`, fileName: f.name })),
     );
-    data.delete.and.returnValue(of(void 0));
-    data.downloadUrl.and.callFake((b, d) => `/api/v1/bulletins/${b}/attachments/documents/${d}/download`);
+    data.delete.mockReturnValue(of(void 0));
+    data.downloadUrl.mockImplementation((b, d) => `/api/v1/bulletins/${b}/attachments/documents/${d}/download`);
 
     const translocoStub = {
       translate: (key: string) => key,
@@ -109,7 +108,7 @@ describe('BulletinAttachments', () => {
     component.onFileInputChange(fileInputEvent([makeFile('a.pdf', 10), makeFile('b.png', 20, 'image/png')]));
 
     expect(component.staged().map(f => f.name)).toEqual(['a.pdf', 'b.png']);
-    expect(component.hasStaged()).toBeTrue();
+    expect(component.hasStaged()).toBe(true);
     expect(data.upload).not.toHaveBeenCalled();
   });
 
@@ -126,27 +125,27 @@ describe('BulletinAttachments', () => {
 
     const ok = await component.uploadStaged('b1', 'd1');
 
-    expect(ok).toBeTrue();
+    expect(ok).toBe(true);
     expect(data.upload).toHaveBeenCalledTimes(2);
     expect(component.staged()).toEqual([]);
-    expect(component.uploading()).toBeFalse();
+    expect(component.uploading()).toBe(false);
   });
 
   it('uploadStaged() stops on the first failure, leaves the queue intact, and toasts', async () => {
     setMode('stage');
     component.onFileInputChange(fileInputEvent([makeFile('a.pdf', 1), makeFile('b.pdf', 1)]));
-    data.upload.and.returnValue(throwError(() => new Error('boom')));
+    data.upload.mockReturnValue(throwError(() => new Error('boom')));
 
     const ok = await component.uploadStaged('b1', 'd1');
 
-    expect(ok).toBeFalse();
+    expect(ok).toBe(false);
     expect(data.upload).toHaveBeenCalledTimes(1);
     expect(component.staged().length).toBe(2);
     expect(notify.apiError).toHaveBeenCalled();
   });
 
   it('edit mode loads existing documents on init and appends successful uploads', async () => {
-    data.listContents.and.returnValue(of({
+    data.listContents.mockReturnValue(of({
       directory: { id: 'd1', name: 'root', parentId: null },
       directories: [],
       documents: [makeDoc({ id: 'existing', fileName: 'old.pdf' })],
@@ -160,7 +159,7 @@ describe('BulletinAttachments', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(data.upload).toHaveBeenCalledWith('b1', 'd1', jasmine.any(File));
+    expect(data.upload).toHaveBeenCalledWith('b1', 'd1', expect.any(File));
     expect(component.documents().map(d => d.fileName)).toEqual(['old.pdf', 'new.pdf']);
   });
 
@@ -188,7 +187,7 @@ describe('BulletinAttachments', () => {
   });
 
   it('deleteDocument prompts to confirm and removes the doc on success', async () => {
-    confirm.danger.and.resolveTo(true);
+    confirm.danger.mockResolvedValue(true);
     setMode('edit', 'b1', 'd1');
     component.documents.set([makeDoc({ id: 'd1' }), makeDoc({ id: 'd2', fileName: 'two.pdf' })]);
 
@@ -200,7 +199,7 @@ describe('BulletinAttachments', () => {
   });
 
   it('deleteDocument does nothing when the user cancels the confirm prompt', async () => {
-    confirm.danger.and.resolveTo(false);
+    confirm.danger.mockResolvedValue(false);
     setMode('edit', 'b1', 'd1');
     component.documents.set([makeDoc({ id: 'd1' })]);
 
@@ -222,20 +221,20 @@ describe('BulletinAttachments', () => {
 
   it('isEditable is false in view mode', () => {
     setMode('view', 'b1', 'd1');
-    expect(component.isEditable()).toBeFalse();
-    expect(component.isStage()).toBeFalse();
+    expect(component.isEditable()).toBe(false);
+    expect(component.isStage()).toBe(false);
   });
 
   it('isEditable is true and isStage is false in edit mode', () => {
     setMode('edit', 'b1', 'd1');
-    expect(component.isEditable()).toBeTrue();
-    expect(component.isStage()).toBeFalse();
+    expect(component.isEditable()).toBe(true);
+    expect(component.isStage()).toBe(false);
   });
 
   it('isStage is true in stage mode', () => {
     setMode('stage');
-    expect(component.isStage()).toBeTrue();
-    expect(component.isEditable()).toBeTrue();
+    expect(component.isStage()).toBe(true);
+    expect(component.isEditable()).toBe(true);
   });
 
   it('downloadUrl falls back to "#" when no bulletinId is set', () => {

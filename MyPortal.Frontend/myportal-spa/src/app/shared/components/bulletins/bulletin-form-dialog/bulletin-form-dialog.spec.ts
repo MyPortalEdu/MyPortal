@@ -1,3 +1,4 @@
+import { createSpyObj, type SpyObj } from '@testing/spy';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
@@ -60,13 +61,38 @@ function makeMe(overrides: Partial<Me> = {}): Me {
   };
 }
 
+interface FormModel {
+  title: string;
+  detail: string;
+  categoryId: string | null;
+  isPinned: boolean;
+  requiresAck: boolean;
+  expiresAt: Date | null;
+  audienceKeys: string[];
+}
+interface FieldLike {
+  valid(): boolean;
+  invalid(): boolean;
+  submitting(): boolean;
+  touched(): boolean;
+}
+interface Internals {
+  model: { (): FormModel; set(v: FormModel): void; update(fn: (m: FormModel) => FormModel): void };
+  f: (() => FieldLike) & { title: () => FieldLike };
+}
+
 describe('BulletinFormDialog', () => {
   let fixture: ComponentFixture<BulletinFormDialog>;
   let component: BulletinFormDialog;
-  let data: jasmine.SpyObj<BulletinsDataService>;
-  let notify: jasmine.SpyObj<NotificationService>;
-  let me$: jasmine.SpyObj<MeService>;
-  let confirmDialog: jasmine.SpyObj<ConfirmationDialog>;
+  let internals: Internals;
+  let data: SpyObj<BulletinsDataService>;
+  let notify: SpyObj<NotificationService>;
+  let me$: SpyObj<MeService>;
+  let confirmDialog: SpyObj<ConfirmationDialog>;
+
+  function setModel(patch: Partial<FormModel>) {
+    internals.model.update(m => ({ ...m, ...patch }));
+  }
 
   const categories: BulletinCategoryResponse[] = [
     { id: 'cat-1', name: 'Notices', icon: 'i', colourCode: '#000000', displayOrder: 1, active: true, isSystem: false, version: 1 },
@@ -77,21 +103,20 @@ describe('BulletinFormDialog', () => {
   ];
 
   beforeEach(async () => {
-    data = jasmine.createSpyObj<BulletinsDataService>('BulletinsDataService',
-      ['listCategories', 'getSettings', 'create', 'update', 'getById']);
-    notify = jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'error']);
-    me$ = jasmine.createSpyObj<MeService>('MeService', ['me']);
+    data = createSpyObj<BulletinsDataService>(['listCategories', 'getSettings', 'create', 'update', 'getById']);
+    notify = createSpyObj<NotificationService>(['success', 'error']);
+    me$ = createSpyObj<MeService>(['me']);
 
-    data.listCategories.and.returnValue(of(categories));
-    data.getSettings.and.returnValue(of({ allowedAudienceGroups: allowedGroups }));
-    data.create.and.returnValue(of({ id: 'new-id' }));
-    data.update.and.returnValue(of(void 0));
-    data.getById.and.returnValue(of(makeDetail({ id: 'new-id', directoryId: 'new-dir' })));
-    me$.me.and.returnValue(of(makeMe()));
+    data.listCategories.mockReturnValue(of(categories));
+    data.getSettings.mockReturnValue(of({ allowedAudienceGroups: allowedGroups }));
+    data.create.mockReturnValue(of({ id: 'new-id' }));
+    data.update.mockReturnValue(of(void 0));
+    data.getById.mockReturnValue(of(makeDetail({ id: 'new-id', directoryId: 'new-dir' })));
+    me$.me.mockReturnValue(of(makeMe()));
 
-    confirmDialog = jasmine.createSpyObj<ConfirmationDialog>('ConfirmationDialog', ['confirm', 'danger']);
-    confirmDialog.confirm.and.resolveTo(true);
-    confirmDialog.danger.and.resolveTo(true);
+    confirmDialog = createSpyObj<ConfirmationDialog>(['confirm', 'danger']);
+    confirmDialog.confirm.mockResolvedValue(true);
+    confirmDialog.danger.mockResolvedValue(true);
 
     const translocoStub = {
       translate: (key: string) => key,
@@ -113,6 +138,7 @@ describe('BulletinFormDialog', () => {
 
     fixture = TestBed.createComponent(BulletinFormDialog);
     component = fixture.componentInstance;
+    internals = component as unknown as Internals;
     fixture.componentRef.setInput('visible', false);
     fixture.componentRef.setInput('existing', null);
     fixture.detectChanges();
@@ -134,19 +160,19 @@ describe('BulletinFormDialog', () => {
   });
 
   it('canPin reflects whether the current user has the pin permission', () => {
-    me$.me.and.returnValue(of(makeMe({ permissions: ['School.PinSchoolBulletins'] })));
+    me$.me.mockReturnValue(of(makeMe({ permissions: ['School.PinSchoolBulletins'] })));
     open();
-    expect(component.canPin()).toBeTrue();
+    expect(component.canPin()).toBe(true);
   });
 
   it('create mode pre-selects All staff and defaults the category to the first option', () => {
     open(null);
-    expect(component.title()).toBe('');
-    expect(component.detail()).toBe('');
-    expect(component.isPinned()).toBeFalse();
-    expect(component.requiresAck()).toBeFalse();
-    expect(component.isSelected('all-staff')).toBeTrue();
-    expect(component.categoryId()).toBe('cat-1');
+    expect(internals.model().title).toBe('');
+    expect(internals.model().detail).toBe('');
+    expect(internals.model().isPinned).toBe(false);
+    expect(internals.model().requiresAck).toBe(false);
+    expect(component.isSelected('all-staff')).toBe(true);
+    expect(internals.model().categoryId).toBe('cat-1');
   });
 
   it('edit mode hydrates every field from the existing bulletin', () => {
@@ -159,13 +185,13 @@ describe('BulletinFormDialog', () => {
       ],
     }));
 
-    expect(component.isEdit()).toBeTrue();
-    expect(component.title()).toBe('Edit me');
-    expect(component.detail()).toBe('Edit detail body');
-    expect(component.isPinned()).toBeTrue();
-    expect(component.requiresAck()).toBeTrue();
-    expect(component.isSelected('all-pupils')).toBeTrue();
-    expect(component.isSelected('sg-g-x')).toBeTrue();
+    expect(component.isEdit()).toBe(true);
+    expect(internals.model().title).toBe('Edit me');
+    expect(internals.model().detail).toBe('Edit detail body');
+    expect(internals.model().isPinned).toBe(true);
+    expect(internals.model().requiresAck).toBe(true);
+    expect(component.isSelected('all-pupils')).toBe(true);
+    expect(component.isSelected('sg-g-x')).toBe(true);
   });
 
   it('audienceChoices surfaces groups from the existing bulletin even when not in the allowlist', () => {
@@ -193,39 +219,37 @@ describe('BulletinFormDialog', () => {
 
   it('isValid is false when title is blank, detail is blank, no category, or no audience', () => {
     open();
-    expect(component.isValid()).toBeFalse();
+    expect(internals.f().invalid()).toBe(true);
 
-    component.title.set('   ');
-    expect(component.isValid()).toBeFalse();
+    setModel({ title: '   ' });
+    expect(internals.f().invalid()).toBe(true);
 
-    component.title.set('T');
-    component.detail.set('D');
-    expect(component.isValid()).toBeTrue();
+    setModel({ title: 'T', detail: 'D' });
+    expect(internals.f().valid()).toBe(true);
 
-    component.selectedAudienceKeys.set(new Set());
-    expect(component.isValid()).toBeFalse();
+    setModel({ audienceKeys: [] });
+    expect(internals.f().invalid()).toBe(true);
   });
 
   it('toggleAudience() flips membership in the selection set', () => {
     open();
-    expect(component.isSelected('all-pupils')).toBeFalse();
+    expect(component.isSelected('all-pupils')).toBe(false);
     component.toggleAudience('all-pupils');
-    expect(component.isSelected('all-pupils')).toBeTrue();
+    expect(component.isSelected('all-pupils')).toBe(true);
     component.toggleAudience('all-pupils');
-    expect(component.isSelected('all-pupils')).toBeFalse();
+    expect(component.isSelected('all-pupils')).toBe(false);
   });
 
-  it('publish() in create mode posts the trimmed payload and emits saved on success', () => {
+  it('publish() in create mode posts the trimmed payload and emits saved on success', async () => {
     open();
-    component.title.set('  Hello  ');
-    component.detail.set('  World  ');
+    setModel({ title: '  Hello  ', detail: '  World  ' });
     component.toggleAudience('all-pupils');
-    const saved = jasmine.createSpy('saved');
+    const saved = vi.fn();
     component.saved.subscribe(saved);
 
-    component.publish();
+    await component.publish();
 
-    const payload = data.create.calls.mostRecent().args[0] as BulletinUpsertRequest;
+    const payload = data.create.mock.calls.at(-1)![0] as BulletinUpsertRequest;
     expect(payload.title).toBe('Hello');
     expect(payload.detail).toBe('World');
     expect(payload.categoryId).toBe('cat-1');
@@ -233,21 +257,20 @@ describe('BulletinFormDialog', () => {
     expect(payload.audiences.map(a => a.audienceKind).sort()).toEqual(
       [BulletinAudienceKind.AllStaff, BulletinAudienceKind.AllPupils].sort(),
     );
-    expect(component.submitting()).toBeFalse();
+    expect(internals.f().submitting()).toBe(false);
     expect(notify.success).toHaveBeenCalled();
     expect(saved).toHaveBeenCalled();
   });
 
-  it('publish() in edit mode calls update with expectedVersion and preserves expiresAt', () => {
+  it('publish() in edit mode calls update with expectedVersion and preserves expiresAt', async () => {
     const existing = makeDetail({ version: 9, expiresAt: '2026-12-31T00:00:00Z' });
     open(existing);
-    component.title.set('Updated');
-    component.detail.set('Updated body');
+    setModel({ title: 'Updated', detail: 'Updated body' });
 
-    component.publish();
+    await component.publish();
 
     expect(data.update).toHaveBeenCalled();
-    const [id, payload] = data.update.calls.mostRecent().args;
+    const [id, payload] = data.update.mock.calls.at(-1)!;
     expect(id).toBe(existing.id);
     expect(payload.expectedVersion).toBe(9);
     expect(new Date(payload.expiresAt!).getTime())
@@ -255,84 +278,74 @@ describe('BulletinFormDialog', () => {
     expect(data.create).not.toHaveBeenCalled();
   });
 
-  it('publish() sends the user-picked expiresAt in create mode', () => {
+  it('publish() sends the user-picked expiresAt in create mode', async () => {
     open();
-    component.title.set('With expiry');
-    component.detail.set('Body');
-    component.categoryId.set(categories[0].id);
-    component.selectedAudienceKeys.set(new Set(['all-staff']));
     const pick = new Date('2027-06-15T12:00:00Z');
-    component.expiresAt.set(pick);
+    setModel({
+      title: 'With expiry',
+      detail: 'Body',
+      categoryId: categories[0].id,
+      audienceKeys: ['all-staff'],
+      expiresAt: pick,
+    });
 
-    component.publish();
+    await component.publish();
 
     expect(data.create).toHaveBeenCalled();
-    const [payload] = data.create.calls.mostRecent().args;
+    const [payload] = data.create.mock.calls.at(-1)!;
     expect(new Date(payload.expiresAt!).getTime()).toBe(pick.getTime());
   });
 
-  it('publish() guards against being invoked when invalid', () => {
+  it('publish() on an invalid form skips the API and marks fields touched to reveal errors', async () => {
     open();
-    component.publish();
+    await component.publish();
     expect(data.create).not.toHaveBeenCalled();
-    expect(component.submitting()).toBeFalse();
+    expect(internals.f().submitting()).toBe(false);
+    expect(internals.f.title().touched()).toBe(true);
   });
 
-  it('publish() guards against re-entrant submissions while one is in flight', () => {
+  it('publish() shows an error toast and clears submitting when the server rejects', async () => {
+    data.create.mockReturnValue(throwError(() => new Error('boom')));
     open();
-    component.title.set('T'); component.detail.set('D');
-    component.submitting.set(true);
+    setModel({ title: 'T', detail: 'D' });
 
-    component.publish();
-
-    expect(data.create).not.toHaveBeenCalled();
-  });
-
-  it('publish() shows an error toast and clears submitting when the server rejects', () => {
-    data.create.and.returnValue(throwError(() => new Error('boom')));
-    open();
-    component.title.set('T'); component.detail.set('D');
-
-    component.publish();
+    await component.publish();
 
     expect(notify.error).toHaveBeenCalled();
-    expect(component.submitting()).toBeFalse();
+    expect(internals.f().submitting()).toBe(false);
   });
 
   it('publish() with staged attachments fetches the new bulletin and uploads against its directoryId', async () => {
     open();
-    component.title.set('T'); component.detail.set('D');
+    setModel({ title: 'T', detail: 'D' });
 
-    const uploadStaged = jasmine.createSpy('uploadStaged').and.resolveTo(undefined);
+    const uploadStaged = vi.fn().mockResolvedValue(undefined);
     const fake = { hasStaged: () => true, uploadStaged };
     (component as unknown as { attachments: () => unknown }).attachments = () => fake;
 
-    component.publish();
-
-    await Promise.resolve();
-    await Promise.resolve();
+    await component.publish();
 
     expect(data.getById).toHaveBeenCalledWith('new-id');
     expect(uploadStaged).toHaveBeenCalledWith('new-id', 'new-dir');
   });
 
-  it('publish() still finishes ok when getById fails after a successful create', () => {
+  it('publish() still finishes ok when getById fails after a successful create', async () => {
     open();
-    component.title.set('T'); component.detail.set('D');
-    data.getById.and.returnValue(throwError(() => new Error('boom')));
+    setModel({ title: 'T', detail: 'D' });
+    data.getById.mockReturnValue(throwError(() => new Error('boom')));
 
     const fake = { hasStaged: () => true, uploadStaged: () => Promise.resolve() };
     (component as unknown as { attachments: () => unknown }).attachments = () => fake;
 
-    component.publish();
+    await component.publish();
 
     expect(notify.success).toHaveBeenCalled();
-    expect(component.submitting()).toBeFalse();
+    expect(internals.f().submitting()).toBe(false);
   });
 
   it('onCancel/onHide emit closed', () => {
     open();
-    const closed = jasmine.createSpy('closed');
+    const closed = vi.fn();
     component.closed.subscribe(closed);
     component.onCancel();
     component.onHide();

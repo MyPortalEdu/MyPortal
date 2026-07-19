@@ -35,7 +35,7 @@ describe('MpCheckbox', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(input().checked).toBeTrue();
+    expect(input().checked).toBe(true);
   });
 
   it('writes back to the model when toggled (onChange)', () => {
@@ -43,13 +43,13 @@ describe('MpCheckbox', () => {
     el.checked = true;
     el.dispatchEvent(new Event('change'));
     fixture.detectChanges();
-    expect(host.value()).toBeTrue();
+    expect(host.value()).toBe(true);
   });
 
   it('disables the native input via the [disabled] input', async () => {
     host.disabled.set(true);
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(input().disabled).toBeTrue();
+    expect(input().disabled).toBe(true);
   });
 });

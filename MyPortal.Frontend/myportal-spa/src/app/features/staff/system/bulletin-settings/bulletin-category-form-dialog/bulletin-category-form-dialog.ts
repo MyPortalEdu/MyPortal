@@ -9,8 +9,17 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MpButton, MpCheckbox, MpDialog, MpDialogFooter, MpInput, MpInputNumber } from '@myportal/ui';
+import { FormField, form, required, submit, validate } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
+import {
+  MpButton,
+  MpCheckbox,
+  MpDialog,
+  MpDialogFooter,
+  MpFormField,
+  MpInput,
+  MpInputNumber,
+} from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../../../shared/services/bulletins-data.service';
@@ -98,7 +107,7 @@ export const CATEGORY_COLOURS: readonly string[] = [
 @Component({
   selector: 'mp-bulletin-category-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpButton, MpCheckbox, MpDialog, MpDialogFooter, MpInput, MpInputNumber, TranslocoDirective, TranslocoPipe],
+  imports: [FormField, MpButton, MpCheckbox, MpDialog, MpDialogFooter, MpFormField, MpInput, MpInputNumber, TranslocoDirective, TranslocoPipe],
   providers: [provideTranslocoScope('bulletin-settings')],
   templateUrl: './bulletin-category-form-dialog.html',
 })
@@ -117,42 +126,36 @@ export class BulletinCategoryFormDialog {
   readonly icons = CATEGORY_ICONS;
   readonly colours = CATEGORY_COLOURS;
 
-  readonly name = signal('');
-  readonly icon = signal<string>(CATEGORY_ICONS[0]);
-  readonly colour = signal<string>(CATEGORY_COLOURS[0]);
-  readonly displayOrder = signal<number>(100);
-  readonly active = signal(true);
-  readonly submitting = signal(false);
+  protected readonly model = signal<FormSnapshot>({
+    name: '',
+    icon: CATEGORY_ICONS[0],
+    colour: CATEGORY_COLOURS[0],
+    displayOrder: 100,
+    active: true,
+  });
+  protected readonly f = form(this.model, path => {
+    required(path.name);
+    validate(path.name, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+  });
 
-  readonly touchedFields = signal<ReadonlySet<string>>(new Set());
-
-  markTouched(field: string): void {
-    if (this.touchedFields().has(field)) return;
-    this.touchedFields.update(s => new Set(s).add(field));
+  setIcon(icon: string): void {
+    this.model.update(m => ({ ...m, icon }));
   }
 
-  wasTouched(field: string): boolean {
-    return this.touchedFields().has(field);
+  setColour(colour: string): void {
+    this.model.update(m => ({ ...m, colour }));
   }
 
   readonly isEdit = computed(() => this.existing() !== null);
 
-  readonly isValid = computed(() => this.name().trim().length > 0);
-
   private readonly snapshot = signal<FormSnapshot | null>(null);
-
-  private readonly currentForm = computed<FormSnapshot>(() => ({
-    name: this.name(),
-    icon: this.icon(),
-    colour: this.colour(),
-    displayOrder: this.displayOrder(),
-    active: this.active(),
-  }));
 
   readonly isDirty = computed(() => {
     const s = this.snapshot();
     if (!s) return false;
-    return JSON.stringify(s) !== JSON.stringify(this.currentForm());
+    return JSON.stringify(s) !== JSON.stringify(this.model());
   });
 
   constructor() {
@@ -184,55 +187,51 @@ export class BulletinCategoryFormDialog {
     this.closed.emit();
   }
 
-  save(): void {
-    if (!this.isValid() || this.submitting()) return;
-    this.submitting.set(true);
+  save(): Promise<boolean> {
+    return submit(this.f, async () => {
+      const existing = this.existing();
+      const m = this.model();
+      const payload: BulletinCategoryUpsertRequest = {
+        name: m.name.trim(),
+        icon: m.icon,
+        colourCode: m.colour,
+        displayOrder: m.displayOrder,
+        active: m.active,
+        expectedVersion: existing?.version ?? 0,
+      };
 
-    const existing = this.existing();
-    const payload: BulletinCategoryUpsertRequest = {
-      name: this.name().trim(),
-      icon: this.icon(),
-      colourCode: this.colour(),
-      displayOrder: this.displayOrder(),
-      active: this.active(),
-      expectedVersion: existing?.version ?? 0,
-    };
+      const t = (key: string) => this.transloco.translate(`bulletin-settings.form.${key}`);
+      try {
+        if (existing) {
+          await firstValueFrom(this.data.updateCategory(existing.id, payload));
+        } else {
+          await firstValueFrom(this.data.createCategory(payload));
+        }
+      } catch (err) {
+        this.notify.apiError(err, t(existing ? 'errorUpdate' : 'errorCreate'));
+        return;
+      }
 
-    const t = (key: string) => this.transloco.translate(`bulletin-settings.form.${key}`);
-    const onSuccess = () => {
-      this.submitting.set(false);
-      this.snapshot.set(this.currentForm());
+      this.snapshot.set(this.model());
       this.notify.success(t(existing ? 'updatedToast' : 'createdToast'));
       this.saved.emit();
-    };
-    const onError = (err: unknown) => {
-      this.submitting.set(false);
-      this.notify.apiError(err, t(existing ? 'errorUpdate' : 'errorCreate'));
-    };
-
-    if (existing) {
-      this.data.updateCategory(existing.id, payload).subscribe({ next: onSuccess, error: onError });
-    } else {
-      this.data.createCategory(payload).subscribe({ next: onSuccess, error: onError });
-    }
+    });
   }
 
   private reset(): void {
     const existing = this.existing();
-    if (existing) {
-      this.name.set(existing.name);
-      this.icon.set(existing.icon || CATEGORY_ICONS[0]);
-      this.colour.set(existing.colourCode || CATEGORY_COLOURS[0]);
-      this.displayOrder.set(existing.displayOrder);
-      this.active.set(existing.active);
-    } else {
-      this.name.set('');
-      this.icon.set(CATEGORY_ICONS[0]);
-      this.colour.set(CATEGORY_COLOURS[0]);
-      this.displayOrder.set(100);
-      this.active.set(true);
-    }
-    this.touchedFields.set(new Set());
-    this.snapshot.set(this.currentForm());
+    this.model.set(
+      existing
+        ? {
+            name: existing.name,
+            icon: existing.icon || CATEGORY_ICONS[0],
+            colour: existing.colourCode || CATEGORY_COLOURS[0],
+            displayOrder: existing.displayOrder,
+            active: existing.active,
+          }
+        : { name: '', icon: CATEGORY_ICONS[0], colour: CATEGORY_COLOURS[0], displayOrder: 100, active: true },
+    );
+    this.f().reset();
+    this.snapshot.set(this.model());
   }
 }
