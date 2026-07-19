@@ -9,7 +9,7 @@
   @if (loading()) {
     <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
       @for (_ of [0, 1, 2]; track $index) {
-        <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
+        <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-border">
           <div class="flex-1 min-w-0 flex flex-col gap-1.5">
             <mp-skeleton width="30%" height="1rem"></mp-skeleton>
             <mp-skeleton width="50%" height="0.75rem"></mp-skeleton>

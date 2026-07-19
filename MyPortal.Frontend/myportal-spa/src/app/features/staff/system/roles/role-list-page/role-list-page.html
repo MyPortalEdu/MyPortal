@@ -24,7 +24,7 @@
       <ng-template mpTableCaption>
         <div class="flex items-center justify-end">
           <span class="relative w-full sm:w-80">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
             <input
               mpInput
               type="text"
@@ -66,7 +66,7 @@
           <td>
             <mp-badge [value]="typeLabel(role)" [severity]="typeSeverity(role)"></mp-badge>
           </td>
-          <td class="text-muted-color">{{ role.description }}</td>
+          <td class="text-muted-foreground">{{ role.description }}</td>
           <td>
             <div class="flex items-center justify-end gap-1">
               @if (canEdit()) {

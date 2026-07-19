@@ -9,7 +9,7 @@
         <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
           @for (address of addresses(); track address.addressPersonId) {
             <div class="flex items-center gap-3 py-2">
-              <span class="w-20 shrink-0 text-xs text-muted-color">{{ typeName(address.typeId) }}</span>
+              <span class="w-20 shrink-0 text-xs text-muted-foreground">{{ typeName(address.typeId) }}</span>
               <span class="flex-1 min-w-0 font-medium">
                 {{ formatAddress(address) }}
                 @if (address.sharedCount > 1) {
@@ -53,7 +53,7 @@
           }
         </div>
       } @else {
-        <span class="text-sm text-muted-color">{{ t('common.contact.address.none') }}</span>
+        <span class="text-sm text-muted-foreground">{{ t('common.contact.address.none') }}</span>
       }
 
       @if (canEdit()) {

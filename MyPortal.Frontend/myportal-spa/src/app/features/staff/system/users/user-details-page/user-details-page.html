@@ -14,12 +14,12 @@
     </mp-card>
   } @else if (notFound()) {
     <mp-card>
-      <div class="py-12 text-center text-muted-color">{{ t('form.errorLoad') }}</div>
+      <div class="py-12 text-center text-muted-foreground">{{ t('form.errorLoad') }}</div>
     </mp-card>
   } @else {
     <form class="flex flex-col gap-4 max-w-5xl" #f="ngForm">
       @if (readOnly()) {
-        <div class="flex items-start gap-2 p-3 rounded-lg bg-emphasis text-sm text-muted-color">
+        <div class="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm text-muted-foreground">
           <i class="fa-solid fa-lock mt-0.5"></i>
           <span>{{ t('form.systemReadonly') }}</span>
         </div>
@@ -88,7 +88,7 @@
       <mp-card>
         <div class="flex flex-col gap-2">
           <mp-section-header [title]="t('form.person')" icon="fa-solid fa-user"></mp-section-header>
-          <span class="text-xs text-muted-color">{{ t('form.personHint') }}</span>
+          <span class="text-xs text-muted-foreground">{{ t('form.personHint') }}</span>
           <div class="flex items-center gap-3">
             @if (personName()) {
               <mp-badge [value]="personName() ?? ''" icon="fa-solid fa-user"></mp-badge>
@@ -98,7 +98,7 @@
             } @else if (!readOnly()) {
               <mp-person-picker (picked)="onPersonPicked($event)"></mp-person-picker>
             } @else {
-              <span class="text-sm text-muted-color italic">{{ t('form.noPerson') }}</span>
+              <span class="text-sm text-muted-foreground italic">{{ t('form.noPerson') }}</span>
             }
           </div>
         </div>
@@ -107,13 +107,13 @@
       <mp-card>
         <div class="flex flex-col gap-2">
           <mp-section-header [title]="t('form.roles')" icon="fa-solid fa-user-shield"></mp-section-header>
-          <span class="text-xs text-muted-color">{{ t('form.rolesHint') }}</span>
+          <span class="text-xs text-muted-foreground">{{ t('form.rolesHint') }}</span>
           @if (audienceRoles().length === 0) {
             <mp-empty-state [message]="t('form.noRoles')"></mp-empty-state>
           } @else {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               @for (role of audienceRoles(); track role.id) {
-                <label class="flex items-start gap-2 cursor-pointer p-2 rounded-md hover:bg-emphasis">
+                <label class="flex items-start gap-2 cursor-pointer p-2 rounded-md hover:bg-muted">
                   <mp-checkbox
                     [ngModel]="isRoleSelected(role.id)"
                     (ngModelChange)="toggleRole(role.id, $event)"
@@ -122,7 +122,7 @@
                   <span class="flex flex-col">
                     <span class="text-sm">{{ role.name }}</span>
                     @if (role.description) {
-                      <span class="text-xs text-muted-color">{{ role.description }}</span>
+                      <span class="text-xs text-muted-foreground">{{ role.description }}</span>
                     }
                   </span>
                 </label>
@@ -136,11 +136,11 @@
         <mp-card>
           <div class="flex flex-col gap-2">
             <mp-section-header [title]="t('form.effectivePermissions')" icon="fa-solid fa-key"></mp-section-header>
-            <span class="text-xs text-muted-color">{{ t('form.effectivePermissionsHint') }}</span>
+            <span class="text-xs text-muted-foreground">{{ t('form.effectivePermissionsHint') }}</span>
             @if (effectiveTreeNodes().length === 0) {
               <mp-empty-state [message]="t('form.noEffectivePermissions')"></mp-empty-state>
             } @else {
-              <div class="border border-surface rounded-lg p-2 max-h-[24rem] overflow-auto">
+              <div class="border border-border rounded-lg p-2 max-h-[24rem] overflow-auto">
                 <mp-permission-tree [nodes]="effectiveTreeNodes()" [selectedIds]="effectiveSelectedIds()" [disabled]="true"></mp-permission-tree>
               </div>
             }

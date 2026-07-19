@@ -3,7 +3,7 @@
     <mp-loading></mp-loading>
   } @else if (contact()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.contactDetails') }}</h3>
-    <p class="text-sm text-muted-color mb-4">
+    <p class="text-sm text-muted-foreground mb-4">
       {{ t('staff-members.contact.hint') }}
     </p>
 
@@ -26,9 +26,9 @@
           [editing]="editing()"></mp-person-phones>
       </section>
 
-      <section class="border-t border-surface pt-6">
+      <section class="border-t border-border pt-6">
         <mp-section-header icon="fa-solid fa-location-dot" [title]="t('staff-members.contact.addressesHeading')"></mp-section-header>
-        <p class="text-sm text-muted-color -mt-2 mb-3">
+        <p class="text-sm text-muted-foreground -mt-2 mb-3">
           {{ t('staff-members.contact.addressesHint') }}
         </p>
         <mp-person-addresses

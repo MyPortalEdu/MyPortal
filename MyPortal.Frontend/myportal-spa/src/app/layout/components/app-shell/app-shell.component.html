@@ -8,11 +8,11 @@
 >
   <ng-container *transloco="let t">
   <div class="flex h-full flex-col
-                bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)]
-                text-[var(--p-text-color)]">
+                bg-surface-50 dark:bg-surface-950
+                text-foreground">
 
     <div class="flex items-center justify-between px-4 py-3
-                  border-b border-[var(--p-content-border-color)]">
+                  border-b border-border">
       <span class="font-semibold text-lg">{{ t('topbar.appName') }}</span>
       <button mpButton variant="ghost" size="icon" (click)="closeSidebar()" [attr.aria-label]="t('common.close')"><i class="fa-solid fa-xmark"></i></button>
     </div>
@@ -28,9 +28,9 @@
 
   <aside
     class="hidden lg:flex shrink-0 flex-col overflow-hidden
-         bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)]
-         border-r border-[var(--p-content-border-color)]
-         text-[var(--p-text-color)]
+         bg-surface-50 dark:bg-surface-950
+         border-r border-border
+         text-foreground
          transition-[width,background-color,border-color,color] duration-200 ease-out"
     [class.w-72]="!sidebarCollapsed()"
     [class.w-16]="sidebarCollapsed()"
@@ -39,7 +39,7 @@
   </aside>
 
   <main
-    class="flex-1 overflow-auto bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)] text-[var(--p-text-color)] p-4 lg:p-6 transition-colors"
+    class="flex-1 overflow-auto bg-surface-50 dark:bg-surface-950 text-foreground p-4 lg:p-6 transition-colors"
   >
     <router-outlet></router-outlet>
   </main>

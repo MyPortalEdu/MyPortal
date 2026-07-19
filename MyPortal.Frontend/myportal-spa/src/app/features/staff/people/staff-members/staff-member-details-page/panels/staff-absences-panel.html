@@ -3,7 +3,7 @@
     <mp-loading></mp-loading>
   } @else if (absences()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.absences') }}</h3>
-    <p class="text-sm text-muted-color mb-4">{{ t('staff-members.absences.hint') }}</p>
+    <p class="text-sm text-muted-foreground mb-4">{{ t('staff-members.absences.hint') }}</p>
 
     @if (!absenceRows().length) {
       <mp-empty-state icon="fa-solid fa-calendar-xmark" [message]="t('staff-members.absences.none')"></mp-empty-state>
@@ -11,9 +11,9 @@
 
     <div class="flex flex-col gap-3">
       @for (a of absenceRows(); track $index; let i = $index) {
-        <div class="rounded bg-emphasis p-3">
+        <div class="rounded bg-muted p-3">
           <div class="flex items-start justify-between gap-2 mb-2">
-            <span class="flex items-center gap-2 text-sm font-medium text-muted-color">
+            <span class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               {{ t('staff-members.absences.absence') }}{{ absenceRows().length > 1 ? ' ' + (i + 1) : '' }}
               @if (a.isConfidential) {
                 <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700">
@@ -55,14 +55,14 @@
           } @else {
             <div class="text-sm">
               <span class="font-medium">{{ lookupLabel(absenceTypes(), a.absenceTypeId) }}</span>
-              @if (a.illnessTypeId) { <span class="text-muted-color"> · {{ lookupLabel(illnessTypes(), a.illnessTypeId) }}</span> }
+              @if (a.illnessTypeId) { <span class="text-muted-foreground"> · {{ lookupLabel(illnessTypes(), a.illnessTypeId) }}</span> }
             </div>
-            <div class="text-sm text-muted-color">
+            <div class="text-sm text-muted-foreground">
               {{ toDate(a.startDate) | date:'mediumDate' }} – {{ toDate(a.endDate) | date:'mediumDate' }}
               @if (absenceDays(a); as days) { · {{ days }} {{ days === 1 ? t('staff-members.absences.day') : t('staff-members.absences.days') }} }
             </div>
             @if (a.notes) {
-              <div class="text-sm text-muted-color mt-1 whitespace-pre-wrap">{{ a.notes }}</div>
+              <div class="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{{ a.notes }}</div>
             }
           }
         </div>

@@ -10,7 +10,7 @@
   <section class="mp-surface p-4 flex flex-col gap-3">
     <div class="flex flex-col gap-0.5">
       <h2 class="text-base font-semibold m-0">{{ t('account.title') }}</h2>
-      <p class="text-sm text-muted-color m-0">{{ t('account.description') }}</p>
+      <p class="text-sm text-muted-foreground m-0">{{ t('account.description') }}</p>
     </div>
 
     @if (loading()) {
@@ -20,13 +20,13 @@
       </div>
     } @else if (me(); as me) {
       <dl class="grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-x-4 gap-y-3 m-0">
-        <dt class="text-xs font-medium text-muted-color self-center">{{ t('account.username') }}</dt>
+        <dt class="text-xs font-medium text-muted-foreground self-center">{{ t('account.username') }}</dt>
         <dd class="m-0 text-sm">{{ me.username }}</dd>
 
-        <dt class="text-xs font-medium text-muted-color self-center">{{ t('account.email') }}</dt>
+        <dt class="text-xs font-medium text-muted-foreground self-center">{{ t('account.email') }}</dt>
         <dd class="m-0 text-sm">{{ me.email || t('account.noEmail') }}</dd>
 
-        <dt class="text-xs font-medium text-muted-color self-center">{{ t('account.portal') }}</dt>
+        <dt class="text-xs font-medium text-muted-foreground self-center">{{ t('account.portal') }}</dt>
         <dd class="m-0 text-sm">{{ t(userTypeKey()) }}</dd>
       </dl>
     }
@@ -35,18 +35,18 @@
   <section class="mp-surface p-4 flex flex-col gap-4">
     <div class="flex flex-col gap-0.5">
       <h2 class="text-base font-semibold m-0">{{ t('password.title') }}</h2>
-      <p class="text-sm text-muted-color m-0">{{ t('password.description') }}</p>
+      <p class="text-sm text-muted-foreground m-0">{{ t('password.description') }}</p>
     </div>
 
     <div class="flex flex-col gap-4 max-w-sm">
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('password.current') }}</label>
+        <label class="text-xs font-medium text-muted-foreground">{{ t('password.current') }}</label>
         <input mpInput type="password" [ngModel]="currentPassword()"
                (ngModelChange)="currentPassword.set($event)" autocomplete="current-password" />
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('password.new') }}</label>
+        <label class="text-xs font-medium text-muted-foreground">{{ t('password.new') }}</label>
         <input mpInput type="password" [ngModel]="newPassword()"
                (ngModelChange)="newPassword.set($event)" [invalid]="sameAsCurrent()"
                autocomplete="new-password" />
@@ -56,7 +56,7 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('password.confirm') }}</label>
+        <label class="text-xs font-medium text-muted-foreground">{{ t('password.confirm') }}</label>
         <input mpInput type="password" [ngModel]="confirm()"
                (ngModelChange)="confirm.set($event)" [invalid]="mismatch()"
                autocomplete="new-password" />

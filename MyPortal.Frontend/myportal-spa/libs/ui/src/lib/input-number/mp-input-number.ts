@@ -100,7 +100,7 @@ export class MpInputNumber implements ControlValueAccessor {
   protected readonly fieldClass = computed(() =>
     cn(
       'flex h-8 w-full rounded-control border bg-background px-2.5 py-1 text-sm outline-none transition-colors ' +
-        'placeholder:text-muted-foreground hover:border-[var(--p-form-field-hover-border-color)] ' +
+        'placeholder:text-muted-foreground hover:border-input-hover ' +
         'focus:border-ring focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50',
       this.showButtons() ? 'rounded-r-none' : '',
       this.invalid() ? 'border-destructive' : 'border-input',

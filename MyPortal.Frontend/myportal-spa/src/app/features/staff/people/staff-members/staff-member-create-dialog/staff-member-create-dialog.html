@@ -28,22 +28,22 @@
                 class="absolute right-3 top-1/2 -translate-y-1/2"></mp-spinner>
             }
           </span>
-          <span class="text-xs text-muted-color">{{ t('staff-members.create.searchHint') }}</span>
+          <span class="text-xs text-muted-foreground">{{ t('staff-members.create.searchHint') }}</span>
         </div>
 
         @if (results().length > 0) {
           <div class="mt-4">
             <p class="text-sm font-medium mb-2">{{ t('staff-members.create.matchesLabel') }}</p>
-            <ul class="flex flex-col divide-y divide-surface border border-surface rounded-lg overflow-hidden">
+            <ul class="flex flex-col divide-y divide-surface border border-border rounded-lg overflow-hidden">
               @for (p of results(); track p.personId) {
                 <li>
                   <button type="button"
-                          class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-emphasis"
+                          class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-muted"
                           (click)="pickPerson(p)">
                     <span class="flex flex-col">
                       <span class="text-sm font-medium">{{ fullName(p) }}</span>
                       @if (p.dob) {
-                        <span class="text-xs text-muted-color">
+                        <span class="text-xs text-muted-foreground">
                           {{ t('staff-members.fields.dob') }}: {{ p.dob | date: 'dd/MM/yyyy' }}
                         </span>
                       }
@@ -53,10 +53,10 @@
                         <span class="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
                           {{ t('staff-members.create.alreadyStaff') }}
                         </span>
-                        <i class="fa-solid fa-arrow-up-right-from-square text-muted-color text-xs"></i>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-muted-foreground text-xs"></i>
                       </span>
                     } @else {
-                      <i class="fa-solid fa-chevron-right text-muted-color text-xs"></i>
+                      <i class="fa-solid fa-chevron-right text-muted-foreground text-xs"></i>
                     }
                   </button>
                 </li>
@@ -65,14 +65,14 @@
           </div>
 
           <div class="flex items-center gap-3 my-4">
-            <span class="flex-1 border-t border-surface"></span>
-            <span class="text-xs uppercase tracking-wide text-muted-color">
+            <span class="flex-1 border-t border-border"></span>
+            <span class="text-xs uppercase tracking-wide text-muted-foreground">
               {{ t('staff-members.create.orCreateNew') }}
             </span>
-            <span class="flex-1 border-t border-surface"></span>
+            <span class="flex-1 border-t border-border"></span>
           </div>
         } @else {
-          <p class="text-sm text-muted-color mt-4 mb-3">
+          <p class="text-sm text-muted-foreground mt-4 mb-3">
             {{ t('staff-members.create.hint') }}
           </p>
         }
@@ -156,17 +156,17 @@
 
     @if (step() === 'attach') {
       <div>
-        <p class="text-sm text-muted-color mb-4">
+        <p class="text-sm text-muted-foreground mb-4">
           {{ t('staff-members.create.attachHint') }}
         </p>
 
         @if (selectedPerson(); as person) {
-          <div class="flex items-center gap-3 p-3 mb-4 border border-surface rounded-lg bg-emphasis">
-            <i class="fa-solid fa-user text-muted-color"></i>
+          <div class="flex items-center gap-3 p-3 mb-4 border border-border rounded-lg bg-muted">
+            <i class="fa-solid fa-user text-muted-foreground"></i>
             <span class="flex flex-col">
               <span class="text-sm font-medium">{{ fullName(person) }}</span>
               @if (person.dob) {
-                <span class="text-xs text-muted-color">
+                <span class="text-xs text-muted-foreground">
                   {{ t('staff-members.fields.dob') }}: {{ person.dob | date: 'dd/MM/yyyy' }}
                 </span>
               }

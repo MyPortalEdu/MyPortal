@@ -10,7 +10,7 @@ import { MpSpinner } from '@myportal/ui';
     <div class="flex flex-col items-center justify-center gap-3 py-10">
       <mp-spinner [size]="dim()" ariaLabel="Loading"></mp-spinner>
       @if (label(); as l) {
-        <span class="text-sm text-muted-color">{{ l }}</span>
+        <span class="text-sm text-muted-foreground">{{ l }}</span>
       }
     </div>
   `,

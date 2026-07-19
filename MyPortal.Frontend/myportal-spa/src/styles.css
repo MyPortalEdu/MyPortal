@@ -1,36 +1,20 @@
 @import '@fontsource-variable/inter';
-@import 'primeicons/primeicons.css';
-/* CDK overlay container/positioning styles — required for libs/ui overlay components
-   (MpSelect and future popover/dialog) built on @angular/cdk's Overlay. */
 @import '@angular/cdk/overlay-prebuilt.css';
 
-/* CDK overlays (MpSelect / MpDatePicker / MpPopover dropdowns) must sit above MpDialog (z-1101)
-   and the sticky topbar (z-1003) — otherwise a dropdown opened INSIDE a dialog renders behind it.
-   The prebuilt CSS defaults the container to z-1000; lift it above everything overlay-anchored. */
 .cdk-overlay-container {
   z-index: 1200;
 }
 
-/* Cascade layer order: Tailwind's base reset lowest, then our `.mp-*` component classes, then
-   Tailwind utilities highest — so a utility stacked on `.mp-chip` still wins. (PrimeNG's runtime
-   `primeng` layer is gone — it was removed at the end of Phase 3.) Split-imported (theme+preflight
-   into tailwind-base, utilities into tailwind-utilities) to preserve that ordering under Tailwind v4. */
 @layer tailwind-base, mp-components, tailwind-utilities;
 
 @import 'tailwindcss/theme.css' layer(tailwind-base);
 @import 'tailwindcss/preflight.css' layer(tailwind-base);
 @import 'tailwindcss/utilities.css' layer(tailwind-utilities);
 
-/* Tailwind auto-detects sources under the app's own tree; point it at the design-system
-   library too so `libs/ui` component classes are generated. */
 @source '../libs/ui/src';
 
-@plugin 'tailwindcss-primeui';
 @custom-variant dark (&:where(.mp-dark, .mp-dark *));
 
-/* Tailwind v4 defaults border-color to `currentcolor`; restore v3's gray-200 default so the
-   app's border-defined surfaces don't darken. In tailwind-base, after preflight, so it wins
-   on equal (`*`) specificity. */
 @layer tailwind-base {
   *,
   ::after,
@@ -43,20 +27,6 @@
 
 html, body { height: 100%; }
 
-/* ─── Design tokens ───────────────────────────────────────────────────────
-   The canonical source for the design system, exposed as Tailwind v4 theme
-   variables so they also generate utilities (`rounded-control`, `shadow-overlay`,
-   `font-sans`) and are consumable by Spartan's helm components later.
-
-   Semantic colour tokens follow (shadcn/Spartan convention: --background, --primary,
-   --border, …) — the palette libs/ui components render against. During the migration these
-   coexist with PrimeNG's own --p-* palette (Aura); as screens move to libs/ui, --p-* usage
-   drains away and these become the single source of truth.
-
-   Radius ramp — one disciplined scale instead of the 4/6/8/12/14px scatter:
-     control  4px  — inputs, buttons          surface  6px  — cards, panels
-     overlay  8px  — dialogs, popovers, menus (float above, read distinct)
-   Elevation — borders define surfaces; real shadow is reserved for floats. */
 @theme {
   --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system,
                'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -68,138 +38,86 @@ html, body { height: 100%; }
   --shadow-overlay: 0 8px 24px -6px rgb(0 0 0 / 0.18), 0 2px 6px -2px rgb(0 0 0 / 0.12);
 }
 
-/* ─── Palette (self-hosted) ───────────────────────────────────────────────
-   These `--p-*` vars were formerly injected at runtime by PrimeNG's Aura theme
-   (providePrimeNG). PrimeNG was removed at the end of Phase 3, so the exact
-   light/dark values it computed — Aura semantic tokens, `slate` surface (light) /
-   `zinc` surface (dark), indigo primary — are baked in here as literals.
-   Consumers: the design-system semantic tokens below, the `.mp-*` component
-   classes, `tailwindcss-primeui` utilities (bg-surface-*, text-muted-color,
-   border-surface, bg-emphasis, …), and inline `bg-[var(--p-*)]` template usages.
-   Follow-up: migrate those utilities to the semantic tokens and drop this block. */
 :root {
   color-scheme: light;
 
-  --p-surface-0: #ffffff;
-  --p-surface-50: #f8fafc;
-  --p-surface-100: #f1f5f9;
-  --p-surface-200: #e2e8f0;
-  --p-surface-300: #cbd5e1;
-  --p-surface-400: #94a3b8;
-  --p-surface-500: #64748b;
-  --p-surface-600: #475569;
-  --p-surface-700: #334155;
-  --p-surface-800: #1e293b;
-  --p-surface-900: #0f172a;
-  --p-surface-950: #020617;
+  --surface-0: #ffffff;
+  --surface-50: #f8fafc;
+  --surface-100: #f1f5f9;
+  --surface-200: #e2e8f0;
+  --surface-300: #cbd5e1;
+  --surface-400: #94a3b8;
+  --surface-500: #64748b;
+  --surface-600: #475569;
+  --surface-700: #334155;
+  --surface-800: #1e293b;
+  --surface-900: #0f172a;
+  --surface-950: #020617;
 
-  --p-primary-50: #eef2ff;
-  --p-primary-100: #e0e7ff;
-  --p-primary-200: #c7d2fe;
-  --p-primary-300: #a5b4fc;
-  --p-primary-400: #818cf8;
-  --p-primary-500: #6366f1;
-  --p-primary-600: #4f46e5;
-  --p-primary-700: #4338ca;
-  --p-primary-800: #3730a3;
-  --p-primary-900: #312e81;
-  --p-primary-950: #1e1b4b;
-  --p-primary-color: #6366f1;
-  --p-primary-contrast-color: #ffffff;
-  --p-primary-hover-color: #4f46e5;
-  --p-primary-active-color: #4338ca;
+  --primary-50: #eef2ff;
+  --primary-100: #e0e7ff;
+  --primary-200: #c7d2fe;
+  --primary-300: #a5b4fc;
+  --primary-400: #818cf8;
+  --primary-500: #6366f1;
+  --primary-600: #4f46e5;
+  --primary-700: #4338ca;
+  --primary-800: #3730a3;
+  --primary-900: #312e81;
+  --primary-950: #1e1b4b;
 
-  --p-content-background: #ffffff;
-  --p-content-hover-background: #f1f5f9;
-  --p-content-hover-color: #1e293b;
-  --p-content-border-color: #e2e8f0;
-  --p-content-border-radius: 6px;
-
-  --p-text-color: #334155;
-  --p-text-hover-color: #1e293b;
-  --p-text-muted-color: #64748b;
-  --p-text-hover-muted-color: #475569;
-
-  --p-highlight-background: #eef2ff;
-  --p-highlight-color: #4338ca;
-  --p-highlight-focus-background: #e0e7ff;
-  --p-highlight-focus-color: #3730a3;
-
-  --p-form-field-border-color: #cbd5e1;
-  --p-form-field-hover-border-color: #94a3b8;
-  --p-form-field-color: #334155;
-
-  --p-red-500: #ef4444;
-  --p-red-600: #dc2626;
-  --p-red-700: #b91c1c;
-  --p-green-600: #16a34a;
-  --p-amber-600: #d97706;
+  --background: #ffffff;
+  --foreground: #334155;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #334155;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #334155;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --input-hover: #94a3b8;
+  --ring: #6366f1;
 }
 
 .mp-dark {
   color-scheme: dark;
 
-  --p-surface-0: #ffffff;
-  --p-surface-50: #fafafa;
-  --p-surface-100: #f4f4f5;
-  --p-surface-200: #e4e4e7;
-  --p-surface-300: #d4d4d8;
-  --p-surface-400: #a1a1aa;
-  --p-surface-500: #71717a;
-  --p-surface-600: #52525b;
-  --p-surface-700: #3f3f46;
-  --p-surface-800: #27272a;
-  --p-surface-900: #18181b;
-  --p-surface-950: #09090b;
+  --surface-0: #ffffff;
+  --surface-50: #fafafa;
+  --surface-100: #f4f4f5;
+  --surface-200: #e4e4e7;
+  --surface-300: #d4d4d8;
+  --surface-400: #a1a1aa;
+  --surface-500: #71717a;
+  --surface-600: #52525b;
+  --surface-700: #3f3f46;
+  --surface-800: #27272a;
+  --surface-900: #18181b;
+  --surface-950: #09090b;
 
-  /* Indigo primary ramp is theme-independent; only the semantic picks shift. */
-  --p-primary-color: #818cf8;
-  --p-primary-contrast-color: #18181b;
-  --p-primary-hover-color: #a5b4fc;
-  --p-primary-active-color: #c7d2fe;
-
-  --p-content-background: #18181b;
-  --p-content-hover-background: #27272a;
-  --p-content-hover-color: #ffffff;
-  --p-content-border-color: #3f3f46;
-
-  --p-text-color: #ffffff;
-  --p-text-hover-color: #ffffff;
-  --p-text-muted-color: #a1a1aa;
-  --p-text-hover-muted-color: #d4d4d8;
-
-  --p-highlight-background: color-mix(in srgb, #818cf8, transparent 84%);
-  --p-highlight-color: rgba(255, 255, 255, 0.87);
-  --p-highlight-focus-background: color-mix(in srgb, #818cf8, transparent 76%);
-  --p-highlight-focus-color: rgba(255, 255, 255, 0.87);
-
-  --p-form-field-border-color: #52525b;
-  --p-form-field-hover-border-color: #71717a;
-  --p-form-field-color: #ffffff;
-}
-
-/* Semantic colour palette (shadcn/Spartan convention) — the tokens libs/ui components render
-   against. These alias the self-hosted `--p-*` vars above and flip with `.mp-dark` for free. */
-:root {
-  --background: var(--p-content-background);
-  --foreground: var(--p-text-color);
-  --primary: var(--p-primary-color);
-  --primary-foreground: var(--p-primary-contrast-color, #ffffff);
-  --secondary: var(--p-content-hover-background);
-  --secondary-foreground: var(--p-text-color);
-  --muted: var(--p-content-hover-background);
-  --muted-foreground: var(--p-text-muted-color);
-  --accent: var(--p-content-hover-background);
-  --accent-foreground: var(--p-text-color);
-  --destructive: var(--p-red-500, #dc2626);
+  --background: #18181b;
+  --foreground: #ffffff;
+  --primary: #818cf8;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #ffffff;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: var(--p-content-border-color);
-  --input: var(--p-form-field-border-color, var(--p-content-border-color));
-  --ring: var(--p-primary-color);
+  --border: #3f3f46;
+  --input: #52525b;
+  --input-hover: #71717a;
+  --ring: #818cf8;
 }
 
-/* Expose the palette as Tailwind colour utilities (bg-background, text-foreground, bg-primary…).
-   `inline` so the utilities reference the vars directly and thus flip with .mp-dark at runtime. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -215,51 +133,51 @@ html, body { height: 100%; }
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-hover: var(--input-hover);
   --color-ring: var(--ring);
+
+  --color-surface-0: var(--surface-0);
+  --color-surface-50: var(--surface-50);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-surface-400: var(--surface-400);
+  --color-surface-500: var(--surface-500);
+  --color-surface-600: var(--surface-600);
+  --color-surface-700: var(--surface-700);
+  --color-surface-800: var(--surface-800);
+  --color-surface-900: var(--surface-900);
+  --color-surface-950: var(--surface-950);
+
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+  --color-primary-950: var(--primary-950);
 }
 
-/* MyPortal brand font. Aura preset doesn't set a font-family of its own, so the
-   body declaration here flows through to every PrimeNG component too. */
 body {
   font-family: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system,
                'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  /* App-wide "small" base (14px). Previously this only came from `.p-component` below, so plain
-     text (field values etc.) inherited it only while inside a PrimeNG component. As PrimeNG is
-     replaced by mp-* wrappers (no `.p-component` class), set the base here so text stays 14px
-     everywhere. Tailwind text-* utilities are rem-based (html-relative) so they're unaffected. */
   font-size: 0.875rem;
   font-feature-settings: 'cv11', 'ss01', 'ss03';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Shared component utilities ──────────────────────────────────────────
-   These are the few CSS patterns that repeat across the app and earn a named
-   class. Everything else should be Tailwind + tailwindcss-primeui utilities
-   inline in the template (border-surface, text-muted-color, bg-emphasis,
-   bg-primary/10, …). Add to this list only when you've got a pattern living
-   in two or more components — until then, keep it inline.
-
-   These live in the `mp-components` cascade layer, ordered BEFORE
-   `tailwind-utilities`, so Tailwind utilities stacked on top (for active /
-   variant states) win cleanly. Properties are written longhand so single-
-   property utilities can override them surgically without needing the layer
-   bump to do all the heavy lifting. */
 @layer mp-components {
-  /* Hand-built surface that matches `.p-card` exactly (border, radius, bg) for
-     places a full p-card is overkill — the page-header bar and dashboard
-     widgets. Keeps every "container" tracking one source of truth so the old
-     `bg-content rounded-xl shadow-sm` (12px + shadow) divergence can't recur. */
   .mp-surface {
-    background-color: var(--p-content-background);
-    border: 1px solid var(--p-content-border-color);
+    background-color: var(--background);
+    border: 1px solid var(--border);
     border-radius: var(--radius-surface);
   }
 
-  /* Heading type scale. Four ad-hoc heading treatments (h2.text-lg.bold,
-     h3.text-base, card-title 1rem, page-header text-lg) collapse to three
-     roles. Applied by the shared header components (mp-page-header,
-     mp-section-header, mp-dialog) so pages don't hand-pick sizes. */
   .mp-title {
     font-size: 1.125rem;
     font-weight: 600;
@@ -276,13 +194,9 @@ body {
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--p-text-muted-color);
+    color: var(--muted-foreground);
   }
 
-  /* Pill-style toggle. Defaults to the muted/unselected state; the active
-     state is supplied per-instance — Tailwind classes (`text-primary
-     border-primary/40 bg-primary/10`) for fixed primary tinting, or inline
-     styles for dynamic per-row colouring. */
   .mp-chip {
     display: inline-flex;
     align-items: center;
@@ -291,39 +205,29 @@ body {
     border-radius: 9999px;
     border-width: 1px;
     border-style: solid;
-    border-color: var(--p-content-border-color);
+    border-color: var(--border);
     background-color: transparent;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--p-text-muted-color);
+    color: var(--muted-foreground);
     cursor: pointer;
     transition: background-color 120ms, color 120ms, border-color 120ms;
   }
   .mp-chip:hover {
-    background-color: var(--p-content-hover-background);
-    color: var(--p-text-color);
+    background-color: var(--muted);
+    color: var(--foreground);
   }
 
-  /* Active state for `.mp-chip` when the tint is the app primary — used by the
-     form's audience picker and the feed's "All" filter. Per-category chips in
-     the feed handle their active state via inline styles (dynamic hex per
-     category) and bypass this class. Kept in our CSS rather than as a Tailwind
-     `border-primary/40 bg-primary/10` utility stack on the element because
-     `tailwindcss-primeui`'s opacity modifiers don't reliably flow through
-     `[ngClass]` object bindings during template scanning. */
   .mp-chip-active {
-    color: var(--p-primary-color);
-    border-color: color-mix(in srgb, var(--p-primary-color) 40%, transparent);
-    background-color: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+    color: var(--primary);
+    border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+    background-color: color-mix(in srgb, var(--primary) 10%, transparent);
   }
   .mp-chip-active:hover {
-    /* Override the muted-hover from `.mp-chip:hover` so hovering an active
-       chip doesn't wash out the primary tint. */
-    color: var(--p-primary-color);
-    background-color: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+    color: var(--primary);
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
   }
 
-  /* Round icon-only button — primarily for dialog close (X) buttons. */
   .mp-icon-button {
     display: inline-flex;
     align-items: center;
@@ -334,22 +238,18 @@ body {
     background-color: transparent;
     border: 0;
     cursor: pointer;
-    color: var(--p-text-muted-color);
+    color: var(--muted-foreground);
   }
   .mp-icon-button:hover {
-    background-color: var(--p-content-hover-background);
-    color: var(--p-text-color);
+    background-color: var(--muted);
+    color: var(--foreground);
   }
 
-  /* Sidebar nav item states, built on PrimeNG semantic vars so they flip with
-     the theme automatically (no light/dark Tailwind class pairs to keep in
-     sync). `--active` is the selected section; `--hoverable` is an idle,
-     enabled item that tints on hover. Used by the staff profile section nav. */
   .mp-nav-item--active {
-    background-color: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
-    color: var(--p-primary-color);
+    background-color: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
   }
   .mp-nav-item--hoverable:hover {
-    background-color: var(--p-content-hover-background);
+    background-color: var(--muted);
   }
 }

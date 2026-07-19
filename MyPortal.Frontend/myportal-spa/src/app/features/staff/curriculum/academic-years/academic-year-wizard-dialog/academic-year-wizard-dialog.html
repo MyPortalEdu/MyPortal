@@ -7,7 +7,7 @@
   [dismissable]="false"
   panelClass="w-[min(64rem,95vw)]">
 
-  <div class="flex items-center justify-between p-4 border-b border-surface">
+  <div class="flex items-center justify-between p-4 border-b border-border">
     <h3 class="text-base font-semibold m-0">
       {{ readOnly() ? t('viewTitle') : (isEditMode() ? t('editTitle') : t('title')) }}
     </h3>
@@ -34,8 +34,8 @@
               [class.text-white]="i < currentStep()"
               [class.bg-primary]="i === currentStep()"
               [class.text-primary-contrast]="i === currentStep()"
-              [class.bg-emphasis]="i > currentStep()"
-              [class.text-muted-color]="i > currentStep()">
+              [class.bg-muted]="i > currentStep()"
+              [class.text-muted-foreground]="i > currentStep()">
           @if (i < currentStep()) {
             <i class="fa-solid fa-check"></i>
           } @else {
@@ -49,7 +49,7 @@
           {{ t('steps.' + key) }}
         </span>
         @if (i < stepKeys.length - 1) {
-          <i class="fa-solid fa-chevron-right text-xs text-muted-color mx-1"></i>
+          <i class="fa-solid fa-chevron-right text-xs text-muted-foreground mx-1"></i>
         }
       </li>
     }
@@ -59,7 +59,7 @@
     @if (loading()) {
       <div class="flex flex-col items-center justify-center min-h-[18rem] gap-3">
         <mp-spinner size="2.5rem"></mp-spinner>
-        <span class="text-sm text-muted-color">{{ t('loading') }}</span>
+        <span class="text-sm text-muted-foreground">{{ t('loading') }}</span>
       </div>
     } @else {
       @switch (currentStepKey()) {
@@ -97,7 +97,7 @@
 
   </div>
 
-  <div class="flex items-center justify-between gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+  <div class="flex items-center justify-between gap-2 p-4 border-t border-border bg-muted rounded-b-xl">
     <button mpButton
       variant="ghost"
       [disabled]="submitting()"

@@ -10,7 +10,7 @@
     <mp-loading></mp-loading>
   } @else {
     @if (!canEdit()) {
-      <div class="mb-3 max-w-5xl px-3 py-2 rounded-md bg-emphasis text-sm text-muted-color">
+      <div class="mb-3 max-w-5xl px-3 py-2 rounded-md bg-muted text-sm text-muted-foreground">
         <i class="fa-solid fa-lock mr-2"></i>{{ t('readOnlyHint') }}
       </div>
     }
@@ -115,7 +115,7 @@
               } @else if (localAuthorityId()) {
                 <span class="font-mono text-xs">{{ localAuthorityId() }}</span>
               } @else {
-                <span class="text-muted-color">{{ t('fields.noLocalAuthority') }}</span>
+                <span class="text-muted-foreground">{{ t('fields.noLocalAuthority') }}</span>
               }
             </span>
             @if (canEdit()) {
@@ -381,7 +381,7 @@
               } @else if (headTeacherId()) {
                 <span class="font-mono text-xs">{{ headTeacherId() }}</span>
               } @else {
-                <span class="text-muted-color">{{ t('fields.noHeadTeacher') }}</span>
+                <span class="text-muted-foreground">{{ t('fields.noHeadTeacher') }}</span>
               }
             </span>
             @if (canEdit()) {

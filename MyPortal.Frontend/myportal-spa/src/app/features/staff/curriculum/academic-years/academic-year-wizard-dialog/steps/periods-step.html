@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-5">
     <div>
       <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
-      <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
+      <p class="text-sm text-muted-foreground m-0">{{ t('description') }}</p>
     </div>
 
     @if (!editMode()) {
@@ -19,7 +19,7 @@
     @if (!editMode() && mode() === 'copy') {
       <section class="flex flex-col gap-2">
         @if (priorYears().length === 0) {
-          <div class="text-sm text-muted-color border border-dashed border-surface rounded-lg p-4 text-center">
+          <div class="text-sm text-muted-foreground border border-dashed border-border rounded-lg p-4 text-center">
             {{ t('noPriorYears') }}
           </div>
         } @else {
@@ -76,15 +76,15 @@
         </div>
 
         @if (periodsForDay().length === 0) {
-          <div class="text-sm text-muted-color text-center border border-dashed border-surface rounded-lg p-4">
+          <div class="text-sm text-muted-foreground text-center border border-dashed border-border rounded-lg p-4">
             {{ t('noPeriods') }}
           </div>
         } @else {
           <ul class="list-none m-0 p-0 flex flex-col gap-2">
             @for (entry of periodsForDay(); track entry.fullIndex) {
-              <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
+              <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-border">
                 <div class="flex flex-col gap-1 flex-1 min-w-[10rem]">
-                  <label class="text-xs text-muted-color">{{ t('periodName') }}</label>
+                  <label class="text-xs text-muted-foreground">{{ t('periodName') }}</label>
                   <input mpInput type="text"
                     [ngModel]="entry.period.name"
                     (ngModelChange)="updatePeriod(entry.fullIndex, { name: $event })"
@@ -92,7 +92,7 @@
                     [placeholder]="t('periodNamePlaceholder')" />
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs text-muted-color">{{ t('startTime') }}</label>
+                  <label class="text-xs text-muted-foreground">{{ t('startTime') }}</label>
                   <mp-date-picker
                     [ngModel]="entry.period.startTime"
                     (ngModelChange)="updatePeriod(entry.fullIndex, { startTime: $event })"
@@ -101,7 +101,7 @@
                   </mp-date-picker>
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs text-muted-color">{{ t('endTime') }}</label>
+                  <label class="text-xs text-muted-foreground">{{ t('endTime') }}</label>
                   <mp-date-picker
                     [ngModel]="entry.period.endTime"
                     (ngModelChange)="updatePeriod(entry.fullIndex, { endTime: $event })"

@@ -59,21 +59,21 @@ const MOBILE_MAX = 639;
          --p-surface-N ramp does NOT invert (Aura defines surface.50 as a light slate/zinc in both
          colour schemes), so it must never be used here. */
       :host ::ng-deep .fc {
-        --fc-page-bg-color: var(--p-content-background);
-        --fc-border-color: var(--p-content-border-color);
-        --fc-neutral-bg-color: var(--p-content-hover-background);
-        --fc-neutral-text-color: var(--p-text-muted-color);
-        --fc-today-bg-color: color-mix(in srgb, var(--p-primary-color) 8%, transparent);
-        --fc-now-indicator-color: var(--p-primary-color);
-        --fc-highlight-color: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
-        --fc-non-business-color: color-mix(in srgb, var(--p-text-muted-color) 8%, transparent);
-        --fc-list-event-hover-bg-color: var(--p-content-hover-background);
-        --fc-more-link-bg-color: var(--p-content-hover-background);
-        --fc-more-link-text-color: var(--p-text-color);
-        --fc-event-bg-color: var(--p-primary-color);
-        --fc-event-border-color: var(--p-primary-color);
-        --fc-event-text-color: var(--p-primary-contrast-color, #fff);
-        --fc-event-selected-overlay-color: color-mix(in srgb, var(--p-text-color) 20%, transparent);
+        --fc-page-bg-color: var(--background);
+        --fc-border-color: var(--border);
+        --fc-neutral-bg-color: var(--muted);
+        --fc-neutral-text-color: var(--muted-foreground);
+        --fc-today-bg-color: color-mix(in srgb, var(--primary) 8%, transparent);
+        --fc-now-indicator-color: var(--primary);
+        --fc-highlight-color: color-mix(in srgb, var(--primary) 12%, transparent);
+        --fc-non-business-color: color-mix(in srgb, var(--muted-foreground) 8%, transparent);
+        --fc-list-event-hover-bg-color: var(--muted);
+        --fc-more-link-bg-color: var(--muted);
+        --fc-more-link-text-color: var(--foreground);
+        --fc-event-bg-color: var(--primary);
+        --fc-event-border-color: var(--primary);
+        --fc-event-text-color: var(--primary-foreground, #fff);
+        --fc-event-selected-overlay-color: color-mix(in srgb, var(--foreground) 20%, transparent);
         font-size: 0.8125rem;
       }
       :host ::ng-deep .fc .fc-toolbar.fc-header-toolbar {
@@ -95,30 +95,30 @@ const MOBILE_MAX = 639;
       /* Bind FullCalendar's button skin to the app's theme: subtle by default,
          indigo for the active view and the pressed state. */
       :host ::ng-deep .fc .fc-button-primary {
-        --fc-button-bg-color: var(--p-content-background);
-        --fc-button-border-color: var(--p-content-border-color);
-        --fc-button-text-color: var(--p-text-color);
-        --fc-button-hover-bg-color: var(--p-content-hover-background);
-        --fc-button-hover-border-color: var(--p-content-border-color);
-        --fc-button-active-bg-color: var(--p-primary-color);
-        --fc-button-active-border-color: var(--p-primary-color);
-        border-radius: var(--p-button-border-radius);
+        --fc-button-bg-color: var(--background);
+        --fc-button-border-color: var(--border);
+        --fc-button-text-color: var(--foreground);
+        --fc-button-hover-bg-color: var(--muted);
+        --fc-button-hover-border-color: var(--border);
+        --fc-button-active-bg-color: var(--primary);
+        --fc-button-active-border-color: var(--primary);
+        border-radius: var(--radius-control);
       }
       :host ::ng-deep .fc .fc-button-primary:not(:disabled).fc-button-active,
       :host ::ng-deep .fc .fc-button-primary:not(:disabled):active {
-        color: var(--p-primary-contrast-color, #fff);
+        color: var(--primary-foreground, #fff);
       }
       :host ::ng-deep .fc .fc-button-primary:disabled {
-        --fc-button-bg-color: var(--p-content-background);
-        --fc-button-border-color: var(--p-content-border-color);
-        --fc-button-text-color: var(--p-text-muted-color);
+        --fc-button-bg-color: var(--background);
+        --fc-button-border-color: var(--border);
+        --fc-button-text-color: var(--muted-foreground);
         opacity: 1;
       }
       :host ::ng-deep .fc .fc-button-primary:focus {
         box-shadow: none;
       }
       :host ::ng-deep .fc .fc-button-primary:focus-visible {
-        outline: 2px solid var(--p-primary-color);
+        outline: 2px solid var(--primary);
         outline-offset: 1px;
       }
       :host ::ng-deep .fc-event {

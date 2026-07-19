@@ -43,7 +43,7 @@
             class="w-full sm:w-44"
             [ariaLabel]="t('staff-members.statusFilter.label')"></mp-select>
           <span class="relative w-full sm:w-80">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
             <input
               mpInput
               type="text"
@@ -94,10 +94,10 @@
               [routerLink]="['/staff/people/staff-members', row.id]"
               class="font-medium hover:underline">{{ displayName(row) }}</a>
             @if (legalName(row); as legal) {
-              <div class="text-xs text-muted-color">{{ legal }}</div>
+              <div class="text-xs text-muted-foreground">{{ legal }}</div>
             }
           </td>
-          <td class="font-mono text-xs text-muted-color">{{ row.code }}</td>
+          <td class="font-mono text-xs text-muted-foreground">{{ row.code }}</td>
           <td>
             <mp-badge
               [value]="t('staff-members.status.' + row.status)"

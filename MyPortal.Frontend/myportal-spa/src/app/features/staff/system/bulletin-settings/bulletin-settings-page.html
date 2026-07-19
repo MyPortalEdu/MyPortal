@@ -9,7 +9,7 @@
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-0.5">
         <h2 class="text-base font-semibold m-0">{{ t('categories.title') }}</h2>
-        <p class="text-sm text-muted-color m-0">{{ t('categories.description') }}</p>
+        <p class="text-sm text-muted-foreground m-0">{{ t('categories.description') }}</p>
       </div>
       <button mpButton (click)="openNewCategory()"><i class="fa-solid fa-plus"></i> {{ t('categories.add') }}</button>
     </div>
@@ -17,7 +17,7 @@
     @if (categoriesLoading()) {
       <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
         @for (_ of [0, 1, 2]; track $index) {
-          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-border">
             <mp-skeleton width="2.25rem" height="2.25rem" class="!rounded-lg shrink-0"></mp-skeleton>
             <div class="flex-1 min-w-0 flex flex-col gap-1.5">
               <mp-skeleton width="40%" height="1rem"></mp-skeleton>
@@ -31,7 +31,7 @@
     } @else {
       <ul class="list-none m-0 p-0 flex flex-col gap-2">
         @for (c of categories(); track c.id) {
-          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-content-background)]">
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-background">
             <div
               class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
               [style.backgroundColor]="c.colourCode + '1A'">
@@ -41,15 +41,15 @@
               <div class="flex items-center gap-2">
                 <span class="font-medium truncate">{{ c.name }}</span>
                 @if (!c.active) {
-                  <span class="text-[0.6875rem] uppercase tracking-wide px-1.5 py-0.5 rounded bg-emphasis text-muted-color">
+                  <span class="text-[0.6875rem] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
                     {{ t('categories.inactive') }}
                   </span>
                 }
                 @if (c.isSystem) {
-                  <span class="text-[0.6875rem] uppercase tracking-wide text-muted-color">system</span>
+                  <span class="text-[0.6875rem] uppercase tracking-wide text-muted-foreground">system</span>
                 }
               </div>
-              <span class="text-xs text-muted-color">
+              <span class="text-xs text-muted-foreground">
                 {{ c.icon }} · {{ c.colourCode }} · #{{ c.displayOrder }}
               </span>
             </div>
@@ -77,7 +77,7 @@
     <div class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-0.5">
         <h2 class="text-base font-semibold m-0">{{ t('audiences.title') }}</h2>
-        <p class="text-sm text-muted-color m-0">{{ t('audiences.description') }}</p>
+        <p class="text-sm text-muted-foreground m-0">{{ t('audiences.description') }}</p>
       </div>
       @if (academicYearId(); as ayId) {
         <mp-student-group-picker
@@ -92,7 +92,7 @@
     @if (allowedGroupsLoading()) {
       <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
         @for (_ of [0, 1, 2]; track $index) {
-          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-border">
             <div class="flex-1 min-w-0 flex flex-col gap-1.5">
               <mp-skeleton width="50%" height="1rem"></mp-skeleton>
               <mp-skeleton width="25%" height="0.75rem"></mp-skeleton>
@@ -105,10 +105,10 @@
     } @else {
       <ul class="list-none m-0 p-0 flex flex-col gap-2">
         @for (g of allowedGroups(); track g.studentGroupId) {
-          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface bg-[var(--p-content-background)]">
+          <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-border bg-background">
             <div class="flex-1 min-w-0 flex flex-col gap-0.5">
               <span class="font-medium truncate">{{ g.name }}</span>
-              <span class="text-xs text-muted-color font-mono">{{ g.code }}</span>
+              <span class="text-xs text-muted-foreground font-mono">{{ g.code }}</span>
             </div>
             <button
               mpButton

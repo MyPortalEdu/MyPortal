@@ -35,10 +35,10 @@
               [severity]="statusSeverity()"
             ></mp-badge>
             @if (h.relationship !== 'Unrelated') {
-              <span class="text-sm text-muted-color">{{ relationshipLabel(h.relationship) }}</span>
+              <span class="text-sm text-muted-foreground">{{ relationshipLabel(h.relationship) }}</span>
             }
           </div>
-          <div class="text-sm text-muted-color font-mono">{{ h.code }}</div>
+          <div class="text-sm text-muted-foreground font-mono">{{ h.code }}</div>
         </div>
         <div class="flex items-center gap-2 w-full justify-end sm:w-auto">
           <button mpButton
@@ -69,7 +69,7 @@
               class="flex items-center gap-2 rounded px-3 py-2 text-left transition-colors"
               [class.mp-nav-item--active]="activeArea() === area.key && area.enabled"
               [class.font-semibold]="activeArea() === area.key && area.enabled"
-              [class.text-muted-color]="!area.enabled"
+              [class.text-muted-foreground]="!area.enabled"
               [class.cursor-pointer]="area.enabled"
               [class.cursor-not-allowed]="!area.enabled"
               [class.mp-nav-item--hoverable]="area.enabled && activeArea() !== area.key"
@@ -89,7 +89,7 @@
               <mp-loading></mp-loading>
             } @else if (current()) {
               <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.basicDetails') }}</h3>
-              <p class="text-sm text-muted-color mb-4">
+              <p class="text-sm text-muted-foreground mb-4">
                 {{ t('staff-members.details.basicHint') }}
               </p>
 
@@ -105,11 +105,11 @@
               <div class="flex flex-col gap-6 md:flex-row md:gap-8">
 
                 <div class="md:w-40 md:shrink-0">
-                  <div class="relative aspect-[3/4] w-full overflow-hidden rounded-md border border-surface bg-emphasis">
+                  <div class="relative aspect-[3/4] w-full overflow-hidden rounded-md border border-border bg-muted">
                     @if (current()?.photoId; as pid) {
                       <img [src]="photoSrc(pid)" alt="" class="h-full w-full object-cover" />
                     } @else {
-                      <div class="flex h-full w-full items-center justify-center text-muted-color">
+                      <div class="flex h-full w-full items-center justify-center text-muted-foreground">
                         <i class="fa-solid fa-user text-5xl"></i>
                       </div>
                     }
@@ -312,7 +312,7 @@
           }
           @case ('timetable') {
             <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.timetable') }}</h3>
-            <p class="text-sm text-muted-color mb-4">{{ t('staff-members.timetable.hint') }}</p>
+            <p class="text-sm text-muted-foreground mb-4">{{ t('staff-members.timetable.hint') }}</p>
             <mp-staff-timetable [staffMemberId]="staffMemberId()"></mp-staff-timetable>
           }
           @case ('performanceDetails') {
@@ -324,7 +324,7 @@
           }
           @case ('documents') {
             <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.documents') }}</h3>
-            <p class="text-sm text-muted-color mb-4">{{ t('staff-members.details.documentsHint') }}</p>
+            <p class="text-sm text-muted-foreground mb-4">{{ t('staff-members.details.documentsHint') }}</p>
             <mp-directory-browser
               [baseUrl]="documentsBaseUrl()"
               [canEdit]="canEditDocuments()"

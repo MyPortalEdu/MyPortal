@@ -11,22 +11,22 @@
 
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('form.name') }}</label>
+        <label class="text-xs font-medium text-muted-foreground">{{ t('form.name') }}</label>
         <input mpInput [ngModel]="name()" (ngModelChange)="name.set($event)" [placeholder]="t('form.namePlaceholder')" />
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('form.audience') }}</label>
+        <label class="text-xs font-medium text-muted-foreground">{{ t('form.audience') }}</label>
         <mp-select
           [ngModel]="userType()"
           (ngModelChange)="userType.set($event)"
           [options]="audienceOptions()"
           optionLabel="label"
           optionValue="value"></mp-select>
-        <small class="text-muted-color">{{ t('form.audienceHint') }}</small>
+        <small class="text-muted-foreground">{{ t('form.audienceHint') }}</small>
       </div>
 
-      <p class="text-xs text-muted-color m-0">{{ t('form.createHint') }}</p>
+      <p class="text-xs text-muted-foreground m-0">{{ t('form.createHint') }}</p>
     </div>
 
     <div mpDialogFooter class="flex items-center justify-end gap-2">

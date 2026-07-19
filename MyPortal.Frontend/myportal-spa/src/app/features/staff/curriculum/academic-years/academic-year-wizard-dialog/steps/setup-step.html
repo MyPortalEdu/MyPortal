@@ -2,14 +2,14 @@
   <div class="flex flex-col gap-5">
     <div>
       <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
-      <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
+      <p class="text-sm text-muted-foreground m-0">{{ t('description') }}</p>
     </div>
 
     @if (yearName(); as name) {
-      <div class="rounded-lg bg-[var(--p-primary-50)] border border-[var(--p-primary-200)] p-3 flex items-center gap-3">
+      <div class="rounded-lg bg-primary-50 border border-primary-200 p-3 flex items-center gap-3">
         <i class="fa-solid fa-calendar-days text-primary text-xl"></i>
         <div>
-          <span class="text-xs uppercase text-muted-color tracking-wide">{{ t('yearPreview') }}</span>
+          <span class="text-xs uppercase text-muted-foreground tracking-wide">{{ t('yearPreview') }}</span>
           <p class="text-base font-semibold m-0">{{ name }}</p>
         </div>
       </div>
@@ -28,7 +28,7 @@
             [showButtons]="!readOnly()"
             [disabled]="readOnly()">
           </mp-input-number>
-          <span class="text-xs text-muted-color">{{ t('daysPerWeekHint') }}</span>
+          <span class="text-xs text-muted-foreground">{{ t('daysPerWeekHint') }}</span>
         </div>
 
         <div class="flex flex-col gap-1">
@@ -63,7 +63,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h4 class="text-sm font-semibold m-0">{{ t('termsSection') }}</h4>
-          <p class="text-xs text-muted-color m-0">{{ t('termsHint') }}</p>
+          <p class="text-xs text-muted-foreground m-0">{{ t('termsHint') }}</p>
         </div>
         @if (!readOnly()) {
           <button mpButton variant="secondary" size="sm" (click)="addTerm()"><i class="fa-solid fa-plus"></i> {{ t('addTerm') }}</button>
@@ -71,15 +71,15 @@
       </div>
 
       @if (model().academicTerms.length === 0) {
-        <div class="text-sm text-muted-color text-center border border-dashed border-surface rounded-lg p-4">
+        <div class="text-sm text-muted-foreground text-center border border-dashed border-border rounded-lg p-4">
           {{ t('noTerms') }}
         </div>
       } @else {
         <ul class="list-none m-0 p-0 flex flex-col gap-2">
           @for (term of model().academicTerms; track $index; let i = $index) {
-            <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
+            <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-border">
               <div class="flex flex-col gap-1 flex-1 min-w-[12rem]">
-                <label class="text-xs text-muted-color">{{ t('termName') }}</label>
+                <label class="text-xs text-muted-foreground">{{ t('termName') }}</label>
                 <input mpInput type="text"
                   [ngModel]="term.name"
                   (ngModelChange)="updateTermName(i, $event)"
@@ -87,7 +87,7 @@
                   [placeholder]="t('termNamePlaceholder')" />
               </div>
               <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-color">{{ t('termStart') }}</label>
+                <label class="text-xs text-muted-foreground">{{ t('termStart') }}</label>
                 <mp-date-picker
                   [ngModel]="term.startDate"
                   (ngModelChange)="updateTermDate(i, 'startDate', $event)"
@@ -95,7 +95,7 @@
                 </mp-date-picker>
               </div>
               <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-color">{{ t('termEnd') }}</label>
+                <label class="text-xs text-muted-foreground">{{ t('termEnd') }}</label>
                 <mp-date-picker
                   [ngModel]="term.endDate"
                   (ngModelChange)="updateTermDate(i, 'endDate', $event)"
@@ -114,7 +114,7 @@
     @if (priorYears().length > 0 && !editMode()) {
       <section class="flex flex-col gap-2">
         <h4 class="text-sm font-semibold m-0">{{ t('pastoralSection') }}</h4>
-        <p class="text-xs text-muted-color m-0">{{ t('pastoralHint') }}</p>
+        <p class="text-xs text-muted-foreground m-0">{{ t('pastoralHint') }}</p>
         <mp-select
           [ngModel]="model().copyPastoralStructureFromAcademicYearId"
           (ngModelChange)="onPastoralYearPicked($event)"

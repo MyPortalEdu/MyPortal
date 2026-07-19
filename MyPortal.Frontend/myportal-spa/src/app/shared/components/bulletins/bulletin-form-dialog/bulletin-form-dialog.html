@@ -12,7 +12,7 @@
 
   <div class="flex flex-col gap-3">
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.titleLabel') }}</label>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.titleLabel') }}</label>
       <input
         mpInput
         [placeholder]="t('form.titlePlaceholder')"
@@ -27,7 +27,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('form.category') }}</label>
+        <label class="text-xs font-medium text-muted-foreground">{{ t('form.category') }}</label>
         <mp-select
           [options]="categories()"
           optionLabel="name"
@@ -46,20 +46,20 @@
 
       @if (canPin()) {
         <div class="flex flex-col gap-1">
-          <label class="text-xs font-medium text-muted-color">{{ t('form.pinLabel') }}</label>
+          <label class="text-xs font-medium text-muted-foreground">{{ t('form.pinLabel') }}</label>
           <label class="flex items-start gap-2 text-sm">
             <mp-checkbox
               [ngModel]="isPinned()"
               (ngModelChange)="isPinned.set($event)">
             </mp-checkbox>
-            <span class="text-muted-color text-xs leading-snug">{{ t('form.pinHint') }}</span>
+            <span class="text-muted-foreground text-xs leading-snug">{{ t('form.pinHint') }}</span>
           </label>
         </div>
       }
     </div>
 
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.audienceLabel') }}</label>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.audienceLabel') }}</label>
       <div class="flex flex-wrap gap-2">
         @for (a of audienceChoices(); track a.key) {
           <button
@@ -78,7 +78,7 @@
     </div>
 
     <div class="flex flex-col gap-1 max-w-[18rem]">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.expiresLabel') }}</label>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.expiresLabel') }}</label>
       <mp-date-picker
         [ngModel]="expiresAt()"
         (ngModelChange)="expiresAt.set($event)"
@@ -87,11 +87,11 @@
         [placeholder]="t('form.expiresPlaceholder')"
         class="w-full">
       </mp-date-picker>
-      <span class="text-xs text-muted-color leading-snug">{{ t('form.expiresHint') }}</span>
+      <span class="text-xs text-muted-foreground leading-snug">{{ t('form.expiresHint') }}</span>
     </div>
 
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.bodyLabel') }}</label>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.bodyLabel') }}</label>
       <textarea
         mpTextarea
         rows="5"
@@ -107,7 +107,7 @@
     </div>
 
     <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.attachmentsLabel') }}</label>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.attachmentsLabel') }}</label>
       <mp-bulletin-attachments
         [mode]="isEdit() ? 'edit' : 'stage'"
         [bulletinId]="isEdit() ? existing()?.id ?? null : null"

@@ -76,12 +76,12 @@
             <td>
               {{ row.name }}
               @if (!row.active) {
-                <span class="ml-2 text-[0.6875rem] text-muted-color">
+                <span class="ml-2 text-[0.6875rem] text-muted-foreground">
                   ({{ t('common.studentGroupPicker.inactive') }})
                 </span>
               }
               @if (isAlreadyPicked(row)) {
-                <span class="ml-2 text-[0.6875rem] text-muted-color">
+                <span class="ml-2 text-[0.6875rem] text-muted-foreground">
                   ({{ t('common.studentGroupPicker.alreadyPicked') }})
                 </span>
               }
@@ -96,7 +96,7 @@
 
         <ng-template mpTableEmpty>
           <tr>
-            <td [attr.colspan]="allowMultiple() ? 4 : 3" class="text-center text-sm text-muted-color py-4">
+            <td [attr.colspan]="allowMultiple() ? 4 : 3" class="text-center text-sm text-muted-foreground py-4">
               {{ t('common.studentGroupPicker.empty') }}
             </td>
           </tr>
@@ -104,7 +104,7 @@
       </mp-table>
 
       @if (allowMultiple()) {
-        <div class="flex items-center justify-end gap-2 pt-2 border-t border-surface">
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
           <button mpButton variant="ghost" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
           <button mpButton [disabled]="selection.length === 0" (click)="confirm()">
             {{ t('common.studentGroupPicker.confirm', { count: selection.length }) }}

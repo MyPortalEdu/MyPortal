@@ -120,7 +120,7 @@ export class MpDatePicker implements ControlValueAccessor {
     'z-50 w-auto rounded-surface border border-border bg-background p-2 shadow-overlay';
   protected readonly timeSelectClass =
     'h-8 rounded-control border border-input bg-background px-1.5 text-sm outline-none cursor-pointer ' +
-    'transition-colors hover:border-[var(--p-form-field-hover-border-color)] focus:border-ring focus:ring-2 focus:ring-ring/40 ' +
+    'transition-colors hover:border-input-hover focus:border-ring focus:ring-2 focus:ring-ring/40 ' +
     'disabled:cursor-not-allowed disabled:opacity-50';
 
   protected pad(n: number): string {

@@ -16,7 +16,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       @if (error(); as e) {
         <small class="text-xs text-red-600 dark:text-red-400">{{ e }}</small>
       } @else if (hint(); as h) {
-        <small class="text-xs text-muted-color">{{ h }}</small>
+        <small class="text-xs text-muted-foreground">{{ h }}</small>
       }
     </div>
   `,

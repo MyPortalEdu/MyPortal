@@ -13,7 +13,7 @@ type CalloutSeverity = 'info' | 'warn' | 'success' | 'danger';
         @if (title(); as t) {
           <span class="font-semibold">{{ t }}</span>
         }
-        <div class="text-sm text-muted-color">
+        <div class="text-sm text-muted-foreground">
           <ng-content></ng-content>
         </div>
       </div>

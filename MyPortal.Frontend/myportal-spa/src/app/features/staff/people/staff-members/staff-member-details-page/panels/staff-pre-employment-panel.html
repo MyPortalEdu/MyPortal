@@ -3,7 +3,7 @@
     <mp-loading></mp-loading>
   } @else if (preEmployment()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.preEmploymentChecks') }}</h3>
-    <p class="text-sm text-muted-color mb-4">{{ t('staff-members.preEmployment.hint') }}</p>
+    <p class="text-sm text-muted-foreground mb-4">{{ t('staff-members.preEmployment.hint') }}</p>
 
     @if (editing() && !valid()) {
       <mp-callout severity="warn" [title]="t('common.validation.missingTitle')" class="mb-4 block">
@@ -43,9 +43,9 @@
         }
         <div class="flex flex-col gap-3">
           @for (d of dbsChecks(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.dbs') }}{{ dbsChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.dbs') }}{{ dbsChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeDbs')" (click)="removeDbsCheck(i)">
@@ -73,7 +73,7 @@
                   </label>
                 </div>
               } @else {
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(dbsCheckTypes(), d.dbsCheckTypeId) }}
                   · <span class="font-mono">{{ d.certificateNumber }}</span>
                   @if (d.issueDate) { · {{ t('staff-members.preEmployment.issueDate') }} {{ toDate(d.issueDate) | date:'mediumDate' }} }
@@ -100,9 +100,9 @@
         }
         <div class="flex flex-col gap-3">
           @for (r of rightToWorkChecks(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.rtw') }}{{ rightToWorkChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.rtw') }}{{ rightToWorkChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeRtw')" (click)="removeRightToWork(i)">
@@ -129,7 +129,7 @@
                   </mp-field>
                 </div>
               } @else {
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(rightToWorkDocumentTypes(), r.documentTypeId) }}
                   @if (r.documentNumber) { · <span class="font-mono">{{ r.documentNumber }}</span> }
                   @if (r.checkDate) { · {{ t('staff-members.preEmployment.checkDate') }} {{ toDate(r.checkDate) | date:'mediumDate' }} }
@@ -156,9 +156,9 @@
         }
         <div class="flex flex-col gap-3">
           @for (ref of references(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.reference') }}{{ references().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.reference') }}{{ references().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeReference')" (click)="removeReference(i)">
@@ -195,9 +195,9 @@
               } @else {
                 <div class="text-sm">
                   <span class="font-medium">{{ ref.refereeName }}</span>
-                  @if (ref.refereeOrganisation) { <span class="text-muted-color"> · {{ ref.refereeOrganisation }}</span> }
+                  @if (ref.refereeOrganisation) { <span class="text-muted-foreground"> · {{ ref.refereeOrganisation }}</span> }
                 </div>
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(referenceTypes(), ref.referenceTypeId) }}
                   · {{ lookupLabel(referenceStatuses(), ref.referenceStatusId) }}
                   @if (ref.receivedDate) { · {{ t('staff-members.preEmployment.receivedDate') }} {{ toDate(ref.receivedDate) | date:'mediumDate' }} }
@@ -223,9 +223,9 @@
         }
         <div class="flex flex-col gap-3">
           @for (o of overseasChecks(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.overseas') }}{{ overseasChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.overseas') }}{{ overseasChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeOverseas')" (click)="removeOverseasCheck(i)">
@@ -247,7 +247,7 @@
                   </label>
                 </div>
               } @else {
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(countries(), o.nationalityId) }}
                   @if (o.checkedDate) { · {{ toDate(o.checkedDate) | date:'mediumDate' }} }
                   · {{ o.isClear ? t('staff-members.preEmployment.clear') : t('staff-members.preEmployment.notClear') }}
