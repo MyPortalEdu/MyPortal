@@ -9,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormField, applyEach, form, maxLength, required, submit, validate } from '@angular/forms/signals';
 import { MpButton, MpDatePicker, MpInput, MpInputNumber, MpTextarea } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -29,14 +29,59 @@ import { SectionHeader } from '../../../../../../shared/components/section-heade
 import { Field } from '../../../../../../shared/components/field/field';
 import { Callout } from '../../../../../../shared/components/callout/callout';
 import {
-  PerformanceReviewUpsertItem,
-  StaffObjectiveUpsertItem,
-  StaffObservationUpsertItem,
   StaffPerformanceResponse,
   StaffPerformanceUpsertRequest,
-  StaffTrainingRecordUpsertItem,
 } from '../../../../../../shared/types/staff-performance';
 import { StaffAreaPanel } from './staff-area-panel';
+
+interface ReviewRow {
+  id: string | null;
+  cycleName: string;
+  reviewerId: string | null;
+  statusId: string | null;
+  reviewDate: Date | null;
+  nextReviewDate: Date | null;
+  overallRatingId: string | null;
+  summary: string;
+}
+interface ObjectiveRow {
+  id: string | null;
+  reviewId: string | null;
+  categoryId: string | null;
+  title: string;
+  description: string;
+  successCriteria: string;
+  dueDate: Date | null;
+  statusId: string | null;
+  progressNotes: string;
+}
+interface ObservationRow {
+  id: string | null;
+  date: Date | null;
+  observerId: string | null;
+  outcomeId: string | null;
+  focus: string;
+  subjectObserved: string;
+  strengths: string;
+  areasForDevelopment: string;
+  notes: string;
+}
+interface TrainingRow {
+  id: string | null;
+  trainingCourseId: string | null;
+  statusId: string | null;
+  completedDate: Date | null;
+  expiryDate: Date | null;
+  provider: string;
+  hours: number | null;
+  certificateReference: string;
+}
+interface PerformanceModel {
+  reviews: ReviewRow[];
+  objectives: ObjectiveRow[];
+  observations: ObservationRow[];
+  trainingRecords: TrainingRow[];
+}
 
 @Component({
   selector: 'mp-staff-performance-panel',
@@ -44,7 +89,7 @@ import { StaffAreaPanel } from './staff-area-panel';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
-    FormsModule,
+    FormField,
     MpButton,
     MpDatePicker,
     MpInput,
@@ -74,15 +119,41 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
   readonly relationship = input<StaffRelationship>();
 
   protected readonly loading = signal(false);
-  override readonly saving = signal(false);
   override readonly editing = signal(false);
 
   protected readonly performance = signal<StaffPerformanceResponse | null>(null);
 
-  protected readonly reviews = signal<PerformanceReviewUpsertItem[]>([]);
-  protected readonly objectives = signal<StaffObjectiveUpsertItem[]>([]);
-  protected readonly observations = signal<StaffObservationUpsertItem[]>([]);
-  protected readonly trainingRecords = signal<StaffTrainingRecordUpsertItem[]>([]);
+  protected readonly model = signal<PerformanceModel>({
+    reviews: [],
+    objectives: [],
+    observations: [],
+    trainingRecords: [],
+  });
+  protected readonly f = form(this.model, path => {
+    applyEach(path.reviews, item => {
+      maxLength(item.cycleName, 128);
+    });
+    applyEach(path.objectives, item => {
+      required(item.title);
+      validate(item.title, ({ value }) =>
+        value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+      );
+      maxLength(item.title, 256);
+    });
+    applyEach(path.observations, item => {
+      required(item.date);
+      required(item.observerId);
+      required(item.outcomeId);
+      maxLength(item.focus, 128);
+      maxLength(item.subjectObserved, 128);
+    });
+    applyEach(path.trainingRecords, item => {
+      required(item.trainingCourseId);
+      required(item.statusId);
+      maxLength(item.provider, 128);
+      maxLength(item.certificateReference, 64);
+    });
+  });
   private readonly snapshot = signal<string>('');
 
   protected readonly reviewStatuses = computed(() => this.performance()?.reviewStatuses ?? []);
@@ -107,21 +178,10 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  override readonly valid = computed(
-    () =>
-      this.objectives().every(o => o.title.trim().length > 0) &&
-      this.observations().every(o => !!o.date && !!o.observerId && !!o.outcomeId) &&
-      this.trainingRecords().every(t => !!t.trainingCourseId && !!t.statusId),
-  );
+  override readonly saving = computed(() => this.f().submitting());
+  override readonly valid = computed(() => this.f().valid());
 
-  private readonly form = computed(() =>
-    JSON.stringify({
-      reviews: this.reviews(),
-      objectives: this.objectives(),
-      observations: this.observations(),
-      trainingRecords: this.trainingRecords(),
-    }),
-  );
+  private readonly form = computed(() => JSON.stringify(this.model()));
 
   override readonly dirty = computed(
     () => this.performance() != null && this.snapshot() !== this.form(),
@@ -156,231 +216,205 @@ export class StaffPerformancePanel extends StaffAreaPanel implements OnInit {
   }
 
   override async save(): Promise<void> {
-    if (!this.canEdit() || !this.valid() || this.saving()) return;
-    this.saving.set(true);
-
-    const payload: StaffPerformanceUpsertRequest = {
-      reviews: this.reviews().map(r => ({
-        id: r.id ?? null,
-        cycleName: this.normalise(r.cycleName),
-        reviewerId: r.reviewerId ?? null,
-        statusId: r.statusId ?? null,
-        reviewDate: r.reviewDate ?? null,
-        nextReviewDate: r.nextReviewDate ?? null,
-        overallRatingId: r.overallRatingId ?? null,
-        summary: this.normalise(r.summary),
-      })),
-      objectives: this.objectives().map(o => ({
-        id: o.id ?? null,
-        reviewId: o.reviewId ?? null,
-        categoryId: o.categoryId ?? null,
-        title: o.title.trim(),
-        description: this.normalise(o.description),
-        successCriteria: this.normalise(o.successCriteria),
-        dueDate: o.dueDate ?? null,
-        statusId: o.statusId ?? null,
-        progressNotes: this.normalise(o.progressNotes),
-      })),
-      observations: this.observations().map(o => ({
-        id: o.id ?? null,
-        date: o.date,
-        observerId: o.observerId,
-        outcomeId: o.outcomeId,
-        focus: this.normalise(o.focus),
-        subjectObserved: this.normalise(o.subjectObserved),
-        strengths: this.normalise(o.strengths),
-        areasForDevelopment: this.normalise(o.areasForDevelopment),
-        notes: this.normalise(o.notes),
-      })),
-      trainingRecords: this.trainingRecords().map(t => ({
-        id: t.id ?? null,
-        trainingCourseId: t.trainingCourseId,
-        statusId: t.statusId,
-        completedDate: t.completedDate ?? null,
-        expiryDate: t.expiryDate ?? null,
-        provider: this.normalise(t.provider),
-        hours: t.hours ?? null,
-        certificateReference: this.normalise(t.certificateReference),
-      })),
-    };
-
-    try {
-      await firstValueFrom(this.data.updatePerformance(this.staffMemberId(), payload));
+    if (!this.canEdit() || !this.dirty()) return;
+    await submit(this.f, async () => {
+      const m = this.model();
+      const payload: StaffPerformanceUpsertRequest = {
+        reviews: m.reviews.map(r => ({
+          id: r.id,
+          cycleName: this.normalise(r.cycleName),
+          reviewerId: r.reviewerId,
+          statusId: r.statusId,
+          reviewDate: r.reviewDate?.toISOString() ?? null,
+          nextReviewDate: r.nextReviewDate?.toISOString() ?? null,
+          overallRatingId: r.overallRatingId,
+          summary: this.normalise(r.summary),
+        })),
+        objectives: m.objectives.map(o => ({
+          id: o.id,
+          reviewId: o.reviewId,
+          categoryId: o.categoryId,
+          title: o.title.trim(),
+          description: this.normalise(o.description),
+          successCriteria: this.normalise(o.successCriteria),
+          dueDate: o.dueDate?.toISOString() ?? null,
+          statusId: o.statusId,
+          progressNotes: this.normalise(o.progressNotes),
+        })),
+        observations: m.observations.map(o => ({
+          id: o.id,
+          date: o.date?.toISOString() ?? null,
+          observerId: o.observerId,
+          outcomeId: o.outcomeId,
+          focus: this.normalise(o.focus),
+          subjectObserved: this.normalise(o.subjectObserved),
+          strengths: this.normalise(o.strengths),
+          areasForDevelopment: this.normalise(o.areasForDevelopment),
+          notes: this.normalise(o.notes),
+        })),
+        trainingRecords: m.trainingRecords.map(t => ({
+          id: t.id,
+          trainingCourseId: t.trainingCourseId,
+          statusId: t.statusId,
+          completedDate: t.completedDate?.toISOString() ?? null,
+          expiryDate: t.expiryDate?.toISOString() ?? null,
+          provider: this.normalise(t.provider),
+          hours: t.hours,
+          certificateReference: this.normalise(t.certificateReference),
+        })),
+      };
+      try {
+        await firstValueFrom(this.data.updatePerformance(this.staffMemberId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.savePerformanceError'));
+        return;
+      }
       this.notify.success(this.transloco.translate('staff-members.savedPerformanceToast'));
       this.editing.set(false);
       this.load();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.savePerformanceError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   private apply(row: StaffPerformanceResponse | null): void {
-    this.reviews.set(
-      (row?.reviews ?? []).map(r => ({
+    this.model.set({
+      reviews: (row?.reviews ?? []).map(r => ({
         id: r.id,
-        cycleName: r.cycleName ?? null,
+        cycleName: r.cycleName ?? '',
         reviewerId: r.reviewerId ?? null,
         statusId: r.statusId ?? null,
-        reviewDate: r.reviewDate ?? null,
-        nextReviewDate: r.nextReviewDate ?? null,
+        reviewDate: r.reviewDate ? new Date(r.reviewDate) : null,
+        nextReviewDate: r.nextReviewDate ? new Date(r.nextReviewDate) : null,
         overallRatingId: r.overallRatingId ?? null,
-        summary: r.summary ?? null,
+        summary: r.summary ?? '',
       })),
-    );
-    this.objectives.set(
-      (row?.objectives ?? []).map(o => ({
+      objectives: (row?.objectives ?? []).map(o => ({
         id: o.id,
         reviewId: o.reviewId ?? null,
         categoryId: o.categoryId ?? null,
         title: o.title,
-        description: o.description ?? null,
-        successCriteria: o.successCriteria ?? null,
-        dueDate: o.dueDate ?? null,
+        description: o.description ?? '',
+        successCriteria: o.successCriteria ?? '',
+        dueDate: o.dueDate ? new Date(o.dueDate) : null,
         statusId: o.statusId ?? null,
-        progressNotes: o.progressNotes ?? null,
+        progressNotes: o.progressNotes ?? '',
       })),
-    );
-    this.observations.set(
-      (row?.observations ?? []).map(o => ({
+      observations: (row?.observations ?? []).map(o => ({
         id: o.id,
-        date: o.date,
-        observerId: o.observerId,
-        outcomeId: o.outcomeId,
-        focus: o.focus ?? null,
-        subjectObserved: o.subjectObserved ?? null,
-        strengths: o.strengths ?? null,
-        areasForDevelopment: o.areasForDevelopment ?? null,
-        notes: o.notes ?? null,
+        date: o.date ? new Date(o.date) : null,
+        observerId: o.observerId ?? null,
+        outcomeId: o.outcomeId ?? null,
+        focus: o.focus ?? '',
+        subjectObserved: o.subjectObserved ?? '',
+        strengths: o.strengths ?? '',
+        areasForDevelopment: o.areasForDevelopment ?? '',
+        notes: o.notes ?? '',
       })),
-    );
-    this.trainingRecords.set(
-      (row?.trainingRecords ?? []).map(t => ({
+      trainingRecords: (row?.trainingRecords ?? []).map(t => ({
         id: t.id,
-        trainingCourseId: t.trainingCourseId,
-        statusId: t.statusId,
-        completedDate: t.completedDate ?? null,
-        expiryDate: t.expiryDate ?? null,
-        provider: t.provider ?? null,
+        trainingCourseId: t.trainingCourseId ?? null,
+        statusId: t.statusId ?? null,
+        completedDate: t.completedDate ? new Date(t.completedDate) : null,
+        expiryDate: t.expiryDate ? new Date(t.expiryDate) : null,
+        provider: t.provider ?? '',
         hours: t.hours ?? null,
-        certificateReference: t.certificateReference ?? null,
+        certificateReference: t.certificateReference ?? '',
       })),
-    );
+    });
+    this.f().reset();
     this.snapshot.set(this.form());
   }
 
   protected addReview(): void {
-    this.reviews.update(rows => [
-      ...rows,
-      {
-        id: null,
-        cycleName: null,
-        reviewerId: null,
-        statusId: null,
-        reviewDate: null,
-        nextReviewDate: null,
-        overallRatingId: null,
-        summary: null,
-      },
-    ]);
+    this.model.update(m => ({
+      ...m,
+      reviews: [
+        ...m.reviews,
+        {
+          id: null,
+          cycleName: '',
+          reviewerId: null,
+          statusId: null,
+          reviewDate: null,
+          nextReviewDate: null,
+          overallRatingId: null,
+          summary: '',
+        },
+      ],
+    }));
   }
 
   protected removeReview(index: number): void {
-    this.reviews.update(rows => rows.filter((_, i) => i !== index));
-  }
-
-  protected patchReview<K extends keyof PerformanceReviewUpsertItem>(
-    index: number,
-    key: K,
-    value: PerformanceReviewUpsertItem[K],
-  ): void {
-    this.reviews.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+    this.model.update(m => ({ ...m, reviews: m.reviews.filter((_, i) => i !== index) }));
   }
 
   protected addObjective(): void {
-    this.objectives.update(rows => [
-      ...rows,
-      {
-        id: null,
-        reviewId: null,
-        categoryId: null,
-        title: '',
-        description: null,
-        successCriteria: null,
-        dueDate: null,
-        statusId: null,
-        progressNotes: null,
-      },
-    ]);
+    this.model.update(m => ({
+      ...m,
+      objectives: [
+        ...m.objectives,
+        {
+          id: null,
+          reviewId: null,
+          categoryId: null,
+          title: '',
+          description: '',
+          successCriteria: '',
+          dueDate: null,
+          statusId: null,
+          progressNotes: '',
+        },
+      ],
+    }));
   }
 
   protected removeObjective(index: number): void {
-    this.objectives.update(rows => rows.filter((_, i) => i !== index));
-  }
-
-  protected patchObjective<K extends keyof StaffObjectiveUpsertItem>(
-    index: number,
-    key: K,
-    value: StaffObjectiveUpsertItem[K],
-  ): void {
-    this.objectives.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+    this.model.update(m => ({ ...m, objectives: m.objectives.filter((_, i) => i !== index) }));
   }
 
   protected addObservation(): void {
-    this.observations.update(rows => [
-      ...rows,
-      {
-        id: null,
-        date: null,
-        observerId: null,
-        outcomeId: null,
-        focus: null,
-        subjectObserved: null,
-        strengths: null,
-        areasForDevelopment: null,
-        notes: null,
-      },
-    ]);
+    this.model.update(m => ({
+      ...m,
+      observations: [
+        ...m.observations,
+        {
+          id: null,
+          date: null,
+          observerId: null,
+          outcomeId: null,
+          focus: '',
+          subjectObserved: '',
+          strengths: '',
+          areasForDevelopment: '',
+          notes: '',
+        },
+      ],
+    }));
   }
 
   protected removeObservation(index: number): void {
-    this.observations.update(rows => rows.filter((_, i) => i !== index));
-  }
-
-  protected patchObservation<K extends keyof StaffObservationUpsertItem>(
-    index: number,
-    key: K,
-    value: StaffObservationUpsertItem[K],
-  ): void {
-    this.observations.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+    this.model.update(m => ({ ...m, observations: m.observations.filter((_, i) => i !== index) }));
   }
 
   protected addTrainingRecord(): void {
-    this.trainingRecords.update(rows => [
-      ...rows,
-      {
-        id: null,
-        trainingCourseId: null,
-        statusId: null,
-        completedDate: null,
-        expiryDate: null,
-        provider: null,
-        hours: null,
-        certificateReference: null,
-      },
-    ]);
+    this.model.update(m => ({
+      ...m,
+      trainingRecords: [
+        ...m.trainingRecords,
+        {
+          id: null,
+          trainingCourseId: null,
+          statusId: null,
+          completedDate: null,
+          expiryDate: null,
+          provider: '',
+          hours: null,
+          certificateReference: '',
+        },
+      ],
+    }));
   }
 
   protected removeTrainingRecord(index: number): void {
-    this.trainingRecords.update(rows => rows.filter((_, i) => i !== index));
-  }
-
-  protected patchTrainingRecord<K extends keyof StaffTrainingRecordUpsertItem>(
-    index: number,
-    key: K,
-    value: StaffTrainingRecordUpsertItem[K],
-  ): void {
-    this.trainingRecords.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
+    this.model.update(m => ({ ...m, trainingRecords: m.trainingRecords.filter((_, i) => i !== index) }));
   }
 }

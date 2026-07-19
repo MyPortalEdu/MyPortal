@@ -15,12 +15,13 @@
       <section>
         <mp-section-header icon="fa-solid fa-clipboard-check" [title]="t('staff-members.preEmployment.summaryHeading')"></mp-section-header>
         <div class="grid gap-4 md:grid-cols-2">
-          @for (f of summaryFlags; track f.key) {
-            <mp-field [label]="t('staff-members.preEmployment.' + f.key)">
+          @for (flag of summaryFlags; track flag.key) {
+            <mp-field [label]="t('staff-members.preEmployment.' + flag.key)">
               @if (editing()) {
-                <mp-date-picker [ngModel]="f.get()" (ngModelChange)="f.set($event)" [showIcon]="true" class="w-full"></mp-date-picker>
+                <mp-date-picker [formField]="flag.field" [showIcon]="true" class="w-full"></mp-date-picker>
               } @else {
-                <span>{{ f.get() ? (f.get() | date:'mediumDate') : '—' }}</span>
+                @let sv = flag.field().value();
+                <span>{{ sv ? (sv | date:'mediumDate') : '—' }}</span>
               }
             </mp-field>
           }
@@ -28,9 +29,9 @@
         <div class="mt-4">
           <mp-field [label]="t('staff-members.preEmployment.notes')">
             @if (editing()) {
-              <textarea mpTextarea rows="2" [ngModel]="preEmploymentNotes() ?? ''" (ngModelChange)="preEmploymentNotes.set($event)"></textarea>
+              <textarea mpTextarea rows="2" [formField]="f.notes"></textarea>
             } @else {
-              <span class="whitespace-pre-wrap">{{ preEmploymentNotes() || '—' }}</span>
+              <span class="whitespace-pre-wrap">{{ model().notes || '—' }}</span>
             }
           </mp-field>
         </div>
@@ -38,14 +39,15 @@
 
       <section>
         <mp-section-header icon="fa-solid fa-id-card" [title]="t('staff-members.preEmployment.dbsHeading')"></mp-section-header>
-        @if (!dbsChecks().length) {
+        @if (!model().dbsChecks.length) {
           <mp-empty-state icon="fa-solid fa-id-card" [message]="t('staff-members.preEmployment.noDbs')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (d of dbsChecks(); track $index; let i = $index) {
+          @for (field of f.dbsChecks; track $index; let i = $index) {
+            @let d = field().value();
             <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.dbs') }}{{ dbsChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.dbs') }}{{ model().dbsChecks.length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeDbs')" (click)="removeDbsCheck(i)">
@@ -56,19 +58,19 @@
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.preEmployment.dbsType')" [required]="true">
-                    <mp-lookup-select [options]="dbsCheckTypes()" [value]="d.dbsCheckTypeId" (valueChange)="patchDbsCheck(i, 'dbsCheckTypeId', $event)" [invalid]="!d.dbsCheckTypeId"></mp-lookup-select>
+                    <mp-lookup-select [options]="dbsCheckTypes()" [formField]="field.dbsCheckTypeId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.certificateNumber')" [required]="true">
-                    <input mpInput required maxlength="20" [ngModel]="d.certificateNumber" (ngModelChange)="patchDbsCheck(i, 'certificateNumber', $event)" [invalid]="!d.certificateNumber.trim()" />
+                    <input mpInput [formField]="field.certificateNumber" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.issueDate')" [required]="true">
-                    <mp-date-picker required [ngModel]="toDate(d.issueDate)" (ngModelChange)="patchDbsCheck(i, 'issueDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" [invalid]="!d.issueDate"></mp-date-picker>
+                    <mp-date-picker [formField]="field.issueDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.expiryDate')">
-                    <mp-date-picker [ngModel]="toDate(d.expiryDate)" (ngModelChange)="patchDbsCheck(i, 'expiryDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                    <mp-date-picker [formField]="field.expiryDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
-                    <mp-checkbox [ngModel]="d.updateServiceEnrolled" (ngModelChange)="patchDbsCheck(i, 'updateServiceEnrolled', $event)"></mp-checkbox>
+                    <mp-checkbox [formField]="field.updateServiceEnrolled"></mp-checkbox>
                     {{ t('staff-members.preEmployment.updateService') }}
                   </label>
                 </div>
@@ -76,7 +78,7 @@
                 <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(dbsCheckTypes(), d.dbsCheckTypeId) }}
                   · <span class="font-mono">{{ d.certificateNumber }}</span>
-                  @if (d.issueDate) { · {{ t('staff-members.preEmployment.issueDate') }} {{ toDate(d.issueDate) | date:'mediumDate' }} }
+                  @if (d.issueDate) { · {{ t('staff-members.preEmployment.issueDate') }} {{ d.issueDate | date:'mediumDate' }} }
                   @if (d.updateServiceEnrolled) { · {{ t('staff-members.preEmployment.updateService') }} }
                 </div>
               }
@@ -95,14 +97,15 @@
 
       <section>
         <mp-section-header icon="fa-solid fa-passport" [title]="t('staff-members.preEmployment.rtwHeading')"></mp-section-header>
-        @if (!rightToWorkChecks().length) {
+        @if (!model().rightToWorkChecks.length) {
           <mp-empty-state icon="fa-solid fa-passport" [message]="t('staff-members.preEmployment.noRtw')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (r of rightToWorkChecks(); track $index; let i = $index) {
+          @for (field of f.rightToWorkChecks; track $index; let i = $index) {
+            @let r = field().value();
             <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.rtw') }}{{ rightToWorkChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.rtw') }}{{ model().rightToWorkChecks.length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeRtw')" (click)="removeRightToWork(i)">
@@ -113,27 +116,27 @@
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.preEmployment.documentType')" [required]="true">
-                    <mp-lookup-select [options]="rightToWorkDocumentTypes()" [value]="r.documentTypeId" (valueChange)="patchRightToWork(i, 'documentTypeId', $event)" [invalid]="!r.documentTypeId"></mp-lookup-select>
+                    <mp-lookup-select [options]="rightToWorkDocumentTypes()" [formField]="field.documentTypeId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.documentNumber')">
-                    <input mpInput maxlength="64" [ngModel]="r.documentNumber ?? ''" (ngModelChange)="patchRightToWork(i, 'documentNumber', $event)" />
+                    <input mpInput [formField]="field.documentNumber" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.checkDate')" [required]="true">
-                    <mp-date-picker required [ngModel]="toDate(r.checkDate)" (ngModelChange)="patchRightToWork(i, 'checkDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" [invalid]="!r.checkDate"></mp-date-picker>
+                    <mp-date-picker [formField]="field.checkDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.documentExpiry')">
-                    <mp-date-picker [ngModel]="toDate(r.documentExpiryDate)" (ngModelChange)="patchRightToWork(i, 'documentExpiryDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                    <mp-date-picker [formField]="field.documentExpiryDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.followUpDate')">
-                    <mp-date-picker [ngModel]="toDate(r.followUpDate)" (ngModelChange)="patchRightToWork(i, 'followUpDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                    <mp-date-picker [formField]="field.followUpDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                 </div>
               } @else {
                 <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(rightToWorkDocumentTypes(), r.documentTypeId) }}
                   @if (r.documentNumber) { · <span class="font-mono">{{ r.documentNumber }}</span> }
-                  @if (r.checkDate) { · {{ t('staff-members.preEmployment.checkDate') }} {{ toDate(r.checkDate) | date:'mediumDate' }} }
-                  @if (r.followUpDate) { · {{ t('staff-members.preEmployment.followUpDate') }} {{ toDate(r.followUpDate) | date:'mediumDate' }} }
+                  @if (r.checkDate) { · {{ t('staff-members.preEmployment.checkDate') }} {{ r.checkDate | date:'mediumDate' }} }
+                  @if (r.followUpDate) { · {{ t('staff-members.preEmployment.followUpDate') }} {{ r.followUpDate | date:'mediumDate' }} }
                 </div>
               }
             </div>
@@ -151,14 +154,15 @@
 
       <section>
         <mp-section-header icon="fa-solid fa-envelope-open-text" [title]="t('staff-members.preEmployment.referencesHeading')"></mp-section-header>
-        @if (!references().length) {
+        @if (!model().references.length) {
           <mp-empty-state icon="fa-solid fa-envelope-open-text" [message]="t('staff-members.preEmployment.noReferences')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (ref of references(); track $index; let i = $index) {
+          @for (field of f.references; track $index; let i = $index) {
+            @let ref = field().value();
             <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.reference') }}{{ references().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.reference') }}{{ model().references.length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeReference')" (click)="removeReference(i)">
@@ -169,26 +173,26 @@
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.preEmployment.refereeName')" [required]="true">
-                    <input mpInput required maxlength="256" [ngModel]="ref.refereeName" (ngModelChange)="patchReference(i, 'refereeName', $event)" [invalid]="!ref.refereeName.trim()" />
+                    <input mpInput [formField]="field.refereeName" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.refereeOrganisation')">
-                    <input mpInput maxlength="256" [ngModel]="ref.refereeOrganisation ?? ''" (ngModelChange)="patchReference(i, 'refereeOrganisation', $event)" />
+                    <input mpInput [formField]="field.refereeOrganisation" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.refereeEmail')">
-                    <input mpInput type="email" maxlength="256" [ngModel]="ref.refereeEmail ?? ''" (ngModelChange)="patchReference(i, 'refereeEmail', $event)" />
+                    <input mpInput type="email" [formField]="field.refereeEmail" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.referenceType')">
-                    <mp-lookup-select [options]="referenceTypes()" [value]="ref.referenceTypeId ?? null" (valueChange)="patchReference(i, 'referenceTypeId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="referenceTypes()" [formField]="field.referenceTypeId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.referenceStatus')">
-                    <mp-lookup-select [options]="referenceStatuses()" [value]="ref.referenceStatusId ?? null" (valueChange)="patchReference(i, 'referenceStatusId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="referenceStatuses()" [formField]="field.referenceStatusId"></mp-lookup-select>
                   </mp-field>
                   <div class="grid gap-3 md:grid-cols-2 md:col-span-2">
                     <mp-field [label]="t('staff-members.preEmployment.requestedDate')">
-                      <mp-date-picker [ngModel]="toDate(ref.requestedDate)" (ngModelChange)="patchReference(i, 'requestedDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                      <mp-date-picker [formField]="field.requestedDate" [showIcon]="true" class="w-full"></mp-date-picker>
                     </mp-field>
                     <mp-field [label]="t('staff-members.preEmployment.receivedDate')">
-                      <mp-date-picker [ngModel]="toDate(ref.receivedDate)" (ngModelChange)="patchReference(i, 'receivedDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                      <mp-date-picker [formField]="field.receivedDate" [showIcon]="true" class="w-full"></mp-date-picker>
                     </mp-field>
                   </div>
                 </div>
@@ -200,7 +204,7 @@
                 <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(referenceTypes(), ref.referenceTypeId) }}
                   · {{ lookupLabel(referenceStatuses(), ref.referenceStatusId) }}
-                  @if (ref.receivedDate) { · {{ t('staff-members.preEmployment.receivedDate') }} {{ toDate(ref.receivedDate) | date:'mediumDate' }} }
+                  @if (ref.receivedDate) { · {{ t('staff-members.preEmployment.receivedDate') }} {{ ref.receivedDate | date:'mediumDate' }} }
                 </div>
               }
             </div>
@@ -218,14 +222,15 @@
 
       <section>
         <mp-section-header icon="fa-solid fa-earth-europe" [title]="t('staff-members.preEmployment.overseasHeading')"></mp-section-header>
-        @if (!overseasChecks().length) {
+        @if (!model().overseasChecks.length) {
           <mp-empty-state icon="fa-solid fa-earth-europe" [message]="t('staff-members.preEmployment.noOverseas')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (o of overseasChecks(); track $index; let i = $index) {
+          @for (field of f.overseasChecks; track $index; let i = $index) {
+            @let o = field().value();
             <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.overseas') }}{{ overseasChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.preEmployment.overseas') }}{{ model().overseasChecks.length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
                   <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
                     [attr.aria-label]="t('staff-members.preEmployment.removeOverseas')" (click)="removeOverseasCheck(i)">
@@ -236,20 +241,20 @@
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.preEmployment.country')" [required]="true">
-                    <mp-lookup-select [options]="countries()" [value]="o.nationalityId" (valueChange)="patchOverseasCheck(i, 'nationalityId', $event)" [invalid]="!o.nationalityId"></mp-lookup-select>
+                    <mp-lookup-select [options]="countries()" [formField]="field.nationalityId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.checkedDate')">
-                    <mp-date-picker [ngModel]="toDate(o.checkedDate)" (ngModelChange)="patchOverseasCheck(i, 'checkedDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                    <mp-date-picker [formField]="field.checkedDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
-                    <mp-checkbox [ngModel]="o.isClear" (ngModelChange)="patchOverseasCheck(i, 'isClear', $event)"></mp-checkbox>
+                    <mp-checkbox [formField]="field.isClear"></mp-checkbox>
                     {{ t('staff-members.preEmployment.isClear') }}
                   </label>
                 </div>
               } @else {
                 <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(countries(), o.nationalityId) }}
-                  @if (o.checkedDate) { · {{ toDate(o.checkedDate) | date:'mediumDate' }} }
+                  @if (o.checkedDate) { · {{ o.checkedDate | date:'mediumDate' }} }
                   · {{ o.isClear ? t('staff-members.preEmployment.clear') : t('staff-members.preEmployment.notClear') }}
                 </div>
               }
