@@ -73,7 +73,7 @@
           <div class="flex flex-col gap-1">
             @if (editing()) {
               <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                <p-checkbox inputId="hasDisability" [binary]="true" [ngModel]="hasDisability()" (ngModelChange)="onHasDisability($event)"></p-checkbox>
+                <mp-checkbox id="hasDisability" [ngModel]="hasDisability()" (ngModelChange)="onHasDisability($event)"></mp-checkbox>
                 {{ t('staff-members.equality.hasDisability') }}
               </label>
             } @else {
@@ -86,19 +86,15 @@
           @if (hasDisability()) {
             <mp-field [label]="t('staff-members.equality.disabilities')" for="disabilities">
               @if (editing()) {
-                <p-multiselect
+                <mp-multi-select
                   inputId="disabilities"
                   [options]="disabilities()"
                   optionLabel="description"
                   optionValue="id"
-                  display="chip"
-                  [filter]="false"
-                  [showToggleAll]="false"
-                  appendTo="body"
-                  styleClass="w-full"
+                  class="w-full"
                   [placeholder]="t('staff-members.equality.disabilitiesPlaceholder')"
                   [ngModel]="disabilityIds()"
-                  (ngModelChange)="disabilityIds.set($event)"></p-multiselect>
+                  (ngModelChange)="disabilityIds.set($event)"></mp-multi-select>
               } @else {
                 <span>{{ selectedLabels(disabilities(), disabilityIds()) }}</span>
               }
@@ -107,7 +103,7 @@
             <mp-field [label]="t('staff-members.equality.details')" for="disabilityDetails">
               @if (editing()) {
                 <textarea
-                  pTextarea
+                  mpTextarea
                   id="disabilityDetails"
                   rows="3"
                   [placeholder]="t('staff-members.equality.detailsPlaceholder')"

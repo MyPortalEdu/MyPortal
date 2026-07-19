@@ -9,8 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { ProgressSpinner } from 'primeng/progressspinner';
-import { MpDialog, MpButton } from '@myportal/ui';
+import { MpDialog, MpButton, MpSpinner } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { AcademicYearsDataService } from '../../../../../shared/services/academic-years-data.service';
@@ -54,7 +53,7 @@ function emptyRequest(): AcademicYearUpsertRequest {
   imports: [
     MpButton,
     MpDialog,
-    ProgressSpinner,
+    MpSpinner,
     Callout,
     TranslocoDirective,
     TranslocoPipe,

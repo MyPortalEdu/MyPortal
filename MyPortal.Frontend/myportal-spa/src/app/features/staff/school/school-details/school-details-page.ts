@@ -8,10 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputText } from 'primeng/inputtext';
-import { InputNumber } from 'primeng/inputnumber';
-import { MpButton, MpSelect, MpDatePicker } from '@myportal/ui';
-import { Checkbox } from 'primeng/checkbox';
+import { MpButton, MpSelect, MpDatePicker, MpInput, MpInputNumber, MpCheckbox } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
@@ -80,10 +77,10 @@ type FormSnapshot = {
   imports: [
     FormsModule,
     MpButton,
-    InputText,
-    InputNumber,
+    MpInput,
+    MpInputNumber,
     MpSelect,
-    Checkbox,
+    MpCheckbox,
     MpDatePicker,
     PageHeader,
     Loading,

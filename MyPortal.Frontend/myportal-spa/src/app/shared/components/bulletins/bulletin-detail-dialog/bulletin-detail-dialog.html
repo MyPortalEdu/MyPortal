@@ -90,7 +90,7 @@
     </div>
   } @else if (loading()) {
     <div class="flex items-center justify-center p-12" aria-busy="true">
-      <p-progressSpinner [ariaLabel]="t('detail.loading')" strokeWidth="3" styleClass="!w-10 !h-10"></p-progressSpinner>
+      <mp-spinner [ariaLabel]="t('detail.loading')" size="2.5rem"></mp-spinner>
     </div>
   }
 </mp-dialog>

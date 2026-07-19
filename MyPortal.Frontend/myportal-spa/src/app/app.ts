@@ -2,13 +2,12 @@ import { Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { ConfirmDialog } from 'primeng/confirmdialog';
-import { Toast } from 'primeng/toast';
+import { MpToast, MpConfirmDialog } from '@myportal/ui';
 import { SchoolService } from './core/services/school-service';
 
 @Component({
   selector: 'mp-root',
-  imports: [RouterOutlet, Toast, ConfirmDialog],
+  imports: [RouterOutlet, MpToast, MpConfirmDialog],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

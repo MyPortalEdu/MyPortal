@@ -1,1 +1,3 @@
-{{ value() }}<ng-content />
+@if (icon(); as ic) {
+  <i [class]="ic" class="text-[0.9em]"></i>
+}{{ value() }}<ng-content />

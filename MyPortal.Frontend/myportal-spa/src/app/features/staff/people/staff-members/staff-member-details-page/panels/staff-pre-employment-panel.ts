@@ -10,11 +10,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
-import { MpDatePicker } from '@myportal/ui';
-import { Textarea } from 'primeng/textarea';
-import { Checkbox } from 'primeng/checkbox';
+import { MpButton, MpCheckbox, MpDatePicker, MpInput, MpTextarea } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -53,11 +49,11 @@ import { StaffAreaPanel } from './staff-area-panel';
   imports: [
     DatePipe,
     FormsModule,
-    Button,
-    InputText,
+    MpButton,
+    MpCheckbox,
     MpDatePicker,
-    Textarea,
-    Checkbox,
+    MpInput,
+    MpTextarea,
     LookupSelect,
     Loading,
     EmptyState,

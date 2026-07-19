@@ -7,9 +7,7 @@ import {
   output,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputText } from 'primeng/inputtext';
-import { MpSelect, MpDatePicker } from '@myportal/ui';
-import { Button } from 'primeng/button';
+import { MpSelect, MpDatePicker, MpInput, MpButton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 import {
@@ -29,9 +27,9 @@ interface LabelledOption<T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    InputText,
+    MpInput,
     MpSelect,
-    Button,
+    MpButton,
     MpDatePicker,
     TranslocoDirective,
   ],

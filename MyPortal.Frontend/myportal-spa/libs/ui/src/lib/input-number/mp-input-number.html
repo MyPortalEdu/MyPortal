@@ -1,0 +1,25 @@
+<div class="flex" [class]="userClass()">
+  <input
+    type="text"
+    inputmode="decimal"
+    [attr.id]="inputId() ?? null"
+    [attr.aria-invalid]="invalid() || null"
+    [value]="text()"
+    [placeholder]="placeholder() ?? ''"
+    [disabled]="disabled()"
+    [class]="fieldClass()"
+    (focus)="onFocus()"
+    (input)="onInput($event)"
+    (blur)="onBlur()" />
+
+  @if (showButtons()) {
+    <div class="flex w-6 flex-col">
+      <button type="button" tabindex="-1" [class]="stepBtnClass + ' rounded-tr-control'" [disabled]="disabled()" (click)="spin(1)" aria-label="Increment">
+        <i class="fa-solid fa-chevron-up"></i>
+      </button>
+      <button type="button" tabindex="-1" [class]="stepBtnClass + ' rounded-br-control border-t-0'" [disabled]="disabled()" (click)="spin(-1)" aria-label="Decrement">
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+    </div>
+  }
+</div>

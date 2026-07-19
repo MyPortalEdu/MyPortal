@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { ProgressSpinner } from 'primeng/progressspinner';
+import { MpSpinner } from '@myportal/ui';
 
 /**
  * Centred loading spinner at one canonical size, with an optional label. Replaces the several bespoke
@@ -9,10 +9,10 @@ import { ProgressSpinner } from 'primeng/progressspinner';
   selector: 'mp-loading',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProgressSpinner],
+  imports: [MpSpinner],
   template: `
     <div class="flex flex-col items-center justify-center gap-3 py-10">
-      <p-progress-spinner [style]="{ width: dim(), height: dim() }" strokeWidth="4" ariaLabel="Loading"></p-progress-spinner>
+      <mp-spinner [size]="dim()" ariaLabel="Loading"></mp-spinner>
       @if (label(); as l) {
         <span class="text-sm text-muted-color">{{ l }}</span>
       }

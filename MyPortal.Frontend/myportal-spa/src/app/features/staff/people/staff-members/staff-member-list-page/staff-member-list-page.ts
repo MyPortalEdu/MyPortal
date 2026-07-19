@@ -21,10 +21,10 @@ import {
   MpTableEmpty,
   MpSortable,
   MpSortIcon,
+  MpBadge,
   type MpTableLazyLoadEvent,
   type MpFilterMetadata,
 } from '@myportal/ui';
-import { Tag } from 'primeng/tag';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { StaffStatus } from '../../../../../shared/types/staff-member-header';
@@ -72,7 +72,7 @@ const GRID_DEFAULTS: GridState = { first: 0, rows: 25, filters: { status: DEFAUL
     MpTableEmpty,
     MpSortable,
     MpSortIcon,
-    Tag,
+    MpBadge,
     FormsModule,
     RouterLink,
     PageHeader,

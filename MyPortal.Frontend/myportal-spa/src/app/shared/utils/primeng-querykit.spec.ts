@@ -1,4 +1,4 @@
-import { TableLazyLoadEvent } from 'primeng/table';
+import { type MpTableLazyLoadEvent as TableLazyLoadEvent } from '@myportal/ui';
 import { SortOptions, toQueryKitParams } from './primeng-querykit';
 
 // The encoder is base64url(JSON(SortOptions)). Round-trip back through the same

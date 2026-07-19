@@ -1,12 +1,11 @@
-import { MenuItem } from 'primeng/api';
-import { LinkItem, MenuCategory } from './menu-types';
+import { LinkItem, MenuCategory, NavItem } from './menu-types';
 
 export function buildMenu(
   categories: MenuCategory[],
   has: (perm: string) => boolean,
   homeLink: string | any[] = ['/']
-): MenuItem[] {
-  const menu: MenuItem[] = [];
+): NavItem[] {
+  const menu: NavItem[] = [];
 
   // Home routes to the caller's portal root (e.g. '/staff', '/student'). It's marked
   // exact-match so it doesn't also highlight when a deeper portal route is active
@@ -35,7 +34,7 @@ export function buildMenu(
 
           return anyOk && allOk;
         })
-        .map<MenuItem>((ch: LinkItem) => ({
+        .map<NavItem>((ch: LinkItem) => ({
           label: ch.label,
           icon: ch.icon,
           routerLink: ch.routerLink
@@ -47,9 +46,9 @@ export function buildMenu(
         label: cat.label,
         icon: cat.icon,
         items: visibleChildren
-      } as MenuItem;
+      } as NavItem;
     })
-    .filter((x): x is MenuItem => !!x);
+    .filter((x): x is NavItem => !!x);
 
   menu.push(...categoryItems);
   return menu;

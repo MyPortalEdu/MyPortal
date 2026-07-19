@@ -12,14 +12,7 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MenuItem } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { InputText } from 'primeng/inputtext';
-import { Menu } from 'primeng/menu';
-import { ProgressSpinner } from 'primeng/progressspinner';
-import { Tag } from 'primeng/tag';
-import { MpDatePicker } from '@myportal/ui';
+import { MpDatePicker, MpButton, MpCard, MpInput, MpBadge, MpSpinner, MpMenu, type MpMenuItem } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   MAX_ATTACHMENT_BYTES,
@@ -122,13 +115,13 @@ const AREAS: AreaTab[] = [
   imports: [
     DatePipe,
     FormsModule,
-    Button,
-    Card,
+    MpButton,
+    MpCard,
     MpDatePicker,
-    InputText,
-    Menu,
-    ProgressSpinner,
-    Tag,
+    MpInput,
+    MpMenu,
+    MpSpinner,
+    MpBadge,
     PageHeader,
     Loading,
     ErrorState,
@@ -374,11 +367,11 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   // Single destructive action tucked behind the kebab. styleClass paints it
   // danger-red so it reads as destructive even inside the menu.
-  protected readonly deleteMenuItems = computed<MenuItem[]>(() => [
+  protected readonly deleteMenuItems = computed<MpMenuItem[]>(() => [
     {
       label: this.transloco.translate('staff-members.delete.menuItem'),
       icon: 'fa-solid fa-trash',
-      styleClass: 'mp-menu-item--danger',
+      styleClass: 'text-destructive hover:!text-destructive hover:!bg-destructive/10',
       command: () => this.confirmDelete(),
     },
   ]);

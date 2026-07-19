@@ -28,7 +28,7 @@
         <div class="mt-4">
           <mp-field [label]="t('staff-members.preEmployment.notes')">
             @if (editing()) {
-              <textarea pTextarea rows="2" [ngModel]="preEmploymentNotes() ?? ''" (ngModelChange)="preEmploymentNotes.set($event)"></textarea>
+              <textarea mpTextarea rows="2" [ngModel]="preEmploymentNotes() ?? ''" (ngModelChange)="preEmploymentNotes.set($event)"></textarea>
             } @else {
               <span class="whitespace-pre-wrap">{{ preEmploymentNotes() || '—' }}</span>
             }
@@ -47,8 +47,10 @@
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.dbs') }}{{ dbsChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.preEmployment.removeDbs')" (onClick)="removeDbsCheck(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.preEmployment.removeDbs')" (click)="removeDbsCheck(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
@@ -57,7 +59,7 @@
                     <mp-lookup-select [options]="dbsCheckTypes()" [value]="d.dbsCheckTypeId" (valueChange)="patchDbsCheck(i, 'dbsCheckTypeId', $event)" [invalid]="!d.dbsCheckTypeId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.certificateNumber')" [required]="true">
-                    <input pInputText required maxlength="20" [ngModel]="d.certificateNumber" (ngModelChange)="patchDbsCheck(i, 'certificateNumber', $event)" [invalid]="!d.certificateNumber.trim()" />
+                    <input mpInput required maxlength="20" [ngModel]="d.certificateNumber" (ngModelChange)="patchDbsCheck(i, 'certificateNumber', $event)" [invalid]="!d.certificateNumber.trim()" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.issueDate')" [required]="true">
                     <mp-date-picker required [ngModel]="toDate(d.issueDate)" (ngModelChange)="patchDbsCheck(i, 'issueDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" [invalid]="!d.issueDate"></mp-date-picker>
@@ -66,7 +68,7 @@
                     <mp-date-picker [ngModel]="toDate(d.expiryDate)" (ngModelChange)="patchDbsCheck(i, 'expiryDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
-                    <p-checkbox [binary]="true" [ngModel]="d.updateServiceEnrolled" (ngModelChange)="patchDbsCheck(i, 'updateServiceEnrolled', $event)"></p-checkbox>
+                    <mp-checkbox [ngModel]="d.updateServiceEnrolled" (ngModelChange)="patchDbsCheck(i, 'updateServiceEnrolled', $event)"></mp-checkbox>
                     {{ t('staff-members.preEmployment.updateService') }}
                   </label>
                 </div>
@@ -83,8 +85,10 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.preEmployment.addDbs')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addDbsCheck()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addDbsCheck()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.preEmployment.addDbs') }}
+            </button>
           </div>
         }
       </section>
@@ -100,8 +104,10 @@
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.rtw') }}{{ rightToWorkChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.preEmployment.removeRtw')" (onClick)="removeRightToWork(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.preEmployment.removeRtw')" (click)="removeRightToWork(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
@@ -110,7 +116,7 @@
                     <mp-lookup-select [options]="rightToWorkDocumentTypes()" [value]="r.documentTypeId" (valueChange)="patchRightToWork(i, 'documentTypeId', $event)" [invalid]="!r.documentTypeId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.documentNumber')">
-                    <input pInputText maxlength="64" [ngModel]="r.documentNumber ?? ''" (ngModelChange)="patchRightToWork(i, 'documentNumber', $event)" />
+                    <input mpInput maxlength="64" [ngModel]="r.documentNumber ?? ''" (ngModelChange)="patchRightToWork(i, 'documentNumber', $event)" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.checkDate')" [required]="true">
                     <mp-date-picker required [ngModel]="toDate(r.checkDate)" (ngModelChange)="patchRightToWork(i, 'checkDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" [invalid]="!r.checkDate"></mp-date-picker>
@@ -135,8 +141,10 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.preEmployment.addRtw')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addRightToWork()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addRightToWork()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.preEmployment.addRtw') }}
+            </button>
           </div>
         }
       </section>
@@ -152,20 +160,22 @@
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.reference') }}{{ references().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.preEmployment.removeReference')" (onClick)="removeReference(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.preEmployment.removeReference')" (click)="removeReference(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.preEmployment.refereeName')" [required]="true">
-                    <input pInputText required maxlength="256" [ngModel]="ref.refereeName" (ngModelChange)="patchReference(i, 'refereeName', $event)" [invalid]="!ref.refereeName.trim()" />
+                    <input mpInput required maxlength="256" [ngModel]="ref.refereeName" (ngModelChange)="patchReference(i, 'refereeName', $event)" [invalid]="!ref.refereeName.trim()" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.refereeOrganisation')">
-                    <input pInputText maxlength="256" [ngModel]="ref.refereeOrganisation ?? ''" (ngModelChange)="patchReference(i, 'refereeOrganisation', $event)" />
+                    <input mpInput maxlength="256" [ngModel]="ref.refereeOrganisation ?? ''" (ngModelChange)="patchReference(i, 'refereeOrganisation', $event)" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.refereeEmail')">
-                    <input pInputText type="email" maxlength="256" [ngModel]="ref.refereeEmail ?? ''" (ngModelChange)="patchReference(i, 'refereeEmail', $event)" />
+                    <input mpInput type="email" maxlength="256" [ngModel]="ref.refereeEmail ?? ''" (ngModelChange)="patchReference(i, 'refereeEmail', $event)" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.preEmployment.referenceType')">
                     <mp-lookup-select [options]="referenceTypes()" [value]="ref.referenceTypeId ?? null" (valueChange)="patchReference(i, 'referenceTypeId', $event)"></mp-lookup-select>
@@ -198,8 +208,10 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.preEmployment.addReference')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addReference()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addReference()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.preEmployment.addReference') }}
+            </button>
           </div>
         }
       </section>
@@ -215,8 +227,10 @@
               <div class="flex items-start justify-between gap-2 mb-2">
                 <span class="text-sm font-medium text-muted-color">{{ t('staff-members.preEmployment.overseas') }}{{ overseasChecks().length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.preEmployment.removeOverseas')" (onClick)="removeOverseasCheck(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.preEmployment.removeOverseas')" (click)="removeOverseasCheck(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
@@ -228,7 +242,7 @@
                     <mp-date-picker [ngModel]="toDate(o.checkedDate)" (ngModelChange)="patchOverseasCheck(i, 'checkedDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
-                    <p-checkbox [binary]="true" [ngModel]="o.isClear" (ngModelChange)="patchOverseasCheck(i, 'isClear', $event)"></p-checkbox>
+                    <mp-checkbox [ngModel]="o.isClear" (ngModelChange)="patchOverseasCheck(i, 'isClear', $event)"></mp-checkbox>
                     {{ t('staff-members.preEmployment.isClear') }}
                   </label>
                 </div>
@@ -244,8 +258,10 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.preEmployment.addOverseas')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addOverseasCheck()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addOverseasCheck()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.preEmployment.addOverseas') }}
+            </button>
           </div>
         }
       </section>

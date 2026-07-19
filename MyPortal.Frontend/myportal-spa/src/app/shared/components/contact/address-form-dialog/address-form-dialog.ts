@@ -10,8 +10,7 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ProgressSpinner } from 'primeng/progressspinner';
-import { MpButton, MpDialog, MpInput, MpSelect } from '@myportal/ui';
+import { MpButton, MpDialog, MpInput, MpSelect, MpSpinner } from '@myportal/ui';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
@@ -68,7 +67,7 @@ const EMPTY_FORM: AddressForm = {
   selector: 'mp-address-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpButton, MpDialog, MpInput, ProgressSpinner, MpSelect, TranslocoDirective],
+  imports: [FormsModule, MpButton, MpDialog, MpInput, MpSpinner, MpSelect, TranslocoDirective],
   templateUrl: './address-form-dialog.html',
 })
 export class AddressFormDialog {

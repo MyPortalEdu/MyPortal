@@ -6,8 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Skeleton } from 'primeng/skeleton';
+import { MpButton, MpSkeleton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
@@ -30,8 +29,8 @@ import { StudentGroupSummaryResponse } from '../../../../shared/types/student-gr
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Button,
-    Skeleton,
+    MpButton,
+    MpSkeleton,
     PageHeader,
     EmptyState,
     StudentGroupPicker,

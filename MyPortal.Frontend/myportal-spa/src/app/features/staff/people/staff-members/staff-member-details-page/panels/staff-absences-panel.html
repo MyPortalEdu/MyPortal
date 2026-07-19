@@ -22,8 +22,10 @@
               }
             </span>
             @if (editing()) {
-              <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                [ariaLabel]="t('staff-members.absences.remove')" (onClick)="removeAbsence(i)"></p-button>
+              <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                [attr.aria-label]="t('staff-members.absences.remove')" (click)="removeAbsence(i)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
             }
           </div>
           @if (editing()) {
@@ -41,11 +43,11 @@
                 <mp-date-picker [ngModel]="toDate(a.endDate)" (ngModelChange)="patchAbsence(i, 'endDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
               </mp-field>
               <mp-field class="md:col-span-2" [label]="t('staff-members.absences.notes')">
-                <textarea pTextarea rows="2" maxlength="256" [ngModel]="a.notes ?? ''" (ngModelChange)="patchAbsence(i, 'notes', $event)"></textarea>
+                <textarea mpTextarea rows="2" maxlength="256" [ngModel]="a.notes ?? ''" (ngModelChange)="patchAbsence(i, 'notes', $event)"></textarea>
               </mp-field>
               @if (canManageConfidential()) {
                 <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
-                  <p-checkbox [binary]="true" [ngModel]="a.isConfidential" (ngModelChange)="patchAbsence(i, 'isConfidential', $event)"></p-checkbox>
+                  <mp-checkbox [ngModel]="a.isConfidential" (ngModelChange)="patchAbsence(i, 'isConfidential', $event)"></mp-checkbox>
                   {{ t('staff-members.absences.markConfidential') }}
                 </label>
               }
@@ -68,8 +70,10 @@
     </div>
     @if (editing()) {
       <div class="mt-3">
-        <p-button [label]="t('staff-members.absences.add')" icon="fa-solid fa-plus"
-          severity="secondary" [outlined]="true" size="small" (onClick)="addAbsence()"></p-button>
+        <button mpButton variant="outline" size="sm" (click)="addAbsence()">
+          <i class="fa-solid fa-plus"></i>
+          {{ t('staff-members.absences.add') }}
+        </button>
       </div>
     }
   }

@@ -12,8 +12,7 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { MpDatePicker, MpDialog, MpButton, MpInput } from '@myportal/ui';
-import { ProgressSpinner } from 'primeng/progressspinner';
+import { MpDatePicker, MpDialog, MpButton, MpInput, MpSpinner } from '@myportal/ui';
 import {
   catchError,
   debounceTime,
@@ -61,7 +60,7 @@ import { PersonMatchResponse } from '../../../../../shared/types/person-match';
     MpDialog,
     MpInput,
     GenderSelect,
-    ProgressSpinner,
+    MpSpinner,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('staff-members')],

@@ -19,11 +19,11 @@ import {
   MpTableEmpty,
   MpSortable,
   MpSortIcon,
+  MpBadge,
   type MpTableLazyLoadEvent,
   type MpFilterMetadata,
 } from '@myportal/ui';
-import { Tag } from 'primeng/tag';
-import { Tooltip } from 'primeng/tooltip';
+import { MpTooltip } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
@@ -65,8 +65,8 @@ const GRID_DEFAULTS: GridState = { first: 0, rows: 25 };
     MpTableEmpty,
     MpSortable,
     MpSortIcon,
-    Tag,
-    Tooltip,
+    MpBadge,
+    MpTooltip,
     RouterLink,
     PageHeader,
     EmptyState,

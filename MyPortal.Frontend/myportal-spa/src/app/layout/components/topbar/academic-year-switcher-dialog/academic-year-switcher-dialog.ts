@@ -9,9 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { ProgressSpinner } from 'primeng/progressspinner';
-import { Tag } from 'primeng/tag';
-import { MpDialog } from '@myportal/ui';
+import { MpDialog, MpSpinner, MpBadge } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { SelectedAcademicYearService } from '../../../../core/services/selected-academic-year-service';
@@ -24,7 +22,7 @@ import { AcademicYearSummary } from '../../../../core/types/academic-year-summar
   selector: 'mp-academic-year-switcher-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MpDialog, ProgressSpinner, Tag, TranslocoDirective, TranslocoPipe],
+  imports: [MpDialog, MpSpinner, MpBadge, TranslocoDirective, TranslocoPipe],
   templateUrl: './academic-year-switcher-dialog.html',
 })
 export class AcademicYearSwitcherDialog {

@@ -1,10 +1,19 @@
 import { Directive, Signal, inject, input } from '@angular/core';
 
-/** The bit of MpTable that selectable rows talk to (token, to avoid a circular import). */
+/** The bit of MpTable that selectable rows + selection checkboxes talk to (token, to avoid a circular import). */
 export abstract class MpSelectionHost {
   abstract readonly selectionEnabled: Signal<boolean>;
+  /** Row click: selects (single) or toggles (multiple). */
   abstract selectRow(row: unknown): void;
   abstract isRowSelected(row: unknown): boolean;
+  // --- multiple-selection (checkbox) support ---
+  abstract toggleRow(row: unknown): void;
+  abstract isRowDisabled(row: unknown): boolean;
+  abstract toggleAll(): void;
+  /** True when every selectable row is selected. */
+  abstract readonly allSelected: Signal<boolean>;
+  /** True when at least one selectable row is selected. */
+  abstract readonly anySelected: Signal<boolean>;
 }
 
 /**

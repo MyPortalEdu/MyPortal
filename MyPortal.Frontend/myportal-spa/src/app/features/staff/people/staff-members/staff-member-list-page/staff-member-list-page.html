@@ -99,9 +99,9 @@
           </td>
           <td class="font-mono text-xs text-muted-color">{{ row.code }}</td>
           <td>
-            <p-tag
+            <mp-badge
               [value]="t('staff-members.status.' + row.status)"
-              [severity]="statusSeverity(row.status)"></p-tag>
+              [severity]="statusSeverity(row.status)"></mp-badge>
           </td>
         </tr>
       </ng-template>

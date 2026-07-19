@@ -12,13 +12,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, NgForm } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { InputText } from 'primeng/inputtext';
-import { Checkbox } from 'primeng/checkbox';
-import { MpSelect } from '@myportal/ui';
-import { Tag } from 'primeng/tag';
-import { Skeleton } from 'primeng/skeleton';
+import { MpButton, MpCard, MpCheckbox, MpInput, MpBadge, MpSelect, MpSkeleton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
@@ -57,13 +51,13 @@ interface AudienceOption {
   imports: [
     FormsModule,
     DatePipe,
-    Button,
-    Card,
-    InputText,
-    Checkbox,
+    MpButton,
+    MpCard,
+    MpInput,
+    MpCheckbox,
     MpSelect,
-    Tag,
-    Skeleton,
+    MpBadge,
+    MpSkeleton,
     PageHeader,
     Field,
     SectionHeader,

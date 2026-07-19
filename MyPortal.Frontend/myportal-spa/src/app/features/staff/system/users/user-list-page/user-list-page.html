@@ -62,19 +62,19 @@
           </td>
           <td class="text-muted-color">{{ user.personFullName }}</td>
           <td>
-            <p-tag [value]="audienceLabel(user.userType)" [severity]="audienceSeverity(user.userType)"></p-tag>
+            <mp-badge [value]="audienceLabel(user.userType)" [severity]="audienceSeverity(user.userType)"></mp-badge>
           </td>
           <td>
             @if (user.isEnabled) {
-              <p-tag [value]="t('enabled')" severity="success"></p-tag>
+              <mp-badge [value]="t('enabled')" severity="success"></mp-badge>
             } @else {
-              <p-tag [value]="t('disabled')" severity="secondary"></p-tag>
+              <mp-badge [value]="t('disabled')" severity="secondary"></mp-badge>
             }
           </td>
           <td>
             <div class="flex items-center justify-end gap-1">
               @if (canEdit()) {
-                <span [pTooltip]="user.isSystem ? t('protectedHint') : ''" tooltipPosition="top">
+                <span [mpTooltip]="user.isSystem ? t('protectedHint') : ''" tooltipPosition="top">
                   <button
                     mpButton
                     variant="ghost"

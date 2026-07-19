@@ -11,21 +11,17 @@
         <h2 class="text-base font-semibold m-0">{{ t('categories.title') }}</h2>
         <p class="text-sm text-muted-color m-0">{{ t('categories.description') }}</p>
       </div>
-      <p-button
-        [label]="t('categories.add')"
-        icon="fa-solid fa-plus"
-        (click)="openNewCategory()">
-      </p-button>
+      <button mpButton (click)="openNewCategory()"><i class="fa-solid fa-plus"></i> {{ t('categories.add') }}</button>
     </div>
 
     @if (categoriesLoading()) {
       <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
         @for (_ of [0, 1, 2]; track $index) {
           <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
-            <p-skeleton shape="square" size="2.25rem" styleClass="!rounded-lg shrink-0"></p-skeleton>
+            <mp-skeleton width="2.25rem" height="2.25rem" class="!rounded-lg shrink-0"></mp-skeleton>
             <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-              <p-skeleton width="40%" height="1rem"></p-skeleton>
-              <p-skeleton width="60%" height="0.75rem"></p-skeleton>
+              <mp-skeleton width="40%" height="1rem"></mp-skeleton>
+              <mp-skeleton width="60%" height="0.75rem"></mp-skeleton>
             </div>
           </li>
         }
@@ -58,23 +54,18 @@
               </span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <p-button
-                [label]="bp.isMobile() ? '' : t('categories.edit')"
-                [ariaLabel]="t('categories.edit')"
-                icon="fa-solid fa-pen-to-square"
-                severity="secondary"
-                [text]="true"
-                (click)="openEditCategory(c)">
-              </p-button>
-              <p-button
-                [label]="bp.isMobile() ? '' : t('categories.delete')"
-                [ariaLabel]="t('categories.delete')"
-                icon="fa-solid fa-trash-can"
-                severity="danger"
-                [text]="true"
+              <button
+                mpButton
+                variant="ghost"
+                [attr.aria-label]="t('categories.edit')"
+                (click)="openEditCategory(c)"><i class="fa-solid fa-pen-to-square"></i> {{ bp.isMobile() ? '' : t('categories.edit') }}</button>
+              <button
+                mpButton
+                variant="ghost"
+                class="text-destructive hover:text-destructive"
+                [attr.aria-label]="t('categories.delete')"
                 [disabled]="c.isSystem"
-                (click)="deleteCategory(c)">
-              </p-button>
+                (click)="deleteCategory(c)"><i class="fa-solid fa-trash-can"></i> {{ bp.isMobile() ? '' : t('categories.delete') }}</button>
             </div>
           </li>
         }
@@ -103,8 +94,8 @@
         @for (_ of [0, 1, 2]; track $index) {
           <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
             <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-              <p-skeleton width="50%" height="1rem"></p-skeleton>
-              <p-skeleton width="25%" height="0.75rem"></p-skeleton>
+              <mp-skeleton width="50%" height="1rem"></mp-skeleton>
+              <mp-skeleton width="25%" height="0.75rem"></mp-skeleton>
             </div>
           </li>
         }
@@ -119,14 +110,12 @@
               <span class="font-medium truncate">{{ g.name }}</span>
               <span class="text-xs text-muted-color font-mono">{{ g.code }}</span>
             </div>
-            <p-button
-              [label]="bp.isMobile() ? '' : t('audiences.remove')"
-              [ariaLabel]="t('audiences.remove')"
-              icon="fa-solid fa-xmark"
-              severity="danger"
-              [text]="true"
-              (click)="removeGroup(g)">
-            </p-button>
+            <button
+              mpButton
+              variant="ghost"
+              class="text-destructive hover:text-destructive"
+              [attr.aria-label]="t('audiences.remove')"
+              (click)="removeGroup(g)"><i class="fa-solid fa-xmark"></i> {{ bp.isMobile() ? '' : t('audiences.remove') }}</button>
           </li>
         }
       </ul>

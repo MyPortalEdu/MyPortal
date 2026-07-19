@@ -64,7 +64,7 @@
 
     @if (loading() && !rows().length) {
       <div class="flex justify-center py-10">
-        <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+        <mp-spinner size="2rem"></mp-spinner>
       </div>
     } @else if (!rows().length) {
       <div class="text-center text-sm text-muted-color py-10">

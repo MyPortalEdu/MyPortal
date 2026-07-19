@@ -1,0 +1,16 @@
+<div class="pointer-events-none fixed right-4 top-4 z-[1400] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">
+  @for (t of store.toasts(); track t.id) {
+    <div class="pointer-events-auto flex items-start gap-3 rounded-surface border p-3 shadow-overlay" [class]="panelClass(t.severity)">
+      <i [class]="icon(t.severity)" class="mt-0.5 shrink-0"></i>
+      <div class="min-w-0 flex-1">
+        <div class="text-sm font-semibold">{{ t.summary }}</div>
+        @if (t.detail) {
+          <div class="mt-0.5 text-xs opacity-90">{{ t.detail }}</div>
+        }
+      </div>
+      <button type="button" class="shrink-0 opacity-60 outline-none transition-opacity hover:opacity-100" (click)="store.dismiss(t.id)" aria-label="Dismiss">
+        <i class="fa-solid fa-xmark text-xs"></i>
+      </button>
+    </div>
+  }
+</div>

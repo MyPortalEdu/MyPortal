@@ -6,8 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Skeleton } from 'primeng/skeleton';
+import { MpButton, MpSkeleton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { forkJoin } from 'rxjs';
 
@@ -29,7 +28,7 @@ import { BulletinFormDialog } from '../bulletin-form-dialog/bulletin-form-dialog
   selector: 'mp-bulletins-feed',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Skeleton, BulletinDetailDialog, BulletinFormDialog, TranslocoDirective],
+  imports: [MpButton, MpSkeleton, BulletinDetailDialog, BulletinFormDialog, TranslocoDirective],
   // The bulletins scope lazy-loads public/i18n/bulletins/<lang>.json the first
   // time this component (or any other consumer) renders.
   providers: [provideTranslocoScope('bulletins')],

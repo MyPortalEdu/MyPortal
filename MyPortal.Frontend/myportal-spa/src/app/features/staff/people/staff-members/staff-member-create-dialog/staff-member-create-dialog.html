@@ -38,9 +38,9 @@
                    [placeholder]="t('staff-members.create.searchPlaceholder')"
                    autocomplete="off" />
             @if (searching()) {
-              <p-progressSpinner
-                styleClass="!w-5 !h-5 absolute right-3 top-1/2 -translate-y-1/2"
-                strokeWidth="6"></p-progressSpinner>
+              <mp-spinner
+                size="1.25rem"
+                class="absolute right-3 top-1/2 -translate-y-1/2"></mp-spinner>
             }
           </span>
           <span class="text-xs text-muted-color">{{ t('staff-members.create.searchHint') }}</span>

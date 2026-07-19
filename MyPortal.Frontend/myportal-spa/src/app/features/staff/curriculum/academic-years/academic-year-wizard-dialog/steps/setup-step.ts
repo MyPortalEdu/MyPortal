@@ -9,10 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputNumber } from 'primeng/inputnumber';
-import { InputText } from 'primeng/inputtext';
-import { MpSelect, MpDatePicker } from '@myportal/ui';
-import { Button } from 'primeng/button';
+import { MpSelect, MpDatePicker, MpInputNumber, MpInput, MpButton } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 import { AcademicYearsDataService } from '../../../../../../shared/services/academic-years-data.service';
@@ -33,10 +30,10 @@ interface LabelledOption<T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    InputNumber,
-    InputText,
+    MpInputNumber,
+    MpInput,
     MpSelect,
-    Button,
+    MpButton,
     MpDatePicker,
     TranslocoDirective,
   ],

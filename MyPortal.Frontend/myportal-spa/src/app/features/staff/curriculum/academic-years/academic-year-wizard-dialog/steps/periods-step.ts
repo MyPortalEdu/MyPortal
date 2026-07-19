@@ -9,12 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputText } from 'primeng/inputtext';
-import { SelectButton } from 'primeng/selectbutton';
-import { MpSelect } from '@myportal/ui';
-import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
-import { DatePicker } from 'primeng/datepicker';
+import { MpSelect, MpInput, MpButton, MpCheckbox, MpSelectButton, MpDatePicker } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 import { AcademicYearsDataService } from '../../../../../../shared/services/academic-years-data.service';
@@ -40,12 +35,12 @@ interface LabelledOption<T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    InputText,
+    MpInput,
     MpSelect,
-    SelectButton,
-    Button,
-    Checkbox,
-    DatePicker,
+    MpSelectButton,
+    MpButton,
+    MpCheckbox,
+    MpDatePicker,
     TranslocoDirective,
   ],
   templateUrl: './periods-step.html',

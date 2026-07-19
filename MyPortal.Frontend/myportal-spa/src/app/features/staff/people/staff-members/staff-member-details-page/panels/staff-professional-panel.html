@@ -13,7 +13,7 @@
             <div class="flex flex-col gap-1">
               @if (editing()) {
                 <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                  <p-checkbox [inputId]="flag.key" [binary]="true" [ngModel]="flag.get()" (ngModelChange)="flag.set($event)"></p-checkbox>
+                  <mp-checkbox [id]="flag.key" [ngModel]="flag.get()" (ngModelChange)="flag.set($event)"></mp-checkbox>
                   {{ t('staff-members.professional.' + flag.key) }}
                 </label>
               } @else {
@@ -32,7 +32,7 @@
         <div class="grid gap-4 md:grid-cols-2">
           <mp-field [label]="t('staff-members.professional.trn')" for="trn">
             @if (editing()) {
-              <input pInputText id="trn" inputmode="numeric" maxlength="7"
+              <input mpInput id="trn" inputmode="numeric" maxlength="7"
                 [ngModel]="teacherReferenceNumber() ?? ''" (ngModelChange)="teacherReferenceNumber.set($event)" />
             } @else {
               <span class="font-mono">{{ teacherReferenceNumber() || '—' }}</span>
@@ -96,7 +96,7 @@
         <div class="mb-4">
           <mp-field [label]="t('staff-members.professional.qualificationsSummary')" for="qualSummary">
             @if (editing()) {
-              <input pInputText id="qualSummary" maxlength="128"
+              <input mpInput id="qualSummary" maxlength="128"
                 [placeholder]="t('staff-members.professional.qualificationsSummaryPlaceholder')"
                 [ngModel]="qualificationsSummary() ?? ''" (ngModelChange)="qualificationsSummary.set($event)" />
             } @else {
@@ -111,47 +111,41 @@
               <div class="rounded border border-surface p-3">
                 <div class="flex items-start justify-between gap-2 mb-2">
                   <span class="text-sm font-medium text-muted-color">#{{ $index + 1 }}</span>
-                  <p-button
-                    icon="fa-solid fa-trash"
-                    severity="danger"
-                    [text]="true"
-                    size="small"
-                    [ariaLabel]="t('staff-members.professional.removeQualification')"
-                    (onClick)="removeQualification($index)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.professional.removeQualification')" (click)="removeQualification($index)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.professional.qualTitle')">
-                    <input pInputText [ngModel]="q.title" (ngModelChange)="patchQualification($index, 'title', $event)" />
+                    <input mpInput [ngModel]="q.title" (ngModelChange)="patchQualification($index, 'title', $event)" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualLevel')">
                     <mp-lookup-select [options]="qualificationLevels()" [value]="q.qualificationLevelId ?? null" (valueChange)="patchQualification($index, 'qualificationLevelId', $event)"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualSubject')">
-                    <input pInputText [ngModel]="q.subject ?? ''" (ngModelChange)="patchQualification($index, 'subject', $event)" />
+                    <input mpInput [ngModel]="q.subject ?? ''" (ngModelChange)="patchQualification($index, 'subject', $event)" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualAwardingBody')">
-                    <input pInputText [ngModel]="q.awardingBody ?? ''" (ngModelChange)="patchQualification($index, 'awardingBody', $event)" />
+                    <input mpInput [ngModel]="q.awardingBody ?? ''" (ngModelChange)="patchQualification($index, 'awardingBody', $event)" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualGrade')">
-                    <input pInputText maxlength="20" [ngModel]="q.grade ?? ''" (ngModelChange)="patchQualification($index, 'grade', $event)" />
+                    <input mpInput maxlength="20" [ngModel]="q.grade ?? ''" (ngModelChange)="patchQualification($index, 'grade', $event)" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualClassOfDegree')">
                     <mp-lookup-select [options]="classesOfDegree()" [value]="q.classOfDegreeId ?? null" (valueChange)="patchQualification($index, 'classOfDegreeId', $event)"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualYearAwarded')">
-                    <input pInputText type="number" inputmode="numeric" [ngModel]="q.yearAwarded" (ngModelChange)="patchQualification($index, 'yearAwarded', $event)" />
+                    <input mpInput type="number" inputmode="numeric" [ngModel]="q.yearAwarded" (ngModelChange)="patchQualification($index, 'yearAwarded', $event)" />
                   </mp-field>
                 </div>
               </div>
             }
             <div>
-              <p-button
-                [label]="t('staff-members.professional.addQualification')"
-                icon="fa-solid fa-plus"
-                severity="secondary"
-                [outlined]="true"
-                size="small"
-                (onClick)="addQualification()"></p-button>
+              <button mpButton variant="outline" size="sm" (click)="addQualification()">
+                <i class="fa-solid fa-plus"></i>
+                {{ t('staff-members.professional.addQualification') }}
+              </button>
             </div>
           </div>
         } @else {

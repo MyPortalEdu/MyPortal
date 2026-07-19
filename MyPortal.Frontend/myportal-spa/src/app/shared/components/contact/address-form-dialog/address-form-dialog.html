@@ -49,9 +49,9 @@
                 [ngModel]="searchTerm()"
                 (ngModelChange)="searchTerm.set($event)" />
               @if (searching()) {
-                <p-progressSpinner
+                <mp-spinner
                   class="absolute right-3 top-1/2 -translate-y-1/2"
-                  [style]="{ width: '1rem', height: '1rem' }"></p-progressSpinner>
+                  size="1rem"></mp-spinner>
               }
             </span>
 

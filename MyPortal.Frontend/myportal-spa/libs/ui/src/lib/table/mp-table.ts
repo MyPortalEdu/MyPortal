@@ -8,6 +8,7 @@ import {
   contentChild,
   inject,
   input,
+  model,
   output,
   signal,
 } from '@angular/core';
@@ -58,6 +59,10 @@ export class MpTable implements OnInit, MpSortHost, MpSelectionHost {
   readonly filterDelay = input(300);
   readonly dataKey = input<string | undefined>(undefined);
   readonly selectionMode = input<'single' | 'multiple' | null>(null);
+  /** Two-way selected rows for `selectionMode="multiple"` (header/row checkboxes). */
+  readonly selection = model<readonly unknown[]>([]);
+  /** Predicate marking rows that can't be selected (excluded from select-all + row checkboxes). */
+  readonly rowDisabled = input<(row: unknown) => boolean>(() => false);
   readonly scrollable = input(false);
   readonly scrollHeight = input<string | undefined>(undefined);
   readonly globalFilterFields = input<string[]>([]); // accepted for parity; used by the parent's adapter
@@ -114,12 +119,53 @@ export class MpTable implements OnInit, MpSortHost, MpSelectionHost {
   }
 
   selectRow(row: unknown): void {
+    if (this.selectionMode() === 'multiple') {
+      this.toggleRow(row);
+      return;
+    }
     this._selectedKey.set(this.keyOf(row));
     this.rowSelect.emit(row);
   }
 
   isRowSelected(row: unknown): boolean {
+    if (this.selectionMode() === 'multiple') {
+      return this.selection().some((s) => this.keyOf(s) === this.keyOf(row));
+    }
     return this.dataKey() != null && this.keyOf(row) === this._selectedKey();
+  }
+
+  isRowDisabled(row: unknown): boolean {
+    return this.rowDisabled()(row);
+  }
+
+  toggleRow(row: unknown): void {
+    if (this.isRowDisabled(row)) return;
+    const selected = this.isRowSelected(row);
+    const next = selected
+      ? this.selection().filter((s) => this.keyOf(s) !== this.keyOf(row))
+      : [...this.selection(), row];
+    this.selection.set(next);
+    if (!selected) this.rowSelect.emit(row);
+  }
+
+  // Rows the user is actually allowed to pick (select-all + header state ignore disabled rows).
+  private readonly selectableRows = computed(() => this.value().filter((r) => !this.isRowDisabled(r)));
+
+  readonly allSelected = computed(() => {
+    const rows = this.selectableRows();
+    return rows.length > 0 && rows.every((r) => this.isRowSelected(r));
+  });
+  readonly anySelected = computed(() => this.selectableRows().some((r) => this.isRowSelected(r)));
+
+  toggleAll(): void {
+    if (this.allSelected()) {
+      const disabledOrUnselectable = new Set(this.selectableRows().map((r) => this.keyOf(r)));
+      this.selection.set(this.selection().filter((s) => !disabledOrUnselectable.has(this.keyOf(s))));
+    } else {
+      const have = new Set(this.selection().map((s) => this.keyOf(s)));
+      const additions = this.selectableRows().filter((r) => !have.has(this.keyOf(r)));
+      this.selection.set([...this.selection(), ...additions]);
+    }
   }
 
   /** Set/clear a single column's filter, debounced by `filterDelay` (p-table's `filter`). */

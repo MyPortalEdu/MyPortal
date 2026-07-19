@@ -13,7 +13,7 @@
             (ngModelChange)="patch($index, { typeId: $event })"></mp-select>
 
           <input
-            pInputText
+            mpInput
             type="email"
             class="flex-1 min-w-48"
             [placeholder]="t('common.contact.emailPlaceholder')"
@@ -21,7 +21,7 @@
             (ngModelChange)="patch($index, { address: $event })" />
 
           <input
-            pInputText
+            mpInput
             class="flex-1 min-w-40"
             [placeholder]="t('common.contact.notesPlaceholder')"
             [ngModel]="email.notes ?? ''"
@@ -36,23 +36,22 @@
             {{ t('common.contact.main') }}
           </button>
 
-          <p-button
-            icon="fa-solid fa-trash"
-            severity="danger"
-            [text]="true"
-            [ariaLabel]="t('common.delete')"
-            (onClick)="removeEmail($index)"></p-button>
+          <button
+            mpButton
+            variant="ghost"
+            class="text-destructive hover:text-destructive"
+            size="icon"
+            [attr.aria-label]="t('common.delete')"
+            (click)="removeEmail($index)"><i class="fa-solid fa-trash"></i></button>
         </div>
       }
 
       <div>
-        <p-button
-          [label]="t('common.contact.addEmail')"
-          icon="fa-solid fa-plus"
-          severity="secondary"
-          [outlined]="true"
+        <button
+          mpButton
+          variant="outline"
           [disabled]="!types().length"
-          (onClick)="addEmail()"></p-button>
+          (click)="addEmail()"><i class="fa-solid fa-plus"></i> {{ t('common.contact.addEmail') }}</button>
       </div>
     } @else {
       @if (emails().length) {

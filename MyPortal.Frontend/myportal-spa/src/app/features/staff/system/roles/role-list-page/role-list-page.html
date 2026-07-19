@@ -61,16 +61,16 @@
             <a [routerLink]="['/staff/system/roles', role.id]" class="font-medium hover:underline">{{ role.name }}</a>
           </td>
           <td>
-            <p-tag [value]="audienceLabel(role.userType)" [severity]="audienceSeverity(role.userType)"></p-tag>
+            <mp-badge [value]="audienceLabel(role.userType)" [severity]="audienceSeverity(role.userType)"></mp-badge>
           </td>
           <td>
-            <p-tag [value]="typeLabel(role)" [severity]="typeSeverity(role)"></p-tag>
+            <mp-badge [value]="typeLabel(role)" [severity]="typeSeverity(role)"></mp-badge>
           </td>
           <td class="text-muted-color">{{ role.description }}</td>
           <td>
             <div class="flex items-center justify-end gap-1">
               @if (canEdit()) {
-                <span [pTooltip]="canDelete(role) ? '' : t('protectedHint')" tooltipPosition="top">
+                <span [mpTooltip]="canDelete(role) ? '' : t('protectedHint')" tooltipPosition="top">
                   <button
                     mpButton
                     variant="ghost"

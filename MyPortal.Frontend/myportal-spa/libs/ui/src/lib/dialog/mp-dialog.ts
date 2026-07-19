@@ -51,7 +51,10 @@ export class MpDialog {
 
   protected readonly panelClasses = computed(() =>
     cn(
-      'relative z-[1101] flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-surface ' +
+      // Width defaults to full (viewport-capped); consumers set the real width via `panelClass`
+      // (e.g. w-[min(64rem,95vw)]). NOT max-w-lg — a fixed max would clamp a wider panelClass width
+      // (tailwind-merge can't reconcile max-w-* against a w-[...] utility).
+      'relative z-[1101] flex max-h-[90vh] w-full max-w-[95vw] flex-col overflow-hidden rounded-surface ' +
         'border border-border bg-background shadow-overlay outline-none',
       this.panelClass(),
     ),

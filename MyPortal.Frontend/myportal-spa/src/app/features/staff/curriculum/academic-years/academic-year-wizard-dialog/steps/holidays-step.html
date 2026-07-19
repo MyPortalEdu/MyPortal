@@ -9,13 +9,7 @@
       <div class="flex items-center justify-between">
         <h4 class="text-sm font-semibold m-0">{{ t('listTitle') }}</h4>
         @if (!readOnly()) {
-          <p-button
-            icon="fa-solid fa-plus"
-            [label]="t('addHoliday')"
-            size="small"
-            severity="secondary"
-            (click)="addHoliday()">
-          </p-button>
+          <button mpButton variant="secondary" size="sm" (click)="addHoliday()"><i class="fa-solid fa-plus"></i> {{ t('addHoliday') }}</button>
         }
       </div>
 
@@ -29,7 +23,7 @@
             <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
               <div class="flex flex-col gap-1 flex-1 min-w-[12rem]">
                 <label class="text-xs text-muted-color">{{ t('holidayName') }}</label>
-                <input pInputText type="text"
+                <input mpInput type="text"
                   [ngModel]="holiday.name"
                   (ngModelChange)="updateHoliday(i, { name: $event })"
                   [disabled]="readOnly()"
@@ -63,13 +57,7 @@
                 </mp-date-picker>
               </div>
               @if (!readOnly()) {
-                <p-button
-                  icon="fa-solid fa-trash-can"
-                  severity="danger"
-                  [text]="true"
-                  [attr.aria-label]="t('removeHoliday')"
-                  (click)="removeHoliday(i)">
-                </p-button>
+                <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive" [attr.aria-label]="t('removeHoliday')" (click)="removeHoliday(i)"><i class="fa-solid fa-trash-can"></i></button>
               }
             </li>
           }

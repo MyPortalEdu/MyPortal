@@ -12,7 +12,7 @@
       </span>
     }
     @if (canPost()) {
-      <p-button class="ml-auto" [label]="t('feed.new')" icon="fa-solid fa-plus" size="small" (click)="openNew()"></p-button>
+      <button mpButton class="ml-auto" size="sm" (click)="openNew()"><i class="fa-solid fa-plus"></i> {{ t('feed.new') }}</button>
     }
   </div>
 
@@ -54,11 +54,11 @@
       <div class="flex flex-col gap-2" aria-busy="true">
         @for (_ of [0, 1, 2]; track $index) {
           <div class="flex gap-3 px-3.5 py-3 rounded-lg border border-surface border-l-4 border-l-transparent">
-            <p-skeleton shape="square" size="2.25rem" styleClass="!rounded-lg shrink-0"></p-skeleton>
+            <mp-skeleton width="2.25rem" height="2.25rem" class="!rounded-lg shrink-0"></mp-skeleton>
             <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-              <p-skeleton width="40%" height="0.75rem"></p-skeleton>
-              <p-skeleton width="70%" height="1rem"></p-skeleton>
-              <p-skeleton width="90%" height="0.875rem"></p-skeleton>
+              <mp-skeleton width="40%" height="0.75rem"></mp-skeleton>
+              <mp-skeleton width="70%" height="1rem"></mp-skeleton>
+              <mp-skeleton width="90%" height="0.875rem"></mp-skeleton>
             </div>
           </div>
         }

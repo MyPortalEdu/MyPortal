@@ -14,8 +14,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
-import { ProgressSpinner } from 'primeng/progressspinner';
-import { MpSelect, MpDialog, MpButton, MpInput, MpTable, MpTableHeader, MpTableBody } from '@myportal/ui';
+import { MpSelect, MpDialog, MpButton, MpInput, MpSpinner, MpTable, MpTableHeader, MpTableBody } from '@myportal/ui';
 
 import { DirectoryDataService } from '../../../services/directory-data.service';
 import { LookupResponse } from '../../../types/lookup';
@@ -53,7 +52,7 @@ type FlatDir = { dir: DirectoryDetailsResponse; depth: number };
   selector: 'mp-directory-browser',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule, MpButton, MpDialog, MpInput, ProgressSpinner, MpSelect, MpTable, MpTableHeader, MpTableBody, TranslocoDirective],
+  imports: [DatePipe, FormsModule, MpButton, MpDialog, MpInput, MpSpinner, MpSelect, MpTable, MpTableHeader, MpTableBody, TranslocoDirective],
   providers: [provideTranslocoScope('documents')],
   templateUrl: './directory-browser.html',
   host: { class: 'block' },

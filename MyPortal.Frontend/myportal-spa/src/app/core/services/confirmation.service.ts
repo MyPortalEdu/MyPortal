@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { ConfirmationService } from 'primeng/api';
+import { MpConfirmStore } from '@myportal/ui';
 import { TranslocoService } from '@jsverse/transloco';
 
 export interface ConfirmOptions {
@@ -27,7 +27,7 @@ export interface ConfirmOptions {
  */
 @Injectable({ providedIn: 'root' })
 export class ConfirmationDialog {
-  private readonly primeng = inject(ConfirmationService);
+  private readonly store = inject(MpConfirmStore);
   private readonly transloco = inject(TranslocoService);
 
   /**
@@ -35,21 +35,19 @@ export class ConfirmationDialog {
    * or dismiss (backdrop / escape).
    */
   confirm(opts: ConfirmOptions): Promise<boolean> {
-    return new Promise<boolean>(resolve => {
-      const accept = opts.acceptSeverity ?? 'primary';
-      this.primeng.confirm({
-        message: opts.message,
-        header: opts.header ?? this.transloco.translate('common.confirmHeader'),
-        icon: opts.icon ?? 'fa-solid fa-circle-exclamation',
-        acceptLabel: opts.acceptLabel ?? this.transloco.translate('common.confirm'),
-        rejectLabel: opts.rejectLabel ?? this.transloco.translate('common.cancel'),
-        // p-button severity flows through via styleClass — `p-button-danger`
-        // gets the red treatment, `p-button-secondary` etc. work too.
-        acceptButtonStyleClass: `p-button-${accept}`,
-        rejectButtonStyleClass: 'p-button-text p-button-secondary',
-        accept: () => resolve(true),
-        reject: () => resolve(false),
-      });
+    return this.store.confirm({
+      message: opts.message,
+      header: opts.header ?? this.transloco.translate('common.confirmHeader'),
+      icon: opts.icon ?? 'fa-solid fa-circle-exclamation',
+      acceptLabel: opts.acceptLabel ?? this.transloco.translate('common.confirm'),
+      rejectLabel: opts.rejectLabel ?? this.transloco.translate('common.cancel'),
+      // Map the accept button's intent to an MpButton variant.
+      acceptVariant:
+        opts.acceptSeverity === 'danger'
+          ? 'destructive'
+          : opts.acceptSeverity === 'secondary'
+            ? 'secondary'
+            : 'default',
     });
   }
 

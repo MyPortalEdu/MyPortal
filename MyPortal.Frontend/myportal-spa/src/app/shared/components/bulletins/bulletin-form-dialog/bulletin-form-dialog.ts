@@ -11,8 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MpSelect, MpDialog, MpButton, MpInput, MpTextarea, MpCheckbox } from '@myportal/ui';
-import { DatePicker } from 'primeng/datepicker';
+import { MpSelect, MpDialog, MpButton, MpInput, MpTextarea, MpCheckbox, MpDatePicker } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { BulletinsDataService } from '../../../services/bulletins-data.service';
@@ -56,7 +55,7 @@ type FormSnapshot = {
 @Component({
   selector: 'mp-bulletin-form-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpDialog, MpButton, MpInput, MpTextarea, MpSelect, MpCheckbox, DatePicker, TranslocoDirective, TranslocoPipe, BulletinAttachments],
+  imports: [FormsModule, MpDialog, MpButton, MpInput, MpTextarea, MpSelect, MpCheckbox, MpDatePicker, TranslocoDirective, TranslocoPipe, BulletinAttachments],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletin-form-dialog.html',
 })

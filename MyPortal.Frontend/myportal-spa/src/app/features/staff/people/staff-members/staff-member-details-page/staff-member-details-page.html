@@ -8,20 +8,17 @@
   @if (loadingHeader() && !header()) {
     <mp-loading></mp-loading>
   } @else if (headerError() && !header()) {
-    <p-card>
+    <mp-card>
       <mp-error-state [message]="t('staff-members.loadHeaderError')">
-        <p-button
-          [label]="t('common.retry')"
-          icon="fa-solid fa-rotate-right"
-          severity="secondary"
-          [outlined]="true"
-          size="small"
-          (onClick)="retry()"
-        ></p-button>
+        <button mpButton
+          variant="outline"
+          size="sm"
+          (click)="retry()"
+        ><i class="fa-solid fa-rotate-right"></i> {{ t('common.retry') }}</button>
       </mp-error-state>
-    </p-card>
+    </mp-card>
   } @else if (header(); as h) {
-    <p-card styleClass="mb-4 max-w-7xl">
+    <mp-card class="mb-4 max-w-7xl">
       <div class="flex flex-wrap items-center gap-4">
         <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-lg font-semibold text-primary-700 dark:bg-primary-900 dark:text-primary-200">
           @if (h.photoId) {
@@ -33,10 +30,10 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-lg font-semibold">{{ h.displayName }}</span>
-            <p-tag
+            <mp-badge
               [value]="t('staff-members.status.' + h.status)"
               [severity]="statusSeverity()"
-            ></p-tag>
+            ></mp-badge>
             @if (h.relationship !== 'Unrelated') {
               <span class="text-sm text-muted-color">{{ relationshipLabel(h.relationship) }}</span>
             }
@@ -44,33 +41,28 @@
           <div class="text-sm text-muted-color font-mono">{{ h.code }}</div>
         </div>
         <div class="flex items-center gap-2 w-full justify-end sm:w-auto">
-          <p-button
-            [label]="t('staff-members.details.backToList')"
-            icon="fa-solid fa-arrow-left"
-            severity="secondary"
-            [outlined]="true"
-            size="small"
-            (onClick)="backToList()"
-          ></p-button>
+          <button mpButton
+            variant="outline"
+            size="sm"
+            (click)="backToList()"
+          ><i class="fa-solid fa-arrow-left"></i> {{ t('staff-members.details.backToList') }}</button>
           @if (canDelete()) {
-            <p-button
-              icon="fa-solid fa-ellipsis-vertical"
-              severity="secondary"
-              [outlined]="true"
-              size="small"
+            <button mpButton
+              variant="outline"
+              size="icon"
               [disabled]="deleting()"
-              [ariaLabel]="t('staff-members.delete.menu')"
-              (onClick)="staffActionsMenu.toggle($event)"
-            ></p-button>
-            <p-menu #staffActionsMenu [model]="deleteMenuItems()" [popup]="true" appendTo="body"></p-menu>
+              [attr.aria-label]="t('staff-members.delete.menu')"
+              (click)="staffActionsMenu.toggle($event)"
+            ><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <mp-menu #staffActionsMenu [model]="deleteMenuItems()"></mp-menu>
           }
         </div>
       </div>
-    </p-card>
+    </mp-card>
 
     <!-- max-w-7xl on the row so the content card beside the 18rem nav lands near the 64rem form width. -->
     <div class="flex flex-col gap-4 md:flex-row max-w-7xl">
-      <p-card styleClass="md:w-72 md:flex-shrink-0">
+      <mp-card class="md:w-72 md:flex-shrink-0">
         <div class="flex flex-col gap-1 text-sm">
           @for (area of areas(); track area.key) {
             <button
@@ -79,6 +71,7 @@
               [class.mp-nav-item--active]="activeArea() === area.key && area.enabled"
               [class.font-semibold]="activeArea() === area.key && area.enabled"
               [class.text-muted-color]="!area.enabled"
+              [class.cursor-pointer]="area.enabled"
               [class.cursor-not-allowed]="!area.enabled"
               [class.mp-nav-item--hoverable]="area.enabled && activeArea() !== area.key"
               [disabled]="!area.enabled"
@@ -88,9 +81,9 @@
             </button>
           }
         </div>
-      </p-card>
+      </mp-card>
 
-      <p-card class="flex-1">
+      <mp-card class="flex-1">
         @switch (activeArea()) {
           @case ('basicDetails') {
             @if (loadingBasic() && !current()) {
@@ -123,30 +116,24 @@
                     }
                     @if (photoUploading()) {
                       <div class="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <p-progressSpinner [style]="{ width: '2rem', height: '2rem' }"></p-progressSpinner>
+                        <mp-spinner size="2rem"></mp-spinner>
                       </div>
                     }
                   </div>
                   @if (editing()) {
                     <input #photoInput type="file" accept="image/*" class="hidden" (change)="onPhotoSelected($event)" />
                     <div class="mt-2 flex flex-wrap gap-2">
-                      <p-button
-                        [label]="current()?.photoId ? t('staff-members.photo.replace') : t('staff-members.photo.add')"
-                        icon="fa-solid fa-camera"
-                        severity="secondary"
-                        [outlined]="true"
-                        size="small"
+                      <button mpButton
+                        variant="outline"
+                        size="sm"
                         [disabled]="photoUploading()"
-                        (onClick)="photoInput.click()"></p-button>
+                        (click)="photoInput.click()"><i class="fa-solid fa-camera"></i> {{ current()?.photoId ? t('staff-members.photo.replace') : t('staff-members.photo.add') }}</button>
                       @if (current()?.photoId) {
-                        <p-button
-                          [label]="t('staff-members.photo.remove')"
-                          icon="fa-solid fa-trash"
-                          severity="danger"
-                          [text]="true"
-                          size="small"
+                        <button mpButton
+                          variant="ghost" class="text-destructive hover:text-destructive"
+                          size="sm"
                           [disabled]="photoUploading()"
-                          (onClick)="removePhoto()"></p-button>
+                          (click)="removePhoto()"><i class="fa-solid fa-trash"></i> {{ t('staff-members.photo.remove') }}</button>
                       }
                     </div>
                   }
@@ -163,7 +150,7 @@
                         [error]="basicFieldError(code())">
                         @if (editing()) {
                           <input
-                            pInputText
+                            mpInput
                             id="code"
                             [ngModel]="code()"
                             (ngModelChange)="code.set($event)"
@@ -182,7 +169,7 @@
                     <div class="grid gap-4 md:grid-cols-2">
                       <mp-field [label]="t('staff-members.fields.title')" for="title">
                         @if (editing()) {
-                          <input pInputText id="title" [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)" />
+                          <input mpInput id="title" [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)" />
                         } @else {
                           <span>{{ title() || '—' }}</span>
                         }
@@ -195,7 +182,7 @@
                         [error]="basicFieldError(firstName())">
                         @if (editing()) {
                           <input
-                            pInputText
+                            mpInput
                             id="firstName"
                             [ngModel]="firstName()"
                             (ngModelChange)="firstName.set($event)"
@@ -209,7 +196,7 @@
 
                       <mp-field [label]="t('staff-members.fields.middleName')" for="middleName">
                         @if (editing()) {
-                          <input pInputText id="middleName" [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)" />
+                          <input mpInput id="middleName" [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)" />
                         } @else {
                           <span>{{ middleName() || '—' }}</span>
                         }
@@ -222,7 +209,7 @@
                         [error]="basicFieldError(lastName())">
                         @if (editing()) {
                           <input
-                            pInputText
+                            mpInput
                             id="lastName"
                             [ngModel]="lastName()"
                             (ngModelChange)="lastName.set($event)"
@@ -236,7 +223,7 @@
 
                       <mp-field [label]="t('staff-members.fields.preferredFirstName')" for="preferredFirst">
                         @if (editing()) {
-                          <input pInputText id="preferredFirst" [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)" />
+                          <input mpInput id="preferredFirst" [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)" />
                         } @else {
                           <span>{{ preferredFirstName() || '—' }}</span>
                         }
@@ -244,7 +231,7 @@
 
                       <mp-field [label]="t('staff-members.fields.preferredLastName')" for="preferredLast">
                         @if (editing()) {
-                          <input pInputText id="preferredLast" [ngModel]="preferredLastName() ?? ''" (ngModelChange)="preferredLastName.set($event)" />
+                          <input mpInput id="preferredLast" [ngModel]="preferredLastName() ?? ''" (ngModelChange)="preferredLastName.set($event)" />
                         } @else {
                           <span>{{ preferredLastName() || '—' }}</span>
                         }
@@ -349,7 +336,7 @@
             <mp-empty-state [message]="t('staff-members.details.areaComingSoon')"></mp-empty-state>
           }
         }
-      </p-card>
+      </mp-card>
     </div>
   }
 </ng-container>

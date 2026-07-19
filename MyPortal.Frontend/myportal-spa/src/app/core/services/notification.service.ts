@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { MessageService } from 'primeng/api';
+import { MpToastStore } from '@myportal/ui';
 
 /**
  * Thin wrapper around PrimeNG's MessageService so consumers don't import the
@@ -10,13 +10,13 @@ import { MessageService } from 'primeng/api';
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private readonly messages = inject(MessageService);
+  private readonly toasts = inject(MpToastStore);
 
   private static readonly DefaultLifeMs = 4000;
   private static readonly ErrorLifeMs = 6000;
 
   success(summary: string, detail?: string): void {
-    this.messages.add({
+    this.toasts.add({
       severity: 'success',
       summary,
       detail,
@@ -25,7 +25,7 @@ export class NotificationService {
   }
 
   info(summary: string, detail?: string): void {
-    this.messages.add({
+    this.toasts.add({
       severity: 'info',
       summary,
       detail,
@@ -34,7 +34,7 @@ export class NotificationService {
   }
 
   warn(summary: string, detail?: string): void {
-    this.messages.add({
+    this.toasts.add({
       severity: 'warn',
       summary,
       detail,
@@ -47,7 +47,7 @@ export class NotificationService {
    * the user has time to read them before they auto-dismiss.
    */
   error(summary: string, detail?: string): void {
-    this.messages.add({
+    this.toasts.add({
       severity: 'error',
       summary,
       detail,
@@ -67,7 +67,7 @@ export class NotificationService {
   }
 
   clear(): void {
-    this.messages.clear();
+    this.toasts.clear();
   }
 }
 

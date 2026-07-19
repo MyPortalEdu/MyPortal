@@ -9,9 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Checkbox } from 'primeng/checkbox';
-import { Textarea } from 'primeng/textarea';
-import { MultiSelect } from 'primeng/multiselect';
+import { MpCheckbox, MpTextarea, MpMultiSelect } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -40,7 +38,7 @@ import { StaffAreaPanel } from './staff-area-panel';
   selector: 'mp-staff-equality-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Checkbox, Textarea, MultiSelect, LookupSelect, Loading, SectionHeader, Field, TranslocoDirective],
+  imports: [FormsModule, MpCheckbox, MpTextarea, MpMultiSelect, LookupSelect, Loading, SectionHeader, Field, TranslocoDirective],
   providers: [
     provideTranslocoScope('staff-members'),
     { provide: StaffAreaPanel, useExisting: forwardRef(() => StaffEqualityPanel) },

@@ -43,14 +43,14 @@
           <td class="text-right">{{ year.schoolWeekLength }}</td>
           <td>
             @if (year.isLocked) {
-              <p-tag [value]="t('locked')" severity="warn" icon="fa-solid fa-lock"></p-tag>
+              <mp-badge [value]="t('locked')" severity="warn" icon="fa-solid fa-lock"></mp-badge>
             } @else {
-              <p-tag [value]="t('open')" severity="success"></p-tag>
+              <mp-badge [value]="t('open')" severity="success"></mp-badge>
             }
           </td>
           <td>
             <div class="flex items-center justify-end gap-1"
-                 [pTooltip]="!canMutate(year) ? mutateBlockReason(year) : ''"
+                 [mpTooltip]="!canMutate(year) ? mutateBlockReason(year) : ''"
                  tooltipPosition="left">
               <button mpButton
                 variant="ghost"

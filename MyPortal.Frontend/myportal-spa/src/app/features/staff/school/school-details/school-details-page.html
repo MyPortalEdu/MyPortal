@@ -23,7 +23,7 @@
         <div class="grid gap-4 md:grid-cols-2">
           <mp-field [label]="t('fields.name')" for="name">
             <input
-              pInputText
+              mpInput
               id="name"
               [ngModel]="name()"
               (ngModelChange)="name.set($event)"
@@ -37,7 +37,7 @@
 
           <mp-field [label]="t('fields.website')" for="website">
             <input
-              pInputText
+              mpInput
               id="website"
               [ngModel]="website() ?? ''"
               (ngModelChange)="website.set($event)"
@@ -54,7 +54,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <mp-field [label]="t('fields.urn')" for="urn">
             <input
-              pInputText
+              mpInput
               id="urn"
               [ngModel]="urn()"
               (ngModelChange)="urn.set($event)"
@@ -67,7 +67,7 @@
 
           <mp-field [label]="t('fields.uprn')" for="uprn">
             <input
-              pInputText
+              mpInput
               id="uprn"
               [ngModel]="uprn()"
               (ngModelChange)="uprn.set($event)"
@@ -79,7 +79,7 @@
           </mp-field>
 
           <mp-field [label]="t('fields.establishmentNumber')" for="establishmentNumber">
-            <p-inputNumber
+            <mp-input-number
               inputId="establishmentNumber"
               [ngModel]="establishmentNumber()"
               (ngModelChange)="establishmentNumber.set($event)"
@@ -92,12 +92,12 @@
               #estabRef="ngModel"
               [invalid]="estabRef.touched && estabRef.invalid"
               name="establishmentNumber">
-            </p-inputNumber>
+            </mp-input-number>
           </mp-field>
 
           <mp-field [label]="t('fields.ukprn')" for="ukprn">
             <input
-              pInputText
+              mpInput
               id="ukprn"
               [ngModel]="ukprn() ?? ''"
               (ngModelChange)="ukprn.set($event)"
@@ -230,7 +230,7 @@
           </mp-field>
 
           <mp-field [label]="t('fields.lowestAge')" for="lowestAge">
-            <p-inputNumber
+            <mp-input-number
               inputId="lowestAge"
               [ngModel]="lowestAge()"
               (ngModelChange)="lowestAge.set($event)"
@@ -240,11 +240,11 @@
               [max]="25"
               [showButtons]="false"
               name="lowestAge">
-            </p-inputNumber>
+            </mp-input-number>
           </mp-field>
 
           <mp-field [label]="t('fields.highestAge')" for="highestAge">
-            <p-inputNumber
+            <mp-input-number
               inputId="highestAge"
               [ngModel]="highestAge()"
               (ngModelChange)="highestAge.set($event)"
@@ -254,11 +254,11 @@
               [max]="25"
               [showButtons]="false"
               name="highestAge">
-            </p-inputNumber>
+            </mp-input-number>
           </mp-field>
 
           <mp-field [label]="t('fields.netCapacity')" for="netCapacity">
-            <p-inputNumber
+            <mp-input-number
               inputId="netCapacity"
               [ngModel]="netCapacity()"
               (ngModelChange)="netCapacity.set($event)"
@@ -267,7 +267,7 @@
               [min]="0"
               [showButtons]="false"
               name="netCapacity">
-            </p-inputNumber>
+            </mp-input-number>
           </mp-field>
 
           <mp-field [label]="t('fields.netCapacityAssessmentDate')" for="netCapacityAssessmentDate">
@@ -287,13 +287,12 @@
         <mp-section-header [title]="t('sections.specialSchool')"></mp-section-header>
 
         <label class="flex items-center gap-2 cursor-pointer">
-          <p-checkbox
-            [binary]="true"
+          <mp-checkbox
             [ngModel]="isSpecialSchool()"
             (ngModelChange)="isSpecialSchool.set($event)"
             [disabled]="!canEdit()"
             name="isSpecialSchool">
-          </p-checkbox>
+          </mp-checkbox>
           <span class="text-sm font-medium">{{ t('fields.isSpecialSchool') }}</span>
         </label>
 
@@ -330,7 +329,7 @@
             </mp-field>
 
             <mp-field [label]="t('fields.maxBoarders')" for="maxBoarders">
-              <p-inputNumber
+              <mp-input-number
                 inputId="maxBoarders"
                 [ngModel]="maxBoarders()"
                 (ngModelChange)="maxBoarders.set($event)"
@@ -339,7 +338,7 @@
                 [min]="0"
                 [showButtons]="false"
                 name="maxBoarders">
-              </p-inputNumber>
+              </mp-input-number>
             </mp-field>
           </div>
         }
@@ -351,7 +350,7 @@
         <div class="grid gap-4 md:grid-cols-2">
           <mp-field [label]="t('fields.telephone')" for="telephone">
             <input
-              pInputText
+              mpInput
               id="telephone"
               [ngModel]="telephone() ?? ''"
               (ngModelChange)="telephone.set($event)"
@@ -362,7 +361,7 @@
 
           <mp-field [label]="t('fields.email')" for="email">
             <input
-              pInputText
+              mpInput
               id="email"
               type="email"
               [ngModel]="email() ?? ''"

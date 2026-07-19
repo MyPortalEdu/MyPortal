@@ -7,9 +7,8 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { MpButton, MpCard, MpSkeleton, MpTable, MpTableHeader, MpTableBody } from '@myportal/ui';
-import { Tag } from 'primeng/tag';
-import { Tooltip } from 'primeng/tooltip';
+import { MpButton, MpCard, MpSkeleton, MpTable, MpTableHeader, MpTableBody, MpBadge } from '@myportal/ui';
+import { MpTooltip } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
@@ -36,8 +35,8 @@ import { AcademicYearWizardDialog } from '../academic-year-wizard-dialog/academi
     MpTable,
     MpTableHeader,
     MpTableBody,
-    Tag,
-    Tooltip,
+    MpBadge,
+    MpTooltip,
     PageHeader,
     EmptyState,
     AcademicYearWizardDialog,

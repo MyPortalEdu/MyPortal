@@ -6,87 +6,71 @@
   <mp-dialog [(visible)]="visible" panelClass="w-[min(48rem,92vw)]" (closed)="cancel()"
              [ariaLabel]="t('common.studentGroupPicker.title')">
     <div class="flex flex-col gap-3 p-2">
-      <!-- Inline close affordance for the single-select case, which has no
-           Cancel button in its footer. -->
-      <div class="flex items-center justify-end">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold">{{ t('common.studentGroupPicker.title') }}</span>
         <button type="button" class="mp-icon-button" (click)="cancel()" [attr.aria-label]="'common.close' | transloco">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <p-table
+
+      <mp-table
         [lazy]="true"
         [paginator]="true"
         [rows]="25"
         [totalRecords]="totalRecords()"
         [loading]="loading()"
         [value]="rows()"
-        (onLazyLoad)="load($event)"
+        (lazyLoad)="load($event)"
         [filterDelay]="300"
         dataKey="id"
-        [(selection)]="selection"
+        [selection]="selection"
+        (selectionChange)="selection = $any($event)"
         [selectionMode]="allowMultiple() ? 'multiple' : 'single'"
-        (onRowSelect)="onRowSelect($any($event).data)"
+        [rowDisabled]="rowDisabledFn"
+        (rowSelect)="onRowSelect($any($event))"
         [scrollable]="true"
         scrollHeight="20rem">
 
-        <ng-template pTemplate="caption">
-          <span class="text-sm font-semibold">{{ t('common.studentGroupPicker.title') }}</span>
-        </ng-template>
-
-        <ng-template pTemplate="header">
+        <ng-template mpTableHeader>
           <tr>
             @if (allowMultiple()) {
-              <th style="width: 2.5rem">
-                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-              </th>
+              <th style="width: 2.5rem"><mp-table-header-checkbox></mp-table-header-checkbox></th>
             }
-            <!-- Column filters live inside the sortable <th>, so clicks on
-                 their icon / inline widgets would otherwise bubble up to
-                 pSortableColumn and toggle the sort. Wrap each filter in a
-                 stop-propagation span. -->
-            <th pSortableColumn="code" style="width: 8rem">
-              {{ t('common.studentGroupPicker.code') }}
-              <p-sortIcon field="code"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="code" display="menu"></p-columnFilter>
-              </span>
+            <th mpSortable="code" style="width: 8rem">
+              {{ t('common.studentGroupPicker.code') }} <mp-sort-icon field="code"></mp-sort-icon>
             </th>
-            <th pSortableColumn="name">
-              {{ t('common.studentGroupPicker.name') }}
-              <p-sortIcon field="name"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="name" display="menu"></p-columnFilter>
-              </span>
+            <th mpSortable="name">
+              {{ t('common.studentGroupPicker.name') }} <mp-sort-icon field="name"></mp-sort-icon>
             </th>
-            <th pSortableColumn="kind" style="width: 12rem">
-              {{ t('common.studentGroupPicker.kind.header') }}
-              <p-sortIcon field="kind"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter field="kind" matchMode="equals" [showMenu]="false">
-                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                    <mp-select
-                      [options]="kindOptions"
-                      [ngModel]="value"
-                      (ngModelChange)="filter($event)"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="true"
-                      [placeholder]="t('common.studentGroupPicker.kind.allKinds')"
-                      class="min-w-32">
-                    </mp-select>
-                  </ng-template>
-                </p-columnFilter>
-              </span>
+            <th mpSortable="kind" style="width: 12rem">
+              {{ t('common.studentGroupPicker.kind.header') }} <mp-sort-icon field="kind"></mp-sort-icon>
+            </th>
+          </tr>
+          <tr>
+            @if (allowMultiple()) {
+              <th></th>
+            }
+            <th><mp-column-filter field="code" matchMode="contains"></mp-column-filter></th>
+            <th><mp-column-filter field="name" matchMode="contains"></mp-column-filter></th>
+            <th>
+              <mp-select
+                [options]="kindOptions"
+                [ngModel]="kindFilter()"
+                (ngModelChange)="onKindFilter($event)"
+                optionLabel="label"
+                optionValue="value"
+                [showClear]="true"
+                [placeholder]="t('common.studentGroupPicker.kind.allKinds')"
+                class="min-w-32">
+              </mp-select>
             </th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-row>
-          <tr [pSelectableRow]="row" [class.opacity-50]="isAlreadyPicked(row)">
+        <ng-template mpTableBody let-row>
+          <tr [mpSelectableRow]="row" [class.opacity-50]="isAlreadyPicked(row)">
             @if (allowMultiple()) {
-              <td>
-                <p-tableCheckbox [value]="row" [disabled]="isAlreadyPicked(row)"></p-tableCheckbox>
-              </td>
+              <td><mp-table-checkbox [value]="row"></mp-table-checkbox></td>
             }
             <td class="font-mono text-xs">{{ row.code }}</td>
             <td>
@@ -110,14 +94,14 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template mpTableEmpty>
           <tr>
             <td [attr.colspan]="allowMultiple() ? 4 : 3" class="text-center text-sm text-muted-color py-4">
               {{ t('common.studentGroupPicker.empty') }}
             </td>
           </tr>
         </ng-template>
-      </p-table>
+      </mp-table>
 
       @if (allowMultiple()) {
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-surface">

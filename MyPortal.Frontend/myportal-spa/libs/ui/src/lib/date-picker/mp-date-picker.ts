@@ -6,19 +6,14 @@ import { MpPopover } from '../popover/mp-popover';
 import { MpCalendar } from './mp-calendar';
 
 /**
- * Data-entry date picker — the design-system equivalent of `p-datePicker`. A typeable text input
- * shows/accepts the date; a trailing calendar button opens MpCalendar in a CDK overlay via
- * brn-popover (the same overlay pattern MpSelect uses).
+ * Data-entry date picker — the design-system equivalent of `p-datePicker`. A typeable input shows/
+ * accepts the value; a trailing button opens MpCalendar (and/or a time picker) in a CDK overlay via
+ * MpPopover.
  *
- * Values are native `Date | null`, matching the app's existing p-datePicker contract, so
- * `[ngModel]`/`(ngModelChange)` migrations are mechanical. Display/parse format follows
- * p-datePicker's jQuery-UI tokens (`dd`, `mm`, `yy` = 4-digit year); only `dd/mm/yy` is used today.
- *
- * Typing: edit the input freely, then blur or press Enter to commit (parsed against `dateFormat`;
- * unparseable text reverts to the last valid value). The calendar header has month + year dropdowns
- * for fast decade jumps (birthdays).
- *
- * Not yet supported (kept on p-datePicker for now): `showTime` / `timeOnly` (time entry).
+ * Modes: date-only (default), `showTime` (calendar + 24h time selects, value = date & time), and
+ * `timeOnly` (just the time selects, no calendar). Values are native `Date | null`, matching
+ * p-datePicker. Display/parse uses jQuery-UI date tokens (`dd`/`mm`/`yy`=4-digit year) plus `HH:mm`
+ * for the time part.
  */
 @Component({
   selector: 'mp-date-picker',
@@ -34,54 +29,116 @@ export class MpDatePicker implements ControlValueAccessor {
   readonly disabledInput = input(false, { alias: 'disabled' });
   readonly invalid = input<boolean | null | undefined>(false);
   readonly inputId = input<string | undefined>(undefined);
-  // p-datePicker's `dateFormat` (jQuery-UI tokens). Default matches the app-wide `dd/mm/yy`.
   readonly dateFormat = input('dd/mm/yy');
-  // Kept for API compatibility with p-datePicker; the calendar opener button is always shown.
   readonly showIcon = input(true);
+  readonly showTime = input(false);
+  readonly timeOnly = input(false);
   readonly minDate = input<Date | undefined>(undefined);
   readonly maxDate = input<Date | undefined>(undefined);
 
   protected readonly value = signal<Date | null>(null);
-  // The input's live text — user-editable, so it's a separate signal we resync on value changes.
   protected readonly text = signal('');
   private readonly cvaDisabled = signal(false);
   protected readonly disabled = computed(() => this.disabledInput() || this.cvaDisabled());
+
+  protected readonly hours = Array.from({ length: 24 }, (_, i) => i);
+  protected readonly minutes = Array.from({ length: 60 }, (_, i) => i);
+  protected readonly selectedHour = computed(() => this.value()?.getHours() ?? 0);
+  protected readonly selectedMinute = computed(() => this.value()?.getMinutes() ?? 0);
 
   protected onChange: (value: Date | null) => void = () => {};
   protected onTouched: () => void = () => {};
 
   private setValue(next: Date | null): void {
     this.value.set(next);
-    this.text.set(next ? formatDate(next, this.dateFormat()) : '');
+    this.text.set(next ? this.formatValue(next) : '');
   }
 
-  protected onDatePicked(date: Date | undefined, popover: { toggle: () => void }): void {
-    const next = date ?? null;
+  private emit(next: Date | null): void {
     this.setValue(next);
     this.onChange(next);
     this.onTouched();
-    // Auto-close after a selection (brn-popover has no close(); toggle() closes while it's open).
-    popover.toggle();
+  }
+
+  protected onDatePicked(date: Date | undefined, popover: { toggle: () => void }): void {
+    let next = date ?? null;
+    // In showTime mode, keep the currently-selected time when a new day is picked.
+    if (next && this.showTime() && this.value()) {
+      const prev = this.value() as Date;
+      next = new Date(next);
+      next.setHours(prev.getHours(), prev.getMinutes(), 0, 0);
+    }
+    this.emit(next);
+    // Date-only auto-closes; showTime stays open so the user can still set the time.
+    if (!this.showTime()) popover.toggle();
+  }
+
+  protected onHourChange(event: Event): void {
+    this.applyTime(Number((event.target as HTMLSelectElement).value), this.selectedMinute());
+  }
+  protected onMinuteChange(event: Event): void {
+    this.applyTime(this.selectedHour(), Number((event.target as HTMLSelectElement).value));
+  }
+  private applyTime(hours: number, minutes: number): void {
+    const base = this.value() ? new Date(this.value() as Date) : new Date();
+    base.setHours(hours, minutes, 0, 0);
+    this.emit(base);
   }
 
   protected commitTyped(): void {
     this.onTouched();
-    const parsed = parseDate(this.text(), this.dateFormat());
-    // Unparseable, non-empty text reverts to the last valid value; empty clears.
+    const parsed = this.parseValue(this.text());
     if (parsed === undefined) {
-      this.text.set(this.value() ? formatDate(this.value() as Date, this.dateFormat()) : '');
+      this.text.set(this.value() ? this.formatValue(this.value() as Date) : '');
       return;
     }
-    if (sameDay(parsed, this.value())) {
-      this.text.set(parsed ? formatDate(parsed, this.dateFormat()) : '');
+    if (sameInstant(parsed, this.value())) {
+      this.text.set(parsed ? this.formatValue(parsed) : '');
       return;
     }
-    this.setValue(parsed);
-    this.onChange(parsed);
+    this.emit(parsed);
+  }
+
+  // --- formatting / parsing (mode-aware) ---
+  private formatValue(date: Date): string {
+    if (this.timeOnly()) return formatTime(date);
+    if (this.showTime()) return `${formatDate(date, this.dateFormat())} ${formatTime(date)}`;
+    return formatDate(date, this.dateFormat());
+  }
+
+  private parseValue(text: string): Date | null | undefined {
+    const trimmed = text.trim();
+    if (!trimmed) return null;
+    if (this.timeOnly()) {
+      const t = parseTime(trimmed);
+      if (!t) return undefined;
+      const base = this.value() ? new Date(this.value() as Date) : new Date();
+      base.setHours(t.h, t.m, 0, 0);
+      return base;
+    }
+    if (this.showTime()) {
+      const m = trimmed.match(/(\d{1,2}):(\d{2})\s*$/);
+      const time = m ? { h: Number(m[1]), m: Number(m[2]) } : { h: 0, m: 0 };
+      if (m && (time.h > 23 || time.m > 59)) return undefined;
+      const datePart = m ? trimmed.slice(0, m.index).trim() : trimmed;
+      const date = parseDate(datePart, this.dateFormat());
+      if (date == null) return date;
+      date.setHours(time.h, time.m, 0, 0);
+      return date;
+    }
+    return parseDate(trimmed, this.dateFormat());
   }
 
   protected readonly contentClass =
     'z-50 w-auto rounded-surface border border-border bg-background p-2 shadow-overlay';
+  protected readonly timeSelectClass =
+    'h-8 rounded-control border border-input bg-background px-1.5 text-sm outline-none cursor-pointer ' +
+    'transition-colors hover:border-[var(--p-form-field-hover-border-color)] focus:border-ring focus:ring-2 focus:ring-ring/40 ' +
+    'disabled:cursor-not-allowed disabled:opacity-50';
+
+  protected pad(n: number): string {
+    return String(n).padStart(2, '0');
+  }
 
   writeValue(value: Date | string | null): void {
     this.setValue(value ? (value instanceof Date ? value : new Date(value)) : null);
@@ -99,12 +156,26 @@ export class MpDatePicker implements ControlValueAccessor {
 
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 
-const sameDay = (a: Date | null, b: Date | null): boolean =>
+const formatTime = (date: Date): string => `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+
+/** Compare to the minute (time-picker granularity), so no-op edits don't churn the model. */
+const sameInstant = (a: Date | null, b: Date | null): boolean =>
   a !== null &&
   b !== null &&
   a.getFullYear() === b.getFullYear() &&
   a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
+  a.getDate() === b.getDate() &&
+  a.getHours() === b.getHours() &&
+  a.getMinutes() === b.getMinutes();
+
+/** `HH:mm` → {h, m}, validated; null if unparseable. */
+function parseTime(text: string): { h: number; m: number } | null {
+  const match = text.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  const h = Number(match[1]);
+  const m = Number(match[2]);
+  return h <= 23 && m <= 59 ? { h, m } : null;
+}
 
 /**
  * Format a Date with p-datePicker's jQuery-UI tokens. `yy` is a 4-digit year (PrimeNG semantics),
@@ -135,7 +206,6 @@ function parseDate(text: string, format: string): Date | null | undefined {
   const parts = trimmed.split(/\D+/).filter(Boolean);
   if (parts.length < 3) return undefined;
 
-  // Order of the day/month/year fields as they appear in the format string.
   const order: string[] = [];
   format.replace(/y+|m+|d+/g, (token) => (order.push(token[0]), token));
   if (order.length < 3) return undefined;
@@ -147,11 +217,9 @@ function parseDate(text: string, format: string): Date | null | undefined {
   const month = fields['m'];
   const day = fields['d'];
   if ([year, month, day].some((n) => Number.isNaN(n))) return undefined;
-  // 2-digit years: >30 → 19xx, else 20xx (matches typical DOB entry).
   if (year < 100) year += year > 30 ? 1900 : 2000;
 
   const date = new Date(year, month - 1, day);
-  // Reject overflow (e.g. 31/02) — the constructed date's parts must match what was typed.
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return undefined;
   }

@@ -1,7 +1,21 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MpButton, MpDialog, MpSelect } from '@myportal/ui';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import {
+  MpButton,
+  MpDialog,
+  MpSelect,
+  MpTable,
+  MpTableHeader,
+  MpTableBody,
+  MpTableEmpty,
+  MpSortable,
+  MpSortIcon,
+  MpSelectableRow,
+  MpColumnFilter,
+  MpTableCheckbox,
+  MpTableHeaderCheckbox,
+  type MpTableLazyLoadEvent,
+} from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { StudentGroupsDataService } from '../../../services/student-groups-data.service';
@@ -28,7 +42,24 @@ interface KindOption {
 @Component({
   selector: 'mp-student-group-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, MpButton, MpDialog, MpSelect, TableModule, TranslocoDirective, TranslocoPipe],
+  imports: [
+    FormsModule,
+    MpButton,
+    MpDialog,
+    MpSelect,
+    MpTable,
+    MpTableHeader,
+    MpTableBody,
+    MpTableEmpty,
+    MpSortable,
+    MpSortIcon,
+    MpSelectableRow,
+    MpColumnFilter,
+    MpTableCheckbox,
+    MpTableHeaderCheckbox,
+    TranslocoDirective,
+    TranslocoPipe,
+  ],
   templateUrl: './student-group-picker.html',
 })
 export class StudentGroupPicker {
@@ -53,9 +84,15 @@ export class StudentGroupPicker {
   protected readonly rows = signal<StudentGroupSummaryResponse[]>([]);
   protected readonly totalRecords = signal(0);
   protected readonly loading = signal(false);
-  // Multi-select state. PrimeNG's p-table mutates this array reference, so we
-  // hold a plain array bound via [(selection)] and reassign on confirm/cancel.
+  // Multi-select state, two-way bound to MpTable's `selection`. Reassigned on confirm/cancel.
   protected selection: StudentGroupSummaryResponse[] = [];
+
+  private readonly table = viewChild(MpTable);
+  protected readonly kindFilter = signal<StudentGroupKind | null>(null);
+
+  // Arrow field so `this` is bound when MpTable calls the predicate.
+  protected readonly rowDisabledFn = (row: unknown): boolean =>
+    this.isAlreadyPicked(row as StudentGroupSummaryResponse);
 
   // Cached per-render: building these in the template would re-translate every
   // change-detection pass. Refreshed when the user opens the popover so a
@@ -71,7 +108,12 @@ export class StudentGroupPicker {
     this.visible.set(false);
   }
 
-  load(event: TableLazyLoadEvent): void {
+  onKindFilter(value: StudentGroupKind | null): void {
+    this.kindFilter.set(value ?? null);
+    this.table()?.filter(value ?? null, 'kind', 'equals');
+  }
+
+  load(event: MpTableLazyLoadEvent): void {
     this.loading.set(true);
     const params = toQueryKitParams(event);
     this.data.list(this.academicYearId(), params).subscribe({

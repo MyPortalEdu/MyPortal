@@ -1,0 +1,38 @@
+<div mpPopover #pop="mpPopover" [sideOffset]="4">
+  <button
+    brnPopoverTrigger
+    type="button"
+    [attr.id]="inputId() ?? null"
+    [attr.aria-invalid]="invalid() || null"
+    [disabled]="disabled()"
+    [class]="triggerClass()">
+    @if (selectedOptions().length) {
+      @for (opt of selectedOptions(); track valueOf(opt)) {
+        <span class="inline-flex items-center gap-1 rounded-control bg-accent px-1.5 py-0.5 text-xs text-accent-foreground">
+          {{ labelOf(opt) }}
+          <span role="button" class="opacity-60 hover:opacity-100" (click)="remove(valueOf(opt), $event)" (mousedown)="$event.stopPropagation()">
+            <i class="fa-solid fa-xmark text-[0.65rem]"></i>
+          </span>
+        </span>
+      }
+    } @else {
+      <span class="truncate text-muted-foreground">{{ placeholder() ?? '' }}</span>
+    }
+    <i class="fa-solid fa-chevron-down ml-auto shrink-0 text-xs opacity-60"></i>
+  </button>
+
+  <div *brnPopoverContent [class]="contentClass">
+    @for (opt of options(); track valueOf(opt)) {
+      <button type="button" [class]="itemClass" (click)="toggle(valueOf(opt))">
+        <span class="flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border border-input"
+              [class.bg-primary]="isSelected(valueOf(opt))"
+              [class.border-primary]="isSelected(valueOf(opt))">
+          @if (isSelected(valueOf(opt))) {
+            <i class="fa-solid fa-check text-[0.6rem] text-primary-foreground"></i>
+          }
+        </span>
+        <span class="truncate">{{ labelOf(opt) }}</span>
+      </button>
+    }
+  </div>
+</div>

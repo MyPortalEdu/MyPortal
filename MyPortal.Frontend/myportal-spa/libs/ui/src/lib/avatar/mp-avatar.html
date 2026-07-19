@@ -1,0 +1,5 @@
+@if (image(); as src) {
+  <img [src]="src" [alt]="label()" class="h-full w-full object-cover" />
+} @else {
+  {{ label() }}
+}

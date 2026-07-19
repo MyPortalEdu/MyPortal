@@ -1,0 +1,12 @@
+<div class="inline-flex flex-wrap gap-0.5 rounded-control border border-input bg-background p-0.5" role="group">
+  @for (opt of options(); track valueOf(opt)) {
+    <button
+      type="button"
+      [class]="btnClass(valueOf(opt) === value())"
+      [disabled]="disabled()"
+      [attr.aria-pressed]="valueOf(opt) === value()"
+      (click)="select(valueOf(opt))">
+      {{ labelOf(opt) }}
+    </button>
+  }
+</div>

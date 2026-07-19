@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, output, signal } from '@angular/core';
-import { Avatar } from 'primeng/avatar';
+import { MpButton, MpAvatar } from '@myportal/ui';
 import { Observable, catchError, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MeService } from '../../../core/services/me-service';
@@ -7,9 +7,9 @@ import { SchoolService } from '../../../core/services/school-service';
 import { SelectedAcademicYearService } from '../../../core/services/selected-academic-year-service';
 import { ThemeService } from '../../../core/services/theme-service';
 import { AsyncPipe } from '@angular/common';
-import { ButtonDirective, ButtonIcon } from 'primeng/button';
 import { RouterLink } from '@angular/router';
-import { Popover } from 'primeng/popover';
+import { BrnPopoverImports } from '@spartan-ng/brain/popover';
+import { MpPopover } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { UserType } from '../../../core/types/user-type';
 import { Me } from '../../../core/types/me';
@@ -19,13 +19,23 @@ import { AcademicYearSwitcherDialog } from './academic-year-switcher-dialog/acad
   selector: 'mp-topbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Avatar, AsyncPipe, ButtonDirective, ButtonIcon, RouterLink, Popover,
+    MpAvatar, AsyncPipe, MpButton, RouterLink, BrnPopoverImports, MpPopover,
     TranslocoDirective, AcademicYearSwitcherDialog,
   ],
   templateUrl: './topbar.html',
-  styleUrl: './topbar.scss',
 })
 export class Topbar implements OnInit {
+  // Shared styling for the user-menu rows (links + buttons). Uses design-system
+  // tokens so it renders correctly in the CDK-portaled overlay (global utilities,
+  // no view-encapsulation scoping needed).
+  protected readonly menuRowClass =
+    'flex items-center gap-3 w-full px-4 py-2 rounded-control text-sm text-inherit no-underline ' +
+    'bg-transparent border-0 cursor-pointer text-left outline-none transition-colors ' +
+    'hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent';
+  protected readonly menuRowDangerClass =
+    'flex items-center gap-3 w-full px-4 py-2 rounded-control text-sm no-underline ' +
+    'bg-transparent border-0 cursor-pointer text-left outline-none transition-colors ' +
+    'text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10';
   private readonly me = inject(MeService);
   private readonly schools = inject(SchoolService);
   private readonly selectedYear = inject(SelectedAcademicYearService);

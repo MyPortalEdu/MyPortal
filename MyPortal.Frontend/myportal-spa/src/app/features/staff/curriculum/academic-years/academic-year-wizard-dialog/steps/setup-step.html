@@ -20,14 +20,14 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="flex flex-col gap-1">
           <label class="text-sm">{{ t('daysPerWeek') }}</label>
-          <p-inputNumber
+          <mp-input-number
             [ngModel]="model().schoolWeekLength"
             (ngModelChange)="onSchoolWeekLengthChange($event)"
             [min]="1"
             [max]="7"
             [showButtons]="!readOnly()"
             [disabled]="readOnly()">
-          </p-inputNumber>
+          </mp-input-number>
           <span class="text-xs text-muted-color">{{ t('daysPerWeekHint') }}</span>
         </div>
 
@@ -66,13 +66,7 @@
           <p class="text-xs text-muted-color m-0">{{ t('termsHint') }}</p>
         </div>
         @if (!readOnly()) {
-          <p-button
-            icon="fa-solid fa-plus"
-            [label]="t('addTerm')"
-            size="small"
-            severity="secondary"
-            (click)="addTerm()">
-          </p-button>
+          <button mpButton variant="secondary" size="sm" (click)="addTerm()"><i class="fa-solid fa-plus"></i> {{ t('addTerm') }}</button>
         }
       </div>
 
@@ -86,7 +80,7 @@
             <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
               <div class="flex flex-col gap-1 flex-1 min-w-[12rem]">
                 <label class="text-xs text-muted-color">{{ t('termName') }}</label>
-                <input pInputText type="text"
+                <input mpInput type="text"
                   [ngModel]="term.name"
                   (ngModelChange)="updateTermName(i, $event)"
                   [disabled]="readOnly()"
@@ -109,13 +103,7 @@
                 </mp-date-picker>
               </div>
               @if (!readOnly()) {
-                <p-button
-                  icon="fa-solid fa-trash-can"
-                  severity="danger"
-                  [text]="true"
-                  [attr.aria-label]="t('removeTerm')"
-                  (click)="removeTerm(i)">
-                </p-button>
+                <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive" [attr.aria-label]="t('removeTerm')" (click)="removeTerm(i)"><i class="fa-solid fa-trash-can"></i></button>
               }
             </li>
           }

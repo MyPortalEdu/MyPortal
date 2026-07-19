@@ -4,15 +4,14 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
-import { Drawer } from 'primeng/drawer';
-import { ButtonDirective } from 'primeng/button';
+import { MpButton, MpDrawer } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { SelectedAcademicYearService } from '../../../core/services/selected-academic-year-service';
 
 @Component({
   selector: 'mp-app-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, ButtonDirective, TranslocoDirective],
+  imports: [RouterOutlet, SidebarComponent, Topbar, MpDrawer, MpButton, TranslocoDirective],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })

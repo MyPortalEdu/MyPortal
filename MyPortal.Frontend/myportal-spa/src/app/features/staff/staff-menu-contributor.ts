@@ -1,5 +1,4 @@
-import {MenuItem} from 'primeng/api';
-import {AppMenuContributor, MenuCategory} from '../../layout/menu/menu-types';
+import {AppMenuContributor, MenuCategory, NavItem} from '../../layout/menu/menu-types';
 import {Me} from '../../core/types/me';
 import {UserType} from '../../core/types/user-type';
 import {Permissions} from '../../core/constants/permissions';
@@ -14,7 +13,7 @@ export class StaffMenuContributor implements AppMenuContributor {
     return user.userType === UserType.Staff;
   }
 
-  getItems(user: Me): MenuItem[] {
+  getItems(user: Me): NavItem[] {
     const has = (p: string) => user.permissions?.includes(p) ?? false;
     const cats: MenuCategory[] = [
       {

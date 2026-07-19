@@ -1,0 +1,19 @@
+<mp-dialog [visible]="open()" panelClass="w-[min(28rem,92vw)]" (closed)="store.reject()">
+  @if (store.request(); as req) {
+    <div class="flex flex-col gap-4 p-5">
+      <div class="flex items-start gap-3">
+        @if (req.icon) {
+          <i [class]="req.icon" class="mt-0.5 text-xl text-muted-foreground"></i>
+        }
+        <div class="flex flex-col gap-1">
+          <h3 class="m-0 text-base font-semibold">{{ req.header }}</h3>
+          <p class="m-0 text-sm text-muted-foreground">{{ req.message }}</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button mpButton variant="ghost" (click)="store.reject()">{{ req.rejectLabel }}</button>
+        <button mpButton [variant]="req.acceptVariant" (click)="store.accept()">{{ req.acceptLabel }}</button>
+      </div>
+    </div>
+  }
+</mp-dialog>

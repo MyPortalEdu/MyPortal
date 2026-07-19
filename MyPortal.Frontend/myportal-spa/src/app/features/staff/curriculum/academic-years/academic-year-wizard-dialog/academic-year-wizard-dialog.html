@@ -68,7 +68,7 @@
   <div class="min-h-[18rem]">
     @if (loading()) {
       <div class="flex flex-col items-center justify-center min-h-[18rem] gap-3">
-        <p-progress-spinner [style]="{ width: '2.5rem', height: '2.5rem' }"></p-progress-spinner>
+        <mp-spinner size="2.5rem"></mp-spinner>
         <span class="text-sm text-muted-color">{{ t('loading') }}</span>
       </div>
     } @else {
