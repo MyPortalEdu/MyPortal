@@ -55,6 +55,13 @@
     }
   </ol>
 
+  @if (!readOnly() && termsOverlap()) {
+    <mp-callout severity="warn">{{ t('validation.termsOverlap') }}</mp-callout>
+  }
+  @if (!readOnly() && holidaysOutOfSpan()) {
+    <mp-callout severity="warn">{{ t('validation.holidaysOutOfSpan') }}</mp-callout>
+  }
+
   <div class="min-h-[18rem]">
     @if (loading()) {
       <div class="flex flex-col items-center justify-center min-h-[18rem] gap-3">

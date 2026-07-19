@@ -9,6 +9,10 @@
       <mp-empty-state icon="fa-solid fa-calendar-xmark" [message]="t('staff-members.absences.none')"></mp-empty-state>
     }
 
+    @if (editing() && hasOverlap()) {
+      <mp-callout severity="warn" class="mb-3 block">{{ t('staff-members.absences.overlap') }}</mp-callout>
+    }
+
     <div class="flex flex-col gap-3">
       @for (field of f.absences; track $index; let i = $index) {
         @let a = field().value();

@@ -151,6 +151,8 @@
   },
   "employment": {
     "hint": "Bank, pay, employment history and contracts. The most sensitive area — visible to the staff member and HR; only HR can edit it.",
+    "overlap": "Employment periods must not overlap.",
+    "contractOutOfRange": "Each contract must fall within its employment period.",
     "bankHeading": "Bank & National Insurance",
     "bankName": "Bank name",
     "bankAccount": "Account number",
@@ -270,7 +272,8 @@
     "days": "days",
     "notes": "Notes",
     "confidential": "Confidential",
-    "markConfidential": "Mark as confidential (HR only)"
+    "markConfidential": "Mark as confidential (HR only)",
+    "overlap": "Absence periods must not overlap."
   },
   "timetable": {
     "hint": "Lessons, cover, detentions, school events, non-contact time, parent-evening appointments and leave for this staff member."

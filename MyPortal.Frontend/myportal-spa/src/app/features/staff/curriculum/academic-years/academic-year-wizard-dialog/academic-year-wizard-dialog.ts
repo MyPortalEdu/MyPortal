@@ -16,7 +16,11 @@ import { AcademicYearsDataService } from '../../../../../shared/services/academi
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
 import { AcademicYearService } from '../../../../../core/services/academic-year-service';
-import { AcademicYearUpsertRequest } from '../../../../../shared/types/academic-year';
+import {
+  AcademicTermUpsertRequest,
+  AcademicYearUpsertRequest,
+  SchoolHolidayUpsertRequest,
+} from '../../../../../shared/types/academic-year';
 import { AcademicYearDetailsResponse } from '../../../../../shared/types/academic-year-details';
 import { Callout } from '../../../../../shared/components/callout/callout';
 import { AcademicYearWizardSetupStep } from './steps/setup-step';
@@ -99,7 +103,8 @@ export class AcademicYearWizardDialog {
               term.name.trim().length > 0
               && term.startDate !== null
               && term.endDate !== null
-              && term.endDate > term.startDate);
+              && term.endDate > term.startDate)
+          && termsDoNotOverlap(m.academicTerms);
       case 1: {
         if (m.copyPeriodsFromAcademicYearId != null) {
           return m.attendancePeriods.length === 0;
@@ -132,7 +137,8 @@ export class AcademicYearWizardDialog {
           h.name.trim().length > 0
           && h.startDate !== null
           && h.endDate !== null
-          && h.endDate >= h.startDate);
+          && h.endDate >= h.startDate)
+          && holidaysWithinTermSpan(m.academicTerms, m.schoolHolidays);
       case 3:
         return true;
       default:
@@ -141,6 +147,15 @@ export class AcademicYearWizardDialog {
   });
 
   readonly canGoNext = computed(() => this.readOnly() || this.canAdvance());
+
+  readonly termsOverlap = computed(
+    () => this.currentStep() === 0 && !termsDoNotOverlap(this.model().academicTerms),
+  );
+  readonly holidaysOutOfSpan = computed(
+    () =>
+      this.currentStep() === 2 &&
+      !holidaysWithinTermSpan(this.model().academicTerms, this.model().schoolHolidays),
+  );
 
   constructor() {
     effect(() => {
@@ -292,4 +307,34 @@ function parseLocalTime(hms: string): Date {
   const d = new Date();
   d.setHours(h, m, s ?? 0, 0);
   return d;
+}
+
+function termsDoNotOverlap(terms: AcademicTermUpsertRequest[]): boolean {
+  const ordered = terms
+    .filter(t => t.startDate && t.endDate)
+    .slice()
+    .sort((a, b) => a.startDate!.getTime() - b.startDate!.getTime());
+  for (let i = 1; i < ordered.length; i++) {
+    if (ordered[i].startDate!.getTime() <= ordered[i - 1].endDate!.getTime()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function holidaysWithinTermSpan(
+  terms: AcademicTermUpsertRequest[],
+  holidays: SchoolHolidayUpsertRequest[],
+): boolean {
+  const starts = terms.filter(t => t.startDate).map(t => t.startDate!.getTime());
+  const ends = terms.filter(t => t.endDate).map(t => t.endDate!.getTime());
+  if (!starts.length || !ends.length) return true;
+  const yearStart = Math.min(...starts);
+  const yearEnd = Math.max(...ends);
+  return holidays.every(
+    h =>
+      !h.startDate ||
+      !h.endDate ||
+      (h.startDate.getTime() >= yearStart && h.endDate.getTime() <= yearEnd),
+  );
 }

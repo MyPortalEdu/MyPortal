@@ -123,7 +123,16 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
             c.fte >= 0 &&
             c.fte <= 1,
         ),
-    ),
+    ) &&
+    employmentsDoNotOverlap(this.employments()) &&
+    this.employments().every(contractsWithinEmployment),
+  );
+
+  protected readonly employmentsOverlap = computed(
+    () => !employmentsDoNotOverlap(this.employments()),
+  );
+  protected readonly contractOutOfRange = computed(
+    () => !this.employments().every(contractsWithinEmployment),
   );
 
   private readonly form = computed(() =>
@@ -467,4 +476,32 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   protected formatMoney(value: number): string {
     return '£' + Math.round(value).toLocaleString('en-GB');
   }
+}
+
+function employmentsDoNotOverlap(employments: StaffEmploymentUpsertItem[]): boolean {
+  const ordered = employments
+    .filter(e => e.startDate)
+    .slice()
+    .sort((a, b) => new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime());
+  for (let i = 1; i < ordered.length; i++) {
+    const previousEnd = ordered[i - 1].endDate ? new Date(ordered[i - 1].endDate!).getTime() : Infinity;
+    if (new Date(ordered[i].startDate!).getTime() <= previousEnd) return false;
+  }
+  return true;
+}
+
+function contractsWithinEmployment(employment: StaffEmploymentUpsertItem): boolean {
+  if (!employment.startDate) return true;
+  const empStart = new Date(employment.startDate).getTime();
+  const empEnd = employment.endDate ? new Date(employment.endDate).getTime() : null;
+  for (const contract of employment.contracts) {
+    if (!contract.startDate) continue;
+    const contractStart = new Date(contract.startDate).getTime();
+    if (contractStart < empStart) return false;
+    if (empEnd !== null) {
+      if (contractStart > empEnd) return false;
+      if (contract.endDate && new Date(contract.endDate).getTime() > empEnd) return false;
+    }
+  }
+  return true;
 }

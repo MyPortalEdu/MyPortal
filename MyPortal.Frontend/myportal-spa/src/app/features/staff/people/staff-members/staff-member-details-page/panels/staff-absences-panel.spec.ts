@@ -109,6 +109,27 @@ describe('StaffAbsencesPanel (array forms)', () => {
     expect(internals.f().valid()).toBe(true);
   });
 
+  it('rejects overlapping absence periods (tree validator on the array)', () => {
+    configure();
+    internals.model.update(m => ({
+      absences: [
+        {
+          ...m.absences[0],
+          startDate: new Date('2026-01-10T00:00:00.000Z'),
+          endDate: new Date('2026-01-15T00:00:00.000Z'),
+        },
+        {
+          ...m.absences[0],
+          id: null,
+          startDate: new Date('2026-01-14T00:00:00.000Z'),
+          endDate: new Date('2026-01-20T00:00:00.000Z'),
+        },
+      ],
+    }));
+    expect((component as unknown as { hasOverlap(): boolean }).hasOverlap()).toBe(true);
+    expect(internals.f().invalid()).toBe(true);
+  });
+
   it('an end date before the start date is invalid (cross-field per item)', () => {
     configure();
     internals.model.update(m => ({

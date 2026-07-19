@@ -10,6 +10,12 @@
         {{ t('common.validation.missingBlocked') }}
       </mp-callout>
     }
+    @if (editing() && employmentsOverlap()) {
+      <mp-callout severity="warn" class="mb-4 block">{{ t('staff-members.employment.overlap') }}</mp-callout>
+    }
+    @if (editing() && contractOutOfRange()) {
+      <mp-callout severity="warn" class="mb-4 block">{{ t('staff-members.employment.contractOutOfRange') }}</mp-callout>
+    }
 
     <div class="flex flex-col gap-6">
       <section>

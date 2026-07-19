@@ -26,6 +26,7 @@ import { LookupSelect } from '../../../../../../shared/components/lookup-select/
 import { Loading } from '../../../../../../shared/components/loading/loading';
 import { EmptyState } from '../../../../../../shared/components/empty-state/empty-state';
 import { Field } from '../../../../../../shared/components/field/field';
+import { Callout } from '../../../../../../shared/components/callout/callout';
 import {
   StaffAbsencesResponse,
   StaffAbsencesUpsertRequest,
@@ -40,6 +41,17 @@ interface AbsenceFormRow {
   endDate: Date | null;
   isConfidential: boolean;
   notes: string;
+}
+
+function absencesOverlap(rows: readonly AbsenceFormRow[]): boolean {
+  const ordered = rows
+    .filter(a => a.startDate && a.endDate)
+    .slice()
+    .sort((a, b) => a.startDate!.getTime() - b.startDate!.getTime());
+  for (let i = 1; i < ordered.length; i++) {
+    if (ordered[i].startDate!.getTime() <= ordered[i - 1].endDate!.getTime()) return true;
+  }
+  return false;
 }
 
 @Component({
@@ -57,6 +69,7 @@ interface AbsenceFormRow {
     Loading,
     EmptyState,
     Field,
+    Callout,
     TranslocoDirective,
   ],
   providers: [
@@ -93,6 +106,11 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
           : { kind: 'endBeforeStart', message: 'staff-members.absences.endBeforeStart' };
       });
     });
+    validate(path.absences, ({ value }) =>
+      absencesOverlap(value())
+        ? { kind: 'overlap', message: 'staff-members.absences.overlap' }
+        : undefined,
+    );
   });
   private readonly snapshot = signal<string>('');
 
@@ -113,6 +131,8 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
 
   override readonly saving = computed(() => this.f().submitting());
   override readonly valid = computed(() => this.f().valid());
+
+  protected readonly hasOverlap = computed(() => absencesOverlap(this.model().absences));
 
   private readonly form = computed(() => JSON.stringify(this.model()));
 
