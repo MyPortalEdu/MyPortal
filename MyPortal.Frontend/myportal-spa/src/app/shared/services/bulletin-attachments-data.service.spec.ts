@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { BulletinAttachmentsDataService } from './bulletin-attachments-data.service';
@@ -11,7 +11,7 @@ describe('BulletinAttachmentsDataService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), BulletinAttachmentsDataService],
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), BulletinAttachmentsDataService],
     });
     service = TestBed.inject(BulletinAttachmentsDataService);
     http = TestBed.inject(HttpTestingController);

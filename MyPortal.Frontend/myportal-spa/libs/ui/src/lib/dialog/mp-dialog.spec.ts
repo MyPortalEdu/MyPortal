@@ -1,10 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MpDialog, MpDialogFooter } from './mp-dialog';
 
 @Component({
   standalone: true,
   imports: [MpDialog, MpDialogFooter],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <mp-dialog
       [visible]="open()"

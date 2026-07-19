@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { MpCheckbox } from './mp-checkbox';
@@ -6,6 +6,7 @@ import { MpCheckbox } from './mp-checkbox';
 @Component({
   standalone: true,
   imports: [MpCheckbox, FormsModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `<mp-checkbox [ngModel]="value()" (ngModelChange)="value.set($event)" [disabled]="disabled()" />`,
 })
 class Host {

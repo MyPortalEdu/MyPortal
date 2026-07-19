@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
-import {provideHttpClient, withInterceptors, withXsrfConfiguration} from '@angular/common/http';
+import {provideHttpClient, withInterceptors, withXsrfConfiguration, withXhr} from '@angular/common/http';
 import {provideTransloco} from '@jsverse/transloco';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
@@ -14,7 +14,7 @@ import {TranslocoHttpLoader} from './core/i18n/transloco-loader';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(
+    provideHttpClient(withXhr(), 
       withInterceptors([apiBaseInterceptor, authErrorInterceptor]),
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' })
     ),
