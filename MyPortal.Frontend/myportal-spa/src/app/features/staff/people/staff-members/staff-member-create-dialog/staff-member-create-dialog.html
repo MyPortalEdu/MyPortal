@@ -3,12 +3,12 @@
     [visible]="open()"
     (visibleChange)="$event ? null : onClose()"
     [modal]="true"
-    [closeOnEscape]="!saving()"
+    [closeOnEscape]="!f().submitting()"
     panelClass="w-[min(40rem,92vw)]"
     [dismissable]="false"
     [title]="step() === 'attach' ? t('staff-members.create.attachHeader') : t('staff-members.create.header')"
     [closeAriaLabel]="t('common.cancel')"
-    [closeDisabled]="saving()">
+    [closeDisabled]="f().submitting()">
 
     @if (step() === 'search') {
       <div>
@@ -83,7 +83,7 @@
               {{ t('staff-members.fields.code') }}
             </label>
             <input mpInput id="create-code"
-                   [ngModel]="code()" (ngModelChange)="code.set($event)"
+                   [formField]="f.code"
                    (keydown.enter)="save()" />
           </div>
 
@@ -92,7 +92,7 @@
               {{ t('staff-members.fields.title') }}
             </label>
             <input mpInput id="create-title"
-                   [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)"
+                   [formField]="f.title"
                    (keydown.enter)="save()" />
           </div>
 
@@ -101,7 +101,7 @@
               {{ t('staff-members.fields.firstName') }}
             </label>
             <input mpInput id="create-firstName"
-                   [ngModel]="firstName()" (ngModelChange)="firstName.set($event)"
+                   [formField]="f.firstName"
                    (keydown.enter)="save()" />
           </div>
 
@@ -110,7 +110,7 @@
               {{ t('staff-members.fields.middleName') }}
             </label>
             <input mpInput id="create-middleName"
-                   [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)"
+                   [formField]="f.middleName"
                    (keydown.enter)="save()" />
           </div>
 
@@ -119,7 +119,7 @@
               {{ t('staff-members.fields.lastName') }}
             </label>
             <input mpInput id="create-lastName"
-                   [ngModel]="lastName()" (ngModelChange)="lastName.set($event)"
+                   [formField]="f.lastName"
                    (keydown.enter)="save()" />
           </div>
 
@@ -128,7 +128,7 @@
               {{ t('staff-members.fields.preferredFirstName') }}
             </label>
             <input mpInput id="create-preferredFirst"
-                   [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)"
+                   [formField]="f.preferredFirstName"
                    (keydown.enter)="save()" />
           </div>
 
@@ -137,8 +137,7 @@
               {{ t('staff-members.fields.gender') }}
             </label>
             <mp-gender-select inputId="create-gender"
-                              [value]="gender()"
-                              (valueChange)="gender.set($event ?? '')"></mp-gender-select>
+                              [formField]="f.gender"></mp-gender-select>
           </div>
 
           <div class="flex flex-col gap-1">
@@ -146,7 +145,7 @@
               {{ t('staff-members.fields.dob') }}
             </label>
             <mp-date-picker inputId="create-dob"
-                          [ngModel]="dob()" (ngModelChange)="dob.set($event)"
+                          [formField]="f.dob"
                           [showIcon]="true"></mp-date-picker>
           </div>
         </div>
@@ -179,7 +178,7 @@
             {{ t('staff-members.fields.code') }}
           </label>
           <input mpInput id="attach-code"
-                 [ngModel]="code()" (ngModelChange)="code.set($event)"
+                 [formField]="f.code"
                  (keydown.enter)="attach()" />
         </div>
       </div>
@@ -190,27 +189,27 @@
         <div class="flex items-center justify-end gap-2">
           <button mpButton
             variant="outline"
-            [disabled]="saving()"
+            [disabled]="f().submitting()"
             (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
           <button mpButton
-            [disabled]="!newPersonValid() || saving()"
-            (click)="save()"><i class="fa-solid" [class.fa-plus]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> {{ t('staff-members.create.submit') }}</button>
+            [disabled]="!f().valid() || f().submitting()"
+            (click)="save()"><i class="fa-solid" [class.fa-plus]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('staff-members.create.submit') }}</button>
         </div>
       }
       @if (step() === 'attach') {
         <div class="flex items-center justify-between gap-2">
           <button mpButton
             variant="ghost"
-            [disabled]="saving()"
+            [disabled]="f().submitting()"
             (click)="backToSearch()"><i class="fa-solid fa-arrow-left"></i> {{ t('common.back') }}</button>
           <div class="flex items-center gap-2">
             <button mpButton
               variant="outline"
-              [disabled]="saving()"
+              [disabled]="f().submitting()"
               (click)="onClose()">{{ t('common.cancel') }}</button>
             <button mpButton
-              [disabled]="!attachValid() || saving()"
-              (click)="attach()"><i class="fa-solid" [class.fa-plus]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> {{ t('staff-members.create.attachSubmit') }}</button>
+              [disabled]="!f().valid() || f().submitting()"
+              (click)="attach()"><i class="fa-solid" [class.fa-plus]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('staff-members.create.attachSubmit') }}</button>
           </div>
         </div>
       }
