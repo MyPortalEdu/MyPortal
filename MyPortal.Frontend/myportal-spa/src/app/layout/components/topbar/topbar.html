@@ -86,7 +86,7 @@
                 <span class="flex-1">{{ t('userMenu.accountSettings') }}</span>
               </a>
             </li>
-            @if (me.userType === UserType.Staff) {
+            @if (me.userType === UserType.Staff && canSwitchYear()) {
               <li>
                 <button type="button" [class]="menuRowClass"
                         (click)="userMenu.close(); openYearSwitcher()">

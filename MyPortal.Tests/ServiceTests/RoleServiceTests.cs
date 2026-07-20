@@ -379,6 +379,10 @@ public class RoleServiceTests
         _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
         _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
 
+        // The role currently holds no permissions, so the admin permission below is being ADDED.
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission>());
+
         // An administrative (System.*) permission the actor does not hold — granting it would escalate.
         _permissionRepository
             .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
@@ -398,6 +402,105 @@ public class RoleServiceTests
             UserType = UserType.Staff,
             PermissionIds = new List<Guid> { permId }
         }, CancellationToken.None), Throws.TypeOf<ForbiddenException>());
+    }
+
+    [Test]
+    public void UpdateAsync_Forbidden_WhenRemovingAdminPermissionActorDoesNotHold()
+    {
+        // Symmetric to granting: an actor who does not hold an administrative permission cannot strip it
+        // from a role either (sabotaging access control they can't wield themselves).
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Teacher", UserType = UserType.Staff };
+        var adminPermId = Guid.NewGuid();
+
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+        _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
+
+        // The role currently HOLDS the admin permission; the update drops it (empty desired set).
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission>
+            {
+                new() { Id = Guid.NewGuid(), RoleId = roleId, PermissionId = adminPermId }
+            });
+
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = adminPermId, Name = "System.EditRoles", FriendlyName = "Edit Roles", Area = "System.Users", UserType = UserType.Staff }
+            });
+
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System.ViewUsers" });
+
+        Assert.That(async () => await _roleService.UpdateAsync(roleId, new RoleUpsertRequest
+        {
+            Name = "Teacher",
+            UserType = UserType.Staff,
+            PermissionIds = new List<Guid>()
+        }, CancellationToken.None), Throws.TypeOf<ForbiddenException>());
+    }
+
+    [Test]
+    public async Task UpdateAsync_Allows_KeepingAdminPermissionActorDoesNotHold_WhenEditingOthers()
+    {
+        // Only CHANGED permissions are gated: an actor lacking System.EditRoles may still edit a role that
+        // carries it, as long as that admin permission is left untouched. Here they swap a functional perm.
+        var roleId = Guid.NewGuid();
+        var role = new ApplicationRole { Id = roleId, Name = "Teacher", UserType = UserType.Staff };
+        var adminPermId = Guid.NewGuid();   // System.* the actor lacks — stays on the role, unchanged
+        var funcOldId = Guid.NewGuid();     // functional perm being removed
+        var funcNewId = Guid.NewGuid();     // functional perm being added
+
+        var existing = new List<RolePermission>
+        {
+            new() { Id = Guid.NewGuid(), RoleId = roleId, PermissionId = adminPermId },
+            new() { Id = Guid.NewGuid(), RoleId = roleId, PermissionId = funcOldId }
+        };
+
+        _roleManager.Setup(m => m.FindByIdAsync(roleId.ToString())).ReturnsAsync(role);
+        _roleManager.Setup(m => m.UpdateAsync(role)).ReturnsAsync(IdentityResult.Success);
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(roleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+        _rolePermissionRepository
+            .Setup(r => r.InsertAsync(It.IsAny<RolePermission>(), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync((RolePermission rp, CancellationToken _, IDbTransaction? _) => rp);
+        _rolePermissionRepository
+            .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(true);
+
+        _permissionRepository
+            .Setup(r => r.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = adminPermId, Name = "System.EditRoles", FriendlyName = "Edit Roles", Area = "System.Users", UserType = UserType.Staff },
+                new() { Id = funcOldId, Name = "Attendance.EditMarks", FriendlyName = "Edit Marks", Area = "Attendance", UserType = UserType.Staff },
+                new() { Id = funcNewId, Name = "Attendance.ViewMarks", FriendlyName = "View Marks", Area = "Attendance", UserType = UserType.Staff }
+            });
+
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System.ViewUsers" });
+
+        var result = await _roleService.UpdateAsync(roleId, new RoleUpsertRequest
+        {
+            Name = "Teacher",
+            UserType = UserType.Staff,
+            PermissionIds = new List<Guid> { adminPermId, funcNewId }
+        }, CancellationToken.None);
+
+        Assert.That(result.Succeeded, Is.True);
+        // The untouched admin permission is neither re-inserted nor deleted; only the functional swap happens.
+        _rolePermissionRepository.Verify(r => r.InsertAsync(
+            It.Is<RolePermission>(rp => rp.PermissionId == funcNewId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Once);
+        _rolePermissionRepository.Verify(r => r.InsertAsync(
+            It.Is<RolePermission>(rp => rp.PermissionId == adminPermId), It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
+        _rolePermissionRepository.Verify(r => r.DeleteAsync(
+            It.Is<Guid>(id => existing.Any(e => e.Id == id && e.PermissionId == funcOldId)),
+            It.IsAny<CancellationToken>(), It.IsAny<bool>(), It.IsAny<IDbTransaction?>()), Times.Once);
     }
 
     [Test]

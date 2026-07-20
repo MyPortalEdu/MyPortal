@@ -44,6 +44,7 @@ export class Topbar implements OnInit {
   me$!: Observable<Me>;
 
   readonly switcherOpen = signal(false);
+  readonly canSwitchYear = this.selectedYear.hasAccess;
   readonly UserType = UserType;
 
   readonly topbarAvatarClass = computed(

@@ -1,6 +1,6 @@
 <div class="pointer-events-none fixed left-4 right-4 top-[4.5rem] z-[1400] flex flex-col gap-2 sm:left-auto sm:top-4 sm:w-80 sm:max-w-[calc(100vw-2rem)]">
   @for (t of store.toasts(); track t.id) {
-    <div class="pointer-events-auto flex items-start gap-3 rounded-surface border p-3 shadow-overlay" [class]="panelClass(t.severity)">
+    <div class="pointer-events-auto flex items-start gap-3 rounded-surface border p-3 shadow-overlay" [class]="panelClass(t.severity)" (mouseenter)="store.pause(t.id)" (mouseleave)="store.resume(t.id)" (focusin)="store.pause(t.id)" (focusout)="store.resume(t.id)">
       <i [class]="icon(t.severity)" class="mt-0.5 shrink-0"></i>
       <div class="min-w-0 flex-1">
         <div class="text-sm font-semibold">{{ t.summary }}</div>

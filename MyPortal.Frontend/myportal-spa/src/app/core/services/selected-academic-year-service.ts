@@ -6,8 +6,16 @@ import { AcademicYearService } from './academic-year-service';
 import { MeService } from './me-service';
 import { AcademicYearsDataService } from '../../shared/services/academic-years-data.service';
 import { AcademicYearSummary } from '../types/academic-year-summary';
+import { Permissions } from '../constants/permissions';
 
 const STORAGE_PREFIX = 'mp.selectedAcademicYearId:';
+
+function hasAcademicYearAccess(permissions: readonly string[] | undefined): boolean {
+  return (
+    (permissions?.includes(Permissions.Curriculum.ViewAcademicYears) ?? false) ||
+    (permissions?.includes(Permissions.Curriculum.EditAcademicYears) ?? false)
+  );
+}
 
 @Injectable({ providedIn: 'root' })
 export class SelectedAcademicYearService {
@@ -17,17 +25,29 @@ export class SelectedAcademicYearService {
 
   private readonly _selected = signal<AcademicYearSummary | null>(null);
   private readonly _initialized = signal<boolean>(false);
+  private readonly _hasAccess = signal<boolean>(false);
   private _currentUserId: string | null = null;
 
   readonly selected = this._selected.asReadonly();
   readonly selectedId = computed(() => this._selected()?.id ?? null);
   readonly initialized = this._initialized.asReadonly();
+  /** Whether the current user can view/edit academic years (and so use the switcher). */
+  readonly hasAccess = this._hasAccess.asReadonly();
 
   init(): void {
     if (this._initialized()) return;
 
     this.me.me().pipe(take(1)).subscribe(me => {
       this._currentUserId = me.id;
+      this._hasAccess.set(hasAcademicYearAccess(me.permissions));
+
+      // A user without academic-year access has no year to select and no switcher — skip the
+      // calls entirely rather than firing them just to catch the 403.
+      if (!this._hasAccess()) {
+        this._selected.set(null);
+        this._initialized.set(true);
+        return;
+      }
 
       const storedId = readStored(me.id);
       combineLatest([
@@ -54,7 +74,7 @@ export class SelectedAcademicYearService {
   }
 
   revalidate(): void {
-    if (!this._initialized() || !this._currentUserId) return;
+    if (!this._initialized() || !this._currentUserId || !this._hasAccess()) return;
 
     const userId = this._currentUserId;
     const wantedId = this.selectedId();

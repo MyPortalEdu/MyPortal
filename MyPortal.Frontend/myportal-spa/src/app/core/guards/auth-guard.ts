@@ -13,6 +13,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { UserType } from '../types/user-type';
 import { MeService } from '../services/me-service';
+import { redirectToLogin } from '../auth/redirect-to-login';
 
 type AuthData = {
   permissionsAll?: readonly string[];
@@ -54,8 +55,7 @@ export class AuthGuard implements CanActivate, CanMatch {
       if (e instanceof HttpErrorResponse) {
         if (e.status === 401) {
           const candidate = returnUrl || (location.pathname + location.search + location.hash);
-          const safe = AuthGuard.sanitizeReturnUrl(candidate);
-          location.href = `/account/login?returnUrl=${encodeURIComponent(safe)}`;
+          redirectToLogin(AuthGuard.sanitizeReturnUrl(candidate));
           return false;
         }
 

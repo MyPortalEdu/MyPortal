@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { MeService } from '../services/me-service';
+import { redirectToLogin } from '../auth/redirect-to-login';
 
 export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -12,8 +13,7 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((err: unknown) => {
       if (err instanceof HttpErrorResponse && err.status === 401) {
         me.clearCache();
-        const returnUrl = encodeURIComponent(router.url);
-        window.location.href = `/account/login?returnUrl=${returnUrl}`;
+        redirectToLogin(router.url);
       }
       return throwError(() => err);
     })

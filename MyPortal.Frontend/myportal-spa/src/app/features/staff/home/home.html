@@ -40,6 +40,8 @@
     </div>
     <mp-staff-timetable [self]="true"></mp-staff-timetable>
   </section>
-  <mp-bulletins-feed class="flex-1 min-w-0"></mp-bulletins-feed>
+  @if (canViewBulletins()) {
+    <mp-bulletins-feed class="flex-1 min-w-0"></mp-bulletins-feed>
+  }
 </div>
 </ng-container>
