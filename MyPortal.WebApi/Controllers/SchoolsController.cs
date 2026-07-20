@@ -5,6 +5,7 @@ using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.School;
 using MyPortal.Services.Interfaces.School;
 using MyPortal.WebApi.Infrastructure.Attributes;
@@ -56,7 +57,23 @@ public class SchoolsController(
     public async Task<IActionResult> SaveLocalSchoolDetails([FromBody] SchoolUpsertRequest model)
     {
         var result = await schoolService.CreateOrUpdateLocalSchoolAsync(model, CancellationToken);
-        
+
         return Ok(result);
+    }
+
+    /// <summary>Advisory check for whether a school URN is available (not used by another school).</summary>
+    /// <remarks>
+    /// For inline UI feedback only — the authoritative uniqueness guard still runs on save. Blank
+    /// URNs report available. Pass <paramref name="excludeId"/> (the local school's own id) so it
+    /// does not clash with itself.
+    /// </remarks>
+    [HttpGet("urn-available")]
+    [UserType(UserType.Staff)]
+    [Permission(PermissionMode.RequireAny, Permissions.Agencies.EditAgencies)]
+    [ProducesResponseType(typeof(AvailabilityResponse), 200)]
+    public async Task<IActionResult> IsUrnAvailableAsync([FromQuery] string? urn, [FromQuery] Guid? excludeId)
+    {
+        var available = await schoolService.IsUrnAvailableAsync(urn, excludeId, CancellationToken);
+        return Ok(new AvailabilityResponse { Available = available });
     }
 }

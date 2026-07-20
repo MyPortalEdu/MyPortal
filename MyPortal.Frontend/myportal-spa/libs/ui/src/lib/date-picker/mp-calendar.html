@@ -1,0 +1,74 @@
+    <div class="flex w-64 flex-col gap-3 p-1">
+
+      <div class="flex items-center gap-1">
+        @if (view() === 'days') {
+          <button brnCalendarPreviousButton type="button" [class]="navBtnClass" aria-label="Previous month">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+        } @else {
+          <span class="h-7 w-7 shrink-0"></span>
+        }
+        <div class="flex flex-1 items-center justify-center gap-1">
+          <button type="button" [class]="headerBtnClass" (click)="toggleView('months')" aria-label="Select month">
+            {{ monthLabel() }}
+          </button>
+          <button type="button" [class]="headerBtnClass" (click)="toggleView('years')" aria-label="Select year">
+            {{ focusedYear() }}
+          </button>
+        </div>
+        @if (view() === 'days') {
+          <button brnCalendarNextButton type="button" [class]="navBtnClass" aria-label="Next month">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        } @else {
+          <span class="h-7 w-7 shrink-0"></span>
+        }
+      </div>
+
+      @switch (view()) {
+        @case ('days') {
+          <table class="w-full border-collapse" brnCalendarGrid>
+            <thead aria-hidden="true">
+              <tr class="flex">
+                <th
+                  *brnCalendarWeekday="let weekday"
+                  scope="col"
+                  class="flex-1 text-[0.7rem] font-normal text-muted-foreground"
+                  [attr.aria-label]="i18n.config().labelWeekday(weekday)">
+                  {{ i18n.config().formatWeekdayName(weekday) }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *brnCalendarWeek="let week" class="mt-1 flex w-full">
+                @for (date of week; track dateAdapter.getTime(date)) {
+                  <td brnCalendarCell class="relative aspect-square flex-1 p-0 text-center">
+                    <button brnCalendarCellButton [date]="date" [class]="cellBtnClass">
+                      {{ dateAdapter.getDate(date) }}
+                    </button>
+                  </td>
+                }
+              </tr>
+            </tbody>
+          </table>
+        }
+        @case ('months') {
+          <div class="grid grid-cols-3 gap-1">
+            @for (m of monthOptions(); track m.value) {
+              <button type="button" [class]="gridBtnClass(m.value === focusedMonth())" (click)="pickMonth(m.value)">
+                {{ m.short }}
+              </button>
+            }
+          </div>
+        }
+        @case ('years') {
+          <div class="grid max-h-52 grid-cols-4 gap-1 overflow-y-auto">
+            @for (y of yearOptions(); track y) {
+              <button type="button" [class]="gridBtnClass(y === focusedYear())" (click)="pickYear(y)">
+                {{ y }}
+              </button>
+            }
+          </div>
+        }
+      }
+    </div>

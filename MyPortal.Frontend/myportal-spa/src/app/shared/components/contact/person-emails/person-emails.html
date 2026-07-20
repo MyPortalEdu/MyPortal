@@ -3,17 +3,17 @@
     @if (editing()) {
       @for (email of emails(); track $index) {
         <div class="flex flex-wrap items-center gap-2 rounded border border-surface-200 dark:border-surface-700 p-3">
-          <p-select
-            styleClass="w-40"
+          <mp-select
+            class="w-40"
             [options]="types()"
             optionLabel="description"
             optionValue="id"
             [placeholder]="t('common.contact.type')"
             [ngModel]="email.typeId"
-            (ngModelChange)="patch($index, { typeId: $event })"></p-select>
+            (ngModelChange)="patch($index, { typeId: $event })"></mp-select>
 
           <input
-            pInputText
+            mpInput
             type="email"
             class="flex-1 min-w-48"
             [placeholder]="t('common.contact.emailPlaceholder')"
@@ -21,7 +21,7 @@
             (ngModelChange)="patch($index, { address: $event })" />
 
           <input
-            pInputText
+            mpInput
             class="flex-1 min-w-40"
             [placeholder]="t('common.contact.notesPlaceholder')"
             [ngModel]="email.notes ?? ''"
@@ -32,38 +32,37 @@
             class="flex items-center gap-1 text-sm"
             [attr.aria-pressed]="email.isMain"
             (click)="setMain($index)">
-            <i [class]="email.isMain ? 'fa-solid fa-circle-dot text-primary-600' : 'fa-regular fa-circle text-muted-color'"></i>
+            <i [class]="email.isMain ? 'fa-solid fa-circle-dot text-primary-600' : 'fa-regular fa-circle text-muted-foreground'"></i>
             {{ t('common.contact.main') }}
           </button>
 
-          <p-button
-            icon="fa-solid fa-trash"
-            severity="danger"
-            [text]="true"
-            [ariaLabel]="t('common.delete')"
-            (onClick)="removeEmail($index)"></p-button>
+          <button
+            mpButton
+            variant="ghost"
+            class="text-destructive hover:text-destructive"
+            size="icon"
+            [attr.aria-label]="t('common.delete')"
+            (click)="removeEmail($index)"><i class="fa-solid fa-trash"></i></button>
         </div>
       }
 
       <div>
-        <p-button
-          [label]="t('common.contact.addEmail')"
-          icon="fa-solid fa-plus"
-          severity="secondary"
-          [outlined]="true"
+        <button
+          mpButton
+          variant="outline"
           [disabled]="!types().length"
-          (onClick)="addEmail()"></p-button>
+          (click)="addEmail()"><i class="fa-solid fa-plus"></i> {{ t('common.contact.addEmail') }}</button>
       </div>
     } @else {
       @if (emails().length) {
         <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
           @for (email of emails(); track $index) {
             <div class="flex items-center gap-3 py-2">
-              <span class="w-20 shrink-0 text-xs text-muted-color">{{ typeName(email.typeId) }}</span>
+              <span class="w-20 shrink-0 text-xs text-muted-foreground">{{ typeName(email.typeId) }}</span>
               <span class="flex-1 min-w-0 truncate font-medium">
                 {{ email.address }}
                 @if (email.notes) {
-                  <span class="ml-1 text-xs font-normal text-muted-color">— {{ email.notes }}</span>
+                  <span class="ml-1 text-xs font-normal text-muted-foreground">— {{ email.notes }}</span>
                 }
               </span>
               @if (email.isMain) {
@@ -81,7 +80,7 @@
           }
         </div>
       } @else {
-        <span class="text-sm text-muted-color">{{ t('common.contact.noEmails') }}</span>
+        <span class="text-sm text-muted-foreground">{{ t('common.contact.noEmails') }}</span>
       }
     }
   </div>

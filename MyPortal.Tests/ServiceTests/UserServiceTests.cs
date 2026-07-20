@@ -758,4 +758,49 @@ public class UserServiceTests
         Assert.That(result.Result.Succeeded, Is.True);
         _userManager.Verify(m => m.AddToRoleAsync(It.IsAny<ApplicationUser>(), "Teacher"), Times.Once);
     }
+
+    [Test]
+    public void UpdateAsync_Forbidden_WhenRemovingRoleWithAdminPermissionAboveActor()
+    {
+        // Symmetric to assignment: an actor who lacks a role's administrative permission cannot UNASSIGN
+        // that role from a user either (that would let them sabotage access control they can't wield).
+        _authorizationService
+            .Setup(a => a.RequirePermissionAsync(Permissions.SystemAdmin.EditUsers, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var id = Guid.NewGuid();
+        var user = new ApplicationUser { Id = id, IsEnabled = true, UserType = UserType.Staff };
+        var adminRoleId = Guid.NewGuid();
+        var adminRole = new ApplicationRole { Id = adminRoleId, Name = "AdminRole", UserType = UserType.Staff };
+        var permId = Guid.NewGuid();
+
+        _userManager.Setup(m => m.FindByIdAsync(id.ToString())).ReturnsAsync(user);
+        // The user currently holds "AdminRole"; the update drops it (empty desired set).
+        _userManager.Setup(m => m.GetRolesAsync(user)).ReturnsAsync(new[] { "AdminRole" });
+        _roleManager.Setup(r => r.FindByNameAsync("AdminRole")).ReturnsAsync(adminRole);
+
+        _authorizationService
+            .Setup(a => a.GetPermissionsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<string>)new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "System.EditUsers" });
+        _permissionRepository
+            .Setup(p => p.GetListAsync(It.IsAny<FilterOptions?>(), It.IsAny<SortOptions?>(), It.IsAny<bool>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()))
+            .ReturnsAsync(new List<Permission>
+            {
+                new() { Id = permId, Name = "System.EditRoles", FriendlyName = "Edit Roles", UserType = UserType.Staff }
+            });
+        _rolePermissionRepository.Setup(r => r.GetByRoleIdAsync(adminRoleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<RolePermission> { new() { PermissionId = permId } });
+
+        Assert.That(async () => await _userService.UpdateAsync(id, new UserUpdateRequest
+        {
+            PersonId = Guid.NewGuid(),
+            Username = "staff",
+            UserType = UserType.Staff,
+            IsEnabled = true,
+            RoleIds = new List<Guid>()
+        }, CancellationToken.None), Throws.TypeOf<ForbiddenException>());
+
+        _userManager.Verify(m => m.RemoveFromRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
+    }
 }

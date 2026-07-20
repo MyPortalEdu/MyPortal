@@ -17,8 +17,6 @@ export const STAFF_ROUTES: Routes = [
   {
     path: '',
     component: AppShell,
-    // No canActivate here — the parent canMatch in app.routes already gated entry to /staff.
-    // Apply canActivate only on children that have additional permission requirements.
     children: [
       {
         path: '',
@@ -35,7 +33,6 @@ export const STAFF_ROUTES: Routes = [
         }
       },
       {
-        // Declared before ':id' so 'new' isn't captured as an id.
         path: 'system/users/new',
         component: UserDetailsPage,
         canActivate: [AuthGuard],
@@ -60,8 +57,6 @@ export const STAFF_ROUTES: Routes = [
         path: 'system/roles',
         component: RoleListPage,
         canActivate: [AuthGuard],
-        // Gated on View — the listing is read-viewable; create/edit/delete actions within enforce
-        // EditRoles server-side.
         data: {
           permissionsAny: [Permissions.SystemAdmin.ViewRoles, Permissions.SystemAdmin.EditRoles],
           breadcrumb: 'Roles'
@@ -100,8 +95,6 @@ export const STAFF_ROUTES: Routes = [
         path: 'curriculum/academic-years',
         component: AcademicYearListPage,
         canActivate: [AuthGuard],
-        // Gated on Edit (not View) by design — the listing page is the entry point for
-        // create/edit/delete. A read-only view variant can be added later if needed.
         data: {
           permissionsAny: [Permissions.Curriculum.EditAcademicYears],
           breadcrumb: 'Academic Years'
@@ -121,8 +114,6 @@ export const STAFF_ROUTES: Routes = [
         component: StaffMemberDetailsPage,
         canActivate: [AuthGuard],
         canDeactivate: [canDeactivateGuard],
-        // Coarse gate — any plausible view-basic scope. The service does the real
-        // per-(viewer, subject) check via IStaffMemberAccessService.
         data: {
           permissionsAny: [
             Permissions.Staff.ViewOwnStaffBasicDetails,

@@ -5,7 +5,7 @@
     } @else {
       <button
         type="button"
-        class="w-5 h-5 flex items-center justify-center text-xs text-muted-color hover:text-color"
+        class="w-5 h-5 flex items-center justify-center text-xs text-muted-foreground hover:text-foreground"
         (click)="toggleCollapse(node)"
         [attr.aria-label]="isCollapsed(node) ? 'Expand' : 'Collapse'">
         <i class="fa-solid" [class.fa-chevron-right]="isCollapsed(node)" [class.fa-chevron-down]="!isCollapsed(node)"></i>
@@ -22,7 +22,7 @@
         (change)="onToggle(node, $event)" />
       <span [class.font-medium]="!isLeaf(node)" [class.text-sm]="isLeaf(node)">
         @if (node.icon) {
-          <i class="fa-solid {{ node.icon }} mr-1.5 text-muted-color"></i>
+          <i class="fa-solid {{ node.icon }} mr-1.5 text-muted-foreground"></i>
         }
         {{ node.label }}
       </span>

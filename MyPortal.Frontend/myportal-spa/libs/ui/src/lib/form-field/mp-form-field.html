@@ -1,0 +1,11 @@
+@if (label(); as l) {
+  <label class="text-xs font-medium text-muted-foreground" [attr.for]="for() ?? null">
+    {{ l }}@if (required()) {<span class="text-destructive" aria-hidden="true"> *</span>}
+  </label>
+}
+<ng-content />
+@if (showError()) {
+  <small [id]="errorId" class="text-xs text-destructive">{{ messageKey() | transloco: messageParams() }}</small>
+} @else if (hint(); as h) {
+  <small [id]="hintId" class="text-xs text-muted-foreground">{{ h }}</small>
+}

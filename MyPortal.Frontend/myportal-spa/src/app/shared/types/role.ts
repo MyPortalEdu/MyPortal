@@ -1,9 +1,5 @@
 import { UserType } from '../../core/types/user-type';
 
-// Mirrors MyPortal.Contracts.Models.System.Roles / Permissions.
-// UserType serialises as an integer (no global JsonStringEnumConverter), so it maps to the numeric
-// UserType enum directly.
-
 export interface RoleSummaryResponse {
   id: string;
   description: string | null;

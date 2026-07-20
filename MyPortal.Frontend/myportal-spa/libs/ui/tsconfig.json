@@ -1,0 +1,18 @@
+/* Editor / Angular Language Service project for the @myportal/ui library.
+ *
+ * The app build compiles these files via ../../tsconfig.app.json (which already includes
+ * libs/ui/src). This config exists only so the Angular Language Service treats the library's
+ * EXTERNAL .html templates as a real Angular project — without a tsconfig near them, the LS infers
+ * a plain project with no Angular/control-flow support and flags @if / @for / @switch as
+ * "unknown block". Extending the root config gives it strictTemplates + the @myportal/ui paths.
+ *
+ * Not referenced by the root solution tsconfig, so it has no effect on `ng build` / `ng test`.
+ */
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/lib-ui",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"]
+}

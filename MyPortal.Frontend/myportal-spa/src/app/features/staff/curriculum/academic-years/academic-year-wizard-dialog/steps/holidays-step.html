@@ -2,79 +2,62 @@
   <div class="flex flex-col gap-5">
     <div>
       <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
-      <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
+      <p class="hidden sm:block text-sm text-muted-foreground m-0">{{ t('description') }}</p>
     </div>
 
     <section class="flex flex-col gap-3">
       <div class="flex items-center justify-between">
         <h4 class="text-sm font-semibold m-0">{{ t('listTitle') }}</h4>
         @if (!readOnly()) {
-          <p-button
-            icon="fa-solid fa-plus"
-            [label]="t('addHoliday')"
-            size="small"
-            severity="secondary"
-            (click)="addHoliday()">
-          </p-button>
+          <button mpButton variant="secondary" size="sm" (click)="addHoliday()"><i class="fa-solid fa-plus"></i> {{ t('addHoliday') }}</button>
         }
       </div>
 
       @if (!hasHolidays()) {
-        <div class="text-sm text-muted-color text-center border border-dashed border-surface rounded-lg p-4">
+        <div class="text-sm text-muted-foreground text-center border border-dashed border-border rounded-lg p-4">
           {{ t('noHolidays') }}
         </div>
       } @else {
         <ul class="list-none m-0 p-0 flex flex-col gap-2">
           @for (holiday of model().schoolHolidays; track $index; let i = $index) {
-            <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
+            <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-border">
               <div class="flex flex-col gap-1 flex-1 min-w-[12rem]">
-                <label class="text-xs text-muted-color">{{ t('holidayName') }}</label>
-                <input pInputText type="text"
+                <label class="text-xs text-muted-foreground">{{ t('holidayName') }}</label>
+                <input mpInput type="text"
                   [ngModel]="holiday.name"
                   (ngModelChange)="updateHoliday(i, { name: $event })"
                   [disabled]="readOnly()"
                   [placeholder]="t('holidayNamePlaceholder')" />
               </div>
               <div class="flex flex-col gap-1 min-w-[10rem]">
-                <label class="text-xs text-muted-color">{{ t('holidayType') }}</label>
-                <p-select
+                <label class="text-xs text-muted-foreground">{{ t('holidayType') }}</label>
+                <mp-select
                   [ngModel]="holiday.type"
                   (ngModelChange)="updateHoliday(i, { type: $event })"
                   [options]="holidayTypes"
                   optionLabel="label"
                   optionValue="value"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-select>
+                  [disabled]="readOnly()">
+                </mp-select>
               </div>
               <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-color">{{ t('holidayStart') }}</label>
-                <p-datepicker
+                <label class="text-xs text-muted-foreground">{{ t('holidayStart') }}</label>
+                <mp-date-picker
                   [ngModel]="holiday.startDate"
                   (ngModelChange)="updateHoliday(i, { startDate: $event })"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-color">{{ t('holidayEnd') }}</label>
-                <p-datepicker
+                <label class="text-xs text-muted-foreground">{{ t('holidayEnd') }}</label>
+                <mp-date-picker
                   [ngModel]="holiday.endDate"
                   (ngModelChange)="updateHoliday(i, { endDate: $event })"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               @if (!readOnly()) {
-                <p-button
-                  icon="fa-solid fa-trash-can"
-                  severity="danger"
-                  [text]="true"
-                  [attr.aria-label]="t('removeHoliday')"
-                  (click)="removeHoliday(i)">
-                </p-button>
+                <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive" [attr.aria-label]="t('removeHoliday')" (click)="removeHoliday(i)"><i class="fa-solid fa-trash-can"></i></button>
               }
             </li>
           }

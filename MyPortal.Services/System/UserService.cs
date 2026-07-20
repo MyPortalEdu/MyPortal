@@ -344,9 +344,9 @@ public class UserService(
                 continue;
             }
 
-            // Only a newly-added role can escalate: verify the actor holds every permission it grants
-            // before assigning it. Removing/keeping an existing role isn't an escalation and is exempt.
-            await EnsureActorCanAssignRoleAsync(role, actorPermissions, permissionsById, cancellationToken);
+            // Verify the actor holds every administrative permission the role grants before adding it —
+            // otherwise they could escalate. Keeping an already-assigned role is exempt.
+            await EnsureActorCanManageRoleAsync(role, actorPermissions, permissionsById, cancellationToken);
 
             await userManager.AddToRoleAsync(user, role.Name);
             changesMade = true;
@@ -359,6 +359,15 @@ public class UserService(
                 continue;
             }
 
+            // Removing a role is gated the same way as adding it: an actor who doesn't hold the role's
+            // administrative permissions can't strip it either, which stops a lower-privileged admin
+            // sabotaging access control (and prevents removing something they then couldn't restore).
+            var role = await roleManager.FindByNameAsync(userRole);
+            if (role != null)
+            {
+                await EnsureActorCanManageRoleAsync(role, actorPermissions, permissionsById, cancellationToken);
+            }
+
             await userManager.RemoveFromRoleAsync(user, userRole);
             changesMade = true;
         }
@@ -366,12 +375,13 @@ public class UserService(
         return changesMade;
     }
 
-    // A staff role may only be assigned by an actor who holds every *administrative* permission it grants
-    // — otherwise a user with EditUsers could assign a high-privilege role (e.g. System Administrator) to
-    // a staff user or to themselves and escalate. Ordinary functional permissions are not gated, so
-    // provisioning works under least privilege: IT support who cannot take a register can still assign
-    // the Teacher role. Student/Parent roles are exempt (a user is only assigned roles of their portal).
-    private async Task EnsureActorCanAssignRoleAsync(ApplicationRole role, IReadOnlySet<string> actorPermissions,
+    // A staff role may only be assigned OR removed by an actor who holds every *administrative*
+    // permission it grants — otherwise a user with EditUsers could assign a high-privilege role (e.g.
+    // System Administrator) to escalate, or strip one to sabotage access control. Ordinary functional
+    // permissions are not gated, so provisioning works under least privilege: IT support who cannot take
+    // a register can still assign or unassign the Teacher role. Student/Parent roles are exempt (a user
+    // is only assigned roles of their own portal).
+    private async Task EnsureActorCanManageRoleAsync(ApplicationRole role, IReadOnlySet<string> actorPermissions,
         IReadOnlyDictionary<Guid, Permission> permissionsById, CancellationToken cancellationToken)
     {
         if (role.UserType != UserType.Staff)
@@ -391,7 +401,7 @@ public class UserService(
         if (beyondActor.Count > 0)
         {
             throw new ForbiddenException(
-                $"You cannot assign the '{role.Name}' role because it grants administrative permissions you do not hold: {string.Join(", ", beyondActor)}.");
+                $"You cannot change the '{role.Name}' role assignment because it grants administrative permissions you do not hold: {string.Join(", ", beyondActor)}.");
         }
     }
 

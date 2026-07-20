@@ -5,20 +5,17 @@ import {
   HostListener,
   OnInit,
   computed,
+  effect,
   inject,
   signal,
-  viewChild,
+  untracked,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule, NgForm } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { FormField, applyWhen, disabled, form, required, submit, validate } from '@angular/forms/signals';
+import { firstValueFrom } from 'rxjs';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { InputText } from 'primeng/inputtext';
-import { Checkbox } from 'primeng/checkbox';
-import { Select } from 'primeng/select';
-import { Tag } from 'primeng/tag';
-import { Skeleton } from 'primeng/skeleton';
+import { MpButton, MpCard, MpCheckbox, MpFormField, MpInput, MpBadge, MpSelect, MpSkeleton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
@@ -50,20 +47,30 @@ interface AudienceOption {
   value: UserType;
 }
 
+interface UserFormModel {
+  username: string;
+  email: string;
+  password: string;
+  userType: UserType;
+  isEnabled: boolean;
+}
+
 @Component({
   selector: 'mp-user-details-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
+    FormField,
     DatePipe,
-    Button,
-    Card,
-    InputText,
-    Checkbox,
-    Select,
-    Tag,
-    Skeleton,
+    MpButton,
+    MpCard,
+    MpInput,
+    MpCheckbox,
+    MpFormField,
+    MpSelect,
+    MpBadge,
+    MpSkeleton,
     PageHeader,
     Field,
     SectionHeader,
@@ -88,19 +95,32 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly router = inject(Router);
   private readonly host = inject(ElementRef<HTMLElement>);
 
-  private readonly form = viewChild<NgForm>('f');
-
-  // The route admits ViewUsers holders too, so the page decides its own mode.
   private readonly canEditUsers = signal(false);
 
   readonly isCreate = signal(false);
   protected userId = '';
 
-  readonly username = signal('');
-  readonly email = signal('');
-  readonly password = signal('');
-  readonly userType = signal<UserType>(UserType.Staff);
-  readonly isEnabled = signal(true);
+  protected readonly model = signal<UserFormModel>({
+    username: '',
+    email: '',
+    password: '',
+    userType: UserType.Staff,
+    isEnabled: true,
+  });
+  protected readonly f = form(this.model, path => {
+    disabled(path, () => this.readOnly());
+    required(path.username);
+    validate(path.username, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+    applyWhen(path, () => this.isCreate(), createPath => {
+      required(createPath.password);
+      validate(createPath.password, ({ value }) =>
+        value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+      );
+    });
+  });
+
   readonly personId = signal<string | null>(null);
   readonly personName = signal<string | null>(null);
   readonly selectedRoleIds = signal<ReadonlySet<string>>(new Set());
@@ -112,7 +132,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   readonly effectiveSelectedIds = signal<ReadonlySet<string>>(new Set());
 
   readonly loading = signal(true);
-  readonly saving = signal(false);
   readonly notFound = signal(false);
   readonly setPasswordOpen = signal(false);
 
@@ -124,30 +143,23 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
     { label: this.transloco.translate('users.userType.parent'), value: UserType.Parent },
   ]);
 
-  // Only roles of the user's own portal can be assigned (mirrors the server-side audience check).
   readonly audienceRoles = computed(() =>
     this.allRoles()
-      .filter(r => r.userType === this.userType())
+      .filter(r => r.userType === this.model().userType)
       .slice()
       .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '')),
   );
 
   readonly readOnly = computed(() => this.isSystem() || !this.canEditUsers());
-  readonly isValid = computed(() => {
-    if (this.username().trim().length === 0) return false;
-    if (this.isCreate() && this.password().trim().length === 0) return false;
-    return true;
-  });
 
   readonly title = computed(() => {
     if (this.isCreate()) return this.transloco.translate('users.form.titleCreate');
-    return this.username() || this.transloco.translate('users.form.titleEdit');
+    return this.model().username || this.transloco.translate('users.form.titleEdit');
   });
 
   readonly headerActions = computed<HeaderAction[]>(() => {
     if (this.loading()) return [];
 
-    // Back is always available (subtle text button), even for read-only / not-found.
     const back: HeaderAction = {
       label: this.transloco.translate('common.back'),
       icon: 'fa-solid fa-arrow-left',
@@ -171,28 +183,40 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
     actions.push({
       label: this.isCreate() ? this.transloco.translate('users.form.create') : this.transloco.translate('users.form.save'),
       icon: 'fa-solid fa-check',
-      // Only "nothing to save" disables Save; an invalid form lets the click through so save()
-      // can mark the fields touched and point at what's missing.
       disabled: !this.isCreate() && !this.isDirty(),
-      loading: this.saving(),
+      loading: this.f().submitting(),
       command: () => this.save(),
     });
     return actions;
   });
 
   private readonly snapshot = signal<string | null>(null);
-  private readonly currentForm = computed(() =>
-    JSON.stringify({
-      username: this.username(),
-      email: this.email(),
-      password: this.password(),
-      userType: this.userType(),
-      isEnabled: this.isEnabled(),
+  private readonly currentForm = computed(() => {
+    const m = this.model();
+    return JSON.stringify({
+      username: m.username,
+      email: m.email,
+      password: m.password,
+      userType: m.userType,
+      isEnabled: m.isEnabled,
       personId: this.personId(),
       roles: [...this.selectedRoleIds()].sort(),
-    }),
-  );
+    });
+  });
   readonly isDirty = computed(() => this.snapshot() !== null && this.snapshot() !== this.currentForm());
+
+  constructor() {
+    effect(() => {
+      const type = this.model().userType;
+      untracked(() => {
+        const valid = new Set(this.allRoles().filter(r => r.userType === type).map(r => r.id));
+        this.selectedRoleIds.update(set => {
+          const next = new Set([...set].filter(id => valid.has(id)));
+          return next.size === set.size ? set : next;
+        });
+      });
+    });
+  }
 
   ngOnInit(): void {
     this.me.me().subscribe(me => {
@@ -202,13 +226,6 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
     this.isCreate.set(this.route.snapshot.data['create'] === true);
     this.userId = this.route.snapshot.paramMap.get('id') ?? '';
     this.load();
-  }
-
-  onUserTypeChange(userType: UserType): void {
-    this.userType.set(userType);
-    // Drop any selected roles that no longer match the new audience.
-    const valid = new Set(this.audienceRoles().map(r => r.id));
-    this.selectedRoleIds.update(set => new Set([...set].filter(id => valid.has(id))));
   }
 
   onPersonPicked(person: PersonSearchResponse): void {
@@ -236,59 +253,57 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
     });
   }
 
-  save(): void {
-    if (this.readOnly() || this.saving() || (!this.isCreate() && !this.isDirty())) return;
-    if (!this.isValid()) {
-      this.form()?.form.markAllAsTouched();
-      focusFirstInvalid(this.host.nativeElement);
-      return;
-    }
-    this.saving.set(true);
+  save(): Promise<boolean> | void {
+    if (this.readOnly() || (!this.isCreate() && !this.isDirty())) return;
+    return submit(this.f, {
+      action: async () => {
+        const m = this.model();
+        const roleIds = [...this.selectedRoleIds()].filter(id =>
+          this.audienceRoles().some(r => r.id === id),
+        );
 
-    if (this.isCreate()) {
-      const payload: UserUpsertRequest = {
-        personId: this.personId(),
-        userType: this.userType(),
-        isEnabled: this.isEnabled(),
-        username: this.username().trim(),
-        email: this.email().trim() || null,
-        password: this.password(),
-        roleIds: [...this.selectedRoleIds()],
-      };
-      this.usersData.create(payload).subscribe({
-        next: res => {
-          this.saving.set(false);
-          this.snapshot.set(this.currentForm()); // re-baseline so the redirect doesn't re-prompt
+        if (this.isCreate()) {
+          const payload: UserUpsertRequest = {
+            personId: this.personId(),
+            userType: m.userType,
+            isEnabled: m.isEnabled,
+            username: m.username.trim(),
+            email: m.email.trim() || null,
+            password: m.password,
+            roleIds,
+          };
+          let res: { id: string };
+          try {
+            res = await firstValueFrom(this.usersData.create(payload));
+          } catch (err) {
+            this.notify.apiError(err, this.transloco.translate('users.form.errorCreate'));
+            return;
+          }
+          this.snapshot.set(this.currentForm());
           this.notify.success(this.transloco.translate('users.form.createdToast'));
-          void this.router.navigate(['/staff/system/users', res.id]);
-        },
-        error: err => {
-          this.saving.set(false);
-          this.notify.apiError(err, this.transloco.translate('users.form.errorCreate'));
-        },
-      });
-      return;
-    }
+          await this.router.navigate(['/staff/system/users', res.id]);
+          return;
+        }
 
-    const update: UserUpdateRequest = {
-      personId: this.personId(),
-      userType: this.userType(),
-      isEnabled: this.isEnabled(),
-      username: this.username().trim(),
-      email: this.email().trim() || null,
-      roleIds: [...this.selectedRoleIds()],
-    };
-    this.usersData.update(this.userId, update).subscribe({
-      next: () => {
-        this.saving.set(false);
+        const update: UserUpdateRequest = {
+          personId: this.personId(),
+          userType: m.userType,
+          isEnabled: m.isEnabled,
+          username: m.username.trim(),
+          email: m.email.trim() || null,
+          roleIds,
+        };
+        try {
+          await firstValueFrom(this.usersData.update(this.userId, update));
+        } catch (err) {
+          this.notify.apiError(err, this.transloco.translate('users.form.errorUpdate'));
+          return;
+        }
         this.snapshot.set(this.currentForm());
         this.notify.success(this.transloco.translate('users.form.updatedToast'));
         this.loadEffectivePermissions();
       },
-      error: err => {
-        this.saving.set(false);
-        this.notify.apiError(err, this.transloco.translate('users.form.errorUpdate'));
-      },
+      onInvalid: () => focusFirstInvalid(this.host.nativeElement),
     });
   }
 
@@ -344,15 +359,19 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   private loadUser(): void {
     this.usersData.getById(this.userId).subscribe({
       next: user => {
-        this.username.set(user.username ?? '');
-        this.email.set(user.email ?? '');
-        this.userType.set(user.userType);
-        this.isEnabled.set(user.isEnabled);
+        this.model.set({
+          username: user.username ?? '',
+          email: user.email ?? '',
+          password: '',
+          userType: user.userType,
+          isEnabled: user.isEnabled,
+        });
         this.personId.set(user.personId);
         this.personName.set(user.personFullName);
         this.selectedRoleIds.set(new Set(user.roleIds));
         this.isSystem.set(user.isSystem);
         this.createdAt.set(user.createdAt);
+        this.f().reset();
         this.loading.set(false);
         this.snapshot.set(this.currentForm());
         this.loadEffectivePermissions();
@@ -366,10 +385,7 @@ export class UserDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   private loadEffectivePermissions(): void {
-    // The effective set is server-computed from the user's SAVED roles, so it refreshes on load and
-    // after each save (not live while editing role checkboxes). Built against the audience catalogue
-    // so the viewer shows the whole space with the granted subset checked.
-    this.rolesData.permissions(this.userType()).subscribe({
+    this.rolesData.permissions(this.model().userType).subscribe({
       next: catalogue => {
         this.effectiveTreeNodes.set(buildPermissionTree(catalogue ?? []));
         this.usersData.effectivePermissions(this.userId).subscribe({

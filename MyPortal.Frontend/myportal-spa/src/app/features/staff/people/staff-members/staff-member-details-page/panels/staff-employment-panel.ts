@@ -10,12 +10,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
-import { InputNumber } from 'primeng/inputnumber';
-import { DatePicker } from 'primeng/datepicker';
-import { Checkbox } from 'primeng/checkbox';
-import { Tag } from 'primeng/tag';
+import { MpBadge, MpButton, MpCheckbox, MpDatePicker, MpInput, MpInputNumber } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -41,11 +36,6 @@ import {
 } from '../../../../../../shared/types/staff-employment-details';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Employment Details area: bank/NI details plus employment spells with nested contracts and the
- * pay-scale/spine-point salary cascade. The "crown jewels" — HR-edit-only (no self or line-manager
- * edit). Self-loads on mount.
- */
 @Component({
   selector: 'mp-staff-employment-panel',
   standalone: true,
@@ -53,12 +43,12 @@ import { StaffAreaPanel } from './staff-area-panel';
   imports: [
     DatePipe,
     FormsModule,
-    Button,
-    InputText,
-    InputNumber,
-    DatePicker,
-    Checkbox,
-    Tag,
+    MpButton,
+    MpInput,
+    MpInputNumber,
+    MpDatePicker,
+    MpCheckbox,
+    MpBadge,
     LookupSelect,
     Loading,
     EmptyState,
@@ -94,7 +84,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   protected readonly employments = signal<StaffEmploymentUpsertItem[]>([]);
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the employment payload so the editor is self-contained.
   protected readonly leavingReasons = computed(() => this.employment()?.leavingReasons ?? []);
   protected readonly origins = computed(() => this.employment()?.origins ?? []);
   protected readonly destinations = computed(() => this.employment()?.destinations ?? []);
@@ -106,9 +95,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   protected readonly payScalePoints = computed(() => this.employment()?.payScalePoints ?? []);
   protected readonly payZoneName = computed(() => this.employment()?.payZoneName ?? null);
 
-  // Spine points grouped by pay scale, rebuilt only when the catalogue changes. Reading from this
-  // (rather than filtering in the template) keeps the option-array reference stable across change-
-  // detection cycles — a fresh array each tick makes p-select churn its list (NG0956).
   private static readonly NO_POINTS: PayScalePointResponse[] = [];
   private readonly payScalePointsByScale = computed(() => {
     const map = new Map<string, PayScalePointResponse[]>();
@@ -120,13 +106,10 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     return map;
   });
 
-  // Employment edit is HR-only — no self/managed edit.
   override readonly canEdit = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffEmploymentDetails),
   );
 
-  // Each spell needs a start date; each contract needs a type, post title, a valid FTE (0–1) and a
-  // start date.
   override readonly valid = computed(() =>
     this.employments().every(
       e =>
@@ -140,7 +123,16 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
             c.fte >= 0 &&
             c.fte <= 1,
         ),
-    ),
+    ) &&
+    employmentsDoNotOverlap(this.employments()) &&
+    this.employments().every(contractsWithinEmployment),
+  );
+
+  protected readonly employmentsOverlap = computed(
+    () => !employmentsDoNotOverlap(this.employments()),
+  );
+  protected readonly contractOutOfRange = computed(
+    () => !this.employments().every(contractsWithinEmployment),
   );
 
   private readonly form = computed(() =>
@@ -228,7 +220,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
       await firstValueFrom(this.data.updateEmploymentDetails(this.staffMemberId(), payload));
       this.notify.success(this.transloco.translate('staff-members.savedEmploymentToast'));
       this.editing.set(false);
-      // Refetch so server-assigned ids (new rows) become the baseline.
       this.load();
     } catch (err) {
       this.notify.apiError(err, this.transloco.translate('staff-members.saveEmploymentError'));
@@ -275,7 +266,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     this.snapshot.set(this.form());
   }
 
-  // Employment spells grid. A new spell has no id (the server inserts it).
   protected addEmployment(): void {
     this.employments.update(rows => [
       ...rows,
@@ -306,8 +296,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     );
   }
 
-  // End date drives "has this person left?": clearing it makes the spell current again, so the
-  // leaving reason and destination (which only apply to leavers) are dropped to stay consistent.
   protected onEmploymentEndDate(index: number, value: Date | null): void {
     const iso = value ? value.toISOString() : null;
     this.employments.update(rows =>
@@ -319,8 +307,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     );
   }
 
-  // Contracts sub-grid, nested under a spell. New contracts default to full-time (FTE 1) and inherit
-  // the spell's start date as a sensible starting point.
   protected addContract(employmentIndex: number): void {
     this.employments.update(rows =>
       rows.map((row, i) =>
@@ -385,7 +371,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     );
   }
 
-  // Applies a transform to one contract, immutably.
   private mutateContract(
     employmentIndex: number,
     contractIndex: number,
@@ -400,28 +385,23 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     );
   }
 
-  // Full-time statutory salary for a spine point in the school's pay zone (null if unknown).
   protected statutoryFor(payScalePointId: string | null | undefined): number | null {
     if (!payScalePointId) return null;
     return this.payScalePoints().find(p => p.id === payScalePointId)?.fullTimeSalary ?? null;
   }
 
-  // The salary that auto-fill would derive for a (spine point, FTE) pair.
   private autoSalaryFor(payScalePointId: string | null | undefined, fte: number | null): number | null {
     const statutory = this.statutoryFor(payScalePointId);
     if (statutory == null || fte == null) return null;
     return Math.round(statutory * fte * 100) / 100;
   }
 
-  // A salary is "still automatic" if it's blank or matches what auto-fill last derived — i.e. HR
-  // hasn't typed their own figure. Manual overrides (acting-up, safeguarded) are respected.
   private salaryIsAuto(c: StaffContractUpsertItem): boolean {
     if (c.annualSalary == null) return true;
     const auto = this.autoSalaryFor(c.payScalePointId, c.fte);
     return auto != null && Math.abs(c.annualSalary - auto) < 0.5;
   }
 
-  // Spine-point change: cascade salary unless HR has overridden it.
   protected onContractSpinePoint(
     employmentIndex: number,
     contractIndex: number,
@@ -435,7 +415,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     });
   }
 
-  // FTE change: re-pro-rata the salary unless HR has overridden it.
   protected onContractFte(employmentIndex: number, contractIndex: number, fte: number | null): void {
     this.mutateContract(employmentIndex, contractIndex, c => {
       const auto = this.salaryIsAuto(c);
@@ -445,7 +424,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     });
   }
 
-  // Changing the pay scale clears the spine point (and the auto salary that came from it).
   protected onContractPayScale(
     employmentIndex: number,
     contractIndex: number,
@@ -459,16 +437,11 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     });
   }
 
-  // Spine points belonging to the chosen pay scale (cascading select source). Returns a stable array
-  // reference per scale so the bound p-select doesn't rebuild its options every cycle.
   protected contractPayScalePoints(payScaleId: string | null | undefined): PayScalePointResponse[] {
     if (!payScaleId) return StaffEmploymentPanel.NO_POINTS;
     return this.payScalePointsByScale().get(payScaleId) ?? StaffEmploymentPanel.NO_POINTS;
   }
 
-  // Lifecycle of a single spell/contract from its own dates, as of today. Mirrors the server's
-  // per-period logic: not-yet-started → upcoming, ended → ended, else current. Re-derives live while
-  // editing, so the badge tracks the dates being typed.
   protected periodStatus(
     startDate: string | null | undefined,
     endDate: string | null | undefined,
@@ -495,14 +468,40 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     return status === 'current' ? 'success' : status === 'upcoming' ? 'info' : 'secondary';
   }
 
-  // Summed FTE across a spell's contracts (a quick "how full is this person" read).
   protected spellFteTotal(e: StaffEmploymentUpsertItem): number {
     const total = e.contracts.reduce((sum, c) => sum + (c.fte ?? 0), 0);
     return Math.round(total * 100) / 100;
   }
 
-  // Whole-pound GBP for the statutory-salary hint.
   protected formatMoney(value: number): string {
     return '£' + Math.round(value).toLocaleString('en-GB');
   }
+}
+
+function employmentsDoNotOverlap(employments: StaffEmploymentUpsertItem[]): boolean {
+  const ordered = employments
+    .filter(e => e.startDate)
+    .slice()
+    .sort((a, b) => new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime());
+  for (let i = 1; i < ordered.length; i++) {
+    const previousEnd = ordered[i - 1].endDate ? new Date(ordered[i - 1].endDate!).getTime() : Infinity;
+    if (new Date(ordered[i].startDate!).getTime() <= previousEnd) return false;
+  }
+  return true;
+}
+
+function contractsWithinEmployment(employment: StaffEmploymentUpsertItem): boolean {
+  if (!employment.startDate) return true;
+  const empStart = new Date(employment.startDate).getTime();
+  const empEnd = employment.endDate ? new Date(employment.endDate).getTime() : null;
+  for (const contract of employment.contracts) {
+    if (!contract.startDate) continue;
+    const contractStart = new Date(contract.startDate).getTime();
+    if (contractStart < empStart) return false;
+    if (empEnd !== null) {
+      if (contractStart > empEnd) return false;
+      if (contract.endDate && new Date(contract.endDate).getTime() > empEnd) return false;
+    }
+  }
+  return true;
 }

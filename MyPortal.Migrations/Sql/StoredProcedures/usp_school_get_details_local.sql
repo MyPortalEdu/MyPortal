@@ -27,6 +27,7 @@ SELECT
     [GT].[Description] AS [GovernanceType],
     [S].[IntakeTypeId],
     [IT].[Description] AS [IntakeType],
+    [S].[HeadTeacherId],
     [HT].[Name] AS [HeadTeacherFullName],
     [S].[Ukprn],
     [S].[PayZoneId],

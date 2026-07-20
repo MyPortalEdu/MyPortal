@@ -23,20 +23,6 @@ import {
 
 export type BulletinAttachmentsMode = 'view' | 'edit' | 'stage';
 
-/**
- * Bulletin attachments widget. Three modes:
- *
- * - **view**: read-only file list (detail dialog). Needs bulletinId + directoryId.
- * - **edit**: list + drop-to-upload + delete (form dialog, edit mode). Needs
- *   bulletinId + directoryId; uploads fire immediately.
- * - **stage**: collect files in memory pre-publish (form dialog, create mode).
- *   No bulletin exists yet; the parent calls `uploadStaged()` after publish
- *   to flush the queue against the freshly-created bulletin.
- *
- * The component owns staged state so the parent doesn't have to babysit File
- * objects. `hasStaged()` and `uploadStaged()` are the contract for the form
- * dialog's post-publish flow.
- */
 @Component({
   selector: 'mp-bulletin-attachments',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,9 +38,7 @@ export class BulletinAttachments {
   private readonly transloco = inject(TranslocoService);
 
   readonly mode = input.required<BulletinAttachmentsMode>();
-  /** Required for view/edit. Null for stage (no bulletin exists yet). */
   readonly bulletinId = input<string | null>(null);
-  /** Required for view/edit. The bulletin's root directory id. */
   readonly directoryId = input<string | null>(null);
 
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -65,7 +49,6 @@ export class BulletinAttachments {
   readonly uploading = signal(false);
   readonly dragOver = signal(false);
 
-  // Exposed for the dropzone hint; the size check itself lives in handleFiles.
   readonly sizeLabel = MAX_ATTACHMENT_LABEL;
 
   readonly isEditable = computed(() => this.mode() === 'edit' || this.mode() === 'stage');
@@ -79,8 +62,6 @@ export class BulletinAttachments {
       const directoryId = this.directoryId();
       untracked(() => {
         if (mode === 'stage') {
-          // Stage mode means no server-side bulletin exists yet — clear any
-          // previously-loaded documents so we don't render leftovers.
           this.documents.set([]);
           return;
         }
@@ -119,7 +100,6 @@ export class BulletinAttachments {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length) {
       this.handleFiles(Array.from(input.files));
-      // Reset the input so the same file can be picked again later.
       input.value = '';
     }
   }
@@ -128,11 +108,6 @@ export class BulletinAttachments {
     return this.staged().length > 0;
   }
 
-  /**
-   * Flush staged files against the freshly-created bulletin. Sequential to
-   * avoid hammering the API; the first failure stops the queue and surfaces
-   * a toast. Resolves true on full success, false otherwise.
-   */
   async uploadStaged(bulletinId: string, directoryId: string): Promise<boolean> {
     const queue = this.staged();
     if (queue.length === 0) return true;
@@ -181,8 +156,6 @@ export class BulletinAttachments {
     return bulletinId ? this.data.downloadUrl(bulletinId, doc.id) : '#';
   }
 
-  // Pretty file size — 1.2 KB / 3.4 MB. Locale-agnostic; the unit suffixes
-  // are short enough that translation isn't worth the i18n weight.
   formatSize(bytes?: number | null): string {
     if (bytes == null) return '';
     const units = ['B', 'KB', 'MB', 'GB'];
@@ -195,7 +168,6 @@ export class BulletinAttachments {
     return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
   }
 
-  // Map MIME type to a Font Awesome icon. Falls back to a generic file icon.
   iconFor(contentType: string): string {
     if (!contentType) return 'fa-solid fa-file';
     if (contentType.startsWith('image/'))      return 'fa-solid fa-file-image';
@@ -209,10 +181,6 @@ export class BulletinAttachments {
   }
 
   private handleFiles(files: File[]): void {
-    // Filter oversize files out client-side and toast for each. The server
-    // also rejects them (Kestrel/MVC size limits on the upload action) but
-    // by then the connection has reset and the browser shows a generic
-    // ERR_CONNECTION_RESET with no useful detail.
     const accepted: File[] = [];
     for (const f of files) {
       if (f.size > MAX_ATTACHMENT_BYTES) {
@@ -237,8 +205,6 @@ export class BulletinAttachments {
     }
   }
 
-  // Sequential to keep failure handling simple (no parallel toast spam) and
-  // to avoid hammering the upload endpoint with N concurrent 30MB requests.
   private async uploadSequentially(bulletinId: string, directoryId: string, files: File[]): Promise<void> {
     this.uploading.set(true);
     for (const file of files) {

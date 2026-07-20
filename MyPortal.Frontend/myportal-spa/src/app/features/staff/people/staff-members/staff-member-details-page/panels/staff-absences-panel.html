@@ -3,18 +3,23 @@
     <mp-loading></mp-loading>
   } @else if (absences()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.absences') }}</h3>
-    <p class="text-sm text-muted-color mb-4">{{ t('staff-members.absences.hint') }}</p>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('staff-members.absences.hint') }}</p>
 
-    @if (!absenceRows().length) {
+    @if (!model().absences.length) {
       <mp-empty-state icon="fa-solid fa-calendar-xmark" [message]="t('staff-members.absences.none')"></mp-empty-state>
     }
 
+    @if (editing() && hasOverlap()) {
+      <mp-callout severity="warn" class="mb-3 block">{{ t('staff-members.absences.overlap') }}</mp-callout>
+    }
+
     <div class="flex flex-col gap-3">
-      @for (a of absenceRows(); track $index; let i = $index) {
-        <div class="rounded bg-emphasis p-3">
+      @for (field of f.absences; track $index; let i = $index) {
+        @let a = field().value();
+        <div class="rounded bg-muted p-3">
           <div class="flex items-start justify-between gap-2 mb-2">
-            <span class="flex items-center gap-2 text-sm font-medium text-muted-color">
-              {{ t('staff-members.absences.absence') }}{{ absenceRows().length > 1 ? ' ' + (i + 1) : '' }}
+            <span class="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              {{ t('staff-members.absences.absence') }}{{ model().absences.length > 1 ? ' ' + (i + 1) : '' }}
               @if (a.isConfidential) {
                 <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700">
                   <i class="fa-solid fa-lock"></i>{{ t('staff-members.absences.confidential') }}
@@ -22,30 +27,32 @@
               }
             </span>
             @if (editing()) {
-              <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                [ariaLabel]="t('staff-members.absences.remove')" (onClick)="removeAbsence(i)"></p-button>
+              <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                [attr.aria-label]="t('staff-members.absences.remove')" (click)="removeAbsence(i)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
             }
           </div>
           @if (editing()) {
             <div class="grid gap-3 md:grid-cols-2">
               <mp-field [label]="t('staff-members.absences.type')">
-                <mp-lookup-select [options]="absenceTypes()" [value]="a.absenceTypeId" (valueChange)="patchAbsence(i, 'absenceTypeId', $event)"></mp-lookup-select>
+                <mp-lookup-select [options]="absenceTypes()" [formField]="field.absenceTypeId"></mp-lookup-select>
               </mp-field>
               <mp-field [label]="t('staff-members.absences.illnessType')">
-                <mp-lookup-select [options]="illnessTypes()" [value]="a.illnessTypeId ?? null" (valueChange)="patchAbsence(i, 'illnessTypeId', $event)"></mp-lookup-select>
+                <mp-lookup-select [options]="illnessTypes()" [formField]="field.illnessTypeId"></mp-lookup-select>
               </mp-field>
               <mp-field [label]="t('staff-members.absences.startDate')">
-                <p-datepicker [ngModel]="toDate(a.startDate)" (ngModelChange)="patchAbsence(i, 'startDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                <mp-date-picker [formField]="field.startDate" [showIcon]="true" class="w-full"></mp-date-picker>
               </mp-field>
               <mp-field [label]="t('staff-members.absences.endDate')">
-                <p-datepicker [ngModel]="toDate(a.endDate)" (ngModelChange)="patchAbsence(i, 'endDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                <mp-date-picker [formField]="field.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
               </mp-field>
               <mp-field class="md:col-span-2" [label]="t('staff-members.absences.notes')">
-                <textarea pTextarea rows="2" maxlength="256" [ngModel]="a.notes ?? ''" (ngModelChange)="patchAbsence(i, 'notes', $event)"></textarea>
+                <textarea mpTextarea rows="2" [formField]="field.notes"></textarea>
               </mp-field>
               @if (canManageConfidential()) {
                 <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
-                  <p-checkbox [binary]="true" [ngModel]="a.isConfidential" (ngModelChange)="patchAbsence(i, 'isConfidential', $event)"></p-checkbox>
+                  <mp-checkbox [formField]="field.isConfidential"></mp-checkbox>
                   {{ t('staff-members.absences.markConfidential') }}
                 </label>
               }
@@ -53,14 +60,14 @@
           } @else {
             <div class="text-sm">
               <span class="font-medium">{{ lookupLabel(absenceTypes(), a.absenceTypeId) }}</span>
-              @if (a.illnessTypeId) { <span class="text-muted-color"> · {{ lookupLabel(illnessTypes(), a.illnessTypeId) }}</span> }
+              @if (a.illnessTypeId) { <span class="text-muted-foreground"> · {{ lookupLabel(illnessTypes(), a.illnessTypeId) }}</span> }
             </div>
-            <div class="text-sm text-muted-color">
-              {{ toDate(a.startDate) | date:'mediumDate' }} – {{ toDate(a.endDate) | date:'mediumDate' }}
+            <div class="text-sm text-muted-foreground">
+              {{ a.startDate | date:'mediumDate' }} – {{ a.endDate | date:'mediumDate' }}
               @if (absenceDays(a); as days) { · {{ days }} {{ days === 1 ? t('staff-members.absences.day') : t('staff-members.absences.days') }} }
             </div>
             @if (a.notes) {
-              <div class="text-sm text-muted-color mt-1 whitespace-pre-wrap">{{ a.notes }}</div>
+              <div class="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{{ a.notes }}</div>
             }
           }
         </div>
@@ -68,8 +75,10 @@
     </div>
     @if (editing()) {
       <div class="mt-3">
-        <p-button [label]="t('staff-members.absences.add')" icon="fa-solid fa-plus"
-          severity="secondary" [outlined]="true" size="small" (onClick)="addAbsence()"></p-button>
+        <button mpButton variant="outline" size="sm" (click)="addAbsence()">
+          <i class="fa-solid fa-plus"></i>
+          {{ t('staff-members.absences.add') }}
+        </button>
       </div>
     }
   }

@@ -6,49 +6,48 @@
 ></mp-page-header>
 
 <div class="flex flex-col gap-4 max-w-2xl">
-  <!-- Read-only identity -->
+
   <section class="mp-surface p-4 flex flex-col gap-3">
     <div class="flex flex-col gap-0.5">
       <h2 class="text-base font-semibold m-0">{{ t('account.title') }}</h2>
-      <p class="text-sm text-muted-color m-0">{{ t('account.description') }}</p>
+      <p class="hidden sm:block text-sm text-muted-foreground m-0">{{ t('account.description') }}</p>
     </div>
 
     @if (loading()) {
       <div class="flex flex-col gap-3">
-        <p-skeleton height="1.5rem" width="14rem"></p-skeleton>
-        <p-skeleton height="1.5rem" width="18rem"></p-skeleton>
+        <mp-skeleton height="1.5rem" width="14rem"></mp-skeleton>
+        <mp-skeleton height="1.5rem" width="18rem"></mp-skeleton>
       </div>
     } @else if (me(); as me) {
       <dl class="grid grid-cols-1 sm:grid-cols-[8rem_1fr] gap-x-4 gap-y-3 m-0">
-        <dt class="text-xs font-medium text-muted-color self-center">{{ t('account.username') }}</dt>
+        <dt class="text-xs font-medium text-muted-foreground self-center">{{ t('account.username') }}</dt>
         <dd class="m-0 text-sm">{{ me.username }}</dd>
 
-        <dt class="text-xs font-medium text-muted-color self-center">{{ t('account.email') }}</dt>
+        <dt class="text-xs font-medium text-muted-foreground self-center">{{ t('account.email') }}</dt>
         <dd class="m-0 text-sm">{{ me.email || t('account.noEmail') }}</dd>
 
-        <dt class="text-xs font-medium text-muted-color self-center">{{ t('account.portal') }}</dt>
+        <dt class="text-xs font-medium text-muted-foreground self-center">{{ t('account.portal') }}</dt>
         <dd class="m-0 text-sm">{{ t(userTypeKey()) }}</dd>
       </dl>
     }
   </section>
 
-  <!-- Change password -->
   <section class="mp-surface p-4 flex flex-col gap-4">
     <div class="flex flex-col gap-0.5">
       <h2 class="text-base font-semibold m-0">{{ t('password.title') }}</h2>
-      <p class="text-sm text-muted-color m-0">{{ t('password.description') }}</p>
+      <p class="hidden sm:block text-sm text-muted-foreground m-0">{{ t('password.description') }}</p>
     </div>
 
     <div class="flex flex-col gap-4 max-w-sm">
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('password.current') }}</label>
-        <input pInputText type="password" [ngModel]="currentPassword()"
+        <label class="text-xs font-medium text-muted-foreground">{{ t('password.current') }}</label>
+        <input mpInput type="password" [ngModel]="currentPassword()"
                (ngModelChange)="currentPassword.set($event)" autocomplete="current-password" />
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('password.new') }}</label>
-        <input pInputText type="password" [ngModel]="newPassword()"
+        <label class="text-xs font-medium text-muted-foreground">{{ t('password.new') }}</label>
+        <input mpInput type="password" [ngModel]="newPassword()"
                (ngModelChange)="newPassword.set($event)" [invalid]="sameAsCurrent()"
                autocomplete="new-password" />
         @if (sameAsCurrent()) {
@@ -57,8 +56,8 @@
       </div>
 
       <div class="flex flex-col gap-1">
-        <label class="text-xs font-medium text-muted-color">{{ t('password.confirm') }}</label>
-        <input pInputText type="password" [ngModel]="confirm()"
+        <label class="text-xs font-medium text-muted-foreground">{{ t('password.confirm') }}</label>
+        <input mpInput type="password" [ngModel]="confirm()"
                (ngModelChange)="confirm.set($event)" [invalid]="mismatch()"
                autocomplete="new-password" />
         @if (mismatch()) {
@@ -68,12 +67,18 @@
     </div>
 
     <div class="flex items-center justify-end">
-      <p-button
-        [label]="t('password.save')"
-        icon="fa-solid fa-check"
-        [disabled]="!isValid()"
-        [loading]="submitting()"
-        (click)="save()"></p-button>
+      <button
+        mpButton
+        type="button"
+        [disabled]="!isValid() || submitting()"
+        (click)="save()">
+        @if (submitting()) {
+          <i class="fa-solid fa-circle-notch fa-spin"></i>
+        } @else {
+          <i class="fa-solid fa-check"></i>
+        }
+        {{ t('password.save') }}
+      </button>
     </div>
   </section>
 </div>

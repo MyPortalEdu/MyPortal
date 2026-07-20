@@ -32,12 +32,6 @@ import {
 } from '../../../../../../shared/types/staff-contact-details';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Contact Details area: emails, phones and addresses. Contact methods live under the BasicDetails
- * permission domain, so the edit gate mirrors basic details (HR All or line-manager Managed — no
- * self-edit). Addresses are managed by their own component (search-before-add, warn-and-choose).
- * Self-loads on mount.
- */
 @Component({
   selector: 'mp-staff-contact-panel',
   standalone: true,
@@ -69,8 +63,6 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
   protected readonly phoneTypes = computed(() => this.contact()?.phoneTypes ?? []);
   private readonly snapshot = signal<string>('');
 
-  // Contact methods live under the BasicDetails permission domain: HR (All) or the line manager
-  // (Managed) — no self-edit. Also drives the addresses component's edit gate.
   override readonly canEdit = computed(() => {
     const perms = this.permissions();
     const rel = this.relationship();
@@ -79,7 +71,6 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  // Every email/phone row needs a type and a non-empty value.
   override readonly valid = computed(
     () =>
       this.emails().every(e => !!e.typeId && e.address.trim().length > 0) &&

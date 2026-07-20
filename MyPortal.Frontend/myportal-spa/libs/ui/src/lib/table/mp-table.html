@@ -1,0 +1,60 @@
+<div class="overflow-hidden rounded-surface border border-border bg-background">
+  @if (captionSlot()) {
+    <div class="border-b border-border p-3">
+      <ng-container [ngTemplateOutlet]="captionSlot()!.template" />
+    </div>
+  }
+
+  <div
+    class="relative"
+    [class.overflow-auto]="scrollable()"
+    [style.max-height]="scrollable() ? scrollHeight() : null">
+    <table [class]="tableClass">
+      <thead>
+        @if (headerSlot()) {
+          <ng-container [ngTemplateOutlet]="headerSlot()!.template" />
+        }
+      </thead>
+      <tbody>
+        @if (value().length) {
+          @for (row of value(); track trackRow(row); let i = $index) {
+            @if (bodySlot()) {
+              <ng-container
+                [ngTemplateOutlet]="bodySlot()!.template"
+                [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
+            }
+          }
+        } @else if (!loading() && emptySlot()) {
+          <ng-container [ngTemplateOutlet]="emptySlot()!.template" />
+        }
+      </tbody>
+    </table>
+
+    @if (loading()) {
+      <div class="pointer-events-none absolute inset-0 flex items-start justify-center bg-background/60 pt-12">
+        <i class="fa-solid fa-spinner fa-spin text-lg text-muted-foreground"></i>
+      </div>
+    }
+  </div>
+
+  @if (paginator()) {
+    <div class="flex items-center justify-between gap-2 border-t border-border px-3 py-2 text-sm">
+      <span class="text-muted-foreground">{{ rangeLabel() }}</span>
+      <div class="flex items-center gap-1">
+        <button mpButton variant="ghost" size="icon" [disabled]="_first() === 0" (click)="toFirst()" aria-label="First page">
+          <i class="fa-solid fa-angles-left text-xs"></i>
+        </button>
+        <button mpButton variant="ghost" size="icon" [disabled]="_first() === 0" (click)="toPrev()" aria-label="Previous page">
+          <i class="fa-solid fa-angle-left text-xs"></i>
+        </button>
+        <span class="px-2 text-muted-foreground">{{ currentPage() }} / {{ pageCount() }}</span>
+        <button mpButton variant="ghost" size="icon" [disabled]="currentPage() >= pageCount()" (click)="toNext()" aria-label="Next page">
+          <i class="fa-solid fa-angle-right text-xs"></i>
+        </button>
+        <button mpButton variant="ghost" size="icon" [disabled]="currentPage() >= pageCount()" (click)="toLast()" aria-label="Last page">
+          <i class="fa-solid fa-angles-right text-xs"></i>
+        </button>
+      </div>
+    </div>
+  }
+</div>

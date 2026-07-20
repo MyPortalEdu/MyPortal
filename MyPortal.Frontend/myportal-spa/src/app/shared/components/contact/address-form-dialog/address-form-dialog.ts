@@ -10,11 +10,8 @@ import {
   untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { ProgressSpinner } from 'primeng/progressspinner';
-import { Select } from 'primeng/select';
+import { FormField, applyWhen, form, required, submit, validate } from '@angular/forms/signals';
+import { MpButton, MpDialog, MpInput, MpSelect, MpSpinner } from '@myportal/ui';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
@@ -61,17 +58,11 @@ const EMPTY_FORM: AddressForm = {
   isMain: false,
 };
 
-/**
- * Add/edit dialog for a person's address. Add mode is a search-before-add flow (find an existing
- * shared address to link, or enter a new one). Edit mode pre-fills the form and, when the address
- * is shared, asks whether the change applies to everyone (FixInPlace) or forks a new address
- * (Moved). Self-contained: commits via the staff data service and emits `saved` on success.
- */
 @Component({
   selector: 'mp-address-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, Dialog, InputText, ProgressSpinner, Select, TranslocoDirective],
+  imports: [FormsModule, FormField, MpButton, MpDialog, MpInput, MpSpinner, MpSelect, TranslocoDirective],
   templateUrl: './address-form-dialog.html',
 })
 export class AddressFormDialog {
@@ -93,31 +84,39 @@ export class AddressFormDialog {
   protected readonly results = signal<AddressMatchResponse[]>([]);
   protected readonly searching = signal(false);
   protected readonly picked = signal<AddressMatchResponse | null>(null);
-  protected readonly form = signal<AddressForm>({ ...EMPTY_FORM });
-  protected readonly saving = signal(false);
   protected readonly confirmShared = signal(false);
+
+  protected readonly model = signal<AddressForm>({ ...EMPTY_FORM });
+  protected readonly f = form(this.model, path => {
+    required(path.typeId);
+    applyWhen(path, () => this.step() === 'form', formPath => {
+      for (const field of [
+        formPath.street,
+        formPath.town,
+        formPath.county,
+        formPath.postcode,
+        formPath.country,
+      ]) {
+        required(field);
+        validate(field, ({ value }) =>
+          value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+        );
+      }
+    });
+  });
 
   protected readonly isEdit = computed(() => !!this.editTarget());
 
   protected readonly canSave = computed(() => {
-    const f = this.form();
-    if (!f.typeId) return false;
-    if (this.step() === 'link') return !!this.picked();
-    return (
-      f.street.trim().length > 0 &&
-      f.town.trim().length > 0 &&
-      f.county.trim().length > 0 &&
-      f.postcode.trim().length > 0 &&
-      f.country.trim().length > 0
-    );
+    if (this.step() === 'search') return false;
+    if (this.step() === 'link') return this.f().valid() && !!this.picked();
+    return this.f().valid();
   });
 
-  // Re-baselined whenever a step begins, so the search term itself never reads as dirty —
-  // only the address the user has actually composed (or the match they picked) does.
   private readonly snapshot = signal<string | null>(null);
 
   private readonly currentForm = computed(() =>
-    JSON.stringify({ ...this.form(), pickedId: this.picked()?.addressId ?? null }),
+    JSON.stringify({ ...this.model(), pickedId: this.picked()?.addressId ?? null }),
   );
 
   protected readonly isDirty = computed(() => {
@@ -126,7 +125,6 @@ export class AddressFormDialog {
   });
 
   constructor() {
-    // Reset whenever the dialog opens (track only `open`, not the form inputs).
     effect(() => {
       if (this.open()) {
         untracked(() => this.reset());
@@ -159,10 +157,6 @@ export class AddressFormDialog {
       });
   }
 
-  protected patch(changes: Partial<AddressForm>): void {
-    this.form.update(f => ({ ...f, ...changes }));
-  }
-
   protected pickExisting(match: AddressMatchResponse): void {
     this.picked.set(match);
     this.step.set('link');
@@ -171,12 +165,13 @@ export class AddressFormDialog {
 
   protected enterManually(): void {
     this.picked.set(null);
-    this.form.set({
+    this.model.set({
       ...EMPTY_FORM,
-      typeId: this.form().typeId || this.addressTypes()[0]?.id || '',
+      typeId: this.model().typeId || this.addressTypes()[0]?.id || '',
       country: 'United Kingdom',
     });
     this.step.set('form');
+    this.f().reset();
     this.snapshot.set(this.currentForm());
   }
 
@@ -198,12 +193,11 @@ export class AddressFormDialog {
   }
 
   protected save(): void {
-    if (!this.canSave() || this.saving()) return;
+    if (!this.canSave()) return;
 
     if (this.isEdit()) {
       const t = this.editTarget()!;
       if (t.sharedCount > 1) {
-        // Shared — let the user choose how the edit applies.
         this.confirmShared.set(true);
         return;
       }
@@ -214,75 +208,70 @@ export class AddressFormDialog {
     void this.doAdd();
   }
 
-  protected async doUpdate(mode: AddressEditMode): Promise<void> {
-    const t = this.editTarget();
-    if (!t || this.saving()) return;
-    this.saving.set(true);
-
-    const f = this.form();
-    const payload: PersonAddressUpdateRequest = {
-      typeId: f.typeId,
-      isMain: f.isMain,
-      mode,
-      buildingNumber: this.nz(f.buildingNumber),
-      buildingName: this.nz(f.buildingName),
-      apartment: this.nz(f.apartment),
-      street: f.street.trim(),
-      district: this.nz(f.district),
-      town: f.town.trim(),
-      county: f.county.trim(),
-      postcode: f.postcode.trim(),
-      country: f.country.trim(),
-    };
-
-    try {
-      await firstValueFrom(this.data.updateAddress(this.staffMemberId(), t.addressPersonId, payload));
-      // Re-baseline before emitting so the parent-driven close doesn't prompt.
+  protected doUpdate(mode: AddressEditMode): Promise<boolean> {
+    return submit(this.f, async () => {
+      const t = this.editTarget();
+      if (!t) return;
+      const m = this.model();
+      const payload: PersonAddressUpdateRequest = {
+        typeId: m.typeId,
+        isMain: m.isMain,
+        mode,
+        buildingNumber: this.nz(m.buildingNumber),
+        buildingName: this.nz(m.buildingName),
+        apartment: this.nz(m.apartment),
+        street: m.street.trim(),
+        district: this.nz(m.district),
+        town: m.town.trim(),
+        county: m.county.trim(),
+        postcode: m.postcode.trim(),
+        country: m.country.trim(),
+      };
+      try {
+        await firstValueFrom(this.data.updateAddress(this.staffMemberId(), t.addressPersonId, payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('common.contact.address.saveError'));
+        return;
+      }
       this.snapshot.set(this.currentForm());
       this.notify.success(this.transloco.translate('common.contact.address.savedToast'));
       this.saved.emit();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('common.contact.address.saveError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
-  private async doAdd(): Promise<void> {
-    this.saving.set(true);
-
-    const f = this.form();
-    const existing = this.picked();
-    const payload: PersonAddressUpsertRequest = existing
-      ? { existingAddressId: existing.addressId, typeId: f.typeId, isMain: f.isMain }
-      : {
-          typeId: f.typeId,
-          isMain: f.isMain,
-          buildingNumber: this.nz(f.buildingNumber),
-          buildingName: this.nz(f.buildingName),
-          apartment: this.nz(f.apartment),
-          street: f.street.trim(),
-          district: this.nz(f.district),
-          town: f.town.trim(),
-          county: f.county.trim(),
-          postcode: f.postcode.trim(),
-          country: f.country.trim(),
-        };
-
-    try {
-      await firstValueFrom(this.data.addAddress(this.staffMemberId(), payload));
+  private doAdd(): Promise<boolean> {
+    return submit(this.f, async () => {
+      const m = this.model();
+      const existing = this.picked();
+      const payload: PersonAddressUpsertRequest = existing
+        ? { existingAddressId: existing.addressId, typeId: m.typeId, isMain: m.isMain }
+        : {
+            typeId: m.typeId,
+            isMain: m.isMain,
+            buildingNumber: this.nz(m.buildingNumber),
+            buildingName: this.nz(m.buildingName),
+            apartment: this.nz(m.apartment),
+            street: m.street.trim(),
+            district: this.nz(m.district),
+            town: m.town.trim(),
+            county: m.county.trim(),
+            postcode: m.postcode.trim(),
+            country: m.country.trim(),
+          };
+      try {
+        await firstValueFrom(this.data.addAddress(this.staffMemberId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('common.contact.address.saveError'));
+        return;
+      }
       this.snapshot.set(this.currentForm());
       this.notify.success(this.transloco.translate('common.contact.address.savedToast'));
       this.saved.emit();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('common.contact.address.saveError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   protected async onCancel(): Promise<void> {
-    if (this.saving()) return;
+    if (this.f().submitting()) return;
     if (this.isDirty()) {
       const ok = await this.confirmDialog.confirm({
         header: this.transloco.translate('common.discardChanges'),
@@ -295,14 +284,11 @@ export class AddressFormDialog {
     this.closed.emit();
   }
 
-  // Escape is gated by closeOnEscape, so this only fires on a clean form or on a
-  // parent-driven close — just keep the parent in sync.
   protected onHide(): void {
     this.closed.emit();
   }
 
   private reset(): void {
-    this.saving.set(false);
     this.confirmShared.set(false);
     this.picked.set(null);
     this.searchTerm.set('');
@@ -311,7 +297,7 @@ export class AddressFormDialog {
     const target = this.editTarget();
     if (target) {
       this.step.set('form');
-      this.form.set({
+      this.model.set({
         buildingNumber: target.buildingNumber ?? '',
         buildingName: target.buildingName ?? '',
         apartment: target.apartment ?? '',
@@ -326,13 +312,14 @@ export class AddressFormDialog {
       });
     } else {
       this.step.set('search');
-      this.form.set({
+      this.model.set({
         ...EMPTY_FORM,
         typeId: this.addressTypes()[0]?.id ?? '',
         country: 'United Kingdom',
       });
     }
 
+    this.f().reset();
     this.snapshot.set(this.currentForm());
   }
 

@@ -50,4 +50,41 @@ public class SchoolServiceTests
         _schoolRepository.Verify(r => r.InsertAsync(It.IsAny<MyPortal.Core.Entities.School>(),
             It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
     }
+
+    [Test]
+    public async Task IsUrnAvailableAsync_ReturnsTrue_ForBlankUrn_WithoutHittingRepo()
+    {
+        var available = await _service.IsUrnAvailableAsync("  ", null, CancellationToken.None);
+
+        Assert.That(available, Is.True);
+        _schoolRepository.Verify(r => r.UrnExistsAsync(It.IsAny<string>(), It.IsAny<Guid?>(),
+            It.IsAny<CancellationToken>(), It.IsAny<IDbTransaction?>()), Times.Never);
+    }
+
+    [Test]
+    public async Task IsUrnAvailableAsync_ReturnsFalse_WhenUrnExists()
+    {
+        _schoolRepository
+            .Setup(r => r.UrnExistsAsync("123456", null, It.IsAny<CancellationToken>(), null))
+            .ReturnsAsync(true);
+
+        var available = await _service.IsUrnAvailableAsync("123456", null, CancellationToken.None);
+
+        Assert.That(available, Is.False);
+    }
+
+    [Test]
+    public async Task IsUrnAvailableAsync_TrimsAndPassesExcludeId()
+    {
+        var excludeId = Guid.NewGuid();
+        _schoolRepository
+            .Setup(r => r.UrnExistsAsync("123456", excludeId, It.IsAny<CancellationToken>(), null))
+            .ReturnsAsync(false);
+
+        var available = await _service.IsUrnAvailableAsync("  123456  ", excludeId, CancellationToken.None);
+
+        Assert.That(available, Is.True);
+        _schoolRepository.Verify(
+            r => r.UrnExistsAsync("123456", excludeId, It.IsAny<CancellationToken>(), null), Times.Once);
+    }
 }

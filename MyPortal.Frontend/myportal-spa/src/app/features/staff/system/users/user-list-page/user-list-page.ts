@@ -7,14 +7,21 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Button } from 'primeng/button';
-import { Card } from 'primeng/card';
-import { InputText } from 'primeng/inputtext';
-import { FilterMetadata } from 'primeng/api';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { Tag } from 'primeng/tag';
-import { Tooltip } from 'primeng/tooltip';
+import { Router, RouterLink } from '@angular/router';
+import {
+  MpButton,
+  MpCard,
+  MpInput,
+  MpTable,
+  MpTableCaption,
+  MpTableHeader,
+  MpTableBody,
+  MpTableEmpty,
+  MpSortable,
+  MpSortIcon,
+  MpBadge,
+} from '@myportal/ui';
+import { MpTooltip } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 
 import { PageHeader } from '../../../../../shared/components/page-header/page-header';
@@ -27,13 +34,8 @@ import { MeService } from '../../../../../core/services/me-service';
 import { Permissions } from '../../../../../core/constants/permissions';
 import { UserSummaryResponse } from '../../../../../shared/types/user';
 import { UserType } from '../../../../../core/types/user-type';
-import {
-  GridState,
-  gridStateFromLazyLoadEvent,
-  gridStateFromQueryParams,
-  gridStateToQueryParams,
-  toQueryKitParams,
-} from '../../../../../shared/utils/primeng-querykit';
+import { GridState } from '../../../../../shared/utils/querykit';
+import { injectGridList } from '../../../../../shared/utils/grid-list';
 
 type AudienceSeverity = 'info' | 'success' | 'warn' | 'secondary';
 
@@ -45,7 +47,24 @@ const GRID_DEFAULTS: GridState = { first: 0, rows: 25 };
   selector: 'mp-user-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Card, InputText, TableModule, Tag, Tooltip, RouterLink, PageHeader, EmptyState, TranslocoDirective],
+  imports: [
+    MpButton,
+    MpCard,
+    MpInput,
+    MpTable,
+    MpTableCaption,
+    MpTableHeader,
+    MpTableBody,
+    MpTableEmpty,
+    MpSortable,
+    MpSortIcon,
+    MpBadge,
+    MpTooltip,
+    RouterLink,
+    PageHeader,
+    EmptyState,
+    TranslocoDirective,
+  ],
   providers: [provideTranslocoScope('users')],
   templateUrl: './user-list-page.html',
 })
@@ -56,33 +75,18 @@ export class UserListPage implements OnInit {
   private readonly transloco = inject(TranslocoService);
   private readonly me = inject(MeService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
-  readonly rows = signal<UserSummaryResponse[]>([]);
-  readonly totalRecords = signal(0);
-  readonly loading = signal(false);
   readonly canEdit = signal(false);
 
-  // Read the URL once from the snapshot rather than subscribing to queryParams:
-  // load() writes the state back, and a subscription would turn that write into
-  // another load → navigate feedback loop.
-  readonly initialState = gridStateFromQueryParams(this.route.snapshot.queryParamMap, GRID_DEFAULTS);
+  private readonly table = viewChild(MpTable);
 
-  // Seeded onto the table's `filters` input so the one lazy-load it fires on init
-  // already carries the restored search term — no second, redundant request.
-  readonly initialFilters: Record<string, FilterMetadata> = this.initialState.global
-    ? { global: { value: this.initialState.global, matchMode: 'contains' } }
-    : {};
-
-  private readonly table = viewChild<Table>('dt');
-
-  // Mirrors the search box so the clear affordance and the empty state can both
-  // read it; the table's own `filters` stay the source of truth for the request.
-  readonly searchTerm = signal(this.initialState.global ?? '');
-
-  readonly hasFilter = computed(() => this.searchTerm().trim().length > 0);
-
-  private lastEvent: TableLazyLoadEvent | null = null;
+  protected readonly grid = injectGridList<UserSummaryResponse>({
+    list: params => this.data.list(params),
+    searchFields: SEARCH_FIELDS,
+    defaults: GRID_DEFAULTS,
+    table: this.table,
+    onError: err => this.notify.apiError(err, this.transloco.translate('users.loadError')),
+  });
 
   readonly headerActions = computed<HeaderAction[]>(() =>
     this.canEdit()
@@ -103,49 +107,6 @@ export class UserListPage implements OnInit {
     });
   }
 
-  load(event: TableLazyLoadEvent): void {
-    this.lastEvent = event;
-    this.syncUrl(event);
-    this.loading.set(true);
-    this.data.list(toQueryKitParams(event, { globalFields: SEARCH_FIELDS })).subscribe({
-      next: page => {
-        this.rows.set(page.items ?? []);
-        this.totalRecords.set(page.totalItems ?? 0);
-        this.loading.set(false);
-      },
-      error: err => {
-        this.loading.set(false);
-        this.notify.apiError(err, this.transloco.translate('users.loadError'));
-      },
-    });
-  }
-
-  reload(): void {
-    if (this.lastEvent) this.load(this.lastEvent);
-  }
-
-  onSearch(value: string): void {
-    this.searchTerm.set(value);
-    this.table()?.filterGlobal(value, 'contains');
-  }
-
-  // Same path as any other search change: the table drops the `global` filter and
-  // re-fires onLazyLoad, so load() → syncUrl() strips `q` from the URL itself.
-  clearSearch(): void {
-    this.onSearch('');
-  }
-
-  private syncUrl(event: TableLazyLoadEvent): void {
-    const state = gridStateFromLazyLoadEvent(event, { defaultRows: GRID_DEFAULTS.rows });
-    // replaceUrl: rewrite the list URL in place. Without it every keystroke and
-    // page change would push a history entry and Back would walk through them.
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: gridStateToQueryParams(state, GRID_DEFAULTS),
-      replaceUrl: true,
-    });
-  }
-
   openCreate(): void {
     void this.router.navigate(['/staff/system/users/new']);
   }
@@ -154,8 +115,6 @@ export class UserListPage implements OnInit {
     void this.router.navigate(['/staff/system/users', user.id]);
   }
 
-  // Row click is a convenience over the username link; ignore clicks that started
-  // on the link or a row action so they aren't handled twice.
   onRowClick(event: MouseEvent, user: UserSummaryResponse): void {
     if ((event.target as HTMLElement).closest('a,button')) return;
     this.openEdit(user);
@@ -189,7 +148,7 @@ export class UserListPage implements OnInit {
     this.data.delete(user.id).subscribe({
       next: () => {
         this.notify.success(this.transloco.translate('users.deletedToast'));
-        this.reload();
+        this.grid.reload();
       },
       error: err => this.notify.apiError(err, this.transloco.translate('users.deleteError')),
     });

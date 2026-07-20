@@ -14,8 +14,6 @@ describe('PageHeader', () => {
 
     fixture = TestBed.createComponent(PageHeader);
     component = fixture.componentInstance;
-    // `title` is a required signal input — set it before the first CD so the
-    // component renders.
     fixture.componentRef.setInput('title', 'Test');
     fixture.detectChanges();
   });

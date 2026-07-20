@@ -1,25 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Popover } from 'primeng/popover';
-import { InputText } from 'primeng/inputtext';
+import { MpButton, MpDialog, MpInput } from '@myportal/ui';
 import { Subject, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 
 import { UsersDataService } from '../../../services/users-data.service';
 import { PersonSearchResponse } from '../../../types/user';
 
-/**
- * General Person search + picker for linking a Person to a user account. Trigger button opens a
- * popover with a debounced search box backed by /api/people/search (all person types). Emits the
- * chosen Person. Translation keys live under `common.personPicker.*` in the root scope.
- */
 @Component({
   selector: 'mp-person-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule, Button, Popover, InputText, TranslocoDirective, TranslocoPipe],
+  imports: [DatePipe, FormsModule, MpButton, MpDialog, MpInput, TranslocoDirective, TranslocoPipe],
   templateUrl: './person-picker.html',
 })
 export class PersonPicker {
@@ -29,8 +22,7 @@ export class PersonPicker {
 
   readonly picked = output<PersonSearchResponse>();
 
-  private readonly op = viewChild<Popover>('op');
-
+  protected readonly visible = signal(false);
   protected readonly query = signal('');
   protected readonly results = signal<PersonSearchResponse[]>([]);
   protected readonly loading = signal(false);
@@ -53,14 +45,6 @@ export class PersonPicker {
       });
   }
 
-  open(event: Event): void {
-    this.op()?.toggle(event);
-  }
-
-  close(): void {
-    this.op()?.hide();
-  }
-
   onQueryChange(q: string): void {
     this.query.set(q);
     const active = q.trim().length >= 2;
@@ -80,6 +64,6 @@ export class PersonPicker {
 
   select(p: PersonSearchResponse): void {
     this.picked.emit(p);
-    this.close();
+    this.visible.set(false);
   }
 }

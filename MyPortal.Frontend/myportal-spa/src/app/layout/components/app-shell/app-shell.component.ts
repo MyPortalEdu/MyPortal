@@ -4,15 +4,14 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { Topbar } from '../topbar/topbar';
-import { Drawer } from 'primeng/drawer';
-import { ButtonDirective } from 'primeng/button';
+import { MpButton, MpDrawer } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { SelectedAcademicYearService } from '../../../core/services/selected-academic-year-service';
 
 @Component({
   selector: 'mp-app-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, SidebarComponent, Topbar, Drawer, ButtonDirective, TranslocoDirective],
+  imports: [RouterOutlet, SidebarComponent, Topbar, MpDrawer, MpButton, TranslocoDirective],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })
@@ -28,8 +27,6 @@ export class AppShell implements OnInit, OnDestroy {
   private mqHandler = (e: MediaQueryListEvent) => this.setDesktop(e.matches);
 
   constructor() {
-    // The mobile drawer is an overlay — without this it stays open on top of the
-    // page the user just navigated to.
     this.router.events
       .pipe(
         filter(e => e instanceof NavigationEnd),
@@ -42,8 +39,6 @@ export class AppShell implements OnInit, OnDestroy {
     this.setDesktop(this.mq.matches);
     this.mq.addEventListener('change', this.mqHandler);
     this.sidebarCollapsed.set(localStorage.getItem('mp:sidebar') === 'collapsed');
-    // The shell mounts once inside the authenticated portal area (auth-guard
-    // upstream), so this is the right place to seed the user's selected AY.
     this.selectedYear.init();
   }
 
@@ -53,10 +48,9 @@ export class AppShell implements OnInit, OnDestroy {
 
   setDesktop(flag: boolean) {
     this.isDesktop.set(flag);
-    this.sidebarOpen.set(flag); // open by default on desktop, closed on mobile
+    this.sidebarOpen.set(flag);
   }
 
-  // On desktop the burger collapses/expands the rail; on mobile it opens the drawer.
   toggleSidebar() {
     if (this.isDesktop()) {
       const next = !this.sidebarCollapsed();

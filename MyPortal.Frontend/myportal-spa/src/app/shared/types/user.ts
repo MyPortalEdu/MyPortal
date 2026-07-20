@@ -1,7 +1,5 @@
 import { UserType } from '../../core/types/user-type';
 
-// Mirrors MyPortal.Contracts.Models.System.Users. UserType serialises as an integer.
-
 export interface UserSummaryResponse {
   id: string;
   createdAt: string;
@@ -21,7 +19,6 @@ export interface UserDetailsResponse extends UserSummaryResponse {
   roleIds: string[];
 }
 
-// Create payload — carries a password.
 export interface UserUpsertRequest {
   personId: string | null;
   userType: UserType;
@@ -32,7 +29,6 @@ export interface UserUpsertRequest {
   roleIds: string[];
 }
 
-// Update payload — no password (changed via the dedicated set-password endpoint).
 export interface UserUpdateRequest {
   personId: string | null;
   userType: UserType;
@@ -46,7 +42,6 @@ export interface UserSetPasswordRequest {
   password: string;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.PersonSearchResponse.
 export interface PersonSearchResponse {
   personId: string;
   title: string | null;

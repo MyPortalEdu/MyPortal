@@ -1,23 +1,17 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import { MpButton, MpInput, MpSelect } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 import { LookupResponse } from '../../../types/lookup';
 import { PersonEmailUpsertItem } from '../../../types/staff-contact-details';
 import { CopyButton } from '../../copy-button/copy-button';
 
-/**
- * Presentational list-editor for a person's email addresses. Owner-agnostic — the host owns
- * the model and persistence; this just renders/edits the list and enforces one-main-per-list.
- */
 @Component({
   selector: 'mp-person-emails',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, InputText, Select, CopyButton, TranslocoDirective],
+  imports: [FormsModule, MpButton, MpInput, MpSelect, CopyButton, TranslocoDirective],
   templateUrl: './person-emails.html',
 })
 export class PersonEmails {
@@ -35,7 +29,7 @@ export class PersonEmails {
       id: null,
       typeId: this.types()[0]?.id ?? '',
       address: '',
-      isMain: list.length === 0, // first one in defaults to main
+      isMain: list.length === 0,
       notes: null,
     });
     this.emails.set(list);
@@ -43,7 +37,6 @@ export class PersonEmails {
 
   protected removeEmail(index: number): void {
     const list = this.emails().filter((_, i) => i !== index);
-    // Lost the main? Promote the first remaining so a non-empty list always has one.
     if (list.length && !list.some(e => e.isMain)) {
       list[0] = { ...list[0], isMain: true };
     }

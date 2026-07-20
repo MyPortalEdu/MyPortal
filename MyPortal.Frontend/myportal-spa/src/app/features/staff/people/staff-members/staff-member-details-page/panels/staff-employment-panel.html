@@ -3,12 +3,18 @@
     <mp-loading></mp-loading>
   } @else if (employment()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.employmentDetails') }}</h3>
-    <p class="text-sm text-muted-color mb-4">{{ t('staff-members.employment.hint') }}</p>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('staff-members.employment.hint') }}</p>
 
     @if (editing() && !valid()) {
       <mp-callout severity="warn" [title]="t('common.validation.missingTitle')" class="mb-4 block">
         {{ t('common.validation.missingBlocked') }}
       </mp-callout>
+    }
+    @if (editing() && employmentsOverlap()) {
+      <mp-callout severity="warn" class="mb-4 block">{{ t('staff-members.employment.overlap') }}</mp-callout>
+    }
+    @if (editing() && contractOutOfRange()) {
+      <mp-callout severity="warn" class="mb-4 block">{{ t('staff-members.employment.contractOutOfRange') }}</mp-callout>
     }
 
     <div class="flex flex-col gap-6">
@@ -17,28 +23,28 @@
         <div class="grid gap-4 md:grid-cols-2">
           <mp-field [label]="t('staff-members.employment.bankName')" for="bankName">
             @if (editing()) {
-              <input pInputText id="bankName" maxlength="50" [ngModel]="bankName() ?? ''" (ngModelChange)="bankName.set($event)" />
+              <input mpInput id="bankName" maxlength="50" [ngModel]="bankName() ?? ''" (ngModelChange)="bankName.set($event)" />
             } @else {
               <span>{{ bankName() || '—' }}</span>
             }
           </mp-field>
           <mp-field [label]="t('staff-members.employment.bankAccount')" for="bankAccount">
             @if (editing()) {
-              <input pInputText id="bankAccount" maxlength="15" [ngModel]="bankAccount() ?? ''" (ngModelChange)="bankAccount.set($event)" />
+              <input mpInput id="bankAccount" maxlength="15" [ngModel]="bankAccount() ?? ''" (ngModelChange)="bankAccount.set($event)" />
             } @else {
               <span class="font-mono">{{ bankAccount() || '—' }}</span>
             }
           </mp-field>
           <mp-field [label]="t('staff-members.employment.bankSortCode')" for="bankSortCode">
             @if (editing()) {
-              <input pInputText id="bankSortCode" maxlength="10" [ngModel]="bankSortCode() ?? ''" (ngModelChange)="bankSortCode.set($event)" />
+              <input mpInput id="bankSortCode" maxlength="10" [ngModel]="bankSortCode() ?? ''" (ngModelChange)="bankSortCode.set($event)" />
             } @else {
               <span class="font-mono">{{ bankSortCode() || '—' }}</span>
             }
           </mp-field>
           <mp-field [label]="t('staff-members.employment.niNumber')" for="niNumber">
             @if (editing()) {
-              <input pInputText id="niNumber" maxlength="9" [ngModel]="niNumber() ?? ''" (ngModelChange)="niNumber.set($event)" />
+              <input mpInput id="niNumber" maxlength="9" [ngModel]="niNumber() ?? ''" (ngModelChange)="niNumber.set($event)" />
             } @else {
               <span class="font-mono">{{ niNumber() || '—' }}</span>
             }
@@ -55,26 +61,28 @@
 
         <div class="flex flex-col gap-4">
           @for (e of employments(); track $index; let ei = $index) {
-            <div class="rounded border border-surface p-3">
+            <div class="rounded border border-border p-3">
               <div class="flex items-center gap-2 mb-2">
                 <span class="text-sm font-semibold">{{ t('staff-members.employment.spell') }}{{ employments().length > 1 ? ' ' + (ei + 1) : '' }}</span>
-                <p-tag
+                <mp-badge
                   [value]="t('staff-members.employment.periodStatus.' + periodStatus(e.startDate, e.endDate))"
-                  [severity]="periodSeverity(periodStatus(e.startDate, e.endDate))"></p-tag>
+                  [severity]="periodSeverity(periodStatus(e.startDate, e.endDate))"></mp-badge>
                 @if (e.contracts.length) {
-                  <span class="text-xs text-muted-color">{{ t('staff-members.employment.fteTotal', { total: spellFteTotal(e) }) }}</span>
+                  <span class="text-xs text-muted-foreground">{{ t('staff-members.employment.fteTotal', { total: spellFteTotal(e) }) }}</span>
                 }
                 <span class="flex-1"></span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.employment.removeSpell')" (onClick)="removeEmployment(ei)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.employment.removeSpell')" (click)="removeEmployment(ei)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
 
               <div class="grid gap-3 md:grid-cols-2">
                 <mp-field [label]="t('staff-members.employment.startDate')" [required]="editing()">
                   @if (editing()) {
-                    <p-datepicker [ngModel]="toDate(e.startDate)" (ngModelChange)="patchEmployment(ei, 'startDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full" required [invalid]="editing() && !e.startDate"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(e.startDate)" (ngModelChange)="patchEmployment(ei, 'startDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" required [invalid]="editing() && !e.startDate"></mp-date-picker>
                   } @else {
                     <span>{{ e.startDate ? (toDate(e.startDate) | date:'mediumDate') : '—' }}</span>
                   }
@@ -88,13 +96,12 @@
                 </mp-field>
                 <mp-field [label]="t('staff-members.employment.endDate')">
                   @if (editing()) {
-                    <p-datepicker [ngModel]="toDate(e.endDate)" (ngModelChange)="onEmploymentEndDate(ei, $event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [ngModel]="toDate(e.endDate)" (ngModelChange)="onEmploymentEndDate(ei, $event)" [showIcon]="true" class="w-full"></mp-date-picker>
                   } @else {
                     <span>{{ e.endDate ? (toDate(e.endDate) | date:'mediumDate') : t('staff-members.employment.current') }}</span>
                   }
                 </mp-field>
 
-                <!-- Leaving details only apply once the employment has an end date. -->
                 @if (e.endDate) {
                   <mp-field [label]="t('staff-members.employment.leavingReason')">
                     @if (editing()) {
@@ -114,14 +121,14 @@
 
                 <mp-field class="md:col-span-2" [label]="t('staff-members.employment.notes')">
                   @if (editing()) {
-                    <input pInputText maxlength="1024" [ngModel]="e.notes ?? ''" (ngModelChange)="patchEmployment(ei, 'notes', $event)" />
+                    <input mpInput maxlength="1024" [ngModel]="e.notes ?? ''" (ngModelChange)="patchEmployment(ei, 'notes', $event)" />
                   } @else {
                     <span class="whitespace-pre-wrap">{{ e.notes || '—' }}</span>
                   }
                 </mp-field>
               </div>
 
-              <div class="mt-3 pt-3 border-t border-surface">
+              <div class="mt-3 pt-3 border-t border-border">
                 <div class="text-sm font-semibold mb-2">{{ t('staff-members.employment.contractsHeading') }}</div>
 
                 @if (!e.contracts.length) {
@@ -130,17 +137,19 @@
 
                 <div class="flex flex-col gap-3">
                   @for (c of e.contracts; track $index; let ci = $index) {
-                    <div class="rounded bg-emphasis p-3">
+                    <div class="rounded bg-muted p-3">
                       <div class="flex items-start justify-between gap-2 mb-2">
                         <div class="flex items-center gap-2 min-w-0">
-                          <span class="text-sm font-medium text-muted-color">{{ t('staff-members.employment.contract') }}{{ e.contracts.length > 1 ? ' ' + (ci + 1) : '' }}</span>
-                          <p-tag
+                          <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.employment.contract') }}{{ e.contracts.length > 1 ? ' ' + (ci + 1) : '' }}</span>
+                          <mp-badge
                             [value]="t('staff-members.employment.periodStatus.' + periodStatus(c.startDate, c.endDate))"
-                            [severity]="periodSeverity(periodStatus(c.startDate, c.endDate))"></p-tag>
+                            [severity]="periodSeverity(periodStatus(c.startDate, c.endDate))"></mp-badge>
                         </div>
                         @if (editing()) {
-                          <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                            [ariaLabel]="t('staff-members.employment.removeContract')" (onClick)="removeContract(ei, ci)"></p-button>
+                          <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                            [attr.aria-label]="t('staff-members.employment.removeContract')" (click)="removeContract(ei, ci)">
+                            <i class="fa-solid fa-trash"></i>
+                          </button>
                         }
                       </div>
 
@@ -148,13 +157,13 @@
                         <div class="flex flex-col gap-5">
 
                           <div>
-                            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-color mb-2.5 pb-1.5 border-b border-surface">
+                            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
                               <i class="fa-solid fa-briefcase"></i>
                               {{ t('staff-members.employment.groupPosition') }}
                             </div>
                             <div class="grid gap-3 md:grid-cols-2">
                               <mp-field class="md:col-span-2" [label]="t('staff-members.employment.postTitle')" [required]="true">
-                                <input pInputText required [ngModel]="c.postTitle" (ngModelChange)="patchContract(ei, ci, 'postTitle', $event)" [invalid]="!c.postTitle.trim()" />
+                                <input mpInput required [ngModel]="c.postTitle" (ngModelChange)="patchContract(ei, ci, 'postTitle', $event)" [invalid]="!c.postTitle.trim()" />
                               </mp-field>
                               <mp-field [label]="t('staff-members.employment.contractType')" [required]="true">
                                 <mp-lookup-select [options]="contractTypes()" [value]="c.contractTypeId" (valueChange)="patchContract(ei, ci, 'contractTypeId', $event)" [invalid]="!c.contractTypeId"></mp-lookup-select>
@@ -172,7 +181,7 @@
                           </div>
 
                           <div>
-                            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-color mb-2.5 pb-1.5 border-b border-surface">
+                            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
                               <i class="fa-solid fa-sterling-sign"></i>
                               {{ t('staff-members.employment.groupPay') }}
                             </div>
@@ -184,13 +193,13 @@
                                 @if (c.payScaleId) {
                                   <mp-lookup-select [options]="contractPayScalePoints(c.payScaleId)" [value]="c.payScalePointId ?? null" (valueChange)="onContractSpinePoint(ei, ci, $event)"></mp-lookup-select>
                                 } @else {
-                                  <span class="text-sm text-muted-color italic py-2">{{ t('staff-members.employment.selectPayScaleFirst') }}</span>
+                                  <span class="text-sm text-muted-foreground italic py-2">{{ t('staff-members.employment.selectPayScaleFirst') }}</span>
                                 }
                               </mp-field>
                               <mp-field [label]="t('staff-members.employment.annualSalary')">
-                                <p-inputNumber mode="currency" currency="GBP" locale="en-GB" [min]="0" [ngModel]="c.annualSalary" (ngModelChange)="patchContract(ei, ci, 'annualSalary', $event)" styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
+                                <mp-input-number mode="currency" currency="GBP" locale="en-GB" [min]="0" [ngModel]="c.annualSalary" (ngModelChange)="patchContract(ei, ci, 'annualSalary', $event)" class="w-full"></mp-input-number>
                                 @if (statutoryFor(c.payScalePointId); as stat) {
-                                  <span class="text-xs text-muted-color">{{ t('staff-members.employment.statutoryHint', { salary: formatMoney(stat), zone: payZoneName() ?? '' }) }}</span>
+                                  <span class="text-xs text-muted-foreground">{{ t('staff-members.employment.statutoryHint', { salary: formatMoney(stat), zone: payZoneName() ?? '' }) }}</span>
                                 } @else if (c.payScalePointId) {
                                   <span class="text-xs text-amber-600 dark:text-amber-500">
                                     {{ payZoneName() ? t('staff-members.employment.noRateHint') : t('staff-members.employment.noPayZoneHint') }}
@@ -199,15 +208,15 @@
                               </mp-field>
                               <div class="flex flex-col gap-2 md:pt-7">
                                 <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                                  <p-checkbox [binary]="true" [ngModel]="c.isAgencySupply" (ngModelChange)="patchContract(ei, ci, 'isAgencySupply', $event)"></p-checkbox>
+                                  <mp-checkbox [ngModel]="c.isAgencySupply" (ngModelChange)="patchContract(ei, ci, 'isAgencySupply', $event)"></mp-checkbox>
                                   {{ t('staff-members.employment.isAgencySupply') }}
                                 </label>
                                 <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                                  <p-checkbox [binary]="true" [ngModel]="c.safeguardedSalary" (ngModelChange)="patchContract(ei, ci, 'safeguardedSalary', $event)"></p-checkbox>
+                                  <mp-checkbox [ngModel]="c.safeguardedSalary" (ngModelChange)="patchContract(ei, ci, 'safeguardedSalary', $event)"></mp-checkbox>
                                   {{ t('staff-members.employment.safeguardedSalary') }}
                                 </label>
                                 <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                                  <p-checkbox [binary]="true" [ngModel]="c.dailyRate" (ngModelChange)="patchContract(ei, ci, 'dailyRate', $event)"></p-checkbox>
+                                  <mp-checkbox [ngModel]="c.dailyRate" (ngModelChange)="patchContract(ei, ci, 'dailyRate', $event)"></mp-checkbox>
                                   {{ t('staff-members.employment.dailyRate') }}
                                 </label>
                               </div>
@@ -215,28 +224,28 @@
                           </div>
 
                           <div>
-                            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-color mb-2.5 pb-1.5 border-b border-surface">
+                            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
                               <i class="fa-solid fa-calendar-day"></i>
                               {{ t('staff-members.employment.groupDatesHours') }}
                             </div>
                             <div class="flex flex-col gap-3">
                               <div class="grid gap-3 md:grid-cols-2">
                                 <mp-field [label]="t('staff-members.employment.contractStart')" [required]="true">
-                                  <p-datepicker required [ngModel]="toDate(c.startDate)" (ngModelChange)="patchContract(ei, ci, 'startDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full" [invalid]="!c.startDate"></p-datepicker>
+                                  <mp-date-picker required [ngModel]="toDate(c.startDate)" (ngModelChange)="patchContract(ei, ci, 'startDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full" [invalid]="!c.startDate"></mp-date-picker>
                                 </mp-field>
                                 <mp-field [label]="t('staff-members.employment.contractEnd')">
-                                  <p-datepicker [ngModel]="toDate(c.endDate)" (ngModelChange)="patchContract(ei, ci, 'endDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                                  <mp-date-picker [ngModel]="toDate(c.endDate)" (ngModelChange)="patchContract(ei, ci, 'endDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
                                 </mp-field>
                               </div>
                               <div class="grid gap-3 md:grid-cols-3">
                                 <mp-field [label]="t('staff-members.employment.fte')" [required]="true">
-                                  <p-inputNumber required mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" [min]="0" [max]="1" [ngModel]="c.fte" (ngModelChange)="onContractFte(ei, ci, $event)" styleClass="w-full" inputStyleClass="w-full" [invalid]="c.fte == null || c.fte < 0 || c.fte > 1"></p-inputNumber>
+                                  <mp-input-number required mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="2" [min]="0" [max]="1" [ngModel]="c.fte" (ngModelChange)="onContractFte(ei, ci, $event)" class="w-full" [invalid]="c.fte == null || c.fte < 0 || c.fte > 1"></mp-input-number>
                                 </mp-field>
                                 <mp-field [label]="t('staff-members.employment.hoursPerWeek')">
-                                  <p-inputNumber mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" [ngModel]="c.hoursPerWeek" (ngModelChange)="patchContract(ei, ci, 'hoursPerWeek', $event)" styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
+                                  <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" [ngModel]="c.hoursPerWeek" (ngModelChange)="patchContract(ei, ci, 'hoursPerWeek', $event)" class="w-full"></mp-input-number>
                                 </mp-field>
                                 <mp-field [label]="t('staff-members.employment.weeksPerYear')">
-                                  <p-inputNumber mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" [ngModel]="c.weeksPerYear" (ngModelChange)="patchContract(ei, ci, 'weeksPerYear', $event)" styleClass="w-full" inputStyleClass="w-full"></p-inputNumber>
+                                  <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" [ngModel]="c.weeksPerYear" (ngModelChange)="patchContract(ei, ci, 'weeksPerYear', $event)" class="w-full"></mp-input-number>
                                 </mp-field>
                               </div>
                             </div>
@@ -244,7 +253,7 @@
                         </div>
                       } @else {
                         <div class="font-medium">{{ c.postTitle }}</div>
-                        <div class="text-sm text-muted-color">
+                        <div class="text-sm text-muted-foreground">
                           {{ lookupLabel(contractTypes(), c.contractTypeId) }}
                           @if (c.fte != null) { · {{ t('staff-members.employment.fte') }} {{ c.fte }} }
                           @if (c.staffRoleId) { · {{ lookupLabel(staffRoles(), c.staffRoleId) }} }
@@ -258,8 +267,10 @@
 
                 @if (editing()) {
                   <div class="mt-2">
-                    <p-button [label]="t('staff-members.employment.addContract')" icon="fa-solid fa-plus"
-                      severity="secondary" [outlined]="true" size="small" (onClick)="addContract(ei)"></p-button>
+                    <button mpButton variant="outline" size="sm" (click)="addContract(ei)">
+                      <i class="fa-solid fa-plus"></i>
+                      {{ t('staff-members.employment.addContract') }}
+                    </button>
                   </div>
                 }
               </div>
@@ -269,8 +280,10 @@
 
         @if (editing()) {
           <div class="mt-3">
-            <p-button [label]="t('staff-members.employment.addSpell')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addEmployment()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addEmployment()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.employment.addSpell') }}
+            </button>
           </div>
         }
       </section>

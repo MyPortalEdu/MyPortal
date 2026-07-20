@@ -8,8 +8,6 @@ export class AcademicYearService {
   private readonly http = inject(HttpClient);
   private current$?: Observable<AcademicYearSummary | null>;
 
-  // The API returns 204 when no academic year covers today's date; HttpClient
-  // surfaces that as a null body, so callers always get a nullable summary.
   getCurrent(): Observable<AcademicYearSummary | null> {
     if (!this.current$) {
       this.current$ = this.http

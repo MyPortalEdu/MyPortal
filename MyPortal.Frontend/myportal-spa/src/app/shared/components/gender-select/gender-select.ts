@@ -8,23 +8,17 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoService } from '@jsverse/transloco';
-import { Select } from 'primeng/select';
+import { MpSelect } from '@myportal/ui';
 
 import { GENDER_CODES } from '../../constants/gender';
 
-/**
- * Reusable gender dropdown for any Person form (staff, students, contacts…).
- * Two-way bind the single-char code via `[value]`/`(valueChange)`. Options and
- * placeholder come from the shared `common.gender.*` i18n keys. For read-only
- * display use the `genderLabel` pipe instead.
- */
 @Component({
   selector: 'mp-gender-select',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Select],
+  imports: [FormsModule, MpSelect],
   template: `
-    <p-select
+    <mp-select
       [inputId]="inputId()"
       [options]="options()"
       optionLabel="label"
@@ -33,23 +27,18 @@ import { GENDER_CODES } from '../../constants/gender';
       [ngModel]="value()"
       (ngModelChange)="value.set($event)"
       [invalid]="invalid()"
-      appendTo="body"
-      styleClass="w-full"></p-select>
+      class="w-full"></mp-select>
   `,
 })
 export class GenderSelect {
   private readonly transloco = inject(TranslocoService);
 
-  /** The selected single-char gender code (M/F/X), two-way bound. */
   readonly value = model<string | null>(null);
 
-  /** Forwarded to the native control for label association. */
   readonly inputId = input<string>();
 
-  /** Optional placeholder override; defaults to "Select gender". */
   readonly placeholder = input<string>();
 
-  /** Paints the invalid state; drive it from the owning form's validity. */
   readonly invalid = input<boolean>(false);
 
   protected readonly defaultPlaceholder = computed(() =>

@@ -82,22 +82,16 @@
           "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "runner": "vitest",
             "tsConfig": "tsconfig.spec.json",
-            "inlineStyleLanguage": "scss",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
+            "setupFiles": [
+              "src/testing/vitest-setup.ts"
             ],
-            "styles": [
-              "src/styles.css"
+            "include": [
+              "**/*.spec.ts",
+              "../libs/ui/src/**/*.spec.ts"
             ]
           }
         }

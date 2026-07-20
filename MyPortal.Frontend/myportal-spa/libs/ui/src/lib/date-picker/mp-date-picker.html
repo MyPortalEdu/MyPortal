@@ -1,0 +1,67 @@
+    <div mpPopover #pop="mpPopover" [sideOffset]="4">
+      <div class="relative w-full">
+        <input
+          mpInput
+          type="text"
+          autocomplete="off"
+          [attr.id]="inputId() ?? null"
+          [value]="text()"
+          [placeholder]="placeholder() ?? (timeOnly() ? 'HH:mm' : dateFormat())"
+          [disabled]="disabled()"
+          [invalid]="showInvalid()"
+          (input)="text.set($any($event.target).value)"
+          (blur)="commitTyped()"
+          (keydown.enter)="commitTyped(); $event.preventDefault()"
+          class="w-full pr-9" />
+        <button
+          brnPopoverTrigger
+          type="button"
+          tabindex="-1"
+          [disabled]="disabled()"
+          [attr.aria-label]="timeOnly() ? 'Open time picker' : 'Open calendar'"
+          class="absolute inset-y-0 right-0 flex w-9 items-center justify-center rounded-r-control text-muted-foreground outline-none transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50">
+          <i [class]="timeOnly() ? 'fa-regular fa-clock' : 'fa-regular fa-calendar'" class="text-sm"></i>
+        </button>
+      </div>
+
+      <div *brnPopoverContent [class]="contentClass">
+        @if (!timeOnly()) {
+          <mp-calendar
+            [date]="value() ?? undefined"
+            [min]="minDate()"
+            [max]="maxDate()"
+            [disabled]="disabled()"
+            (dateChange)="onDatePicked($event, pop)" />
+        }
+
+        @if (timeOnly() || showTime()) {
+          <div
+            class="flex items-center justify-center gap-1.5 p-1"
+            [class.border-t]="!timeOnly()"
+            [class.border-border]="!timeOnly()"
+            [class.mt-1]="!timeOnly()">
+            <select
+              [value]="selectedHour()"
+              (change)="onHourChange($event)"
+              [disabled]="disabled()"
+              [class]="timeSelectClass"
+              aria-label="Hour">
+              @for (h of hours; track h) {
+                <option [value]="h">{{ pad(h) }}</option>
+              }
+            </select>
+            <span class="font-semibold text-muted-foreground">:</span>
+            <select
+              [value]="selectedMinute()"
+              (change)="onMinuteChange($event)"
+              [disabled]="disabled()"
+              [class]="timeSelectClass"
+              aria-label="Minute">
+              @for (m of minutes; track m) {
+                <option [value]="m">{{ pad(m) }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+    </div>

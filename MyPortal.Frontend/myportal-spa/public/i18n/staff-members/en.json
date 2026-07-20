@@ -47,7 +47,9 @@
     "attachHint": "This person is already on file. Adding a staff code creates their staff record — their existing details are reused, not duplicated.",
     "attachSubmit": "Create",
     "hint": "Capture the joiner data — name, code, gender, optional DOB. Employment, pay, pre-employment checks and other areas are filled in afterwards from the staff profile page.",
-    "submit": "Create"
+    "submit": "Create",
+    "codeTaken": "This staff code is already in use.",
+    "checkingCode": "Checking availability…"
   },
   "columns": {
     "name": "Name",
@@ -151,6 +153,8 @@
   },
   "employment": {
     "hint": "Bank, pay, employment history and contracts. The most sensitive area — visible to the staff member and HR; only HR can edit it.",
+    "overlap": "Employment periods must not overlap.",
+    "contractOutOfRange": "Each contract must fall within its employment period.",
     "bankHeading": "Bank & National Insurance",
     "bankName": "Bank name",
     "bankAccount": "Account number",
@@ -270,7 +274,8 @@
     "days": "days",
     "notes": "Notes",
     "confidential": "Confidential",
-    "markConfidential": "Mark as confidential (HR only)"
+    "markConfidential": "Mark as confidential (HR only)",
+    "overlap": "Absence periods must not overlap."
   },
   "timetable": {
     "hint": "Lessons, cover, detentions, school events, non-contact time, parent-evening appointments and leave for this staff member."

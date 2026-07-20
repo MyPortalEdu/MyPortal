@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Button } from 'primeng/button';
+import { MpButton } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Callout } from '../../../shared/components/callout/callout';
@@ -19,7 +19,7 @@ import { Permissions } from '../../../core/constants/permissions';
     Callout,
     BulletinsFeed,
     StaffTimetable,
-    Button,
+    MpButton,
     RouterLink,
     TranslocoDirective,
   ],
@@ -33,9 +33,7 @@ export class Home implements OnInit {
 
   readonly canEditAgencies = signal(false);
   readonly canEditAcademicYears = signal(false);
-  // null while loading — keeps the banners hidden until we know the answer,
-  // so they don't flash on every home visit before the underlying call
-  // resolves.
+  readonly canViewBulletins = signal(false);
   readonly schoolExists = signal<boolean | null>(null);
   readonly anyAcademicYears = signal<boolean | null>(null);
 
@@ -43,29 +41,29 @@ export class Home implements OnInit {
     this.canEditAgencies() && this.schoolExists() === false,
   );
 
-  // Same shape as the school-setup nudge: only surface when the viewer is
-  // empowered to fix it (EditAcademicYears) and we know for sure no AYs
-  // exist. Editors landing on a fresh install need a clear next step toward
-  // the wizard rather than just an empty timetable card.
   readonly showAcademicYearSetup = computed(() =>
     this.canEditAcademicYears() && this.anyAcademicYears() === false,
   );
 
   ngOnInit(): void {
     this.me.me().subscribe(me => {
-      this.canEditAgencies.set(me.permissions?.includes(Permissions.Agencies.EditAgencies) ?? false);
-      this.canEditAcademicYears.set(
-        me.permissions?.includes(Permissions.Curriculum.EditAcademicYears) ?? false,
-      );
+      const perms = me.permissions ?? [];
+      const canEditAcademicYears = perms.includes(Permissions.Curriculum.EditAcademicYears);
+      this.canEditAgencies.set(perms.includes(Permissions.Agencies.EditAgencies));
+      this.canEditAcademicYears.set(canEditAcademicYears);
+      this.canViewBulletins.set(perms.includes(Permissions.School.ViewSchoolBulletins));
+
+      // Only used to prompt a permitted editor to set up a year — so only the users who can act
+      // on it need the call. Users without the permission would just get a 403.
+      if (canEditAcademicYears) {
+        this.academicYears.list().subscribe({
+          next: rows => this.anyAcademicYears.set((rows ?? []).length > 0),
+          error: () => this.anyAcademicYears.set(null),
+        });
+      }
     });
     this.schools.getLocalName().subscribe(name => {
       this.schoolExists.set(name !== null);
-    });
-    // Fail-soft: on error, leave the signal at null so the banner stays hidden
-    // rather than nagging the user about a state we can't actually verify.
-    this.academicYears.list().subscribe({
-      next: rows => this.anyAcademicYears.set((rows ?? []).length > 0),
-      error: () => this.anyAcademicYears.set(null),
     });
   }
 }

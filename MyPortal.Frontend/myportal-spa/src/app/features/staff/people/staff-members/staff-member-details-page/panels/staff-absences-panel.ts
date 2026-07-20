@@ -9,11 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
-import { Textarea } from 'primeng/textarea';
-import { Checkbox } from 'primeng/checkbox';
+import { FormField, applyEach, form, maxLength, required, submit, validate } from '@angular/forms/signals';
+import { MpButton, MpCheckbox, MpDatePicker, MpTextarea } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -29,33 +26,50 @@ import { LookupSelect } from '../../../../../../shared/components/lookup-select/
 import { Loading } from '../../../../../../shared/components/loading/loading';
 import { EmptyState } from '../../../../../../shared/components/empty-state/empty-state';
 import { Field } from '../../../../../../shared/components/field/field';
+import { Callout } from '../../../../../../shared/components/callout/callout';
 import {
-  StaffAbsenceUpsertItem,
   StaffAbsencesResponse,
   StaffAbsencesUpsertRequest,
 } from '../../../../../../shared/types/staff-absences';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Absences & Leave area of the staff profile. Self-loads on mount (the shell only renders it while
- * its tab is active). Absences are relationship-scoped: HR (All) sees/edits everyone, a line manager
- * their reports (Managed), and only HR may mark a row confidential.
- */
+interface AbsenceFormRow {
+  id: string | null;
+  absenceTypeId: string | null;
+  illnessTypeId: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
+  isConfidential: boolean;
+  notes: string;
+}
+
+function absencesOverlap(rows: readonly AbsenceFormRow[]): boolean {
+  const ordered = rows
+    .filter(a => a.startDate && a.endDate)
+    .slice()
+    .sort((a, b) => a.startDate!.getTime() - b.startDate!.getTime());
+  for (let i = 1; i < ordered.length; i++) {
+    if (ordered[i].startDate!.getTime() <= ordered[i - 1].endDate!.getTime()) return true;
+  }
+  return false;
+}
+
 @Component({
   selector: 'mp-staff-absences-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
-    FormsModule,
-    Button,
-    DatePicker,
-    Textarea,
-    Checkbox,
+    FormField,
+    MpButton,
+    MpDatePicker,
+    MpTextarea,
+    MpCheckbox,
     LookupSelect,
     Loading,
     EmptyState,
     Field,
+    Callout,
     TranslocoDirective,
   ],
   providers: [
@@ -74,18 +88,35 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
   readonly relationship = input<StaffRelationship>();
 
   protected readonly loading = signal(false);
-  override readonly saving = signal(false);
   override readonly editing = signal(false);
 
   protected readonly absences = signal<StaffAbsencesResponse | null>(null);
-  protected readonly absenceRows = signal<StaffAbsenceUpsertItem[]>([]);
+  protected readonly model = signal<{ absences: AbsenceFormRow[] }>({ absences: [] });
+  protected readonly f = form(this.model, path => {
+    applyEach(path.absences, item => {
+      required(item.absenceTypeId);
+      required(item.startDate);
+      required(item.endDate);
+      maxLength(item.notes, 256);
+      validate(item.endDate, ({ value, valueOf }) => {
+        const end = value();
+        const start = valueOf(item.startDate);
+        return !end || !start || end.getTime() >= start.getTime()
+          ? undefined
+          : { kind: 'endBeforeStart', message: 'staff-members.absences.endBeforeStart' };
+      });
+    });
+    validate(path.absences, ({ value }) =>
+      absencesOverlap(value())
+        ? { kind: 'overlap', message: 'staff-members.absences.overlap' }
+        : undefined,
+    );
+  });
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the absence payload so the editor is self-contained.
   protected readonly absenceTypes = computed(() => this.absences()?.absenceTypes ?? []);
   protected readonly illnessTypes = computed(() => this.absences()?.illnessTypes ?? []);
 
-  // Absence edit: HR (All) or the line manager (Managed) — no self-edit (the record is HR/manager-owned).
   override readonly canEdit = computed(() => {
     const perms = this.permissions();
     const rel = this.relationship();
@@ -94,19 +125,16 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  // Only HR (All scope) may mark an absence confidential; a line manager never sees or sets the flag.
   protected readonly canManageConfidential = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffAbsences),
   );
 
-  // Each absence row needs a type, a start date and an end date no earlier than it.
-  override readonly valid = computed(() =>
-    this.absenceRows().every(
-      a => !!a.absenceTypeId && !!a.startDate && !!a.endDate && a.endDate >= a.startDate,
-    ),
-  );
+  override readonly saving = computed(() => this.f().submitting());
+  override readonly valid = computed(() => this.f().valid());
 
-  private readonly form = computed(() => JSON.stringify({ absences: this.absenceRows() }));
+  protected readonly hasOverlap = computed(() => absencesOverlap(this.model().absences));
+
+  private readonly form = computed(() => JSON.stringify(this.model()));
 
   override readonly dirty = computed(
     () => this.absences() != null && this.snapshot() !== this.form(),
@@ -141,82 +169,71 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
   }
 
   override async save(): Promise<void> {
-    if (!this.canEdit() || !this.valid() || this.saving()) return;
-    this.saving.set(true);
-
-    const payload: StaffAbsencesUpsertRequest = {
-      absences: this.absenceRows().map(a => ({
-        id: a.id ?? null,
-        absenceTypeId: a.absenceTypeId,
-        illnessTypeId: a.illnessTypeId ?? null,
-        startDate: a.startDate,
-        endDate: a.endDate,
-        isConfidential: a.isConfidential,
-        notes: this.normalise(a.notes),
-      })),
-    };
-
-    try {
-      await firstValueFrom(this.data.updateAbsences(this.staffMemberId(), payload));
+    if (!this.canEdit() || !this.dirty()) return;
+    await submit(this.f, async () => {
+      const payload: StaffAbsencesUpsertRequest = {
+        absences: this.model().absences.map(a => ({
+          id: a.id,
+          absenceTypeId: a.absenceTypeId,
+          illnessTypeId: a.illnessTypeId,
+          startDate: a.startDate?.toISOString() ?? null,
+          endDate: a.endDate?.toISOString() ?? null,
+          isConfidential: a.isConfidential,
+          notes: this.normalise(a.notes),
+        })),
+      };
+      try {
+        await firstValueFrom(this.data.updateAbsences(this.staffMemberId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.saveAbsencesError'));
+        return;
+      }
       this.notify.success(this.transloco.translate('staff-members.savedAbsencesToast'));
       this.editing.set(false);
-      // Refetch so server-assigned ids (new rows) become the baseline.
       this.load();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.saveAbsencesError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   private apply(row: StaffAbsencesResponse | null): void {
-    this.absenceRows.set(
-      (row?.absences ?? []).map(a => ({
+    this.model.set({
+      absences: (row?.absences ?? []).map(a => ({
         id: a.id,
         absenceTypeId: a.absenceTypeId,
         illnessTypeId: a.illnessTypeId ?? null,
-        startDate: a.startDate,
-        endDate: a.endDate,
+        startDate: a.startDate ? new Date(a.startDate) : null,
+        endDate: a.endDate ? new Date(a.endDate) : null,
         isConfidential: a.isConfidential,
-        notes: a.notes ?? null,
+        notes: a.notes ?? '',
       })),
-    );
+    });
+    this.f().reset();
     this.snapshot.set(this.form());
   }
 
   protected addAbsence(): void {
-    this.absenceRows.update(rows => [
-      ...rows,
-      {
-        id: null,
-        absenceTypeId: null,
-        illnessTypeId: null,
-        startDate: null,
-        endDate: null,
-        isConfidential: false,
-        notes: null,
-      },
-    ]);
+    this.model.update(m => ({
+      absences: [
+        ...m.absences,
+        {
+          id: null,
+          absenceTypeId: null,
+          illnessTypeId: null,
+          startDate: null,
+          endDate: null,
+          isConfidential: false,
+          notes: '',
+        },
+      ],
+    }));
   }
 
   protected removeAbsence(index: number): void {
-    this.absenceRows.update(rows => rows.filter((_, i) => i !== index));
+    this.model.update(m => ({ absences: m.absences.filter((_, i) => i !== index) }));
   }
 
-  protected patchAbsence<K extends keyof StaffAbsenceUpsertItem>(
-    index: number,
-    key: K,
-    value: StaffAbsenceUpsertItem[K],
-  ): void {
-    this.absenceRows.update(rows => rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
-  }
-
-  // Whole days inclusive of both ends — the simple span a school cares about.
-  protected absenceDays(a: StaffAbsenceUpsertItem): number | null {
+  protected absenceDays(a: AbsenceFormRow): number | null {
     if (!a.startDate || !a.endDate) return null;
-    const start = new Date(a.startDate);
-    const end = new Date(a.endDate);
-    const ms = end.getTime() - start.getTime();
+    const ms = a.endDate.getTime() - a.startDate.getTime();
     if (ms < 0) return null;
     return Math.round(ms / 86_400_000) + 1;
   }

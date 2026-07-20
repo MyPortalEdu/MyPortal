@@ -43,6 +43,10 @@
       "holidays": "Holidays",
       "review": "Review"
     },
+    "validation": {
+      "termsOverlap": "Academic terms must not overlap.",
+      "holidaysOutOfSpan": "School holidays must fall within the academic year's term dates."
+    },
     "setup": {
       "title": "Cycle, terms, and pastoral structure",
       "description": "Set the timetable cycle, school week shape, and term dates. Optionally copy the pastoral structure from an existing year.",

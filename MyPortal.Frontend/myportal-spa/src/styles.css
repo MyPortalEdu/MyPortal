@@ -1,210 +1,183 @@
-@import "@fontsource-variable/inter";
-@import "primeicons/primeicons.css";
+@import '@fontsource-variable/inter';
+@import '@angular/cdk/overlay-prebuilt.css';
 
-/* Layer order matters for the shared `.mp-*` classes below. Putting `mp-components`
-   BEFORE `tailwind-utilities` means any Tailwind utility (e.g. `bg-primary/10`,
-   `border-primary/40`, `text-primary`) stacked on top of `.mp-chip` overrides the
-   chip's defaults, regardless of source order within the file. Without this split
-   the chip's `border: 1px solid …` shorthand and `background: transparent` would
-   beat single-property utilities in the same layer and active states wouldn't
-   show their tint. */
-@layer tailwind-base, primeng, mp-components, tailwind-utilities;
-
-@layer tailwind-base {
-  @tailwind base;
+.cdk-overlay-container {
+  z-index: 1200;
 }
 
-@layer tailwind-utilities {
-  @tailwind components;
-  @tailwind utilities;
+@layer tailwind-base, mp-components, tailwind-utilities;
+
+@import 'tailwindcss/theme.css' layer(tailwind-base);
+@import 'tailwindcss/preflight.css' layer(tailwind-base);
+@import 'tailwindcss/utilities.css' layer(tailwind-utilities);
+
+@source '../libs/ui/src';
+
+@custom-variant dark (&:where(.mp-dark, .mp-dark *));
+
+@layer tailwind-base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
 html, body { height: 100%; }
 
-/* ─── Radius scale ────────────────────────────────────────────────────────
-   One disciplined ramp instead of the 4/6/8/12/14px scatter the app grew.
-   Mirrors Tailwind's `rounded`(4) / `rounded-md`(6) / `rounded-lg`(8) so
-   templates can use those utilities and land on the same values.
-     control  4px  — inputs, buttons (matches formField.borderRadius)
-     surface  6px  — cards, panels, page-header (matches content.borderRadius)
-     overlay  8px  — dialogs, popovers, menus (float above, read distinct)
-   Use `rounded-md` for any hand-built surface so it tracks `p-card`. */
-:root {
-  --mp-radius-control: 4px;
-  --mp-radius-surface: 6px;
-  --mp-radius-overlay: 8px;
+@theme {
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system,
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --radius-control: 4px;
+  --radius-surface: 6px;
+  --radius-overlay: 8px;
+
+  --shadow-overlay: 0 8px 24px -6px rgb(0 0 0 / 0.18), 0 2px 6px -2px rgb(0 0 0 / 0.12);
 }
 
-/* MyPortal brand font. Aura preset doesn't set a font-family of its own, so the
-   body declaration here flows through to every PrimeNG component too. */
+:root {
+  color-scheme: light;
+
+  --surface-0: #ffffff;
+  --surface-50: #f8fafc;
+  --surface-100: #f1f5f9;
+  --surface-200: #e2e8f0;
+  --surface-300: #cbd5e1;
+  --surface-400: #94a3b8;
+  --surface-500: #64748b;
+  --surface-600: #475569;
+  --surface-700: #334155;
+  --surface-800: #1e293b;
+  --surface-900: #0f172a;
+  --surface-950: #020617;
+
+  --primary-50: #eef2ff;
+  --primary-100: #e0e7ff;
+  --primary-200: #c7d2fe;
+  --primary-300: #a5b4fc;
+  --primary-400: #818cf8;
+  --primary-500: #6366f1;
+  --primary-600: #4f46e5;
+  --primary-700: #4338ca;
+  --primary-800: #3730a3;
+  --primary-900: #312e81;
+  --primary-950: #1e1b4b;
+
+  --background: #ffffff;
+  --foreground: #334155;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #334155;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #334155;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --input-hover: #94a3b8;
+  --ring: #6366f1;
+}
+
+.mp-dark {
+  color-scheme: dark;
+
+  --surface-0: #ffffff;
+  --surface-50: #fafafa;
+  --surface-100: #f4f4f5;
+  --surface-200: #e4e4e7;
+  --surface-300: #d4d4d8;
+  --surface-400: #a1a1aa;
+  --surface-500: #71717a;
+  --surface-600: #52525b;
+  --surface-700: #3f3f46;
+  --surface-800: #27272a;
+  --surface-900: #18181b;
+  --surface-950: #09090b;
+
+  --background: #18181b;
+  --foreground: #ffffff;
+  --primary: #818cf8;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #ffffff;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #3f3f46;
+  --input: #52525b;
+  --input-hover: #71717a;
+  --ring: #818cf8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-hover: var(--input-hover);
+  --color-ring: var(--ring);
+
+  --color-surface-0: var(--surface-0);
+  --color-surface-50: var(--surface-50);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-surface-400: var(--surface-400);
+  --color-surface-500: var(--surface-500);
+  --color-surface-600: var(--surface-600);
+  --color-surface-700: var(--surface-700);
+  --color-surface-800: var(--surface-800);
+  --color-surface-900: var(--surface-900);
+  --color-surface-950: var(--surface-950);
+
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+  --color-primary-950: var(--primary-950);
+}
+
 body {
   font-family: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system,
                'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.875rem;
   font-feature-settings: 'cv11', 'ss01', 'ss03';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Global PrimeNG density. Aura's default form-field fontSize is 1rem and the
-   preset's typings only expose fontSize overrides on the sm/lg variants — so
-   to make the *default* size feel like "small" we drop the base .p-component
-   font-size here. Buttons, inputs, selects, checkboxes all inherit from this.
-   Pair with the formField paddingX/Y override in app.config.ts.
-   Components with their own typography (dialog header, card title) keep
-   their explicit sizes via higher-specificity rules. */
-.p-component {
-  font-size: 0.875rem;
-}
-
-/* Hairline surface treatment. The app's visual language is border-defined, not
-   shadow-defined: cards/panels read as crisp 1px-edged surfaces and elevation
-   (real shadow) is reserved for things that float — dialogs, popovers, menus.
-   Aura ships p-card with a soft drop shadow and no border; flip that. This is
-   the single source of truth for "what a surface looks like" — `.mp-surface`
-   below matches it for hand-built surfaces that don't warrant a full p-card. */
-.p-card {
-  border: 1px solid var(--p-content-border-color);
-  box-shadow: none;
-}
-
-/* PrimeNG card title size override — Aura's default sits around 1.25rem which is
-   too prominent for our compact card density. Centralised here so individual
-   components don't need per-card overrides. */
-.p-card-title {
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-/* Button density pinned to match the tightened form-field tokens in
-   app.config.ts. v20's typed ButtonDesignTokens don't expose paddingX/Y or
-   iconOnlyWidth at the root, so we set the generated CSS vars directly.
-   Net effect: a Save button next to an InputText sits at the same height to
-   the pixel, and small/large variants stay proportional. */
-.p-button {
-  --p-button-padding-x: 0.625rem;
-  --p-button-padding-y: 0.25rem;
-  --p-button-border-radius: 4px;
-  --p-button-icon-only-width: 2rem;
-}
-
-/* PrimeNG Select / MultiSelect each define their own padding at the component
-   level rather than referencing {form.field.padding.*}, so the token override
-   in app.config.ts doesn't reach them — they end up ~40px tall while their
-   InputText neighbours sit at ~30. Pin via the generated CSS vars (same
-   pattern as the button override above) AND drop the wrapper's residual
-   min-height so it actually shrinks to the new padded label.
-   Without `min-height: 0` Aura keeps the wrapper at ~40px even when the label
-   is 30px-sized, causing the label to top-align in a too-tall container.
-   `--p-select-color` is set explicitly to match the form-field text color —
-   Aura's default leans muted for selects, which read as washed-out next to
-   the dark InputText values in the same row.
-   DatePicker and AutoComplete use InputText internally so the formField token
-   already covers them; revisit if a screen shows otherwise. */
-.p-select {
-  --p-select-padding-x: 0.5rem;
-  --p-select-padding-y: 0.25rem;
-  --p-select-border-radius: 4px;
-  --p-select-color: var(--p-form-field-color);
-  --p-select-font-size: 0.875rem;
-  min-height: 0;
-}
-
-.p-multiselect {
-  --p-multiselect-padding-x: 0.5rem;
-  --p-multiselect-padding-y: 0.25rem;
-  --p-multiselect-border-radius: 4px;
-  --p-multiselect-color: var(--p-form-field-color);
-  --p-multiselect-font-size: 0.875rem;
-  min-height: 0;
-}
-
-/* The global .p-component { font-size: 0.875rem } rule only applies to the
-   select wrapper; PrimeNG sets an explicit font-size on the inner label which
-   breaks the cascade. Pin it on the label directly so the var override above
-   isn't the only line of defence (some Aura preset versions don't generate
-   a --p-select-font-size var at all). */
-.p-select-label,
-.p-multiselect-label {
-  font-size: 0.875rem;
-}
-
-/* MIS-grade card body padding. Aura's default is ~1.25rem on every edge — over
-   a 5-card page that's 40px of vertical space that could be carrying data.
-   1rem reads as "container with breathing room" rather than "marketing hero".
-   Token coverage on `card.body.padding` is patchy across PrimeNG versions, so
-   we pin it via CSS for consistency. */
-.p-card-body {
-  padding: 1rem;
-}
-
-/* Table row density. ~28px row height (vs Aura's default ~40px) roughly
-   doubles rows-per-screen, which is the headline functional win for a data
-   tool — staff attendance, behaviour logs, lookups. Block padding does the
-   heavy lifting; inline padding stays a touch generous so column dividers
-   read clearly. */
-.p-datatable-thead > tr > th,
-.p-datatable-tbody > tr > td {
-  padding-block: 0.375rem;
-  padding-inline: 0.75rem;
-}
-
-/* Inline column-filter inputs (display="row") sit in a tight header row alongside
-   the title + sort. The global form-field scale would still have them dominate
-   the row; drop padding + font a touch further so the filter row reads as
-   "search inputs" rather than full-weight form fields. Scoped to thead so
-   form-page inputs are unaffected. Targets the wrapper element types so we
-   don't have to know the exact PrimeNG inner-class names. */
-.p-datatable-thead p-columnfilter input,
-.p-datatable-thead p-columnfilter .p-inputtext {
-  padding-block: 0.1875rem;
-  padding-inline: 0.5rem;
-  font-size: 0.8125rem;
-}
-
-/* Filter-row trigger button (the funnel icon that opens the match-mode menu)
-   shrinks to match — otherwise it towers over the smaller input next to it. */
-.p-datatable-thead .p-columnfilter-menu-button,
-.p-datatable-thead .p-columnfilter-clear-button {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-/* Dialogs we render edge-to-edge — our own header/body/footer rows handle
-   their own padding and want to extend to the dialog's rounded corners.
-   Without this, PrimeNG's `.p-dialog-content` padding leaves a gutter around
-   any bg-emphasis footer (or any other full-bleed treatment). Add the
-   `mp-flush-dialog` styleClass to a p-dialog to opt in. */
-.mp-flush-dialog .p-dialog-content {
-  padding: 0;
-}
-
-/* ─── Shared component utilities ──────────────────────────────────────────
-   These are the few CSS patterns that repeat across the app and earn a named
-   class. Everything else should be Tailwind + tailwindcss-primeui utilities
-   inline in the template (border-surface, text-muted-color, bg-emphasis,
-   bg-primary/10, …). Add to this list only when you've got a pattern living
-   in two or more components — until then, keep it inline.
-
-   These live in the `mp-components` cascade layer, ordered BEFORE
-   `tailwind-utilities`, so Tailwind utilities stacked on top (for active /
-   variant states) win cleanly. Properties are written longhand so single-
-   property utilities can override them surgically without needing the layer
-   bump to do all the heavy lifting. */
 @layer mp-components {
-  /* Hand-built surface that matches `.p-card` exactly (border, radius, bg) for
-     places a full p-card is overkill — the page-header bar and dashboard
-     widgets. Keeps every "container" tracking one source of truth so the old
-     `bg-content rounded-xl shadow-sm` (12px + shadow) divergence can't recur. */
   .mp-surface {
-    background-color: var(--p-content-background);
-    border: 1px solid var(--p-content-border-color);
-    border-radius: var(--mp-radius-surface);
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-surface);
   }
 
-  /* Heading type scale. Four ad-hoc heading treatments (h2.text-lg.bold,
-     h3.text-base, card-title 1rem, page-header text-lg) collapse to three
-     roles. Applied by the shared header components (mp-page-header,
-     mp-section-header, mp-dialog) so pages don't hand-pick sizes. */
   .mp-title {
     font-size: 1.125rem;
     font-weight: 600;
@@ -221,13 +194,9 @@ body {
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--p-text-muted-color);
+    color: var(--muted-foreground);
   }
 
-  /* Pill-style toggle. Defaults to the muted/unselected state; the active
-     state is supplied per-instance — Tailwind classes (`text-primary
-     border-primary/40 bg-primary/10`) for fixed primary tinting, or inline
-     styles for dynamic per-row colouring. */
   .mp-chip {
     display: inline-flex;
     align-items: center;
@@ -236,78 +205,51 @@ body {
     border-radius: 9999px;
     border-width: 1px;
     border-style: solid;
-    border-color: var(--p-content-border-color);
+    border-color: var(--border);
     background-color: transparent;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: var(--p-text-muted-color);
+    color: var(--muted-foreground);
     cursor: pointer;
     transition: background-color 120ms, color 120ms, border-color 120ms;
   }
   .mp-chip:hover {
-    background-color: var(--p-content-hover-background);
-    color: var(--p-text-color);
+    background-color: var(--muted);
+    color: var(--foreground);
   }
 
-  /* Active state for `.mp-chip` when the tint is the app primary — used by the
-     form's audience picker and the feed's "All" filter. Per-category chips in
-     the feed handle their active state via inline styles (dynamic hex per
-     category) and bypass this class. Kept in our CSS rather than as a Tailwind
-     `border-primary/40 bg-primary/10` utility stack on the element because
-     `tailwindcss-primeui`'s opacity modifiers don't reliably flow through
-     `[ngClass]` object bindings during template scanning. */
   .mp-chip-active {
-    color: var(--p-primary-color);
-    border-color: color-mix(in srgb, var(--p-primary-color) 40%, transparent);
-    background-color: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+    color: var(--primary);
+    border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+    background-color: color-mix(in srgb, var(--primary) 10%, transparent);
   }
   .mp-chip-active:hover {
-    /* Override the muted-hover from `.mp-chip:hover` so hovering an active
-       chip doesn't wash out the primary tint. */
-    color: var(--p-primary-color);
-    background-color: color-mix(in srgb, var(--p-primary-color) 15%, transparent);
+    color: var(--primary);
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
   }
 
-  /* Round icon-only button — primarily for dialog close (X) buttons. */
   .mp-icon-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: 9999px;
     background-color: transparent;
     border: 0;
     cursor: pointer;
-    color: var(--p-text-muted-color);
+    color: var(--muted-foreground);
   }
   .mp-icon-button:hover {
-    background-color: var(--p-content-hover-background);
-    color: var(--p-text-color);
+    background-color: var(--muted);
+    color: var(--foreground);
   }
 
-  /* Sidebar nav item states, built on PrimeNG semantic vars so they flip with
-     the theme automatically (no light/dark Tailwind class pairs to keep in
-     sync). `--active` is the selected section; `--hoverable` is an idle,
-     enabled item that tints on hover. Used by the staff profile section nav. */
   .mp-nav-item--active {
-    background-color: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
-    color: var(--p-primary-color);
+    background-color: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
   }
   .mp-nav-item--hoverable:hover {
-    background-color: var(--p-content-hover-background);
-  }
-
-  /* Destructive p-menu item — paints the label + icon danger-red. Applied via a
-     MenuItem's `styleClass` (e.g. the staff profile's Delete action). Lives in
-     global CSS because p-menu renders with `appendTo="body"`, outside any
-     component's encapsulated styles. */
-  .mp-menu-item--danger .p-menu-item-link .p-menu-item-icon,
-  .mp-menu-item--danger .p-menu-item-link .p-menu-item-label {
-    color: var(--p-red-600);
-  }
-  .mp-menu-item--danger .p-menu-item-link:hover .p-menu-item-icon,
-  .mp-menu-item--danger .p-menu-item-link:hover .p-menu-item-label {
-    color: var(--p-red-700);
+    background-color: var(--muted);
   }
 }

@@ -3,7 +3,7 @@
     <mp-loading></mp-loading>
   } @else if (performance()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.performanceDetails') }}</h3>
-    <p class="text-sm text-muted-color mb-4">{{ t('staff-members.performance.hint') }}</p>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('staff-members.performance.hint') }}</p>
 
     @if (editing() && !valid()) {
       <mp-callout severity="warn" [title]="t('common.validation.missingTitle')" class="mb-4 block">
@@ -14,52 +14,55 @@
     <div class="flex flex-col gap-6">
       <section>
         <mp-section-header icon="fa-solid fa-clipboard-user" [title]="t('staff-members.performance.reviewsHeading')"></mp-section-header>
-        @if (!reviews().length) {
+        @if (!model().reviews.length) {
           <mp-empty-state icon="fa-solid fa-clipboard-user" [message]="t('staff-members.performance.noReviews')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (r of reviews(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+          @for (field of f.reviews; track $index; let i = $index) {
+            @let r = field().value();
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ r.cycleName || t('staff-members.performance.review') }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ r.cycleName || t('staff-members.performance.review') }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.performance.removeReview')" (onClick)="removeReview(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.performance.removeReview')" (click)="removeReview(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.performance.cycle')">
-                    <input pInputText maxlength="128" [ngModel]="r.cycleName ?? ''" (ngModelChange)="patchReview(i, 'cycleName', $event)" />
+                    <input mpInput [formField]="field.cycleName" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.status')">
-                    <mp-lookup-select [options]="reviewStatuses()" [value]="r.statusId ?? null" (valueChange)="patchReview(i, 'statusId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="reviewStatuses()" [formField]="field.statusId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.reviewer')">
-                    <mp-lookup-select [options]="staff()" [value]="r.reviewerId ?? null" (valueChange)="patchReview(i, 'reviewerId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="staff()" [formField]="field.reviewerId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.overallRating')">
-                    <mp-lookup-select [options]="observationOutcomes()" [value]="r.overallRatingId ?? null" (valueChange)="patchReview(i, 'overallRatingId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="observationOutcomes()" [formField]="field.overallRatingId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.reviewDate')">
-                    <p-datepicker [ngModel]="toDate(r.reviewDate)" (ngModelChange)="patchReview(i, 'reviewDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [formField]="field.reviewDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.nextReview')">
-                    <p-datepicker [ngModel]="toDate(r.nextReviewDate)" (ngModelChange)="patchReview(i, 'nextReviewDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [formField]="field.nextReviewDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.summary')">
-                    <textarea pTextarea rows="3" [ngModel]="r.summary ?? ''" (ngModelChange)="patchReview(i, 'summary', $event)"></textarea>
+                    <textarea mpTextarea rows="3" [formField]="field.summary"></textarea>
                   </mp-field>
                 </div>
               } @else {
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(observationOutcomes(), r.overallRatingId) }}
                   · {{ lookupLabel(reviewStatuses(), r.statusId) }}
-                  @if (r.reviewDate) { · {{ toDate(r.reviewDate) | date:'mediumDate' }} }
+                  @if (r.reviewDate) { · {{ r.reviewDate | date:'mediumDate' }} }
                   @if (r.reviewerId) { · {{ t('staff-members.performance.reviewer') }}: {{ lookupLabel(staff(), r.reviewerId) }} }
                 </div>
                 @if (r.summary) {
-                  <div class="text-sm text-muted-color mt-1 whitespace-pre-wrap">{{ r.summary }}</div>
+                  <div class="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{{ r.summary }}</div>
                 }
               }
             </div>
@@ -67,66 +70,71 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.performance.addReview')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addReview()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addReview()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.performance.addReview') }}
+            </button>
           </div>
         }
       </section>
 
       <section>
         <mp-section-header icon="fa-solid fa-bullseye" [title]="t('staff-members.performance.objectivesHeading')"></mp-section-header>
-        @if (!objectives().length) {
+        @if (!model().objectives.length) {
           <mp-empty-state icon="fa-solid fa-bullseye" [message]="t('staff-members.performance.noObjectives')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (o of objectives(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+          @for (field of f.objectives; track $index; let i = $index) {
+            @let o = field().value();
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ t('staff-members.performance.objective') }}{{ objectives().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.performance.objective') }}{{ model().objectives.length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.performance.removeObjective')" (onClick)="removeObjective(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.performance.removeObjective')" (click)="removeObjective(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.objectiveTitle')" [required]="true">
-                    <input pInputText required maxlength="256" [ngModel]="o.title" (ngModelChange)="patchObjective(i, 'title', $event)" [invalid]="!o.title.trim()" />
+                    <input mpInput [formField]="field.title" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.category')">
-                    <mp-lookup-select [options]="objectiveCategories()" [value]="o.categoryId ?? null" (valueChange)="patchObjective(i, 'categoryId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="objectiveCategories()" [formField]="field.categoryId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.cycle')">
-                    <mp-lookup-select [options]="reviewOptions()" [value]="o.reviewId ?? null" (valueChange)="patchObjective(i, 'reviewId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="reviewOptions()" [formField]="field.reviewId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.status')">
-                    <mp-lookup-select [options]="objectiveStatuses()" [value]="o.statusId ?? null" (valueChange)="patchObjective(i, 'statusId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="objectiveStatuses()" [formField]="field.statusId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.dueDate')">
-                    <p-datepicker [ngModel]="toDate(o.dueDate)" (ngModelChange)="patchObjective(i, 'dueDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [formField]="field.dueDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.objectiveDescription')">
-                    <textarea pTextarea rows="2" [ngModel]="o.description ?? ''" (ngModelChange)="patchObjective(i, 'description', $event)"></textarea>
+                    <textarea mpTextarea rows="2" [formField]="field.description"></textarea>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.successCriteria')">
-                    <textarea pTextarea rows="2" [ngModel]="o.successCriteria ?? ''" (ngModelChange)="patchObjective(i, 'successCriteria', $event)"></textarea>
+                    <textarea mpTextarea rows="2" [formField]="field.successCriteria"></textarea>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.progressNotes')">
-                    <textarea pTextarea rows="2" [ngModel]="o.progressNotes ?? ''" (ngModelChange)="patchObjective(i, 'progressNotes', $event)"></textarea>
+                    <textarea mpTextarea rows="2" [formField]="field.progressNotes"></textarea>
                   </mp-field>
                 </div>
               } @else {
                 <div class="text-sm font-medium">{{ o.title }}</div>
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   @if (o.categoryId) { {{ lookupLabel(objectiveCategories(), o.categoryId) }} · }
                   {{ lookupLabel(objectiveStatuses(), o.statusId) }}
-                  @if (o.dueDate) { · {{ t('staff-members.performance.dueDate') }} {{ toDate(o.dueDate) | date:'mediumDate' }} }
+                  @if (o.dueDate) { · {{ t('staff-members.performance.dueDate') }} {{ o.dueDate | date:'mediumDate' }} }
                 </div>
                 @if (o.description) {
-                  <div class="text-sm text-muted-color mt-1 whitespace-pre-wrap">{{ o.description }}</div>
+                  <div class="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{{ o.description }}</div>
                 }
                 @if (o.successCriteria) {
-                  <div class="text-sm text-muted-color mt-1"><span class="font-medium">{{ t('staff-members.performance.successCriteria') }}:</span> {{ o.successCriteria }}</div>
+                  <div class="text-sm text-muted-foreground mt-1"><span class="font-medium">{{ t('staff-members.performance.successCriteria') }}:</span> {{ o.successCriteria }}</div>
                 }
               }
             </div>
@@ -134,72 +142,77 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.performance.addObjective')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addObjective()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addObjective()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.performance.addObjective') }}
+            </button>
           </div>
         }
       </section>
 
       <section>
         <mp-section-header icon="fa-solid fa-eye" [title]="t('staff-members.performance.observationsHeading')"></mp-section-header>
-        @if (!observations().length) {
+        @if (!model().observations.length) {
           <mp-empty-state icon="fa-solid fa-eye" [message]="t('staff-members.performance.noObservations')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (o of observations(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+          @for (field of f.observations; track $index; let i = $index) {
+            @let o = field().value();
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ t('staff-members.performance.observation') }}{{ observations().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.performance.observation') }}{{ model().observations.length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.performance.removeObservation')" (onClick)="removeObservation(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.performance.removeObservation')" (click)="removeObservation(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.performance.observationDate')" [required]="true">
-                    <p-datepicker required [ngModel]="toDate(o.date)" (ngModelChange)="patchObservation(i, 'date', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full" [invalid]="!o.date"></p-datepicker>
+                    <mp-date-picker [formField]="field.date" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.observer')" [required]="true">
-                    <mp-lookup-select [options]="staff()" [value]="o.observerId" (valueChange)="patchObservation(i, 'observerId', $event)" [invalid]="!o.observerId"></mp-lookup-select>
+                    <mp-lookup-select [options]="staff()" [formField]="field.observerId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.outcome')" [required]="true">
-                    <mp-lookup-select [options]="observationOutcomes()" [value]="o.outcomeId" (valueChange)="patchObservation(i, 'outcomeId', $event)" [invalid]="!o.outcomeId"></mp-lookup-select>
+                    <mp-lookup-select [options]="observationOutcomes()" [formField]="field.outcomeId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.focus')">
-                    <input pInputText maxlength="128" [ngModel]="o.focus ?? ''" (ngModelChange)="patchObservation(i, 'focus', $event)" />
+                    <input mpInput [formField]="field.focus" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.subjectObserved')">
-                    <input pInputText maxlength="128" [ngModel]="o.subjectObserved ?? ''" (ngModelChange)="patchObservation(i, 'subjectObserved', $event)" />
+                    <input mpInput [formField]="field.subjectObserved" />
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.strengths')">
-                    <textarea pTextarea rows="2" [ngModel]="o.strengths ?? ''" (ngModelChange)="patchObservation(i, 'strengths', $event)"></textarea>
+                    <textarea mpTextarea rows="2" [formField]="field.strengths"></textarea>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.areasForDevelopment')">
-                    <textarea pTextarea rows="2" [ngModel]="o.areasForDevelopment ?? ''" (ngModelChange)="patchObservation(i, 'areasForDevelopment', $event)"></textarea>
+                    <textarea mpTextarea rows="2" [formField]="field.areasForDevelopment"></textarea>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.notes')">
-                    <textarea pTextarea rows="2" [ngModel]="o.notes ?? ''" (ngModelChange)="patchObservation(i, 'notes', $event)"></textarea>
+                    <textarea mpTextarea rows="2" [formField]="field.notes"></textarea>
                   </mp-field>
                 </div>
               } @else {
                 <div class="text-sm">
                   <span class="font-medium">{{ lookupLabel(observationOutcomes(), o.outcomeId) }}</span>
-                  <span class="text-muted-color"> · {{ toDate(o.date) | date:'mediumDate' }}</span>
-                  @if (o.focus) { <span class="text-muted-color"> · {{ o.focus }}</span> }
+                  <span class="text-muted-foreground"> · {{ o.date | date:'mediumDate' }}</span>
+                  @if (o.focus) { <span class="text-muted-foreground"> · {{ o.focus }}</span> }
                 </div>
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   {{ t('staff-members.performance.observer') }}: {{ lookupLabel(staff(), o.observerId) }}
                   @if (o.subjectObserved) { · {{ o.subjectObserved }} }
                 </div>
                 @if (o.strengths) {
-                  <div class="text-sm text-muted-color mt-1"><span class="font-medium">{{ t('staff-members.performance.strengths') }}:</span> {{ o.strengths }}</div>
+                  <div class="text-sm text-muted-foreground mt-1"><span class="font-medium">{{ t('staff-members.performance.strengths') }}:</span> {{ o.strengths }}</div>
                 }
                 @if (o.areasForDevelopment) {
-                  <div class="text-sm text-muted-color mt-1"><span class="font-medium">{{ t('staff-members.performance.areasForDevelopment') }}:</span> {{ o.areasForDevelopment }}</div>
+                  <div class="text-sm text-muted-foreground mt-1"><span class="font-medium">{{ t('staff-members.performance.areasForDevelopment') }}:</span> {{ o.areasForDevelopment }}</div>
                 }
                 @if (o.notes) {
-                  <div class="text-sm text-muted-color mt-1 whitespace-pre-wrap">{{ o.notes }}</div>
+                  <div class="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{{ o.notes }}</div>
                 }
               }
             </div>
@@ -207,62 +220,67 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.performance.addObservation')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addObservation()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addObservation()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.performance.addObservation') }}
+            </button>
           </div>
         }
       </section>
 
       <section>
         <mp-section-header icon="fa-solid fa-certificate" [title]="t('staff-members.performance.trainingHeading')"></mp-section-header>
-        @if (!trainingRecords().length) {
+        @if (!model().trainingRecords.length) {
           <mp-empty-state icon="fa-solid fa-certificate" [message]="t('staff-members.performance.noTraining')"></mp-empty-state>
         }
         <div class="flex flex-col gap-3">
-          @for (tr of trainingRecords(); track $index; let i = $index) {
-            <div class="rounded bg-emphasis p-3">
+          @for (field of f.trainingRecords; track $index; let i = $index) {
+            @let tr = field().value();
+            <div class="rounded bg-muted p-3">
               <div class="flex items-start justify-between gap-2 mb-2">
-                <span class="text-sm font-medium text-muted-color">{{ t('staff-members.performance.training') }}{{ trainingRecords().length > 1 ? ' ' + (i + 1) : '' }}</span>
+                <span class="text-sm font-medium text-muted-foreground">{{ t('staff-members.performance.training') }}{{ model().trainingRecords.length > 1 ? ' ' + (i + 1) : '' }}</span>
                 @if (editing()) {
-                  <p-button icon="fa-solid fa-trash" severity="danger" [text]="true" size="small"
-                    [ariaLabel]="t('staff-members.performance.removeTraining')" (onClick)="removeTrainingRecord(i)"></p-button>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.performance.removeTraining')" (click)="removeTrainingRecord(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 }
               </div>
               @if (editing()) {
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.performance.course')" [required]="true">
-                    <mp-lookup-select [options]="trainingCourses()" [value]="tr.trainingCourseId" (valueChange)="patchTrainingRecord(i, 'trainingCourseId', $event)" [invalid]="!tr.trainingCourseId"></mp-lookup-select>
+                    <mp-lookup-select [options]="trainingCourses()" [formField]="field.trainingCourseId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.status')" [required]="true">
-                    <mp-lookup-select [options]="trainingStatuses()" [value]="tr.statusId" (valueChange)="patchTrainingRecord(i, 'statusId', $event)" [invalid]="!tr.statusId"></mp-lookup-select>
+                    <mp-lookup-select [options]="trainingStatuses()" [formField]="field.statusId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.completedDate')">
-                    <p-datepicker [ngModel]="toDate(tr.completedDate)" (ngModelChange)="patchTrainingRecord(i, 'completedDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [formField]="field.completedDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.expiryDate')">
-                    <p-datepicker [ngModel]="toDate(tr.expiryDate)" (ngModelChange)="patchTrainingRecord(i, 'expiryDate', $event ? $event.toISOString() : null)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                    <mp-date-picker [formField]="field.expiryDate" [showIcon]="true" class="w-full"></mp-date-picker>
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.provider')">
-                    <input pInputText maxlength="128" [ngModel]="tr.provider ?? ''" (ngModelChange)="patchTrainingRecord(i, 'provider', $event)" />
+                    <input mpInput [formField]="field.provider" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.performance.hours')">
-                    <p-inputnumber [ngModel]="tr.hours ?? null" (ngModelChange)="patchTrainingRecord(i, 'hours', $event)" [min]="0" [maxFractionDigits]="2" styleClass="w-full" inputStyleClass="w-full"></p-inputnumber>
+                    <mp-input-number [formField]="field.hours" [min]="0" [maxFractionDigits]="2" class="w-full"></mp-input-number>
                   </mp-field>
                   <mp-field class="md:col-span-2" [label]="t('staff-members.performance.certificateReference')">
-                    <input pInputText maxlength="64" [ngModel]="tr.certificateReference ?? ''" (ngModelChange)="patchTrainingRecord(i, 'certificateReference', $event)" />
+                    <input mpInput [formField]="field.certificateReference" />
                   </mp-field>
                 </div>
               } @else {
                 <div class="text-sm font-medium">{{ lookupLabel(trainingCourses(), tr.trainingCourseId) }}</div>
-                <div class="text-sm text-muted-color">
+                <div class="text-sm text-muted-foreground">
                   {{ lookupLabel(trainingStatuses(), tr.statusId) }}
                   @if (tr.provider) { · {{ tr.provider }} }
                   @if (tr.hours != null) { · {{ tr.hours }} {{ t('staff-members.performance.hoursLabel') }} }
-                  @if (tr.completedDate) { · {{ t('staff-members.performance.completedDate') }} {{ toDate(tr.completedDate) | date:'mediumDate' }} }
-                  @if (tr.expiryDate) { · {{ t('staff-members.performance.expiryDate') }} {{ toDate(tr.expiryDate) | date:'mediumDate' }} }
+                  @if (tr.completedDate) { · {{ t('staff-members.performance.completedDate') }} {{ tr.completedDate | date:'mediumDate' }} }
+                  @if (tr.expiryDate) { · {{ t('staff-members.performance.expiryDate') }} {{ tr.expiryDate | date:'mediumDate' }} }
                 </div>
                 @if (tr.certificateReference) {
-                  <div class="text-sm text-muted-color">{{ t('staff-members.performance.certificateReference') }}: <span class="font-mono">{{ tr.certificateReference }}</span></div>
+                  <div class="text-sm text-muted-foreground">{{ t('staff-members.performance.certificateReference') }}: <span class="font-mono">{{ tr.certificateReference }}</span></div>
                 }
               }
             </div>
@@ -270,8 +288,10 @@
         </div>
         @if (editing()) {
           <div class="mt-2">
-            <p-button [label]="t('staff-members.performance.addTraining')" icon="fa-solid fa-plus"
-              severity="secondary" [outlined]="true" size="small" (onClick)="addTrainingRecord()"></p-button>
+            <button mpButton variant="outline" size="sm" (click)="addTrainingRecord()">
+              <i class="fa-solid fa-plus"></i>
+              {{ t('staff-members.performance.addTraining') }}
+            </button>
           </div>
         }
       </section>

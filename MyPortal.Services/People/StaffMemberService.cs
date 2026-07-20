@@ -312,6 +312,18 @@ public class StaffMemberService(
         }
     }
 
+    public async Task<bool> IsCodeAvailableAsync(string? code, Guid? excludeStaffMemberId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return true;
+        }
+
+        return !await staffMemberRepository.CodeExistsAsync(code.Trim(), excludeStaffMemberId,
+            cancellationToken, null);
+    }
+
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         // HR-only action; All-scope.

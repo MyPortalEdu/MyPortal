@@ -1,20 +1,15 @@
-import {MenuItem} from 'primeng/api';
-import {AppMenuContributor, MenuCategory} from '../../layout/menu/menu-types';
+import {AppMenuContributor, MenuCategory, NavItem} from '../../layout/menu/menu-types';
 import {Me} from '../../core/types/me';
 import {UserType} from '../../core/types/user-type';
 import {Permissions} from '../../core/constants/permissions';
 import {buildMenu} from '../../layout/menu/menu-util';
 
-// Menu contributors return Transloco keys rather than literal text so the
-// sidebar can re-render labels on language change without each contributor
-// having to depend on the i18n service. The keys live in the root locale file
-// (public/i18n/<lang>.json) under `nav.*`.
 export class StaffMenuContributor implements AppMenuContributor {
   supports(user: Me): boolean {
     return user.userType === UserType.Staff;
   }
 
-  getItems(user: Me): MenuItem[] {
+  getItems(user: Me): NavItem[] {
     const has = (p: string) => user.permissions?.includes(p) ?? false;
     const cats: MenuCategory[] = [
       {

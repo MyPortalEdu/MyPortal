@@ -6,14 +6,11 @@ export interface PermissionTreeNode {
   key: string;
   label: string;
   permissionId?: string;
-  // Font Awesome glyph, set on top-level area groups only.
   icon?: string;
-  // Every descendant permission id (a leaf's is just its own). Drives parent tri-state + subtree toggle.
   leafIds: string[];
   children: PermissionTreeNode[];
 }
 
-// Glyph per top-level permission area (keyed by the first Area segment).
 const AREA_ICONS: Record<string, string> = {
   Agencies: 'fa-building',
   Attendance: 'fa-clipboard-check',
@@ -24,8 +21,6 @@ const AREA_ICONS: Record<string, string> = {
   Timetable: 'fa-calendar-days',
 };
 
-// Builds a tree from the permission catalogue by splitting each permission's Area on '.' — e.g.
-// "Staff.Absences" nests Staff ▸ Absences, with the permission (FriendlyName) as a leaf underneath.
 export function buildPermissionTree(permissions: PermissionResponse[]): PermissionTreeNode[] {
   const root: PermissionTreeNode = { key: '', label: '', leafIds: [], children: [] };
 
@@ -63,7 +58,6 @@ export function buildPermissionTree(permissions: PermissionResponse[]): Permissi
     if (n.permissionId) return;
     n.children.forEach(finalise);
     n.leafIds = n.children.flatMap(c => c.leafIds);
-    // Groups before individual permissions, each alphabetical.
     n.children.sort((a, b) => {
       const ag = a.permissionId ? 1 : 0;
       const bg = b.permissionId ? 1 : 0;
@@ -75,7 +69,6 @@ export function buildPermissionTree(permissions: PermissionResponse[]): Permissi
   return root.children;
 }
 
-// "BasicDetails" → "Basic Details", "PreEmploymentChecks" → "Pre Employment Checks".
 function humanise(segment: string): string {
   return segment.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
 }
@@ -92,7 +85,6 @@ export class PermissionTree {
   readonly selectedIds = input.required<ReadonlySet<string>>();
   readonly disabled = input(false);
 
-  // A subtree (or single leaf) was toggled; the parent owns the selection set and applies it.
   readonly toggle = output<{ ids: string[]; checked: boolean }>();
 
   private readonly collapsedKeys = signal<ReadonlySet<string>>(new Set());

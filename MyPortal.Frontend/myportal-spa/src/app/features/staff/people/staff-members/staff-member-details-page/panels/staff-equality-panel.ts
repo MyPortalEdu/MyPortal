@@ -3,15 +3,15 @@ import {
   Component,
   OnInit,
   computed,
+  effect,
   forwardRef,
   inject,
   input,
   signal,
+  untracked,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Checkbox } from 'primeng/checkbox';
-import { Textarea } from 'primeng/textarea';
-import { MultiSelect } from 'primeng/multiselect';
+import { FormField, form, submit } from '@angular/forms/signals';
+import { MpCheckbox, MpTextarea, MpMultiSelect } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -32,15 +32,24 @@ import {
 } from '../../../../../../shared/types/staff-equality-details';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Equality & Diversity area of the staff profile. Special-category data: HR-edit-only (no self or
- * line-manager edit). Self-loads on mount; every field is optional so the form is always valid.
- */
+interface EqualityModel {
+  ethnicityId: string | null;
+  nationalityId: string | null;
+  firstLanguageId: string | null;
+  maritalStatusId: string | null;
+  religionId: string | null;
+  sexualOrientationId: string | null;
+  genderIdentityId: string | null;
+  hasDisability: boolean;
+  disabilityDetails: string;
+  disabilityIds: string[];
+}
+
 @Component({
   selector: 'mp-staff-equality-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Checkbox, Textarea, MultiSelect, LookupSelect, Loading, SectionHeader, Field, TranslocoDirective],
+  imports: [FormField, MpCheckbox, MpTextarea, MpMultiSelect, LookupSelect, Loading, SectionHeader, Field, TranslocoDirective],
   providers: [
     provideTranslocoScope('staff-members'),
     { provide: StaffAreaPanel, useExisting: forwardRef(() => StaffEqualityPanel) },
@@ -56,24 +65,25 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
   readonly permissions = input.required<Set<string>>();
 
   protected readonly loading = signal(false);
-  override readonly saving = signal(false);
   override readonly editing = signal(false);
 
   protected readonly equality = signal<StaffEqualityDetailsResponse | null>(null);
 
-  protected readonly ethnicityId = signal<string | null>(null);
-  protected readonly nationalityId = signal<string | null>(null);
-  protected readonly firstLanguageId = signal<string | null>(null);
-  protected readonly maritalStatusId = signal<string | null>(null);
-  protected readonly religionId = signal<string | null>(null);
-  protected readonly sexualOrientationId = signal<string | null>(null);
-  protected readonly genderIdentityId = signal<string | null>(null);
-  protected readonly hasDisability = signal<boolean>(false);
-  protected readonly disabilityDetails = signal<string | null>(null);
-  protected readonly disabilityIds = signal<string[]>([]);
+  protected readonly model = signal<EqualityModel>({
+    ethnicityId: null,
+    nationalityId: null,
+    firstLanguageId: null,
+    maritalStatusId: null,
+    religionId: null,
+    sexualOrientationId: null,
+    genderIdentityId: null,
+    hasDisability: false,
+    disabilityDetails: '',
+    disabilityIds: [],
+  });
+  protected readonly f = form(this.model);
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the equality payload so the editor is self-contained.
   protected readonly ethnicities = computed(() => this.equality()?.ethnicities ?? []);
   protected readonly nationalities = computed(() => this.equality()?.nationalities ?? []);
   protected readonly languages = computed(() => this.equality()?.languages ?? []);
@@ -83,33 +93,47 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
   protected readonly genderIdentities = computed(() => this.equality()?.genderIdentities ?? []);
   protected readonly disabilities = computed(() => this.equality()?.disabilities ?? []);
 
-  // Equality is HR-edit-only — no self/managed edit.
   override readonly canEdit = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffEqualityDetails),
   );
 
-  // Every equality field is optional — nothing to invalidate.
-  override readonly valid = computed(() => true);
+  override readonly saving = computed(() => this.f().submitting());
+  override readonly valid = computed(() => this.f().valid());
 
-  // Serialised edit state for the dirty check; disability ids sorted so reorder alone isn't a change.
-  private readonly form = computed(() =>
-    JSON.stringify({
-      ethnicityId: this.ethnicityId(),
-      nationalityId: this.nationalityId(),
-      firstLanguageId: this.firstLanguageId(),
-      maritalStatusId: this.maritalStatusId(),
-      religionId: this.religionId(),
-      sexualOrientationId: this.sexualOrientationId(),
-      genderIdentityId: this.genderIdentityId(),
-      hasDisability: this.hasDisability(),
-      disabilityDetails: this.disabilityDetails(),
-      disabilityIds: [...this.disabilityIds()].sort(),
-    }),
-  );
+  private readonly form = computed(() => {
+    const m = this.model();
+    return JSON.stringify({
+      ethnicityId: m.ethnicityId,
+      nationalityId: m.nationalityId,
+      firstLanguageId: m.firstLanguageId,
+      maritalStatusId: m.maritalStatusId,
+      religionId: m.religionId,
+      sexualOrientationId: m.sexualOrientationId,
+      genderIdentityId: m.genderIdentityId,
+      hasDisability: m.hasDisability,
+      disabilityDetails: m.disabilityDetails,
+      disabilityIds: [...m.disabilityIds].sort(),
+    });
+  });
 
   override readonly dirty = computed(
     () => this.equality() != null && this.snapshot() !== this.form(),
   );
+
+  constructor() {
+    super();
+    effect(() => {
+      if (!this.model().hasDisability) {
+        untracked(() =>
+          this.model.update(m =>
+            m.disabilityIds.length === 0 && m.disabilityDetails === ''
+              ? m
+              : { ...m, disabilityIds: [], disabilityDetails: '' },
+          ),
+        );
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.load();
@@ -140,56 +164,47 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
   }
 
   override async save(): Promise<void> {
-    if (!this.canEdit() || this.saving()) return;
-    this.saving.set(true);
-
-    const payload: StaffEqualityDetailsUpsertRequest = {
-      ethnicityId: this.ethnicityId(),
-      nationalityId: this.nationalityId(),
-      firstLanguageId: this.firstLanguageId(),
-      maritalStatusId: this.maritalStatusId(),
-      religionId: this.religionId(),
-      sexualOrientationId: this.sexualOrientationId(),
-      genderIdentityId: this.genderIdentityId(),
-      hasDisability: this.hasDisability(),
-      disabilityDetails: this.normalise(this.disabilityDetails()),
-      disabilityIds: this.disabilityIds(),
-    };
-
-    try {
-      await firstValueFrom(this.data.updateEqualityDetails(this.staffMemberId(), payload));
+    if (!this.canEdit() || !this.dirty()) return;
+    await submit(this.f, async () => {
+      const m = this.model();
+      const payload: StaffEqualityDetailsUpsertRequest = {
+        ethnicityId: m.ethnicityId,
+        nationalityId: m.nationalityId,
+        firstLanguageId: m.firstLanguageId,
+        maritalStatusId: m.maritalStatusId,
+        religionId: m.religionId,
+        sexualOrientationId: m.sexualOrientationId,
+        genderIdentityId: m.genderIdentityId,
+        hasDisability: m.hasDisability,
+        disabilityDetails: this.normalise(m.disabilityDetails),
+        disabilityIds: m.disabilityIds,
+      };
+      try {
+        await firstValueFrom(this.data.updateEqualityDetails(this.staffMemberId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.saveEqualityError'));
+        return;
+      }
       this.notify.success(this.transloco.translate('staff-members.savedEqualityToast'));
       this.editing.set(false);
-      // Refetch so the snapshot (and any server normalisation) is the new baseline.
       this.load();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.saveEqualityError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   private apply(row: StaffEqualityDetailsResponse | null): void {
-    this.ethnicityId.set(row?.ethnicityId ?? null);
-    this.nationalityId.set(row?.nationalityId ?? null);
-    this.firstLanguageId.set(row?.firstLanguageId ?? null);
-    this.maritalStatusId.set(row?.maritalStatusId ?? null);
-    this.religionId.set(row?.religionId ?? null);
-    this.sexualOrientationId.set(row?.sexualOrientationId ?? null);
-    this.genderIdentityId.set(row?.genderIdentityId ?? null);
-    this.hasDisability.set(row?.hasDisability ?? false);
-    this.disabilityDetails.set(row?.disabilityDetails ?? null);
-    this.disabilityIds.set([...(row?.disabilityIds ?? [])]);
+    this.model.set({
+      ethnicityId: row?.ethnicityId ?? null,
+      nationalityId: row?.nationalityId ?? null,
+      firstLanguageId: row?.firstLanguageId ?? null,
+      maritalStatusId: row?.maritalStatusId ?? null,
+      religionId: row?.religionId ?? null,
+      sexualOrientationId: row?.sexualOrientationId ?? null,
+      genderIdentityId: row?.genderIdentityId ?? null,
+      hasDisability: row?.hasDisability ?? false,
+      disabilityDetails: row?.disabilityDetails ?? '',
+      disabilityIds: [...(row?.disabilityIds ?? [])],
+    });
+    this.f().reset();
     this.snapshot.set(this.form());
-  }
-
-  // Disability detail (type + free text) only applies once a disability is declared; clearing the
-  // declaration discards those values so nothing stale is saved.
-  protected onHasDisability(value: boolean): void {
-    this.hasDisability.set(value);
-    if (!value) {
-      this.disabilityIds.set([]);
-      this.disabilityDetails.set(null);
-    }
   }
 }

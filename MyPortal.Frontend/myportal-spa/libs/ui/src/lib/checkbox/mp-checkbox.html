@@ -1,0 +1,22 @@
+    <label [class]="wrapperClass()">
+      <input
+        type="checkbox"
+        class="sr-only peer"
+        [id]="id()"
+        [checked]="checked()"
+        [disabled]="disabled()"
+        (change)="onToggle($any($event.target).checked)"
+        (blur)="onTouched()" />
+      <span aria-hidden="true" [class]="boxClass()">
+        @if (checked()) {
+          <svg viewBox="0 0 16 16" fill="none" class="h-3 w-3">
+            <path
+              d="M13 4.5 6.5 11.5 3 8"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        }
+      </span>
+    </label>

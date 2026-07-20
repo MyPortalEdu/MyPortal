@@ -2,14 +2,14 @@
   <div class="flex flex-col gap-5">
     <div>
       <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
-      <p class="text-sm text-muted-color m-0">{{ t('description') }}</p>
+      <p class="hidden sm:block text-sm text-muted-foreground m-0">{{ t('description') }}</p>
     </div>
 
     @if (yearName(); as name) {
-      <div class="rounded-lg bg-[var(--p-primary-50)] border border-[var(--p-primary-200)] p-3 flex items-center gap-3">
+      <div class="rounded-lg bg-primary-50 border border-primary-200 p-3 flex items-center gap-3">
         <i class="fa-solid fa-calendar-days text-primary text-xl"></i>
         <div>
-          <span class="text-xs uppercase text-muted-color tracking-wide">{{ t('yearPreview') }}</span>
+          <span class="text-xs uppercase text-muted-foreground tracking-wide">{{ t('yearPreview') }}</span>
           <p class="text-base font-semibold m-0">{{ name }}</p>
         </div>
       </div>
@@ -20,42 +20,40 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="flex flex-col gap-1">
           <label class="text-sm">{{ t('daysPerWeek') }}</label>
-          <p-inputNumber
+          <mp-input-number
             [ngModel]="model().schoolWeekLength"
             (ngModelChange)="onSchoolWeekLengthChange($event)"
             [min]="1"
             [max]="7"
             [showButtons]="!readOnly()"
             [disabled]="readOnly()">
-          </p-inputNumber>
-          <span class="text-xs text-muted-color">{{ t('daysPerWeekHint') }}</span>
+          </mp-input-number>
+          <span class="text-xs text-muted-foreground">{{ t('daysPerWeekHint') }}</span>
         </div>
 
         <div class="flex flex-col gap-1">
           <label class="text-sm">{{ t('cycleLength') }}</label>
-          <p-select
+          <mp-select
             [ngModel]="cycleWeeks()"
             (ngModelChange)="onCycleWeeksChange($event)"
             [options]="cycleWeekChoices"
             optionLabel="label"
             optionValue="value"
-            [disabled]="readOnly()"
-            appendTo="body">
-          </p-select>
+            [disabled]="readOnly()">
+          </mp-select>
         </div>
 
         @if (cycleWeeks() > 1) {
           <div class="flex flex-col gap-1">
             <label class="text-sm">{{ t('yearStartsIn') }}</label>
-            <p-select
+            <mp-select
               [ngModel]="firstWeekIndex()"
               (ngModelChange)="onFirstWeekIndexChange($event)"
               [options]="weekChoices()"
               optionLabel="label"
               optionValue="value"
-              [disabled]="readOnly()"
-              appendTo="body">
-            </p-select>
+              [disabled]="readOnly()">
+            </mp-select>
           </div>
         }
       </div>
@@ -65,63 +63,47 @@
       <div class="flex items-center justify-between">
         <div>
           <h4 class="text-sm font-semibold m-0">{{ t('termsSection') }}</h4>
-          <p class="text-xs text-muted-color m-0">{{ t('termsHint') }}</p>
+          <p class="hidden sm:block text-xs text-muted-foreground m-0">{{ t('termsHint') }}</p>
         </div>
         @if (!readOnly()) {
-          <p-button
-            icon="fa-solid fa-plus"
-            [label]="t('addTerm')"
-            size="small"
-            severity="secondary"
-            (click)="addTerm()">
-          </p-button>
+          <button mpButton variant="secondary" size="sm" (click)="addTerm()"><i class="fa-solid fa-plus"></i> {{ t('addTerm') }}</button>
         }
       </div>
 
       @if (model().academicTerms.length === 0) {
-        <div class="text-sm text-muted-color text-center border border-dashed border-surface rounded-lg p-4">
+        <div class="text-sm text-muted-foreground text-center border border-dashed border-border rounded-lg p-4">
           {{ t('noTerms') }}
         </div>
       } @else {
         <ul class="list-none m-0 p-0 flex flex-col gap-2">
           @for (term of model().academicTerms; track $index; let i = $index) {
-            <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-surface">
+            <li class="flex flex-wrap items-end gap-3 p-3 rounded-lg border border-border">
               <div class="flex flex-col gap-1 flex-1 min-w-[12rem]">
-                <label class="text-xs text-muted-color">{{ t('termName') }}</label>
-                <input pInputText type="text"
+                <label class="text-xs text-muted-foreground">{{ t('termName') }}</label>
+                <input mpInput type="text"
                   [ngModel]="term.name"
                   (ngModelChange)="updateTermName(i, $event)"
                   [disabled]="readOnly()"
                   [placeholder]="t('termNamePlaceholder')" />
               </div>
               <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-color">{{ t('termStart') }}</label>
-                <p-datepicker
+                <label class="text-xs text-muted-foreground">{{ t('termStart') }}</label>
+                <mp-date-picker
                   [ngModel]="term.startDate"
                   (ngModelChange)="updateTermDate(i, 'startDate', $event)"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               <div class="flex flex-col gap-1">
-                <label class="text-xs text-muted-color">{{ t('termEnd') }}</label>
-                <p-datepicker
+                <label class="text-xs text-muted-foreground">{{ t('termEnd') }}</label>
+                <mp-date-picker
                   [ngModel]="term.endDate"
                   (ngModelChange)="updateTermDate(i, 'endDate', $event)"
-                  dateFormat="dd/mm/yy"
-                  [disabled]="readOnly()"
-                  appendTo="body">
-                </p-datepicker>
+                  [disabled]="readOnly()">
+                </mp-date-picker>
               </div>
               @if (!readOnly()) {
-                <p-button
-                  icon="fa-solid fa-trash-can"
-                  severity="danger"
-                  [text]="true"
-                  [attr.aria-label]="t('removeTerm')"
-                  (click)="removeTerm(i)">
-                </p-button>
+                <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive" [attr.aria-label]="t('removeTerm')" (click)="removeTerm(i)"><i class="fa-solid fa-trash-can"></i></button>
               }
             </li>
           }
@@ -132,15 +114,14 @@
     @if (priorYears().length > 0 && !editMode()) {
       <section class="flex flex-col gap-2">
         <h4 class="text-sm font-semibold m-0">{{ t('pastoralSection') }}</h4>
-        <p class="text-xs text-muted-color m-0">{{ t('pastoralHint') }}</p>
-        <p-select
+        <p class="hidden sm:block text-xs text-muted-foreground m-0">{{ t('pastoralHint') }}</p>
+        <mp-select
           [ngModel]="model().copyPastoralStructureFromAcademicYearId"
           (ngModelChange)="onPastoralYearPicked($event)"
           [options]="pastoralOptions()"
           optionLabel="label"
-          optionValue="value"
-          appendTo="body">
-        </p-select>
+          optionValue="value">
+        </mp-select>
       </section>
     }
   </div>

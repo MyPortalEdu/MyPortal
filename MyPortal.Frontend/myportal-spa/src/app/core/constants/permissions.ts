@@ -1,7 +1,4 @@
 export const Permissions = {
-  // Object key matches the C# `Permissions.SystemAdmin` class name (which avoids the `System`
-  // namespace collision); the wire-string values keep the "System." prefix to match the
-  // server's permission rows.
   SystemAdmin: {
     ViewUsers:           'System.ViewUsers',
     EditUsers:           'System.EditUsers',
@@ -24,8 +21,6 @@ export const Permissions = {
     ViewAcademicYears: 'Curriculum.ViewAcademicYears',
     EditAcademicYears: 'Curriculum.EditAcademicYears',
   },
-  // Scoped staff-profile permissions: Staff.{Verb}{Scope}Staff{Area}.
-  // See docs/staff-profile-access.md.
   Staff: {
     ViewOwnStaffBasicDetails:            'Staff.ViewOwnStaffBasicDetails',
     ViewManagedStaffBasicDetails:        'Staff.ViewManagedStaffBasicDetails',
@@ -74,8 +69,6 @@ export const Permissions = {
   },
 } as const;
 
-// Flatten to a union of all permission string literals across every category.
-// Distributes over keys so adding a second category yields a union, not `never`.
 export type Permission = {
   [C in keyof typeof Permissions]: (typeof Permissions)[C][keyof (typeof Permissions)[C]]
 }[keyof typeof Permissions];

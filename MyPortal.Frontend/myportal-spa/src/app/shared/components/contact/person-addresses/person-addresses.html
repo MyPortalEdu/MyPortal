@@ -2,21 +2,21 @@
   <div class="flex flex-col gap-3">
     @if (loading() && !addresses().length) {
       <div class="flex justify-center py-4">
-        <p-progressSpinner [style]="{ width: '1.5rem', height: '1.5rem' }"></p-progressSpinner>
+        <mp-spinner size="1.5rem"></mp-spinner>
       </div>
     } @else {
       @if (addresses().length) {
         <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
           @for (address of addresses(); track address.addressPersonId) {
             <div class="flex items-center gap-3 py-2">
-              <span class="w-20 shrink-0 text-xs text-muted-color">{{ typeName(address.typeId) }}</span>
+              <span class="w-20 shrink-0 text-xs text-muted-foreground">{{ typeName(address.typeId) }}</span>
               <span class="flex-1 min-w-0 font-medium">
                 {{ formatAddress(address) }}
                 @if (address.sharedCount > 1) {
-                  <p-tag
+                  <mp-badge
                     class="ml-2 align-middle"
                     [value]="t('common.contact.address.sharedBy', { count: address.sharedCount })"
-                    severity="info"></p-tag>
+                    severity="info"></mp-badge>
                 }
               </span>
               @if (address.isMain) {
@@ -34,35 +34,34 @@
               </a>
               @if (canEdit()) {
                 <div class="flex items-center gap-1 shrink-0">
-                  <p-button
-                    icon="fa-solid fa-pen"
-                    [text]="true"
-                    severity="secondary"
-                    [ariaLabel]="t('common.edit')"
-                    (onClick)="openEdit(address)"></p-button>
-                  <p-button
-                    icon="fa-solid fa-trash"
-                    [text]="true"
-                    severity="danger"
-                    [ariaLabel]="t('common.delete')"
-                    (onClick)="remove(address)"></p-button>
+                  <button
+                    mpButton
+                    variant="ghost"
+                    size="icon"
+                    [attr.aria-label]="t('common.edit')"
+                    (click)="openEdit(address)"><i class="fa-solid fa-pen"></i></button>
+                  <button
+                    mpButton
+                    variant="ghost"
+                    class="text-destructive hover:text-destructive"
+                    size="icon"
+                    [attr.aria-label]="t('common.delete')"
+                    (click)="remove(address)"><i class="fa-solid fa-trash"></i></button>
                 </div>
               }
             </div>
           }
         </div>
       } @else {
-        <span class="text-sm text-muted-color">{{ t('common.contact.address.none') }}</span>
+        <span class="text-sm text-muted-foreground">{{ t('common.contact.address.none') }}</span>
       }
 
       @if (canEdit()) {
         <div>
-          <p-button
-            [label]="t('common.contact.address.add')"
-            icon="fa-solid fa-plus"
-            severity="secondary"
-            [outlined]="true"
-            (onClick)="openAdd()"></p-button>
+          <button
+            mpButton
+            variant="outline"
+            (click)="openAdd()"><i class="fa-solid fa-plus"></i> {{ t('common.contact.address.add') }}</button>
         </div>
       }
     }

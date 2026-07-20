@@ -15,8 +15,6 @@ export class MeService {
     return this.me$;
   }
 
-  // Self-service password change — the server verifies currentPassword before
-  // applying the new one (204 on success, 400 ProblemDetails on failure).
   changePassword(model: MeChangePasswordRequest): Observable<void> {
     return this.http.put<void>('/api/me/password', model);
   }
