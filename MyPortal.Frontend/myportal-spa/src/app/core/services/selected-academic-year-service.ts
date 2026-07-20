@@ -6,18 +6,17 @@ import { AcademicYearService } from './academic-year-service';
 import { MeService } from './me-service';
 import { AcademicYearsDataService } from '../../shared/services/academic-years-data.service';
 import { AcademicYearSummary } from '../types/academic-year-summary';
+import { Permissions } from '../constants/permissions';
 
 const STORAGE_PREFIX = 'mp.selectedAcademicYearId:';
 
-// Holds the academic year the staff user is currently "viewing" — distinct from
-// the calendar-current year (AcademicYearService.getCurrent), which is the
-// system fact "what year covers today". The selection is per-user, persisted to
-// localStorage so it survives a refresh, cleared on logout so the next sign-in
-// starts fresh. Init validates the persisted id against the latest list — if
-// the year was deleted, we silently fall back to the calendar-current year.
-//
-// Staff-only by design; the service still works for student/parent sessions
-// but no UI surface exposes it to them.
+function hasAcademicYearAccess(permissions: readonly string[] | undefined): boolean {
+  return (
+    (permissions?.includes(Permissions.Curriculum.ViewAcademicYears) ?? false) ||
+    (permissions?.includes(Permissions.Curriculum.EditAcademicYears) ?? false)
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class SelectedAcademicYearService {
   private readonly me = inject(MeService);
@@ -26,20 +25,29 @@ export class SelectedAcademicYearService {
 
   private readonly _selected = signal<AcademicYearSummary | null>(null);
   private readonly _initialized = signal<boolean>(false);
+  private readonly _hasAccess = signal<boolean>(false);
   private _currentUserId: string | null = null;
 
   readonly selected = this._selected.asReadonly();
   readonly selectedId = computed(() => this._selected()?.id ?? null);
   readonly initialized = this._initialized.asReadonly();
+  /** Whether the current user can view/edit academic years (and so use the switcher). */
+  readonly hasAccess = this._hasAccess.asReadonly();
 
-  // Resolve the active selection. Called once after auth completes (from the
-  // app shell). Subsequent calls are no-ops — repeated mounts of the shell
-  // shouldn't re-seed and clobber a deliberate user choice.
   init(): void {
     if (this._initialized()) return;
 
     this.me.me().pipe(take(1)).subscribe(me => {
       this._currentUserId = me.id;
+      this._hasAccess.set(hasAcademicYearAccess(me.permissions));
+
+      // A user without academic-year access has no year to select and no switcher — skip the
+      // calls entirely rather than firing them just to catch the 403.
+      if (!this._hasAccess()) {
+        this._selected.set(null);
+        this._initialized.set(true);
+        return;
+      }
 
       const storedId = readStored(me.id);
       combineLatest([
@@ -50,8 +58,6 @@ export class SelectedAcademicYearService {
         const chosen = persisted ?? current;
 
         this._selected.set(chosen);
-        // Stale storage gets cleared when we couldn't find the persisted id —
-        // otherwise it'd keep looking ghosted on the next refresh.
         if (storedId && !persisted) {
           writeStored(me.id, null);
         }
@@ -67,13 +73,8 @@ export class SelectedAcademicYearService {
     }
   }
 
-  // Re-check the current selection against the latest list. Call after create /
-  // update / delete from the AY list page: if the selected year was deleted,
-  // fall back to the calendar-current year; if it was renamed or had its dates
-  // changed, refresh the cached summary so the topbar label stays in sync.
-  // No-op before init — the app shell will seed the selection itself.
   revalidate(): void {
-    if (!this._initialized() || !this._currentUserId) return;
+    if (!this._initialized() || !this._currentUserId || !this._hasAccess()) return;
 
     const userId = this._currentUserId;
     const wantedId = this.selectedId();
@@ -85,18 +86,12 @@ export class SelectedAcademicYearService {
       const chosen = matched ?? current;
       this._selected.set(chosen);
 
-      // Persisted id is stale (year deleted) — clear or replace so a refresh
-      // doesn't reintroduce the missing year.
       if (wantedId && !matched) {
         writeStored(userId, chosen?.id ?? null);
       }
     });
   }
 
-  // Wipe the persisted selection — called on logout so the next sign-in (even
-  // as the same user) starts on the calendar-current year. Token refresh /
-  // silent re-auth doesn't go through this path, so a long-running session
-  // keeps the user's choice through background refreshes.
   clear(): void {
     if (this._currentUserId) {
       writeStored(this._currentUserId, null);
@@ -123,8 +118,5 @@ function writeStored(userId: string, id: string | null): void {
       localStorage.removeItem(STORAGE_PREFIX + userId);
     }
   } catch {
-    // localStorage can throw in private-browsing modes / when quota-exceeded;
-    // failing silently is fine because the in-memory signal still works for
-    // the current session.
   }
 }

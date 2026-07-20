@@ -3,7 +3,7 @@
     <mp-loading></mp-loading>
   } @else if (professional()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.professionalDetails') }}</h3>
-    <p class="text-sm text-muted-color mb-4">{{ t('staff-members.professional.hint') }}</p>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('staff-members.professional.hint') }}</p>
 
     <div class="flex flex-col gap-6">
       <section>
@@ -13,47 +13,45 @@
             <div class="flex flex-col gap-1">
               @if (editing()) {
                 <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
-                  <p-checkbox [inputId]="flag.key" [binary]="true" [ngModel]="flag.get()" (ngModelChange)="flag.set($event)"></p-checkbox>
+                  <mp-checkbox [id]="flag.key" [formField]="flag.field"></mp-checkbox>
                   {{ t('staff-members.professional.' + flag.key) }}
                 </label>
               } @else {
                 <label class="text-sm font-medium">{{ t('staff-members.professional.' + flag.key) }}</label>
-                <span>{{ flag.get() ? t('common.yes') : t('common.no') }}</span>
+                <span>{{ flag.field().value() ? t('common.yes') : t('common.no') }}</span>
               }
             </div>
           }
         </div>
       </section>
 
-      <!-- QTS and statutory induction only apply to teachers, not support staff (incl. HLTAs). -->
-      @if (isTeachingStaff()) {
+      @if (model().isTeachingStaff) {
       <section>
         <mp-section-header icon="fa-solid fa-certificate" [title]="t('staff-members.professional.qtsHeading')"></mp-section-header>
         <div class="grid gap-4 md:grid-cols-2">
           <mp-field [label]="t('staff-members.professional.trn')" for="trn">
             @if (editing()) {
-              <input pInputText id="trn" inputmode="numeric" maxlength="7"
-                [ngModel]="teacherReferenceNumber() ?? ''" (ngModelChange)="teacherReferenceNumber.set($event)" />
+              <input mpInput id="trn" inputmode="numeric" [formField]="f.teacherReferenceNumber" />
             } @else {
-              <span class="font-mono">{{ teacherReferenceNumber() || '—' }}</span>
+              <span class="font-mono">{{ model().teacherReferenceNumber || '—' }}</span>
             }
           </mp-field>
 
-          <!-- Route and award date only apply once QTS is held. -->
-          @if (hasQts()) {
+          @if (model().hasQts) {
             <mp-field [label]="t('staff-members.professional.qtsRoute')" for="qtsRoute">
               @if (editing()) {
-                <mp-lookup-select inputId="qtsRoute" [options]="qtsRoutes()" [value]="qtsRouteId()" (valueChange)="qtsRouteId.set($event)"></mp-lookup-select>
+                <mp-lookup-select inputId="qtsRoute" [options]="qtsRoutes()" [formField]="f.qtsRouteId"></mp-lookup-select>
               } @else {
-                <span>{{ lookupLabel(qtsRoutes(), qtsRouteId()) }}</span>
+                <span>{{ lookupLabel(qtsRoutes(), model().qtsRouteId) }}</span>
               }
             </mp-field>
 
             <mp-field [label]="t('staff-members.professional.qtsAwardedDate')" for="qtsAwarded">
               @if (editing()) {
-                <p-datepicker id="qtsAwarded" [ngModel]="qtsAwardedDate()" (ngModelChange)="qtsAwardedDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+                <mp-date-picker inputId="qtsAwarded" [formField]="f.qtsAwardedDate" [showIcon]="true" class="w-full"></mp-date-picker>
               } @else {
-                <span>{{ qtsAwardedDate() ? (qtsAwardedDate() | date:'mediumDate') : '—' }}</span>
+                @let qad = model().qtsAwardedDate;
+                <span>{{ qad ? (qad | date:'mediumDate') : '—' }}</span>
               }
             </mp-field>
           }
@@ -65,25 +63,27 @@
         <div class="grid gap-4 md:grid-cols-2">
           <mp-field [label]="t('staff-members.professional.inductionStatus')" for="inductionStatus">
             @if (editing()) {
-              <mp-lookup-select inputId="inductionStatus" [options]="inductionStatuses()" [value]="inductionStatusId()" (valueChange)="inductionStatusId.set($event)"></mp-lookup-select>
+              <mp-lookup-select inputId="inductionStatus" [options]="inductionStatuses()" [formField]="f.inductionStatusId"></mp-lookup-select>
             } @else {
-              <span>{{ lookupLabel(inductionStatuses(), inductionStatusId()) }}</span>
+              <span>{{ lookupLabel(inductionStatuses(), model().inductionStatusId) }}</span>
             }
           </mp-field>
 
           <mp-field [label]="t('staff-members.professional.inductionStartDate')" for="inductionStart">
             @if (editing()) {
-              <p-datepicker id="inductionStart" [ngModel]="inductionStartDate()" (ngModelChange)="inductionStartDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+              <mp-date-picker inputId="inductionStart" [formField]="f.inductionStartDate" [showIcon]="true" class="w-full"></mp-date-picker>
             } @else {
-              <span>{{ inductionStartDate() ? (inductionStartDate() | date:'mediumDate') : '—' }}</span>
+              @let isd = model().inductionStartDate;
+              <span>{{ isd ? (isd | date:'mediumDate') : '—' }}</span>
             }
           </mp-field>
 
           <mp-field [label]="t('staff-members.professional.inductionCompletedDate')" for="inductionCompleted">
             @if (editing()) {
-              <p-datepicker id="inductionCompleted" [ngModel]="inductionCompletedDate()" (ngModelChange)="inductionCompletedDate.set($event)" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" inputStyleClass="w-full"></p-datepicker>
+              <mp-date-picker inputId="inductionCompleted" [formField]="f.inductionCompletedDate" [showIcon]="true" class="w-full"></mp-date-picker>
             } @else {
-              <span>{{ inductionCompletedDate() ? (inductionCompletedDate() | date:'mediumDate') : '—' }}</span>
+              @let icd = model().inductionCompletedDate;
+              <span>{{ icd ? (icd | date:'mediumDate') : '—' }}</span>
             }
           </mp-field>
         </div>
@@ -96,71 +96,65 @@
         <div class="mb-4">
           <mp-field [label]="t('staff-members.professional.qualificationsSummary')" for="qualSummary">
             @if (editing()) {
-              <input pInputText id="qualSummary" maxlength="128"
+              <input mpInput id="qualSummary"
                 [placeholder]="t('staff-members.professional.qualificationsSummaryPlaceholder')"
-                [ngModel]="qualificationsSummary() ?? ''" (ngModelChange)="qualificationsSummary.set($event)" />
+                [formField]="f.qualificationsSummary" />
             } @else {
-              <span>{{ qualificationsSummary() || '—' }}</span>
+              <span>{{ model().qualificationsSummary || '—' }}</span>
             }
           </mp-field>
         </div>
 
         @if (editing()) {
           <div class="flex flex-col gap-3">
-            @for (q of qualifications(); track $index) {
-              <div class="rounded border border-surface p-3">
+            @for (field of f.qualifications; track $index; let i = $index) {
+              <div class="rounded border border-border p-3">
                 <div class="flex items-start justify-between gap-2 mb-2">
-                  <span class="text-sm font-medium text-muted-color">#{{ $index + 1 }}</span>
-                  <p-button
-                    icon="fa-solid fa-trash"
-                    severity="danger"
-                    [text]="true"
-                    size="small"
-                    [ariaLabel]="t('staff-members.professional.removeQualification')"
-                    (onClick)="removeQualification($index)"></p-button>
+                  <span class="text-sm font-medium text-muted-foreground">#{{ i + 1 }}</span>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('staff-members.professional.removeQualification')" (click)="removeQualification(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 </div>
                 <div class="grid gap-3 md:grid-cols-2">
                   <mp-field [label]="t('staff-members.professional.qualTitle')">
-                    <input pInputText [ngModel]="q.title" (ngModelChange)="patchQualification($index, 'title', $event)" />
+                    <input mpInput [formField]="field.title" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualLevel')">
-                    <mp-lookup-select [options]="qualificationLevels()" [value]="q.qualificationLevelId ?? null" (valueChange)="patchQualification($index, 'qualificationLevelId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="qualificationLevels()" [formField]="field.qualificationLevelId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualSubject')">
-                    <input pInputText [ngModel]="q.subject ?? ''" (ngModelChange)="patchQualification($index, 'subject', $event)" />
+                    <input mpInput [formField]="field.subject" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualAwardingBody')">
-                    <input pInputText [ngModel]="q.awardingBody ?? ''" (ngModelChange)="patchQualification($index, 'awardingBody', $event)" />
+                    <input mpInput [formField]="field.awardingBody" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualGrade')">
-                    <input pInputText maxlength="20" [ngModel]="q.grade ?? ''" (ngModelChange)="patchQualification($index, 'grade', $event)" />
+                    <input mpInput [formField]="field.grade" />
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualClassOfDegree')">
-                    <mp-lookup-select [options]="classesOfDegree()" [value]="q.classOfDegreeId ?? null" (valueChange)="patchQualification($index, 'classOfDegreeId', $event)"></mp-lookup-select>
+                    <mp-lookup-select [options]="classesOfDegree()" [formField]="field.classOfDegreeId"></mp-lookup-select>
                   </mp-field>
                   <mp-field [label]="t('staff-members.professional.qualYearAwarded')">
-                    <input pInputText type="number" inputmode="numeric" [ngModel]="q.yearAwarded" (ngModelChange)="patchQualification($index, 'yearAwarded', $event)" />
+                    <input mpInput type="number" inputmode="numeric" [formField]="field.yearAwarded" />
                   </mp-field>
                 </div>
               </div>
             }
             <div>
-              <p-button
-                [label]="t('staff-members.professional.addQualification')"
-                icon="fa-solid fa-plus"
-                severity="secondary"
-                [outlined]="true"
-                size="small"
-                (onClick)="addQualification()"></p-button>
+              <button mpButton variant="outline" size="sm" (click)="addQualification()">
+                <i class="fa-solid fa-plus"></i>
+                {{ t('staff-members.professional.addQualification') }}
+              </button>
             </div>
           </div>
         } @else {
-          @if (qualifications().length) {
+          @if (model().qualifications.length) {
             <div class="flex flex-col gap-2">
-              @for (q of qualifications(); track $index) {
-                <div class="rounded border border-surface p-3">
+              @for (q of model().qualifications; track $index) {
+                <div class="rounded border border-border p-3">
                   <div class="font-medium">{{ q.title }}</div>
-                  <div class="text-sm text-muted-color">{{ qualificationLine(q) }}</div>
+                  <div class="text-sm text-muted-foreground">{{ qualificationLine(q) }}</div>
                 </div>
               }
             </div>

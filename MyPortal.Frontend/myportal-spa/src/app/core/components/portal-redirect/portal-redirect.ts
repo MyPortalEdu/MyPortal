@@ -22,9 +22,6 @@ export class PortalRedirect implements OnInit {
       const me = await firstValueFrom(this.me.me());
       userType = me.userType;
     } catch (err) {
-      // 401 is already redirected by auth-error-interceptor; anything else is
-      // a transient / server problem — sign out so the user lands somewhere
-      // sensible instead of an infinite "Redirecting…" page.
       console.error('PortalRedirect: failed to resolve current user', err);
       window.location.href = '/account/logout';
       return;
@@ -34,8 +31,6 @@ export class PortalRedirect implements OnInit {
       userType === UserType.Staff   ? '/staff'   :
         userType === UserType.Student ? '/student' :
           userType === UserType.Parent  ? '/parent'  :
-            // Unknown / unmapped user type — sign out instead of bouncing back to '/' which
-            // re-enters this component and creates an infinite redirect loop.
             '/account/logout';
     if (url.startsWith('/account/')) {
       window.location.href = url;

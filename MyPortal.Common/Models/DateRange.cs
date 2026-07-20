@@ -2,7 +2,6 @@
 
 namespace MyPortal.Common.Models;
 
-/// <summary>Represents an inclusive start / exclusive end date range.</summary>
 public class DateRange
 {
     public DateTime Start { get; private set; }
@@ -34,25 +33,21 @@ public class DateRange
 
     public bool IsAdjacentTo(DateRange other) =>
         End == other.Start || Start == other.End;
-
-    /// <summary>Expands this range to also cover <paramref name="other"/>.</summary>
+    
     public void Merge(DateRange other)
     {
         if (other.Start < Start) Start = other.Start;
         if (other.End > End) End = other.End;
     }
-
-    /// <summary>Shifts the range so it begins at <paramref name="newStart"/>.</summary>
+    
     public void MoveToStart(DateTime newStart) => Move(newStart - Start);
-
-    /// <summary>Shifts both endpoints by <paramref name="offset"/>.</summary>
+    
     public void Move(TimeSpan offset)
     {
         Start = Start.Add(offset);
         End = End.Add(offset);
     }
-
-    /// <summary>Stretches the end of the range by <paramref name="amount"/>.</summary>
+    
     public void Extend(TimeSpan amount)
     {
         if (amount < TimeSpan.Zero)
@@ -60,11 +55,7 @@ public class DateRange
 
         End = End.Add(amount);
     }
-
-    /// <summary>
-    /// Attempts to coalesce this range with <paramref name="other"/>.
-    /// Returns <c>false</c> when the two ranges are not adjacent.
-    /// </summary>
+    
     public bool TryCoalesce(DateRange other, out DateRange? coalesced)
     {
         if (!IsAdjacentTo(other))

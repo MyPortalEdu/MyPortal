@@ -1,15 +1,9 @@
 namespace MyPortal.Common.Constants;
 
-/// <summary>
-/// Well-known DiaryEventType IDs seeded by 20251101000300_seed_uk_data.sql. Every row is IsSystem=1
-/// (General was flagged late by 20260716000000_fix_lookup_is_system_flags.sql), so the rows are
-/// stable across deployments and not deletable through the UI.
-/// </summary>
 public static class DiaryEventTypes
 {
     public static readonly Guid General         = Guid.Parse("84E9DDA4-1BCB-4A2F-8082-FCE51DD04F2A");
     public static readonly Guid EcActivity      = Guid.Parse("84E9DDA4-1BCB-4A2F-8082-FCE51DD04F22");
-    // …F23 was Lesson — removed; lessons are backed by Sessions, not DiaryEvents (mig 0022).
     public static readonly Guid Cover           = Guid.Parse("84E9DDA4-1BCB-4A2F-8082-FCE51DD04F24");
     public static readonly Guid Detention       = Guid.Parse("84E9DDA4-1BCB-4A2F-8082-FCE51DD04F25");
     public static readonly Guid Ncc             = Guid.Parse("84E9DDA4-1BCB-4A2F-8082-FCE51DD04F26");

@@ -1,6 +1,3 @@
-// Mirrors MyPortal.Contracts.Models.People.* for the addresses section of the
-// Contact Details area. Addresses are shared entities — see the granular endpoints
-// and the FixInPlace/Moved edit mode.
 import { LookupResponse } from './lookup';
 
 export interface PersonAddressResponse {
@@ -17,7 +14,6 @@ export interface PersonAddressResponse {
   county: string;
   postcode: string;
   country: string;
-  // How many people share this address, including this one. > 1 means shared.
   sharedCount: number;
 }
 
@@ -40,11 +36,9 @@ export interface AddressListResponse {
   addressTypes: LookupResponse[];
 }
 
-// Serialised as strings by the API (JsonStringEnumConverter).
 export type AddressEditMode = 'FixInPlace' | 'Moved';
 
 export interface PersonAddressUpsertRequest {
-  // Set to link an existing address; the fields below are ignored when it is.
   existingAddressId?: string | null;
   typeId: string;
   isMain: boolean;

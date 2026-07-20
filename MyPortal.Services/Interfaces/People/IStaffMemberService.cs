@@ -62,6 +62,15 @@ public interface IStaffMemberService
     /// </summary>
     Task<Guid> CreateForPersonAsync(StaffMemberCreateForPersonRequest model, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Advisory availability check for a staff code — true when the code is not already in use.
+    /// Blank codes are reported available (nothing to clash with). Pass <paramref name="excludeStaffMemberId"/>
+    /// when editing so a record does not clash with itself. This is a convenience check for inline
+    /// UI feedback; the authoritative guard still runs on create/update.
+    /// </summary>
+    Task<bool> IsCodeAvailableAsync(string? code, Guid? excludeStaffMemberId,
+        CancellationToken cancellationToken);
+
     /// <summary>Soft-deletes the StaffMember row; the underlying Person is left intact.</summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

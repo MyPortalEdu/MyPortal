@@ -3,17 +3,16 @@ import {
   Component,
   OnInit,
   computed,
+  effect,
   forwardRef,
   inject,
   input,
   signal,
+  untracked,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
-import { DatePicker } from 'primeng/datepicker';
-import { Checkbox } from 'primeng/checkbox';
+import { FieldTree, FormField, applyEach, form, maxLength, required, submit, validate } from '@angular/forms/signals';
+import { MpButton, MpCheckbox, MpDatePicker, MpInput } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -33,26 +32,47 @@ import { Field } from '../../../../../../shared/components/field/field';
 import {
   StaffProfessionalDetailsResponse,
   StaffProfessionalDetailsUpsertRequest,
-  StaffQualificationUpsertItem,
 } from '../../../../../../shared/types/staff-professional-details';
 import { StaffAreaPanel } from './staff-area-panel';
 
-/**
- * Professional Details area: teaching status, QTS, statutory induction and qualifications.
- * Relationship-scoped edit (HR All or line-manager Managed) — self can view but never edit.
- * Self-loads on mount.
- */
+interface QualificationRow {
+  id: string | null;
+  qualificationLevelId: string | null;
+  title: string;
+  subject: string;
+  awardingBody: string;
+  grade: string;
+  classOfDegreeId: string | null;
+  yearAwarded: number | null;
+}
+interface ProfessionalModel {
+  isTeachingStaff: boolean;
+  hasQts: boolean;
+  hasHlta: boolean;
+  hasQtls: boolean;
+  hasEyts: boolean;
+  isSeniorLeadership: boolean;
+  teacherReferenceNumber: string;
+  qtsRouteId: string | null;
+  qtsAwardedDate: Date | null;
+  inductionStatusId: string | null;
+  inductionStartDate: Date | null;
+  inductionCompletedDate: Date | null;
+  qualificationsSummary: string;
+  qualifications: QualificationRow[];
+}
+
 @Component({
   selector: 'mp-staff-professional-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
-    FormsModule,
-    Button,
-    InputText,
-    DatePicker,
-    Checkbox,
+    FormField,
+    MpButton,
+    MpCheckbox,
+    MpDatePicker,
+    MpInput,
     LookupSelect,
     Loading,
     EmptyState,
@@ -76,49 +96,59 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
   readonly relationship = input<StaffRelationship>();
 
   protected readonly loading = signal(false);
-  override readonly saving = signal(false);
   override readonly editing = signal(false);
 
   protected readonly professional = signal<StaffProfessionalDetailsResponse | null>(null);
 
-  protected readonly isTeachingStaff = signal<boolean>(false);
-  protected readonly hasQts = signal<boolean>(false);
-  protected readonly hasHlta = signal<boolean>(false);
-  protected readonly hasQtls = signal<boolean>(false);
-  protected readonly hasEyts = signal<boolean>(false);
-  protected readonly isSeniorLeadership = signal<boolean>(false);
-  protected readonly teacherReferenceNumber = signal<string | null>(null);
-  protected readonly qtsRouteId = signal<string | null>(null);
-  protected readonly qtsAwardedDate = signal<Date | null>(null);
-  protected readonly inductionStatusId = signal<string | null>(null);
-  protected readonly inductionStartDate = signal<Date | null>(null);
-  protected readonly inductionCompletedDate = signal<Date | null>(null);
-  protected readonly qualificationsSummary = signal<string | null>(null);
-  protected readonly qualifications = signal<StaffQualificationUpsertItem[]>([]);
+  protected readonly model = signal<ProfessionalModel>({
+    isTeachingStaff: false,
+    hasQts: false,
+    hasHlta: false,
+    hasQtls: false,
+    hasEyts: false,
+    isSeniorLeadership: false,
+    teacherReferenceNumber: '',
+    qtsRouteId: null,
+    qtsAwardedDate: null,
+    inductionStatusId: null,
+    inductionStartDate: null,
+    inductionCompletedDate: null,
+    qualificationsSummary: '',
+    qualifications: [],
+  });
+  protected readonly f = form(this.model, path => {
+    validate(path.teacherReferenceNumber, ({ value }) => {
+      const trn = value().trim();
+      return !trn || /^\d{7}$/.test(trn)
+        ? undefined
+        : { kind: 'pattern', message: 'staff-members.professional.trnInvalid' };
+    });
+    maxLength(path.teacherReferenceNumber, 7);
+    maxLength(path.qualificationsSummary, 128);
+    applyEach(path.qualifications, item => {
+      required(item.title);
+      validate(item.title, ({ value }) =>
+        value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+      );
+      maxLength(item.grade, 20);
+    });
+  });
   private readonly snapshot = signal<string>('');
 
-  // Option lists travel with the professional payload so the editor is self-contained.
   protected readonly qtsRoutes = computed(() => this.professional()?.qtsRoutes ?? []);
   protected readonly inductionStatuses = computed(() => this.professional()?.inductionStatuses ?? []);
   protected readonly qualificationLevels = computed(() => this.professional()?.qualificationLevels ?? []);
   protected readonly classesOfDegree = computed(() => this.professional()?.classesOfDegree ?? []);
 
-  // The teaching-status checkboxes, driven by a small descriptor list so the template doesn't
-  // repeat the same get/set block six times. The i18n key is the field name.
-  protected readonly professionalFlags: {
-    key: string;
-    get: () => boolean;
-    set: (value: boolean) => void;
-  }[] = [
-    { key: 'isTeachingStaff', get: () => this.isTeachingStaff(), set: v => this.onIsTeachingStaff(v) },
-    { key: 'hasQts', get: () => this.hasQts(), set: v => this.onHasQts(v) },
-    { key: 'hasHlta', get: () => this.hasHlta(), set: v => this.hasHlta.set(v) },
-    { key: 'hasQtls', get: () => this.hasQtls(), set: v => this.hasQtls.set(v) },
-    { key: 'hasEyts', get: () => this.hasEyts(), set: v => this.hasEyts.set(v) },
-    { key: 'isSeniorLeadership', get: () => this.isSeniorLeadership(), set: v => this.isSeniorLeadership.set(v) },
+  protected readonly professionalFlags: { key: string; field: FieldTree<boolean> }[] = [
+    { key: 'isTeachingStaff', field: this.f.isTeachingStaff },
+    { key: 'hasQts', field: this.f.hasQts },
+    { key: 'hasHlta', field: this.f.hasHlta },
+    { key: 'hasQtls', field: this.f.hasQtls },
+    { key: 'hasEyts', field: this.f.hasEyts },
+    { key: 'isSeniorLeadership', field: this.f.isSeniorLeadership },
   ];
 
-  // Professional edit: HR (All) or the line manager (Managed) — no self-edit.
   override readonly canEdit = computed(() => {
     const perms = this.permissions();
     const rel = this.relationship();
@@ -127,37 +157,49 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  // A 7-digit TRN when provided, and every qualification row needs a title.
-  override readonly valid = computed(() => {
-    const trn = (this.teacherReferenceNumber() ?? '').trim();
-    if (trn.length > 0 && !/^\d{7}$/.test(trn)) return false;
-    return this.qualifications().every(q => q.title.trim().length > 0);
-  });
+  override readonly saving = computed(() => this.f().submitting());
+  override readonly valid = computed(() => this.f().valid());
 
-  // Serialised edit state for the dirty check. Dates normalised to ISO so a Date vs string doesn't
-  // read as a change.
-  private readonly form = computed(() =>
-    JSON.stringify({
-      isTeachingStaff: this.isTeachingStaff(),
-      hasQts: this.hasQts(),
-      hasHlta: this.hasHlta(),
-      hasQtls: this.hasQtls(),
-      hasEyts: this.hasEyts(),
-      isSeniorLeadership: this.isSeniorLeadership(),
-      teacherReferenceNumber: this.teacherReferenceNumber(),
-      qtsRouteId: this.qtsRouteId(),
-      qtsAwardedDate: this.qtsAwardedDate()?.toISOString() ?? null,
-      inductionStatusId: this.inductionStatusId(),
-      inductionStartDate: this.inductionStartDate()?.toISOString() ?? null,
-      inductionCompletedDate: this.inductionCompletedDate()?.toISOString() ?? null,
-      qualificationsSummary: this.qualificationsSummary(),
-      qualifications: this.qualifications(),
-    }),
-  );
+  private readonly form = computed(() => JSON.stringify(this.model()));
 
   override readonly dirty = computed(
     () => this.professional() != null && this.snapshot() !== this.form(),
   );
+
+  constructor() {
+    super();
+    effect(() => {
+      if (this.model().isTeachingStaff) return;
+      untracked(() =>
+        this.model.update(m =>
+          m.teacherReferenceNumber === '' &&
+          !m.hasQts &&
+          m.inductionStatusId === null &&
+          m.inductionStartDate === null &&
+          m.inductionCompletedDate === null
+            ? m
+            : {
+                ...m,
+                teacherReferenceNumber: '',
+                hasQts: false,
+                inductionStatusId: null,
+                inductionStartDate: null,
+                inductionCompletedDate: null,
+              },
+        ),
+      );
+    });
+    effect(() => {
+      if (this.model().hasQts) return;
+      untracked(() =>
+        this.model.update(m =>
+          m.qtsRouteId === null && m.qtsAwardedDate === null
+            ? m
+            : { ...m, qtsRouteId: null, qtsAwardedDate: null },
+        ),
+      );
+    });
+  }
 
   ngOnInit(): void {
     this.load();
@@ -188,104 +230,100 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
   }
 
   override async save(): Promise<void> {
-    if (!this.canEdit() || !this.valid() || this.saving()) return;
-    this.saving.set(true);
-
-    const payload: StaffProfessionalDetailsUpsertRequest = {
-      isTeachingStaff: this.isTeachingStaff(),
-      hasQts: this.hasQts(),
-      hasHlta: this.hasHlta(),
-      hasQtls: this.hasQtls(),
-      hasEyts: this.hasEyts(),
-      isSeniorLeadership: this.isSeniorLeadership(),
-      teacherReferenceNumber: this.normalise(this.teacherReferenceNumber()),
-      qtsRouteId: this.qtsRouteId(),
-      qtsAwardedDate: this.qtsAwardedDate()?.toISOString() ?? null,
-      inductionStatusId: this.inductionStatusId(),
-      inductionStartDate: this.inductionStartDate()?.toISOString() ?? null,
-      inductionCompletedDate: this.inductionCompletedDate()?.toISOString() ?? null,
-      qualificationsSummary: this.normalise(this.qualificationsSummary()),
-      qualifications: this.qualifications().map(q => ({
-        id: q.id ?? null,
-        qualificationLevelId: q.qualificationLevelId ?? null,
-        title: q.title.trim(),
-        subject: this.normalise(q.subject),
-        awardingBody: this.normalise(q.awardingBody),
-        grade: this.normalise(q.grade),
-        classOfDegreeId: q.classOfDegreeId ?? null,
-        yearAwarded: q.yearAwarded ?? null,
-      })),
-    };
-
-    try {
-      await firstValueFrom(this.data.updateProfessionalDetails(this.staffMemberId(), payload));
+    if (!this.canEdit() || !this.dirty()) return;
+    await submit(this.f, async () => {
+      const m = this.model();
+      const payload: StaffProfessionalDetailsUpsertRequest = {
+        isTeachingStaff: m.isTeachingStaff,
+        hasQts: m.hasQts,
+        hasHlta: m.hasHlta,
+        hasQtls: m.hasQtls,
+        hasEyts: m.hasEyts,
+        isSeniorLeadership: m.isSeniorLeadership,
+        teacherReferenceNumber: this.normalise(m.teacherReferenceNumber),
+        qtsRouteId: m.qtsRouteId,
+        qtsAwardedDate: m.qtsAwardedDate?.toISOString() ?? null,
+        inductionStatusId: m.inductionStatusId,
+        inductionStartDate: m.inductionStartDate?.toISOString() ?? null,
+        inductionCompletedDate: m.inductionCompletedDate?.toISOString() ?? null,
+        qualificationsSummary: this.normalise(m.qualificationsSummary),
+        qualifications: m.qualifications.map(q => ({
+          id: q.id,
+          qualificationLevelId: q.qualificationLevelId,
+          title: q.title.trim(),
+          subject: this.normalise(q.subject),
+          awardingBody: this.normalise(q.awardingBody),
+          grade: this.normalise(q.grade),
+          classOfDegreeId: q.classOfDegreeId,
+          yearAwarded: q.yearAwarded,
+        })),
+      };
+      try {
+        await firstValueFrom(this.data.updateProfessionalDetails(this.staffMemberId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.saveProfessionalError'));
+        return;
+      }
       this.notify.success(this.transloco.translate('staff-members.savedProfessionalToast'));
       this.editing.set(false);
-      // Refetch so server-assigned ids (new rows) and any normalisation become the baseline.
       this.load();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.saveProfessionalError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   private apply(row: StaffProfessionalDetailsResponse | null): void {
-    this.isTeachingStaff.set(row?.isTeachingStaff ?? false);
-    this.hasQts.set(row?.hasQts ?? false);
-    this.hasHlta.set(row?.hasHlta ?? false);
-    this.hasQtls.set(row?.hasQtls ?? false);
-    this.hasEyts.set(row?.hasEyts ?? false);
-    this.isSeniorLeadership.set(row?.isSeniorLeadership ?? false);
-    this.teacherReferenceNumber.set(row?.teacherReferenceNumber ?? null);
-    this.qtsRouteId.set(row?.qtsRouteId ?? null);
-    this.qtsAwardedDate.set(row?.qtsAwardedDate ? new Date(row.qtsAwardedDate) : null);
-    this.inductionStatusId.set(row?.inductionStatusId ?? null);
-    this.inductionStartDate.set(row?.inductionStartDate ? new Date(row.inductionStartDate) : null);
-    this.inductionCompletedDate.set(
-      row?.inductionCompletedDate ? new Date(row.inductionCompletedDate) : null,
-    );
-    this.qualificationsSummary.set(row?.qualificationsSummary ?? null);
-    this.qualifications.set(
-      (row?.qualifications ?? []).map(q => ({
+    this.model.set({
+      isTeachingStaff: row?.isTeachingStaff ?? false,
+      hasQts: row?.hasQts ?? false,
+      hasHlta: row?.hasHlta ?? false,
+      hasQtls: row?.hasQtls ?? false,
+      hasEyts: row?.hasEyts ?? false,
+      isSeniorLeadership: row?.isSeniorLeadership ?? false,
+      teacherReferenceNumber: row?.teacherReferenceNumber ?? '',
+      qtsRouteId: row?.qtsRouteId ?? null,
+      qtsAwardedDate: this.toDate(row?.qtsAwardedDate),
+      inductionStatusId: row?.inductionStatusId ?? null,
+      inductionStartDate: this.toDate(row?.inductionStartDate),
+      inductionCompletedDate: this.toDate(row?.inductionCompletedDate),
+      qualificationsSummary: row?.qualificationsSummary ?? '',
+      qualifications: (row?.qualifications ?? []).map(q => ({
         id: q.id,
         qualificationLevelId: q.qualificationLevelId ?? null,
         title: q.title,
-        subject: q.subject ?? null,
-        awardingBody: q.awardingBody ?? null,
-        grade: q.grade ?? null,
+        subject: q.subject ?? '',
+        awardingBody: q.awardingBody ?? '',
+        grade: q.grade ?? '',
         classOfDegreeId: q.classOfDegreeId ?? null,
         yearAwarded: q.yearAwarded ?? null,
       })),
-    );
+    });
+    this.f().reset();
     this.snapshot.set(this.form());
   }
 
-  // Qualifications grid — a new row has no id (the server inserts it); editing a field rewrites the
-  // array immutably so the dirty check and OnPush both fire.
   protected addQualification(): void {
-    this.qualifications.update(rows => [
-      ...rows,
-      {
-        id: null,
-        qualificationLevelId: null,
-        title: '',
-        subject: null,
-        awardingBody: null,
-        grade: null,
-        classOfDegreeId: null,
-        yearAwarded: null,
-      },
-    ]);
+    this.model.update(m => ({
+      ...m,
+      qualifications: [
+        ...m.qualifications,
+        {
+          id: null,
+          qualificationLevelId: null,
+          title: '',
+          subject: '',
+          awardingBody: '',
+          grade: '',
+          classOfDegreeId: null,
+          yearAwarded: null,
+        },
+      ],
+    }));
   }
 
   protected removeQualification(index: number): void {
-    this.qualifications.update(rows => rows.filter((_, i) => i !== index));
+    this.model.update(m => ({ ...m, qualifications: m.qualifications.filter((_, i) => i !== index) }));
   }
 
-  // One-line read-only summary of a qualification's secondary fields (level, subject, grade, class,
-  // awarding body, year) — empty fields dropped.
-  protected qualificationLine(q: StaffQualificationUpsertItem): string {
+  protected qualificationLine(q: QualificationRow): string {
     const parts = [
       this.lookupLabel(this.qualificationLevels(), q.qualificationLevelId),
       q.subject,
@@ -296,39 +334,5 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     ];
     const shown = parts.filter(p => p && p !== '—');
     return shown.length ? shown.join(' · ') : '—';
-  }
-
-  protected patchQualification<K extends keyof StaffQualificationUpsertItem>(
-    index: number,
-    key: K,
-    value: StaffQualificationUpsertItem[K],
-  ): void {
-    this.qualifications.update(rows =>
-      rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
-    );
-  }
-
-  // "Teaching staff" means qualified/unqualified teachers — not teaching assistants, who are support
-  // staff even as HLTAs. QTS and statutory induction only apply to teachers, so clear and hide those
-  // fields when the teaching-staff flag is off.
-  protected onIsTeachingStaff(value: boolean): void {
-    this.isTeachingStaff.set(value);
-    if (!value) {
-      this.teacherReferenceNumber.set(null);
-      this.onHasQts(false);
-      this.inductionStatusId.set(null);
-      this.inductionStartDate.set(null);
-      this.inductionCompletedDate.set(null);
-    }
-  }
-
-  // Route to QTS and award date are meaningless without QTS; clear them when the QTS flag is turned
-  // off so the hidden fields don't persist stale data.
-  protected onHasQts(value: boolean): void {
-    this.hasQts.set(value);
-    if (!value) {
-      this.qtsRouteId.set(null);
-      this.qtsAwardedDate.set(null);
-    }
   }
 }

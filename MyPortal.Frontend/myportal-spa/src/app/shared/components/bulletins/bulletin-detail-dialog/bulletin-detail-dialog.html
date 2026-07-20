@@ -1,18 +1,14 @@
 <ng-container *transloco="let t; prefix: 'bulletins'">
-<p-dialog
+<mp-dialog
   [visible]="visible()"
   [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [dismissableMask]="true"
+  [dismissable]="true"
   [closeOnEscape]="true"
-  [style]="{ width: 'min(44rem, 92vw)' }"
-  styleClass="bulletin-detail-dialog mp-flush-dialog"
-  (onHide)="onHide()"
-  [showHeader]="false">
+  panelClass="w-[min(44rem,92vw)]"
+  (closed)="onHide()">
 
   @if (bulletin(); as b) {
-    <div class="flex items-center justify-between p-4 border-b border-surface">
+    <div class="flex items-center justify-between p-4 border-b border-border">
       <span
         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
         [style.color]="b.categoryColourCode"
@@ -33,11 +29,10 @@
           {{ initials() }}
         </span>
         <span class="font-medium text-sm">{{ b.createdByName }}</span>
-        <span class="text-muted-color">·</span>
-        <span class="text-muted-color">{{ formatDateTime(b.createdAt) }}</span>
+        <span class="text-muted-foreground">·</span>
+        <span class="text-muted-foreground">{{ formatDateTime(b.createdAt) }}</span>
       </div>
 
-      <!-- Body. Plain text for now; renderer is a follow-up. -->
       <div class="whitespace-pre-wrap text-sm leading-relaxed">{{ b.detail }}</div>
 
       <mp-bulletin-attachments
@@ -46,37 +41,31 @@
         [directoryId]="b.directoryId">
       </mp-bulletin-attachments>
 
-      <div class="pt-3 border-t border-surface">
-        <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-color mb-1">{{ t('detail.sentTo') }}</div>
+      <div class="pt-3 border-t border-border">
+        <div class="text-[0.6875rem] tracking-[0.06em] font-bold text-muted-foreground mb-1">{{ t('detail.sentTo') }}</div>
         <div class="flex items-center gap-2 text-xs">
-          <i class="fa-regular fa-users text-muted-color"></i>
+          <i class="fa-regular fa-users text-muted-foreground"></i>
           <span>{{ audienceSummary() }}</span>
           @if (b.acknowledgedCount !== null && b.acknowledgedCount !== undefined) {
-            <span class="text-muted-color">·</span>
-            <span class="text-muted-color">{{ t('detail.acknowledgedCount', { count: b.acknowledgedCount }) }}</span>
+            <span class="text-muted-foreground">·</span>
+            <span class="text-muted-foreground">{{ t('detail.acknowledgedCount', { count: b.acknowledgedCount }) }}</span>
           }
         </div>
       </div>
     </div>
 
-    <!-- Footer. bg-emphasis + rounded-b-xl matches the rest of the app's
-         modal footers for a consistent "actions zone" treatment. -->
-    <div class="flex items-center justify-between gap-3 p-4 border-t border-surface bg-emphasis rounded-b-xl">
+    <div class="flex items-center justify-between gap-3 p-4 border-t border-border bg-muted rounded-b-xl">
       @if (isExpired()) {
-        <!-- Expired wins: no Acknowledge button (pointless) and no
-             "Acknowledged" badge (irrelevant once the bulletin's gone). -->
-        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-color">
+
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <i class="fa-regular fa-clock"></i> {{ t('detail.expired') }}
         </span>
       } @else if (b.requiresAcknowledgement && !b.hasAcknowledged) {
-        <p-button
-          [label]="t('detail.acknowledge')"
-          icon="fa-solid fa-check"
-          [loading]="acknowledging()"
-          (click)="acknowledge()">
-        </p-button>
+        <button mpButton
+          [disabled]="acknowledging()"
+          (click)="acknowledge()"><i class="fa-solid" [class.fa-check]="!acknowledging()" [class.fa-spinner]="acknowledging()" [class.fa-spin]="acknowledging()"></i> {{ t('detail.acknowledge') }}</button>
       } @else if (b.requiresAcknowledgement && b.hasAcknowledged) {
-        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--p-green-600)]">
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
           <i class="fa-solid fa-circle-check"></i> {{ t('detail.acknowledged') }}
         </span>
       } @else {
@@ -85,27 +74,20 @@
 
       <div class="flex items-center gap-1">
         @if (canEdit()) {
-          <p-button
-            [label]="t('detail.edit')"
-            icon="fa-solid fa-pen-to-square"
-            severity="secondary"
-            [text]="true"
-              (click)="requestEdit()">
-          </p-button>
-          <p-button
-            [label]="t('detail.delete')"
-            icon="fa-solid fa-trash-can"
-            severity="danger"
-            [text]="true"
-              (click)="requestDelete()">
-          </p-button>
+          <button mpButton
+            variant="ghost"
+            (click)="requestEdit()"><i class="fa-solid fa-pen-to-square"></i> {{ t('detail.edit') }}</button>
+          <button mpButton
+            variant="ghost"
+            class="text-destructive hover:text-destructive"
+            (click)="requestDelete()"><i class="fa-solid fa-trash-can"></i> {{ t('detail.delete') }}</button>
         }
       </div>
     </div>
   } @else if (loading()) {
     <div class="flex items-center justify-center p-12" aria-busy="true">
-      <p-progressSpinner [ariaLabel]="t('detail.loading')" strokeWidth="3" styleClass="!w-10 !h-10"></p-progressSpinner>
+      <mp-spinner [ariaLabel]="t('detail.loading')" size="2.5rem"></mp-spinner>
     </div>
   }
-</p-dialog>
+</mp-dialog>
 </ng-container>

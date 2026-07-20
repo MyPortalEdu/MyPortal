@@ -1,7 +1,5 @@
 import { LookupResponse } from './lookup';
 
-// Mirrors MyPortal.Contracts.Models.People.PayScalePointResponse — a pay-scale
-// point carrying its parent payScaleId so the editor can cascade.
 export interface PayScalePointResponse {
   id: string;
   payScaleId: string;
@@ -9,7 +7,6 @@ export interface PayScalePointResponse {
   fullTimeSalary?: number | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffContractResponse.
 export interface StaffContractResponse {
   id: string;
   contractTypeId: string;
@@ -30,8 +27,6 @@ export interface StaffContractResponse {
   dailyRate: boolean;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffContractUpsertItem — null id is a
-// new row; populated id updates; omitted rows are soft-deleted server-side.
 export interface StaffContractUpsertItem {
   id?: string | null;
   contractTypeId: string | null;
@@ -52,7 +47,6 @@ export interface StaffContractUpsertItem {
   dailyRate: boolean;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffEmploymentResponse.
 export interface StaffEmploymentResponse {
   id: string;
   startDate: string;
@@ -64,7 +58,6 @@ export interface StaffEmploymentResponse {
   contracts: StaffContractResponse[];
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffEmploymentUpsertItem.
 export interface StaffEmploymentUpsertItem {
   id?: string | null;
   startDate: string | null;
@@ -76,8 +69,6 @@ export interface StaffEmploymentUpsertItem {
   contracts: StaffContractUpsertItem[];
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffEmploymentDetailsResponse —
-// bank/NI + employment spells (with contracts) + the option lists.
 export interface StaffEmploymentDetailsResponse {
   bankName?: string | null;
   bankAccount?: string | null;
@@ -100,7 +91,6 @@ export interface StaffEmploymentDetailsResponse {
   payScalePoints: PayScalePointResponse[];
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffEmploymentDetailsUpsertRequest.
 export interface StaffEmploymentDetailsUpsertRequest {
   bankName?: string | null;
   bankAccount?: string | null;

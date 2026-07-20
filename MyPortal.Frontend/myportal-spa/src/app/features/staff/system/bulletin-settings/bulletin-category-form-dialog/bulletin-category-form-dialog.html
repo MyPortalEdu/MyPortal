@@ -1,75 +1,54 @@
 <ng-container *transloco="let t; prefix: 'bulletin-settings'">
-<p-dialog
+<mp-dialog
   [visible]="visible()"
   [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [dismissableMask]="false"
+  [dismissable]="false"
   [closeOnEscape]="!isDirty()"
-  [style]="{ width: 'min(40rem, 94vw)' }"
-  styleClass="mp-flush-dialog"
-  (onHide)="onHide()"
-  [showHeader]="false">
+  panelClass="w-[min(40rem,94vw)]"
+  (closed)="onHide()"
+  [title]="isEdit() ? t('form.titleEdit') : t('form.titleCreate')"
+  [closeAriaLabel]="'common.close' | transloco">
 
-  <div class="flex items-center justify-between p-4 border-b border-surface">
-    <h3 class="text-base font-semibold m-0">
-      {{ isEdit() ? t('form.titleEdit') : t('form.titleCreate') }}
-    </h3>
-    <button type="button" class="mp-icon-button" (click)="onCancel()" [attr.aria-label]="'common.close' | transloco">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-
-  <div class="p-4 flex flex-col gap-4">
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.name') }}</label>
-      <input
-        pInputText
-        [placeholder]="t('form.namePlaceholder')"
-        [ngModel]="name()"
-        (ngModelChange)="name.set($event)"
-        (blur)="markTouched('name')"
-        required
-        name="name"
-        #nameRef="ngModel"
-        [invalid]="wasTouched('name') && nameRef.invalid" />
-    </div>
+  <div class="flex flex-col gap-4">
+    <mp-form-field [label]="t('form.name')">
+      <input mpInput [placeholder]="t('form.namePlaceholder')" [formField]="f.name" />
+    </mp-form-field>
 
     <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.icon') }}</label>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.icon') }}</label>
       <div class="grid grid-cols-6 sm:grid-cols-10 gap-1.5">
         @for (i of icons; track i) {
           <button
             type="button"
-            class="aspect-square rounded-md border border-surface flex items-center justify-center hover:bg-emphasis transition-colors"
-            [class.ring-2]="icon() === i"
-            [class.ring-primary]="icon() === i"
-            [class.border-primary]="icon() === i"
-            (click)="icon.set(i)"
+            class="aspect-square rounded-md border border-border flex items-center justify-center hover:bg-muted transition-colors"
+            [class.ring-2]="model().icon === i"
+            [class.ring-primary]="model().icon === i"
+            [class.border-primary]="model().icon === i"
+            (click)="setIcon(i)"
             [attr.aria-label]="i"
-            [attr.aria-pressed]="icon() === i">
-            <i [class]="i + ' text-base'" [style.color]="colour()"></i>
+            [attr.aria-pressed]="model().icon === i">
+            <i [class]="i + ' text-base'" [style.color]="model().colour"></i>
           </button>
         }
       </div>
     </div>
 
     <div class="flex flex-col gap-1.5">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.colour') }}</label>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.colour') }}</label>
       <div class="flex flex-wrap gap-2">
         @for (c of colours; track c) {
           <button
             type="button"
-            class="w-7 h-7 rounded-full border border-surface flex items-center justify-center transition-transform"
-            [class.ring-2]="colour() === c"
-            [class.ring-offset-2]="colour() === c"
-            [class.scale-110]="colour() === c"
+            class="w-7 h-7 rounded-full border border-border flex items-center justify-center transition-transform"
+            [class.ring-2]="model().colour === c"
+            [class.ring-offset-2]="model().colour === c"
+            [class.scale-110]="model().colour === c"
             [style.backgroundColor]="c"
             [style.borderColor]="c"
-            (click)="colour.set(c)"
+            (click)="setColour(c)"
             [attr.aria-label]="c"
-            [attr.aria-pressed]="colour() === c">
-            @if (colour() === c) {
+            [attr.aria-pressed]="model().colour === c">
+            @if (model().colour === c) {
               <i class="fa-solid fa-check text-white text-[0.6875rem]"></i>
             }
           </button>
@@ -77,46 +56,29 @@
       </div>
     </div>
 
-    <!-- Display order: fixed small width, its own row so the wider Active
-         hint isn't squashed beside it. -->
     <div class="flex flex-col gap-1 max-w-[8rem]">
-      <label class="text-xs font-medium text-muted-color">{{ t('form.displayOrder') }}</label>
-      <p-inputnumber
-        [ngModel]="displayOrder()"
-        (ngModelChange)="displayOrder.set($event)"
-        [min]="0"
-        [max]="999"
-        [showButtons]="false">
-      </p-inputnumber>
-      <span class="text-xs text-muted-color leading-snug">{{ t('form.displayOrderHint') }}</span>
+      <label class="text-xs font-medium text-muted-foreground">{{ t('form.displayOrder') }}</label>
+      <mp-input-number [formField]="f.displayOrder" [min]="0" [max]="999" [showButtons]="false">
+      </mp-input-number>
+      <span class="text-xs text-muted-foreground leading-snug">{{ t('form.displayOrderHint') }}</span>
     </div>
 
-    <!-- Active: full-width row. The hint reads as the second line of a
-         clickable label, with the checkbox aligning to the first line. -->
     <label class="flex items-start gap-2 text-sm cursor-pointer">
-      <p-checkbox
-        [binary]="true"
-        [ngModel]="active()"
-        (ngModelChange)="active.set($event)">
-      </p-checkbox>
+      <mp-checkbox [formField]="f.active">
+      </mp-checkbox>
       <span class="flex flex-col gap-0.5 leading-tight">
         <span class="font-medium">{{ t('form.active') }}</span>
-        <span class="text-muted-color text-xs leading-snug">{{ t('form.activeHint') }}</span>
+        <span class="text-muted-foreground text-xs leading-snug">{{ t('form.activeHint') }}</span>
       </span>
     </label>
   </div>
 
-  <!-- Footer. bg-emphasis + rounded-b-xl matches the rest of the app's
-       modal footers for a consistent "actions zone" treatment. -->
-  <div class="flex items-center justify-end gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
-    <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="onCancel()"></p-button>
-    <p-button
-      [label]="isEdit() ? t('form.save') : t('form.create')"
-      icon="fa-solid fa-check"
-      [disabled]="!isValid() || !isDirty()"
-      [loading]="submitting()"
-      (click)="save()">
-    </p-button>
+  <div mpDialogFooter class="flex items-center justify-end gap-2">
+    <button mpButton variant="ghost" (click)="onCancel()">{{ 'common.cancel' | transloco }}</button>
+    <button
+      mpButton
+      [disabled]="!isDirty() || f().submitting()"
+      (click)="save()"><i class="fa-solid" [class.fa-check]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ isEdit() ? t('form.save') : t('form.create') }}</button>
   </div>
-</p-dialog>
+</mp-dialog>
 </ng-container>

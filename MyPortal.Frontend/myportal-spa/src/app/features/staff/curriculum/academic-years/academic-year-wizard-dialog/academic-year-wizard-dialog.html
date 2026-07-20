@@ -1,18 +1,13 @@
 <ng-container *transloco="let t; prefix: 'academic-years.wizard'">
-<p-dialog
+<mp-dialog
   [visible]="visible()"
   (visibleChange)="$event ? null : onHide()"
   [modal]="true"
-  [closable]="false"
   [closeOnEscape]="false"
-  [dismissableMask]="false"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: 'min(64rem, 95vw)' }"
-  styleClass="mp-flush-dialog"
-  [showHeader]="false">
+  [dismissable]="false"
+  panelClass="w-[min(64rem,95vw)]">
 
-  <div class="flex items-center justify-between p-4 border-b border-surface">
+  <div class="flex shrink-0 items-center justify-between p-4 border-b border-border">
     <h3 class="text-base font-semibold m-0">
       {{ readOnly() ? t('viewTitle') : (isEditMode() ? t('editTitle') : t('title')) }}
     </h3>
@@ -23,17 +18,13 @@
     </button>
   </div>
 
-  <div class="p-4 flex flex-col gap-5">
+  <div class="p-4 flex flex-1 min-h-0 flex-col gap-5 overflow-auto">
   @if (readOnly()) {
     <mp-callout severity="info" [title]="t('readOnlyTitle')">
       {{ readOnlyReason() }}
     </mp-callout>
   }
 
-  <!-- Step indicator strip. Each chip shows its position and label; the active
-       chip is filled, completed chips show a check, and upcoming chips are
-       muted. Click-to-jump is intentionally disabled — the wizard validates
-       step-by-step, so users have to walk through in order. -->
   <ol class="list-none m-0 p-0 flex flex-wrap items-center gap-2 text-sm">
     @for (key of stepKeys; track key; let i = $index) {
       <li class="flex items-center gap-2"
@@ -43,38 +34,39 @@
               [class.text-white]="i < currentStep()"
               [class.bg-primary]="i === currentStep()"
               [class.text-primary-contrast]="i === currentStep()"
-              [class.bg-emphasis]="i > currentStep()"
-              [class.text-muted-color]="i > currentStep()">
+              [class.bg-muted]="i > currentStep()"
+              [class.text-muted-foreground]="i > currentStep()">
           @if (i < currentStep()) {
             <i class="fa-solid fa-check"></i>
           } @else {
             {{ i + 1 }}
           }
         </span>
-        <!-- On mobile only the current step keeps its label (space is tight);
-             every step shows its label from sm up. -->
+
         <span class="sm:inline"
               [class.hidden]="i !== currentStep()"
               [class.font-semibold]="i === currentStep()">
           {{ t('steps.' + key) }}
         </span>
         @if (i < stepKeys.length - 1) {
-          <i class="fa-solid fa-chevron-right text-xs text-muted-color mx-1"></i>
+          <i class="fa-solid fa-chevron-right text-xs text-muted-foreground mx-1"></i>
         }
       </li>
     }
   </ol>
 
-  <!-- Active step body. One component visible at a time keeps each step's
-       state scoped to its own component instance — bookkeeping like "did the
-       user touch this field" doesn't leak across steps. In edit mode the
-       wizard is briefly empty while the GET fires; show a spinner so the
-       user doesn't see an unprefilled form for the round-trip. -->
+  @if (!readOnly() && termsOverlap()) {
+    <mp-callout severity="warn">{{ t('validation.termsOverlap') }}</mp-callout>
+  }
+  @if (!readOnly() && holidaysOutOfSpan()) {
+    <mp-callout severity="warn">{{ t('validation.holidaysOutOfSpan') }}</mp-callout>
+  }
+
   <div class="min-h-[18rem]">
     @if (loading()) {
       <div class="flex flex-col items-center justify-center min-h-[18rem] gap-3">
-        <p-progress-spinner [style]="{ width: '2.5rem', height: '2.5rem' }"></p-progress-spinner>
-        <span class="text-sm text-muted-color">{{ t('loading') }}</span>
+        <mp-spinner size="2.5rem"></mp-spinner>
+        <span class="text-sm text-muted-foreground">{{ t('loading') }}</span>
       </div>
     } @else {
       @switch (currentStepKey()) {
@@ -112,50 +104,28 @@
 
   </div>
 
-  <!-- Footer is inlined rather than projected via pTemplate="footer" because
-       PrimeNG 20 stopped honouring pTemplate-based slot projection on p-dialog.
-       Mirrors the bulletin-form-dialog footer: bg-emphasis + top border +
-       rounded-b-xl anchor it as a distinct actions strip flush against the
-       dialog's bottom edge (needs the mp-flush-dialog styleClass above to
-       cancel the default content padding). -->
-  <div class="flex items-center justify-between gap-2 p-4 border-t border-surface bg-emphasis rounded-b-xl">
-    <p-button
-      [label]="readOnly() ? ('common.close' | transloco) : t('cancel')"
-      severity="secondary"
-      [text]="true"
+  <div class="flex shrink-0 items-center justify-between gap-2 p-4 border-t border-border bg-muted rounded-b-xl">
+    <button mpButton
+      variant="ghost"
       [disabled]="submitting()"
-      (click)="onCancel()">
-    </p-button>
+      (click)="onCancel()">{{ readOnly() ? ('common.close' | transloco) : t('cancel') }}</button>
 
     <div class="flex items-center gap-2">
-      <p-button
-        [label]="t('back')"
-        icon="fa-solid fa-arrow-left"
-        severity="secondary"
+      <button mpButton
+        variant="secondary"
         [disabled]="currentStep() === 0 || submitting()"
-        (click)="back()">
-      </p-button>
+        (click)="back()"><i class="fa-solid fa-arrow-left"></i> {{ t('back') }}</button>
 
       @if (!isLastStep()) {
-        <p-button
-          [label]="t('next')"
-          icon="fa-solid fa-arrow-right"
-          iconPos="right"
-          severity="primary"
+        <button mpButton
           [disabled]="!canGoNext() || submitting() || loading()"
-          (click)="next()">
-        </p-button>
+          (click)="next()"><i class="fa-solid fa-arrow-right"></i> {{ t('next') }}</button>
       } @else if (!readOnly()) {
-        <p-button
-          [label]="isEditMode() ? t('save') : t('create')"
-          icon="fa-solid fa-check"
-          severity="primary"
-          [disabled]="!canAdvance() || submitting() || loading()"
-          [loading]="submitting()"
-          (click)="save()">
-        </p-button>
+        <button mpButton
+          [disabled]="(!canAdvance() || submitting() || loading()) || submitting()"
+          (click)="save()"><i class="fa-solid" [class.fa-check]="!submitting()" [class.fa-spinner]="submitting()" [class.fa-spin]="submitting()"></i> {{ isEditMode() ? t('save') : t('create') }}</button>
       }
     </div>
   </div>
-</p-dialog>
+</mp-dialog>
 </ng-container>

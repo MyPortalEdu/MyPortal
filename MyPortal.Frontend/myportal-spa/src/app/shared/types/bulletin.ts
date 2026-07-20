@@ -1,4 +1,3 @@
-// Matches MyPortal.Common.Enums.BulletinAudienceKind on the backend (TINYINT 1-4).
 export enum BulletinAudienceKind {
   AllStaff = 1,
   AllPupils = 2,
@@ -112,9 +111,6 @@ export interface BulletinSettingsUpdateRequest {
   allowedAudienceGroupIds: string[];
 }
 
-// Matches QueryKit's PageResult<T> on the API side. Only Items + TotalItems
-// are part of the wire contract — page/pageSize echo back to the caller via
-// the request, not the response.
 export interface PageResult<T> {
   items: T[];
   totalItems: number;

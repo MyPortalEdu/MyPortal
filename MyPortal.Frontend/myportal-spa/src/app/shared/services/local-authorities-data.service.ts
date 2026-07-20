@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LocalAuthoritySummaryResponse } from '../types/school';
 import { PageResult } from '../types/bulletin';
-import { QueryKitParams } from '../utils/primeng-querykit';
+import { QueryKitParams } from '../utils/querykit';
 
 @Injectable({ providedIn: 'root' })
 export class LocalAuthoritiesDataService {

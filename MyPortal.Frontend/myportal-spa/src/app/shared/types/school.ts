@@ -1,5 +1,3 @@
-// Wire shapes for the school details edit page. Mirrors
-// MyPortal.Contracts.Models.School.* on the backend.
 
 export interface SchoolDetailsResponse {
   id: string;

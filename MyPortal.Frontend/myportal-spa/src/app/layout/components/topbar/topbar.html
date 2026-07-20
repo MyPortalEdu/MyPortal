@@ -7,8 +7,8 @@
          text-white transition-colors"
 >
   <div class="flex items-center gap-3">
-    <button pButton type="button" class="p-button-text p-button-sm !text-white hover:!bg-white/10" (click)="menuToggle.emit()" [attr.aria-label]="t('topbar.toggleNavigation')">
-      <i pButtonIcon class="fa-solid fa-bars"></i>
+    <button mpButton variant="ghost" size="icon" type="button" class="!text-white hover:!bg-white/10" (click)="menuToggle.emit()" [attr.aria-label]="t('topbar.toggleNavigation')">
+      <i class="fa-solid fa-bars"></i>
     </button>
 
     <a routerLink="/portal" class="flex items-center gap-2 select-none">
@@ -35,23 +35,27 @@
 
   <div class="flex items-center gap-2 sm:gap-3">
     @if (me$ | async; as me) {
-      <button pButton class="!p-0 !rounded-full w-9 h-9 !bg-transparent !border-0" (click)="userMenu.toggle($event)" [attr.aria-label]="t('topbar.userMenu')">
-        <p-avatar
+      <div mpPopover #userMenu="mpPopover" align="end" [sideOffset]="8">
+      <button
+        brnPopoverTrigger
+        type="button"
+        class="flex items-center justify-center w-9 h-9 rounded-full bg-transparent border-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+        [attr.aria-label]="t('topbar.userMenu')">
+        <mp-avatar
           shape="circle"
           [label]="initials(me.displayName)"
-          [styleClass]="topbarAvatarClass()"
-        ></p-avatar>
+          [class]="topbarAvatarClass()"
+        ></mp-avatar>
       </button>
 
-      <p-popover #userMenu styleClass="user-menu-popover">
-        <div class="w-72">
+      <div *brnPopoverContent class="w-72 overflow-hidden rounded-overlay border border-border bg-background text-foreground shadow-overlay">
           <div class="flex items-center gap-3 p-4">
-            <p-avatar
+            <mp-avatar
               shape="circle"
               [label]="initials(me.displayName)"
               size="large"
-              styleClass="!bg-primary-500 !text-white !w-12 !h-12 !text-base font-semibold"
-            ></p-avatar>
+              class="!bg-primary-500 !text-white !w-12 !h-12 !text-base font-semibold"
+            ></mp-avatar>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
                 <span class="font-semibold truncate">{{ me.displayName }}</span>
@@ -67,83 +71,82 @@
             </div>
           </div>
 
-          <div class="border-t border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]"></div>
+          <div class="border-t border-border"></div>
 
-          <ul class="py-1 list-none m-0 p-0">
+          <ul class="py-1 px-2 list-none m-0">
             <li>
-              <a routerLink="/portal/profile" (click)="userMenu.hide()" class="menu-row">
-                <i class="fa-regular fa-user"></i>
+              <a routerLink="/portal/profile" (click)="userMenu.close()" [class]="menuRowClass">
+                <i class="fa-regular fa-user w-4 text-center opacity-75"></i>
                 <span class="flex-1">{{ t('userMenu.profile') }}</span>
               </a>
             </li>
             <li>
-              <a routerLink="/portal/settings" (click)="userMenu.hide()" class="menu-row">
-                <i class="fa-regular fa-gear"></i>
+              <a routerLink="/portal/settings" (click)="userMenu.close()" [class]="menuRowClass">
+                <i class="fa-regular fa-gear w-4 text-center opacity-75"></i>
                 <span class="flex-1">{{ t('userMenu.accountSettings') }}</span>
               </a>
             </li>
-            @if (me.userType === UserType.Staff) {
+            @if (me.userType === UserType.Staff && canSwitchYear()) {
               <li>
-                <button type="button" class="menu-row"
-                        (click)="userMenu.hide(); openYearSwitcher()">
-                  <i class="fa-regular fa-calendar-days"></i>
-                  <span class="flex-1 text-left">{{ t('userMenu.switchAcademicYear') }}</span>
+                <button type="button" [class]="menuRowClass"
+                        (click)="userMenu.close(); openYearSwitcher()">
+                  <i class="fa-regular fa-calendar-days w-4 text-center opacity-75"></i>
+                  <span class="flex-1">{{ t('userMenu.switchAcademicYear') }}</span>
                 </button>
               </li>
             }
             <li class="px-4 py-2 flex items-center gap-3 text-sm">
-              <i class="fa-regular fa-palette opacity-75"></i>
+              <i class="fa-regular fa-palette w-4 text-center opacity-75"></i>
               <span class="flex-1">{{ t('userMenu.theme') }}</span>
-              <div class="theme-switch">
+              @let themeBtn = 'inline-flex items-center justify-center w-7 h-6 rounded-control bg-transparent border-0 cursor-pointer text-inherit opacity-60 transition hover:opacity-90';
+              @let themeBtnActive = 'inline-flex items-center justify-center w-7 h-6 rounded-control border-0 cursor-pointer text-inherit opacity-100 bg-background shadow-sm';
+              <div class="inline-flex items-center gap-0.5 p-0.5 rounded-control border border-border bg-muted">
                 <button
                   type="button"
-                  class="theme-btn"
-                  [class.active]="themeService.theme() === 'light'"
+                  [class]="themeService.theme() === 'light' ? themeBtnActive : themeBtn"
                   (click)="themeService.setTheme('light')"
                   [attr.aria-label]="t('userMenu.themeLight')"
                 >
-                  <i class="fa-solid fa-sun"></i>
+                  <i class="fa-solid fa-sun text-xs"></i>
                 </button>
                 <button
                   type="button"
-                  class="theme-btn"
-                  [class.active]="themeService.theme() === 'dark'"
+                  [class]="themeService.theme() === 'dark' ? themeBtnActive : themeBtn"
                   (click)="themeService.setTheme('dark')"
                   [attr.aria-label]="t('userMenu.themeDark')"
                 >
-                  <i class="fa-solid fa-moon"></i>
+                  <i class="fa-solid fa-moon text-xs"></i>
                 </button>
                 <button
                   type="button"
-                  class="theme-btn"
-                  [class.active]="themeService.theme() === 'system'"
+                  [class]="themeService.theme() === 'system' ? themeBtnActive : themeBtn"
                   (click)="themeService.setTheme('system')"
                   [attr.aria-label]="t('userMenu.themeSystem')"
                 >
-                  <i class="fa-solid fa-desktop"></i>
+                  <i class="fa-solid fa-desktop text-xs"></i>
                 </button>
               </div>
             </li>
             <li>
-              <a routerLink="/portal/help" (click)="userMenu.hide()" class="menu-row">
-                <i class="fa-regular fa-circle-question"></i>
+              <a routerLink="/portal/help" (click)="userMenu.close()" [class]="menuRowClass">
+                <i class="fa-regular fa-circle-question w-4 text-center opacity-75"></i>
                 <span class="flex-1">{{ t('userMenu.helpAndSupport') }}</span>
               </a>
             </li>
           </ul>
 
-          <div class="border-t border-[var(--p-surface-200)] dark:border-[var(--p-surface-700)]"></div>
+          <div class="border-t border-border"></div>
 
-          <ul class="py-1 list-none m-0 p-0">
+          <ul class="py-1 px-2 list-none m-0">
             <li>
-              <button type="button" class="menu-row menu-row--danger" (click)="logout()">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span class="flex-1 text-left">{{ t('userMenu.signOut') }}</span>
+              <button type="button" [class]="menuRowDangerClass" (click)="logout()">
+                <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>
+                <span class="flex-1">{{ t('userMenu.signOut') }}</span>
               </button>
             </li>
           </ul>
-        </div>
-      </p-popover>
+      </div>
+      </div>
     }
   </div>
 </div>

@@ -1,22 +1,20 @@
 <mp-topbar (menuToggle)="toggleSidebar()"></mp-topbar>
 
-<p-drawer
+<mp-drawer
   [visible]="!isDesktop() && sidebarOpen()"
-  (onHide)="closeSidebar()"
+  (closed)="closeSidebar()"
   position="left"
   [modal]="true"
-  [closable]="false"
 >
-<ng-template #headless>
   <ng-container *transloco="let t">
   <div class="flex h-full flex-col
-                bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)]
-                text-[var(--p-text-color)]">
+                bg-surface-50 dark:bg-surface-950
+                text-foreground">
 
     <div class="flex items-center justify-between px-4 py-3
-                  border-b border-[var(--p-content-border-color)]">
+                  border-b border-border">
       <span class="font-semibold text-lg">{{ t('topbar.appName') }}</span>
-      <button pButton class="p-button-text p-button-sm" icon="fa-solid fa-xmark" (click)="closeSidebar()" [attr.aria-label]="t('common.close')"></button>
+      <button mpButton variant="ghost" size="icon" (click)="closeSidebar()" [attr.aria-label]="t('common.close')"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <div class="flex-1 overflow-auto">
@@ -24,17 +22,15 @@
     </div>
   </div>
   </ng-container>
-</ng-template>
-</p-drawer>
-
+</mp-drawer>
 
 <div class="flex min-h-[calc(100dvh-3.5rem)] overflow-hidden">
-  <!-- static sidebar; collapses to an icon-only rail on desktop -->
+
   <aside
     class="hidden lg:flex shrink-0 flex-col overflow-hidden
-         bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)]
-         border-r border-[var(--p-content-border-color)]
-         text-[var(--p-text-color)]
+         bg-surface-50 dark:bg-surface-950
+         border-r border-border
+         text-foreground
          transition-[width,background-color,border-color,color] duration-200 ease-out"
     [class.w-72]="!sidebarCollapsed()"
     [class.w-16]="sidebarCollapsed()"
@@ -42,9 +38,8 @@
     <mp-sidebar [collapsed]="sidebarCollapsed()" (expandRequested)="expandSidebar()"></mp-sidebar>
   </aside>
 
-
   <main
-    class="flex-1 overflow-auto bg-[var(--p-surface-50)] dark:bg-[var(--p-surface-950)] text-[var(--p-text-color)] p-4 lg:p-6 transition-colors"
+    class="flex-1 overflow-auto bg-surface-50 dark:bg-surface-950 text-foreground p-4 lg:p-6 transition-colors"
   >
     <router-outlet></router-outlet>
   </main>

@@ -1,36 +1,53 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { Popover } from 'primeng/popover';
-import { Select } from 'primeng/select';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import {
+  MpButton,
+  MpDialog,
+  MpSelect,
+  MpTable,
+  MpTableHeader,
+  MpTableBody,
+  MpTableEmpty,
+  MpSortable,
+  MpSortIcon,
+  MpSelectableRow,
+  MpColumnFilter,
+  MpTableCheckbox,
+  MpTableHeaderCheckbox,
+  type MpTableLazyLoadEvent,
+} from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { StudentGroupsDataService } from '../../../services/student-groups-data.service';
 import { StudentGroupKind, StudentGroupSummaryResponse } from '../../../types/student-group';
-import { toQueryKitParams } from '../../../utils/primeng-querykit';
+import { toQueryKitParams } from '../../../utils/querykit';
 
 interface KindOption {
   label: string;
   value: StudentGroupKind;
 }
 
-/**
- * Generic student-group browser. Renders a trigger button; clicking opens a
- * popover with a lazy-loaded p-table backed by /api/studentgroups, with column
- * filters on Code/Name and a Kind dropdown filter.
- *
- * Single-select mode (default): clicking a row emits and closes the popover
- * immediately. Multi-select (`allowMultiple` true): checkboxes appear and a
- * Confirm button emits the array; pre-existing selections in the parent are
- * not surfaced — this is an "add new" picker, not a stateful "manage" widget.
- *
- * Translation keys live under `common.studentGroupPicker.*` in the root scope.
- */
 @Component({
   selector: 'mp-student-group-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, Popover, Select, TableModule, TranslocoDirective, TranslocoPipe],
+  imports: [
+    FormsModule,
+    MpButton,
+    MpDialog,
+    MpSelect,
+    MpTable,
+    MpTableHeader,
+    MpTableBody,
+    MpTableEmpty,
+    MpSortable,
+    MpSortIcon,
+    MpSelectableRow,
+    MpColumnFilter,
+    MpTableCheckbox,
+    MpTableHeaderCheckbox,
+    TranslocoDirective,
+    TranslocoPipe,
+  ],
   templateUrl: './student-group-picker.html',
 })
 export class StudentGroupPicker {
@@ -39,42 +56,40 @@ export class StudentGroupPicker {
 
   readonly academicYearId = input.required<string>();
   readonly allowMultiple = input(false);
-  /** Optional override for the trigger button label. Defaults to "Add student group…". */
   readonly buttonLabel = input<string | undefined>(undefined);
-  /**
-   * Group ids the caller has already picked. The picker doesn't *filter* on
-   * these (filtering client-side breaks pagination and totalRecords) — it
-   * just dims the row and disables selection. Dedup of the final picked set
-   * is the caller's responsibility.
-   */
   readonly excludeIds = input<readonly string[]>([]);
 
   readonly picked = output<StudentGroupSummaryResponse[]>();
 
-  private readonly op = viewChild<Popover>('op');
-
+  protected readonly visible = signal(false);
   protected readonly rows = signal<StudentGroupSummaryResponse[]>([]);
   protected readonly totalRecords = signal(0);
   protected readonly loading = signal(false);
-  // Multi-select state. PrimeNG's p-table mutates this array reference, so we
-  // hold a plain array bound via [(selection)] and reassign on confirm/cancel.
   protected selection: StudentGroupSummaryResponse[] = [];
 
-  // Cached per-render: building these in the template would re-translate every
-  // change-detection pass. Refreshed when the user opens the popover so a
-  // language change between opens still gets picked up.
+  private readonly table = viewChild(MpTable);
+  protected readonly kindFilter = signal<StudentGroupKind | null>(null);
+
+  protected readonly rowDisabledFn = (row: unknown): boolean =>
+    this.isAlreadyPicked(row as StudentGroupSummaryResponse);
+
   protected kindOptions: KindOption[] = [];
 
-  open(event: Event): void {
+  open(): void {
     this.refreshKindOptions();
-    this.op()?.toggle(event);
+    this.visible.set(true);
   }
 
   close(): void {
-    this.op()?.hide();
+    this.visible.set(false);
   }
 
-  load(event: TableLazyLoadEvent): void {
+  onKindFilter(value: StudentGroupKind | null): void {
+    this.kindFilter.set(value ?? null);
+    this.table()?.filter(value ?? null, 'kind', 'equals');
+  }
+
+  load(event: MpTableLazyLoadEvent): void {
     this.loading.set(true);
     const params = toQueryKitParams(event);
     this.data.list(this.academicYearId(), params).subscribe({
@@ -91,7 +106,6 @@ export class StudentGroupPicker {
     return this.excludeIds().includes(row.id);
   }
 
-  // Single-select path. PrimeNG fires (onRowSelect) when selectionMode="single".
   onRowSelect(row: StudentGroupSummaryResponse): void {
     if (this.allowMultiple()) return;
     if (this.isAlreadyPicked(row)) return;
@@ -117,9 +131,6 @@ export class StudentGroupPicker {
   }
 
   private refreshKindOptions(): void {
-    // Order: House, YearGroup, RegGroup, CurriculumGroup, Other. Order matters
-    // for the dropdown — bulletins-relevant kinds (Houses/years/reg groups)
-    // bubble up first.
     const kinds: StudentGroupKind[] = [
       StudentGroupKind.House,
       StudentGroupKind.YearGroup,

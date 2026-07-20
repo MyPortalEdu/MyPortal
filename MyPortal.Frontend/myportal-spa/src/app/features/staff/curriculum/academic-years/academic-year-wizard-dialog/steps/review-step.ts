@@ -43,8 +43,6 @@ export class AcademicYearWizardReviewStep implements OnInit {
 
   readonly model = input.required<AcademicYearUpsertRequest>();
 
-  // Used to resolve the "copy from" id back to a human name for the review.
-  // Same call the other steps make; not cached cross-step today.
   readonly priorYears = signal<AcademicYearSummary[]>([]);
 
   ngOnInit(): void {
@@ -90,9 +88,6 @@ export class AcademicYearWizardReviewStep implements OnInit {
     return this.priorYears().find(y => y.id === id)?.name ?? id;
   });
 
-  // Per-day period rollup. Sorted by cycle-day index and again by start time
-  // within each day so first/last reflect actual chronological bounds rather
-  // than insertion order.
   readonly periodDaySummaries = computed<DaySummary[]>(() => {
     const m = this.model();
     if (m.copyPeriodsFromAcademicYearId != null) return [];
@@ -131,8 +126,6 @@ export class AcademicYearWizardReviewStep implements OnInit {
     }
   }
 
-  // Day-of-cycle label — same scheme as the periods step (short day name with
-  // optional Week A/B/… suffix for multi-week cycles).
   private dayLabel(cycleDayIndex: number): string {
     const m = this.model();
     const swl = Math.max(1, m.schoolWeekLength);

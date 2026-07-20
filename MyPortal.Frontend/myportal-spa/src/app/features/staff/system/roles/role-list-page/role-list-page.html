@@ -1,43 +1,43 @@
 <ng-container *transloco="let t; prefix: 'roles'">
   <mp-page-header [title]="t('title')" icon="fa-solid fa-user-shield" [actions]="headerActions()"></mp-page-header>
 
-  <p-card>
-    <p-table
+  <mp-card>
+    <mp-table
       #dt
       [lazy]="true"
       [paginator]="true"
-      [first]="initialState.first"
-      [rows]="initialState.rows"
-      [sortField]="initialState.sortField"
-      [sortOrder]="initialState.sortOrder ?? 1"
-      [totalRecords]="totalRecords()"
-      [loading]="loading()"
-      [value]="rows()"
-      (onLazyLoad)="load($event)"
+      [first]="grid.initialState.first"
+      [rows]="grid.initialState.rows"
+      [sortField]="grid.initialState.sortField ?? null"
+      [sortOrder]="grid.initialState.sortOrder ?? 1"
+      [totalRecords]="grid.totalRecords()"
+      [loading]="grid.loading()"
+      [value]="grid.rows()"
+      (lazyLoad)="grid.load($event)"
       [filterDelay]="300"
-      [filters]="initialFilters"
+      [filters]="grid.initialFilters"
       [globalFilterFields]="['name', 'description']"
       dataKey="id"
       selectionMode="single"
       [scrollable]="true">
 
-      <ng-template pTemplate="caption">
+      <ng-template mpTableCaption>
         <div class="flex items-center justify-end">
           <span class="relative w-full sm:w-80">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
             <input
-              pInputText
+              mpInput
               type="text"
               class="w-full pl-9 pr-9"
               [placeholder]="t('searchPlaceholder')"
-              [value]="searchTerm()"
-              (input)="onSearch($any($event.target).value)" />
-            @if (searchTerm()) {
+              [value]="grid.searchTerm()"
+              (input)="grid.onSearch($any($event.target).value)" />
+            @if (grid.searchTerm()) {
               <button
                 type="button"
                 class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                 [attr.aria-label]="t('clearSearch')"
-                (click)="clearSearch()">
+                (click)="grid.clearSearch()">
                 <i class="fa-solid fa-xmark text-xs"></i>
               </button>
             }
@@ -45,9 +45,9 @@
         </div>
       </ng-template>
 
-      <ng-template pTemplate="header">
+      <ng-template mpTableHeader>
         <tr>
-          <th pSortableColumn="name">{{ t('columns.name') }} <p-sortIcon field="name"></p-sortIcon></th>
+          <th mpSortable="name">{{ t('columns.name') }} <mp-sort-icon field="name"></mp-sort-icon></th>
           <th style="width: 9rem">{{ t('columns.audience') }}</th>
           <th style="width: 9rem">{{ t('columns.type') }}</th>
           <th>{{ t('columns.description') }}</th>
@@ -55,30 +55,29 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-role>
-        <tr [pSelectableRow]="role" class="cursor-pointer" (click)="onRowClick($event, role)">
+      <ng-template mpTableBody let-role>
+        <tr class="cursor-pointer" (click)="onRowClick($event, role)">
           <td>
             <a [routerLink]="['/staff/system/roles', role.id]" class="font-medium hover:underline">{{ role.name }}</a>
           </td>
           <td>
-            <p-tag [value]="audienceLabel(role.userType)" [severity]="audienceSeverity(role.userType)"></p-tag>
+            <mp-badge [value]="audienceLabel(role.userType)" [severity]="audienceSeverity(role.userType)"></mp-badge>
           </td>
           <td>
-            <p-tag [value]="typeLabel(role)" [severity]="typeSeverity(role)"></p-tag>
+            <mp-badge [value]="typeLabel(role)" [severity]="typeSeverity(role)"></mp-badge>
           </td>
-          <td class="text-muted-color">{{ role.description }}</td>
+          <td class="text-muted-foreground">{{ role.description }}</td>
           <td>
             <div class="flex items-center justify-end gap-1">
               @if (canEdit()) {
-                <span [pTooltip]="canDelete(role) ? '' : t('protectedHint')" tooltipPosition="top">
-                  <p-button
-                    [label]="t('delete')"
-                    icon="fa-solid fa-trash-can"
-                    severity="danger"
-                    size="small"
-                    [text]="true"
+                <span [mpTooltip]="canDelete(role) ? '' : t('protectedHint')" tooltipPosition="top">
+                  <button
+                    mpButton
+                    variant="ghost"
+                    size="sm"
+                    class="text-destructive hover:text-destructive"
                     [disabled]="!canDelete(role)"
-                    (click)="deleteRole(role)"></p-button>
+                    (click)="deleteRole(role)"><i class="fa-solid fa-trash-can"></i> {{ t('delete') }}</button>
                 </span>
               }
             </div>
@@ -86,36 +85,25 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="emptymessage">
+      <ng-template mpTableEmpty>
         <tr>
           <td [attr.colspan]="5" class="p-4">
-            @if (hasFilter()) {
+            @if (grid.hasFilter()) {
               <mp-empty-state icon="fa-solid fa-magnifying-glass" [message]="t('emptyFiltered')">
-                <p-button
-                  [label]="t('clearSearch')"
-                  icon="fa-solid fa-xmark"
-                  severity="secondary"
-                  size="small"
-                  [outlined]="true"
-                  (click)="clearSearch()"></p-button>
+                <button mpButton variant="outline" size="sm" (click)="grid.clearSearch()"><i class="fa-solid fa-xmark"></i> {{ t('clearSearch') }}</button>
               </mp-empty-state>
             } @else {
               <mp-empty-state icon="fa-solid fa-user-shield" [message]="t('emptyNone')">
                 @if (canEdit()) {
-                  <p-button
-                    [label]="t('new')"
-                    icon="fa-solid fa-plus"
-                    severity="primary"
-                    size="small"
-                    (click)="openCreate()"></p-button>
+                  <button mpButton size="sm" (click)="openCreate()"><i class="fa-solid fa-plus"></i> {{ t('new') }}</button>
                 }
               </mp-empty-state>
             }
           </td>
         </tr>
       </ng-template>
-    </p-table>
-  </p-card>
+    </mp-table>
+  </mp-card>
 
   <mp-role-create-dialog
     [visible]="createOpen()"

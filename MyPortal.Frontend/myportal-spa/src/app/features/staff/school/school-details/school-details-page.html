@@ -10,41 +10,23 @@
     <mp-loading></mp-loading>
   } @else {
     @if (!canEdit()) {
-      <div class="mb-3 max-w-5xl px-3 py-2 rounded-md bg-emphasis text-sm text-muted-color">
+      <div class="mb-3 max-w-5xl px-3 py-2 rounded-md bg-muted text-sm text-muted-foreground">
         <i class="fa-solid fa-lock mr-2"></i>{{ t('readOnlyHint') }}
       </div>
     }
 
-    <!-- Detail forms cap at max-w-5xl (64rem) so a 2-col field grid reads at a sane scan width. -->
-    <form class="flex flex-col gap-4 max-w-5xl" (ngSubmit)="save()">
+    <form class="flex flex-col gap-4 max-w-5xl" (submit)="$event.preventDefault(); save()">
       <section class="mp-surface p-4 flex flex-col gap-3">
         <mp-section-header [title]="t('sections.agency')"></mp-section-header>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <mp-field [label]="t('fields.name')" for="name">
-            <input
-              pInputText
-              id="name"
-              [ngModel]="name()"
-              (ngModelChange)="name.set($event)"
-              [disabled]="!canEdit()"
-              [placeholder]="t('fields.namePlaceholder')"
-              required
-              #nameRef="ngModel"
-              [invalid]="nameRef.touched && nameRef.invalid"
-              name="name"/>
-          </mp-field>
+          <mp-form-field [label]="t('fields.name')" for="name">
+            <input mpInput id="name" [formField]="f.name" [placeholder]="t('fields.namePlaceholder')" />
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.website')" for="website">
-            <input
-              pInputText
-              id="website"
-              [ngModel]="website() ?? ''"
-              (ngModelChange)="website.set($event)"
-              [disabled]="!canEdit()"
-              [placeholder]="t('fields.websitePlaceholder')"
-              name="website"/>
-          </mp-field>
+          <mp-form-field [label]="t('fields.website')" for="website">
+            <input mpInput id="website" [formField]="f.website" [placeholder]="t('fields.websitePlaceholder')" />
+          </mp-form-field>
         </div>
       </section>
 
@@ -52,64 +34,31 @@
         <mp-section-header [title]="t('sections.school')"></mp-section-header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <mp-field [label]="t('fields.urn')" for="urn">
-            <input
-              pInputText
-              id="urn"
-              [ngModel]="urn()"
-              (ngModelChange)="urn.set($event)"
-              [disabled]="!canEdit()"
-              required
-              #urnRef="ngModel"
-              [invalid]="urnRef.touched && urnRef.invalid"
-              name="urn"/>
-          </mp-field>
+          <mp-form-field [label]="t('fields.urn')" for="urn"
+            [hint]="f.urn().pending() ? t('fields.checkingUrn') : undefined">
+            <input mpInput id="urn" [formField]="f.urn" />
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.uprn')" for="uprn">
-            <input
-              pInputText
-              id="uprn"
-              [ngModel]="uprn()"
-              (ngModelChange)="uprn.set($event)"
-              [disabled]="!canEdit()"
-              required
-              #uprnRef="ngModel"
-              [invalid]="uprnRef.touched && uprnRef.invalid"
-              name="uprn"/>
-          </mp-field>
+          <mp-form-field [label]="t('fields.uprn')" for="uprn">
+            <input mpInput id="uprn" [formField]="f.uprn" />
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.establishmentNumber')" for="establishmentNumber">
-            <p-inputNumber
+          <mp-form-field [label]="t('fields.establishmentNumber')" for="establishmentNumber">
+            <mp-input-number
               inputId="establishmentNumber"
-              [ngModel]="establishmentNumber()"
-              (ngModelChange)="establishmentNumber.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.establishmentNumber"
               [useGrouping]="false"
               mode="decimal"
               [min]="0"
-              [showButtons]="false"
-              required
-              #estabRef="ngModel"
-              [invalid]="estabRef.touched && estabRef.invalid"
-              name="establishmentNumber">
-            </p-inputNumber>
-          </mp-field>
+              [showButtons]="false">
+            </mp-input-number>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.ukprn')" for="ukprn">
-            <input
-              pInputText
-              id="ukprn"
-              [ngModel]="ukprn() ?? ''"
-              (ngModelChange)="ukprn.set($event)"
-              [disabled]="!canEdit()"
-              maxlength="8"
-              [placeholder]="t('fields.ukprnPlaceholder')"
-              name="ukprn"/>
-          </mp-field>
+          <mp-form-field [label]="t('fields.ukprn')" for="ukprn">
+            <input mpInput id="ukprn" [formField]="f.ukprn" [placeholder]="t('fields.ukprnPlaceholder')" />
+          </mp-form-field>
         </div>
 
-        <!-- Local authority via picker. Show the picked LA's name; null state
-             reads as "Not set". The picker is hidden in read-only mode. -->
         <mp-field [label]="t('fields.localAuthority')">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-sm">
@@ -118,19 +67,15 @@
               } @else if (localAuthorityId()) {
                 <span class="font-mono text-xs">{{ localAuthorityId() }}</span>
               } @else {
-                <span class="text-muted-color">{{ t('fields.noLocalAuthority') }}</span>
+                <span class="text-muted-foreground">{{ t('fields.noLocalAuthority') }}</span>
               }
             </span>
             @if (canEdit()) {
               <mp-local-authority-picker (picked)="onLocalAuthorityPicked($event)"></mp-local-authority-picker>
               @if (localAuthorityId()) {
-                <p-button
-                  [label]="t('fields.clear')"
-                  icon="fa-solid fa-xmark"
-                  severity="secondary"
-                  [text]="true"
-                  (click)="clearLocalAuthority()">
-                </p-button>
+                <button mpButton variant="ghost" size="sm" (click)="clearLocalAuthority()">
+                  <i class="fa-solid fa-xmark"></i> {{ t('fields.clear') }}
+                </button>
               }
             }
           </div>
@@ -141,156 +86,110 @@
         <mp-section-header [title]="t('sections.classification')"></mp-section-header>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <mp-field [label]="t('fields.schoolPhase')" for="schoolPhaseId">
-            <p-select
+          <mp-form-field [label]="t('fields.schoolPhase')" for="schoolPhaseId">
+            <mp-select
               inputId="schoolPhaseId"
               [options]="schoolPhases()"
               optionLabel="description"
               optionValue="id"
-              [ngModel]="schoolPhaseId()"
-              (ngModelChange)="schoolPhaseId.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.schoolPhaseId"
               [filter]="true"
               filterBy="description"
-              appendTo="body"
-              [style]="{ width: '100%' }"
-              required
-              #schoolPhaseRef="ngModel"
-              [invalid]="schoolPhaseRef.touched && schoolPhaseRef.invalid"
-              name="schoolPhaseId">
-            </p-select>
-          </mp-field>
+              class="w-full">
+            </mp-select>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.schoolType')" for="schoolTypeId">
-            <p-select
+          <mp-form-field [label]="t('fields.schoolType')" for="schoolTypeId">
+            <mp-select
               inputId="schoolTypeId"
               [options]="schoolTypes()"
               optionLabel="description"
               optionValue="id"
-              [ngModel]="schoolTypeId()"
-              (ngModelChange)="schoolTypeId.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.schoolTypeId"
               [filter]="true"
               filterBy="description"
-              appendTo="body"
-              [style]="{ width: '100%' }"
-              required
-              #schoolTypeRef="ngModel"
-              [invalid]="schoolTypeRef.touched && schoolTypeRef.invalid"
-              name="schoolTypeId">
-            </p-select>
-          </mp-field>
+              class="w-full">
+            </mp-select>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.governanceType')" for="governanceTypeId">
-            <p-select
+          <mp-form-field [label]="t('fields.governanceType')" for="governanceTypeId">
+            <mp-select
               inputId="governanceTypeId"
               [options]="governanceTypes()"
               optionLabel="description"
               optionValue="id"
-              [ngModel]="governanceTypeId()"
-              (ngModelChange)="governanceTypeId.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.governanceTypeId"
               [filter]="true"
               filterBy="description"
-              appendTo="body"
-              [style]="{ width: '100%' }"
-              required
-              #governanceTypeRef="ngModel"
-              [invalid]="governanceTypeRef.touched && governanceTypeRef.invalid"
-              name="governanceTypeId">
-            </p-select>
-          </mp-field>
+              class="w-full">
+            </mp-select>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.intakeType')" for="intakeTypeId">
-            <p-select
+          <mp-form-field [label]="t('fields.intakeType')" for="intakeTypeId">
+            <mp-select
               inputId="intakeTypeId"
               [options]="intakeTypes()"
               optionLabel="description"
               optionValue="id"
-              [ngModel]="intakeTypeId()"
-              (ngModelChange)="intakeTypeId.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.intakeTypeId"
               [filter]="true"
               filterBy="description"
-              appendTo="body"
-              [style]="{ width: '100%' }"
-              required
-              #intakeTypeRef="ngModel"
-              [invalid]="intakeTypeRef.touched && intakeTypeRef.invalid"
-              name="intakeTypeId">
-            </p-select>
-          </mp-field>
+              class="w-full">
+            </mp-select>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.payZone')" for="payZoneId" [hint]="t('fields.payZoneHint')">
-            <p-select
+          <mp-form-field [label]="t('fields.payZone')" for="payZoneId" [hint]="t('fields.payZoneHint')">
+            <mp-select
               inputId="payZoneId"
               [options]="payZones()"
               optionLabel="description"
               optionValue="id"
-              [ngModel]="payZoneId()"
-              (ngModelChange)="payZoneId.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.payZoneId"
               [showClear]="true"
-              appendTo="body"
-              [style]="{ width: '100%' }"
-              [placeholder]="t('fields.payZonePlaceholder')"
-              name="payZoneId">
-            </p-select>
-          </mp-field>
+              class="w-full"
+              [placeholder]="t('fields.payZonePlaceholder')">
+            </mp-select>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.lowestAge')" for="lowestAge">
-            <p-inputNumber
+          <mp-form-field [label]="t('fields.lowestAge')" for="lowestAge">
+            <mp-input-number
               inputId="lowestAge"
-              [ngModel]="lowestAge()"
-              (ngModelChange)="lowestAge.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.lowestAge"
               [useGrouping]="false"
               [min]="0"
               [max]="25"
-              [showButtons]="false"
-              name="lowestAge">
-            </p-inputNumber>
-          </mp-field>
+              [showButtons]="false">
+            </mp-input-number>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.highestAge')" for="highestAge">
-            <p-inputNumber
+          <mp-form-field [label]="t('fields.highestAge')" for="highestAge">
+            <mp-input-number
               inputId="highestAge"
-              [ngModel]="highestAge()"
-              (ngModelChange)="highestAge.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.highestAge"
               [useGrouping]="false"
               [min]="0"
               [max]="25"
-              [showButtons]="false"
-              name="highestAge">
-            </p-inputNumber>
-          </mp-field>
+              [showButtons]="false">
+            </mp-input-number>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.netCapacity')" for="netCapacity">
-            <p-inputNumber
+          <mp-form-field [label]="t('fields.netCapacity')" for="netCapacity">
+            <mp-input-number
               inputId="netCapacity"
-              [ngModel]="netCapacity()"
-              (ngModelChange)="netCapacity.set($event)"
-              [disabled]="!canEdit()"
+              [formField]="f.netCapacity"
               [useGrouping]="false"
               [min]="0"
-              [showButtons]="false"
-              name="netCapacity">
-            </p-inputNumber>
-          </mp-field>
+              [showButtons]="false">
+            </mp-input-number>
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.netCapacityAssessmentDate')" for="netCapacityAssessmentDate">
-            <p-datepicker
+          <mp-form-field [label]="t('fields.netCapacityAssessmentDate')" for="netCapacityAssessmentDate">
+            <mp-date-picker
               inputId="netCapacityAssessmentDate"
-              [ngModel]="netCapacityAssessmentDate()"
-              (ngModelChange)="netCapacityAssessmentDate.set($event)"
-              [disabled]="!canEdit()"
-              dateFormat="dd/mm/yy"
-              [showIcon]="true"
-              appendTo="body"
-              name="netCapacityAssessmentDate">
-            </p-datepicker>
-          </mp-field>
+              [formField]="f.netCapacityAssessmentDate"
+              [showIcon]="true">
+            </mp-date-picker>
+          </mp-form-field>
         </div>
       </section>
 
@@ -298,62 +197,45 @@
         <mp-section-header [title]="t('sections.specialSchool')"></mp-section-header>
 
         <label class="flex items-center gap-2 cursor-pointer">
-          <p-checkbox
-            [binary]="true"
-            [ngModel]="isSpecialSchool()"
-            (ngModelChange)="isSpecialSchool.set($event)"
-            [disabled]="!canEdit()"
-            name="isSpecialSchool">
-          </p-checkbox>
+          <mp-checkbox [formField]="f.isSpecialSchool"></mp-checkbox>
           <span class="text-sm font-medium">{{ t('fields.isSpecialSchool') }}</span>
         </label>
 
-        @if (isSpecialSchool()) {
+        @if (model().isSpecialSchool) {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <mp-field [label]="t('fields.specialSchoolOrganisation')" for="specialSchoolOrganisationId">
-              <p-select
+            <mp-form-field [label]="t('fields.specialSchoolOrganisation')" for="specialSchoolOrganisationId">
+              <mp-select
                 inputId="specialSchoolOrganisationId"
                 [options]="specialSchoolOrganisations()"
                 optionLabel="description"
                 optionValue="id"
-                [ngModel]="specialSchoolOrganisationId()"
-                (ngModelChange)="specialSchoolOrganisationId.set($event)"
-                [disabled]="!canEdit()"
+                [formField]="f.specialSchoolOrganisationId"
                 [showClear]="true"
-                appendTo="body"
-                [style]="{ width: '100%' }"
-                name="specialSchoolOrganisationId">
-              </p-select>
-            </mp-field>
+                class="w-full">
+              </mp-select>
+            </mp-form-field>
 
-            <mp-field [label]="t('fields.specialSchoolType')" for="specialSchoolTypeId">
-              <p-select
+            <mp-form-field [label]="t('fields.specialSchoolType')" for="specialSchoolTypeId">
+              <mp-select
                 inputId="specialSchoolTypeId"
                 [options]="specialSchoolTypes()"
                 optionLabel="description"
                 optionValue="id"
-                [ngModel]="specialSchoolTypeId()"
-                (ngModelChange)="specialSchoolTypeId.set($event)"
-                [disabled]="!canEdit()"
+                [formField]="f.specialSchoolTypeId"
                 [showClear]="true"
-                appendTo="body"
-                [style]="{ width: '100%' }"
-                name="specialSchoolTypeId">
-              </p-select>
-            </mp-field>
+                class="w-full">
+              </mp-select>
+            </mp-form-field>
 
-            <mp-field [label]="t('fields.maxBoarders')" for="maxBoarders">
-              <p-inputNumber
+            <mp-form-field [label]="t('fields.maxBoarders')" for="maxBoarders">
+              <mp-input-number
                 inputId="maxBoarders"
-                [ngModel]="maxBoarders()"
-                (ngModelChange)="maxBoarders.set($event)"
-                [disabled]="!canEdit()"
+                [formField]="f.maxBoarders"
                 [useGrouping]="false"
                 [min]="0"
-                [showButtons]="false"
-                name="maxBoarders">
-              </p-inputNumber>
-            </mp-field>
+                [showButtons]="false">
+              </mp-input-number>
+            </mp-form-field>
           </div>
         }
       </section>
@@ -362,28 +244,13 @@
         <mp-section-header [title]="t('sections.contact')"></mp-section-header>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <mp-field [label]="t('fields.telephone')" for="telephone">
-            <input
-              pInputText
-              id="telephone"
-              [ngModel]="telephone() ?? ''"
-              (ngModelChange)="telephone.set($event)"
-              [disabled]="!canEdit()"
-              maxlength="30"
-              name="telephone"/>
-          </mp-field>
+          <mp-form-field [label]="t('fields.telephone')" for="telephone">
+            <input mpInput id="telephone" [formField]="f.telephone" />
+          </mp-form-field>
 
-          <mp-field [label]="t('fields.email')" for="email">
-            <input
-              pInputText
-              id="email"
-              type="email"
-              [ngModel]="email() ?? ''"
-              (ngModelChange)="email.set($event)"
-              [disabled]="!canEdit()"
-              maxlength="256"
-              name="email"/>
-          </mp-field>
+          <mp-form-field [label]="t('fields.email')" for="email">
+            <input mpInput id="email" type="email" [formField]="f.email" />
+          </mp-form-field>
         </div>
       </section>
 
@@ -398,19 +265,15 @@
               } @else if (headTeacherId()) {
                 <span class="font-mono text-xs">{{ headTeacherId() }}</span>
               } @else {
-                <span class="text-muted-color">{{ t('fields.noHeadTeacher') }}</span>
+                <span class="text-muted-foreground">{{ t('fields.noHeadTeacher') }}</span>
               }
             </span>
             @if (canEdit()) {
               <mp-staff-member-picker (picked)="onHeadTeacherPicked($event)"></mp-staff-member-picker>
               @if (headTeacherId()) {
-                <p-button
-                  [label]="t('fields.clear')"
-                  icon="fa-solid fa-xmark"
-                  severity="secondary"
-                  [text]="true"
-                  (click)="clearHeadTeacher()">
-                </p-button>
+                <button mpButton variant="ghost" size="sm" (click)="clearHeadTeacher()">
+                  <i class="fa-solid fa-xmark"></i> {{ t('fields.clear') }}
+                </button>
               }
             }
           </div>

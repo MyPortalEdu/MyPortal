@@ -9,12 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
-import { SelectButton } from 'primeng/selectbutton';
-import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
-import { DatePicker } from 'primeng/datepicker';
+import { MpSelect, MpInput, MpButton, MpCheckbox, MpSelectButton, MpDatePicker } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
 import { AcademicYearsDataService } from '../../../../../../shared/services/academic-years-data.service';
@@ -40,12 +35,12 @@ interface LabelledOption<T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    InputText,
-    Select,
-    SelectButton,
-    Button,
-    Checkbox,
-    DatePicker,
+    MpInput,
+    MpSelect,
+    MpSelectButton,
+    MpButton,
+    MpCheckbox,
+    MpDatePicker,
     TranslocoDirective,
   ],
   templateUrl: './periods-step.html',
@@ -56,24 +51,14 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
   private readonly transloco = inject(TranslocoService);
 
   readonly model = input.required<AcademicYearUpsertRequest>();
-  // Hides the define/copy mode switch and forces 'define' when true. The
-  // server rejects copy-from on update so edit mode only ever submits inline
-  // periods.
   readonly editMode = input<boolean>(false);
-  // Disables every control and drops the add/remove/copy actions — the step
-  // becomes a read-back of a year the server won't let us change.
   readonly readOnly = input<boolean>(false);
   readonly modelChange = output<Partial<AcademicYearUpsertRequest>>();
 
   readonly priorYears = signal<AcademicYearSummary[]>([]);
 
-  // Local UI state — which cycle day is being edited. Independent of the model
-  // (the model is a flat list keyed by cycleDayIndex; the day switcher is UX).
   readonly selectedCycleDay = signal(0);
 
-  // Local mode toggle. The server's validator rejects both inline AND copy
-  // being set, so the user has to pick one. Initialised from the model in
-  // ngOnInit so navigating back into step 2 preserves the previous choice.
   readonly mode = signal<Mode>('define');
 
   readonly modeOptions: LabelledOption<Mode>[] = [
@@ -81,8 +66,6 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
     { label: 'Copy from existing year', value: 'copy' },
   ];
 
-  // Cycle-day labels. For a multi-week cycle the day name gets a "Week A/B/…"
-  // suffix so the user can tell which week of the cycle each tab represents.
   readonly cycleDayOptions = computed<LabelledOption<number>[]>(() => {
     const m = this.model();
     const swl = Math.max(1, m.schoolWeekLength);
@@ -99,8 +82,6 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
     });
   });
 
-  // If the user shrank the cycle in step 1, the previously-selected day may
-  // now be out of range. Clamp at read time so the UI never shows a non-day.
   readonly displayedDay = computed(() => {
     const cycle = this.model().timetableCycleLength;
     return Math.min(this.selectedCycleDay(), Math.max(0, cycle - 1));
@@ -110,9 +91,6 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
     this.cycleDayOptions().find(o => o.value === this.displayedDay())?.label ?? '',
   );
 
-  // Periods for the currently-shown cycle day, with their index in the flat
-  // attendancePeriods array attached so update/remove handlers can locate the
-  // row without re-scanning.
   readonly periodsForDay = computed(() =>
     this.model().attendancePeriods
       .map((period, fullIndex) => ({ period, fullIndex }))
@@ -123,16 +101,10 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
     this.priorYears().map(y => ({ label: y.name, value: y.id })),
   );
 
-  // Copy-to-all only makes sense when there's actually something to copy AND
-  // somewhere to copy it to.
   readonly canCopyToAllDays = computed(() =>
     this.periodsForDay().length > 0 && this.model().timetableCycleLength > 1,
   );
 
-  // Surfaces the AM/PM rule violations so the user knows WHY Next is disabled
-  // rather than having to guess. Only computed when in define mode and the
-  // user has actually started defining periods — empty define-mode is its own
-  // (more obvious) blocking state covered by the "Add period" CTA.
   readonly amPmIssues = computed<string[]>(() => {
     const m = this.model();
     if (m.attendancePeriods.length === 0) return [];
@@ -160,20 +132,12 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
   ngOnInit(): void {
     const m = this.model();
 
-    // Restore mode from the model so users who navigate back into this step
-    // don't lose their previous choice.
     if (m.copyPeriodsFromAcademicYearId != null) {
       this.mode.set('copy');
     } else if (m.attendancePeriods.length > 0) {
       this.mode.set('define');
     }
 
-    // Drop any periods that point at a cycle-day no longer in range (e.g. the
-    // user shrank the cycle on step 1 after defining periods on a now-removed
-    // day). Otherwise they'd be invisible in the UI but flunk the server's
-    // CycleDayIndex < cycle check on submit.
-    // Read-only never submits, so leave the loaded data exactly as the server
-    // returned it.
     const cycle = m.timetableCycleLength;
     const inRange = m.attendancePeriods.filter(p => p.cycleDayIndex < cycle);
     if (!this.readOnly() && inRange.length !== m.attendancePeriods.length) {
@@ -189,9 +153,6 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
   setMode(mode: Mode): void {
     if (mode === this.mode()) return;
     this.mode.set(mode);
-    // Server-side validator rejects both inline AND copy being set. Switching
-    // modes clears whichever data is no longer relevant so the user can't
-    // accidentally submit an ambiguous payload.
     if (mode === 'copy') {
       if (this.model().attendancePeriods.length > 0) {
         this.modelChange.emit({ attendancePeriods: [] });
@@ -209,10 +170,6 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
 
   addPeriod(): void {
     const day = this.displayedDay();
-    // Chain the new period's startTime to the previous period's endTime when
-    // one exists — most schools' periods run back-to-back, so this saves a
-    // click. New default: IsLesson=true (everything is a taught period unless
-    // the user says otherwise).
     const existing = this.model().attendancePeriods.filter(p => p.cycleDayIndex === day);
     const last = existing[existing.length - 1];
     const newPeriod: AttendancePeriodUpsertRequest = {
@@ -248,10 +205,6 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
     const cycle = this.model().timetableCycleLength;
     const sourcePeriods = this.model().attendancePeriods.filter(p => p.cycleDayIndex === day);
 
-    // Only prompt when overwriting something — copying onto empty days is
-    // a safe, expected operation. Shared Date references in the cloned
-    // periods are fine: the model only ever replaces Date instances, never
-    // mutates them in place.
     const daysWithPeriods = new Set<number>();
     for (const p of this.model().attendancePeriods) {
       if (p.cycleDayIndex !== day) daysWithPeriods.add(p.cycleDayIndex);
@@ -267,8 +220,6 @@ export class AcademicYearWizardPeriodsStep implements OnInit {
       if (!ok) return;
     }
 
-    // Keep current day's rows as-is, then synthesise a copy for every other
-    // cycle day. Builds a fresh array so signal change detection picks it up.
     const kept = this.model().attendancePeriods.filter(p => p.cycleDayIndex === day);
     const cloned: AttendancePeriodUpsertRequest[] = [];
     for (let d = 0; d < cycle; d++) {

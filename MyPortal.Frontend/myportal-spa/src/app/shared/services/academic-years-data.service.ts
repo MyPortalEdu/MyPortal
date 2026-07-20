@@ -30,12 +30,6 @@ export class AcademicYearsDataService {
     return this.http.delete<void>(`/api/v1/academicyears/${id}`);
   }
 
-  // Translate the wizard's Date-typed form model into the server's wire format.
-  // Dates go out as local-component "YYYY-MM-DDT00:00:00" strings (no Z) so that
-  // a date picked in BST doesn't shift back a day when the browser would
-  // otherwise serialise via Date.toJSON()'s UTC conversion. The server's
-  // DateTime parser reads these as local-tz unspecified, preserving the date.
-  // Period times go out as "HH:mm:ss" to match the server's TimeOnly type.
   private toWire(model: AcademicYearUpsertRequest): unknown {
     return {
       ...model,

@@ -1,4 +1,3 @@
-import { MenuItem } from 'primeng/api';
 import {Me} from '../../core/types/me';
 
 export interface LinkItem {
@@ -13,7 +12,16 @@ export interface MenuCategory {
   icon?: string;
   children: LinkItem[];
 }
+
+export interface NavItem {
+  label: string;
+  icon?: string;
+  routerLink?: string | any[];
+  items?: NavItem[];
+  state?: { exact?: boolean };
+}
+
 export interface AppMenuContributor {
   supports(me: Me): boolean;
-  getItems(me: Me): MenuItem[];
+  getItems(me: Me): NavItem[];
 }

@@ -27,8 +27,6 @@
     transition: color 120ms, opacity 120ms, transform 150ms;
   }
 
-  // Indigo accent bar — visible only on the active row. Inset top/bottom for the
-  // shorter-than-row look from the design.
   &::before {
     content: '';
     position: absolute;
@@ -37,22 +35,22 @@
     bottom: 0.375rem;
     width: 3px;
     border-radius: 0 2px 2px 0;
-    background: var(--p-primary-color);
+    background: var(--primary);
     opacity: 0;
     transition: opacity 120ms;
   }
 
   &:hover,
   &:focus-visible {
-    background: var(--p-content-hover-background);
+    background: var(--muted);
   }
 
   &.active {
-    background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
-    color: var(--p-primary-color);
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    color: var(--primary);
 
     i {
-      color: var(--p-primary-color);
+      color: var(--primary);
       opacity: 1;
     }
 
@@ -62,9 +60,6 @@
   }
 }
 
-// Sub-items: no icon, indented to align under the parent's text. The active
-// indigo bar shifts in to sit just before the text rather than at the row edge —
-// keeps the bar visually anchored to the label, not the parent row's geometry.
 .nav-row--sub {
   padding-left: 2.5rem;
 
@@ -82,14 +77,8 @@
   }
 }
 
-// Rail mode: icon-only, centered. Existing `.active` rules still apply, so a
-// group with `hasActiveChild` gets the indigo accent bar and icon tint for free.
 .nav-row--rail {
   justify-content: center;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
-
-// Hover (--p-content-hover-background), active tint (color-mix on
-// --p-primary-color), and the accent bar all flip with the theme
-// automatically, so no dark-mode override is needed.

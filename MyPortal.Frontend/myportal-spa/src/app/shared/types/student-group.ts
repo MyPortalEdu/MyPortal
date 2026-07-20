@@ -1,4 +1,3 @@
-// Matches MyPortal.Common.Enums.StudentGroupKind on the backend (TINYINT, 0..4).
 export enum StudentGroupKind {
   Other = 0,
   House = 1,

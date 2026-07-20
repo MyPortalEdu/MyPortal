@@ -3,12 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay } from 'rxjs';
 import { LookupResponse } from '../types/lookup';
 
-/**
- * Reference-data fetches for the dropdowns on the school details page (and
- * any future page that needs the same catalogues). Each list is small,
- * mostly-static, and re-used across edit screens — so we shareReplay once
- * per page-lifetime rather than re-hitting the API on every dialog open.
- */
 @Injectable({ providedIn: 'root' })
 export class LookupsDataService {
   private readonly http = inject(HttpClient);

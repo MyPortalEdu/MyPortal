@@ -411,6 +411,20 @@ public sealed class StaffMembersController(
         return Ok(result);
     }
 
+    /// <summary>Advisory check for whether a staff code is available (not already in use).</summary>
+    /// <remarks>
+    /// For inline UI feedback only — the authoritative uniqueness guard still runs on create/update.
+    /// Blank codes report available. Pass <paramref name="excludeId"/> when editing.
+    /// </remarks>
+    [HttpGet("code-available")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(AvailabilityResponse), 200)]
+    public async Task<IActionResult> IsCodeAvailableAsync([FromQuery] string? code, [FromQuery] Guid? excludeId)
+    {
+        var available = await staffMemberService.IsCodeAvailableAsync(code, excludeId, CancellationToken);
+        return Ok(new AvailabilityResponse { Available = available });
+    }
+
     /// <summary>Attach a staff role to an existing person.</summary>
     /// <remarks>
     /// Only the staff code is supplied. Returns 404 if the person does not exist and 400 if they

@@ -6,8 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { Button } from 'primeng/button';
-import { Skeleton } from 'primeng/skeleton';
+import { MpButton, MpSkeleton } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { forkJoin } from 'rxjs';
 
@@ -29,13 +28,9 @@ import { BulletinFormDialog } from '../bulletin-form-dialog/bulletin-form-dialog
   selector: 'mp-bulletins-feed',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, Skeleton, BulletinDetailDialog, BulletinFormDialog, TranslocoDirective],
-  // The bulletins scope lazy-loads public/i18n/bulletins/<lang>.json the first
-  // time this component (or any other consumer) renders.
+  imports: [MpButton, MpSkeleton, BulletinDetailDialog, BulletinFormDialog, TranslocoDirective],
   providers: [provideTranslocoScope('bulletins')],
   templateUrl: './bulletins-feed.html',
-  // display:block on the host so parent flex containers (e.g. <home> with
-  // flex-1 on this element) can size it. Custom elements default to inline.
   host: { class: 'block' },
 })
 export class BulletinsFeed implements OnInit {
@@ -48,9 +43,6 @@ export class BulletinsFeed implements OnInit {
   readonly bulletins = signal<BulletinSummaryResponse[]>([]);
   readonly categories = signal<BulletinCategoryResponse[]>([]);
   readonly selectedCategoryId = signal<string | null>(null);
-  // Permission gate for the "+ New" button. The form / endpoint still enforce
-  // server-side; hiding the button just keeps non-editors from seeing an
-  // action that would 403.
   private readonly me = signal<Me | null>(null);
   readonly canPost = computed(() => {
     const me = this.me();
@@ -58,22 +50,13 @@ export class BulletinsFeed implements OnInit {
     return !!me.permissions?.includes(Permissions.School.EditSchoolBulletins);
   });
   readonly detailId = signal<string | null>(null);
-  // Form-dialog state. `formOpen` controls visibility; `editingBulletin` switches
-  // the dialog between create mode (null) and edit mode (the full bulletin to
-  // hydrate fields from). Always clear `editingBulletin` when closing so a stale
-  // edit doesn't leak into the next "+ New" click.
   readonly formOpen = signal(false);
   readonly editingBulletin = signal<BulletinDetailsResponse | null>(null);
 
-  // "{n} new" in the header counts bulletins that require acknowledgement and that
-  // the current caller hasn't acted on yet — those are the items the user is being
-  // asked to read. Plain backlog counts felt noisy.
   readonly newCount = computed(() =>
     this.bulletins().filter(b => b.requiresAcknowledgement && !b.hasAcknowledged).length,
   );
 
-  // Pinned-first, then most-recent-first. The API has no opinion on default sort;
-  // we apply it client-side so this widget renders the feed the way the mockup shows.
   readonly orderedBulletins = computed(() => {
     const list = this.bulletins().slice();
     list.sort((a, b) => {
@@ -129,7 +112,6 @@ export class BulletinsFeed implements OnInit {
   }
 
   openNew(): void {
-    // Defensive: clear any stale edit state before opening in create mode.
     this.editingBulletin.set(null);
     this.formOpen.set(true);
   }
@@ -145,7 +127,6 @@ export class BulletinsFeed implements OnInit {
   }
 
   onEditRequested(bulletin: BulletinDetailsResponse): void {
-    // Close the detail dialog first so we don't stack two modals.
     this.closeDetail();
     this.editingBulletin.set(bulletin);
     this.formOpen.set(true);
@@ -163,8 +144,6 @@ export class BulletinsFeed implements OnInit {
   }
 
   onAcknowledged(): void {
-    // Mark the locally cached row as acknowledged so the "{n} new" badge updates
-    // without a round-trip. The detail dialog re-fetches its own state separately.
     const id = this.detailId();
     if (!id) return;
     this.bulletins.update(list =>
@@ -172,9 +151,6 @@ export class BulletinsFeed implements OnInit {
     );
   }
 
-  // Lightweight time-ago. The numeric thresholds are locale-neutral; only the
-  // resulting label is translated. For the >7-day fallback we hand off to the
-  // platform's locale-aware date formatter.
   timeAgo(iso?: string | null): string {
     if (!iso) return '';
     const then = new Date(iso).getTime();
@@ -193,16 +169,11 @@ export class BulletinsFeed implements OnInit {
     return date.toLocaleDateString(this.transloco.getActiveLang(), { day: '2-digit', month: 'short' });
   }
 
-  // PrimeNG hex colours don't have built-in alpha helpers; we just append an opacity
-  // suffix for the tinted icon-square background.
   tint(hex: string, alphaHex = '22'): string {
     if (!hex) return '';
     return hex.length === 7 ? `${hex}${alphaHex}` : hex;
   }
 
-  // True when the bulletin's expiresAt is in the past. Only ever seen by users
-  // who can still view post-expiry bulletins (staff creators); for everyone
-  // else the server filters expired rows out of the feed entirely.
   isExpired(b: BulletinSummaryResponse): boolean {
     return !!b.expiresAt && new Date(b.expiresAt).getTime() < Date.now();
   }

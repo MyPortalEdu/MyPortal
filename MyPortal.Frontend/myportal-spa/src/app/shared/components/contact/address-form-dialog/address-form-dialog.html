@@ -1,16 +1,12 @@
 <ng-container *transloco="let t">
-  <p-dialog
+  <mp-dialog
     [visible]="open()"
     [modal]="true"
-    [draggable]="false"
-    [resizable]="false"
-    [dismissableMask]="false"
+    [dismissable]="false"
     [closeOnEscape]="!isDirty()"
-    [style]="{ width: 'min(44rem, 94vw)' }"
-    styleClass="mp-flush-dialog"
-    (onHide)="onHide()"
-    [showHeader]="false">
-    <div class="flex items-center justify-between p-4 border-b border-surface">
+    panelClass="w-[min(44rem,94vw)]"
+    (closed)="onHide()">
+    <div class="flex shrink-0 items-center justify-between p-4 border-b border-border">
       <h2 class="text-lg font-semibold m-0">
         {{ isEdit() ? t('common.contact.address.edit') : t('common.contact.address.add') }}
       </h2>
@@ -19,48 +15,43 @@
       </button>
     </div>
 
-    <div class="flex flex-col gap-4 p-4">
+    <div class="flex flex-1 min-h-0 flex-col gap-4 overflow-auto p-4">
       @if (confirmShared()) {
-        <!-- Warn-and-choose for a shared address -->
+
         <div class="flex flex-col gap-3">
           <p class="text-sm">
             {{ t('common.contact.address.sharedWarning', { count: editTarget()?.sharedCount }) }}
           </p>
-          <p-button
-            [label]="t('common.contact.address.fixForEveryone')"
-            icon="fa-solid fa-users"
-            severity="primary"
-            [loading]="saving()"
-            (onClick)="doUpdate('FixInPlace')"></p-button>
-          <p-button
-            [label]="t('common.contact.address.theyMoved')"
-            icon="fa-solid fa-truck-fast"
-            severity="secondary"
-            [outlined]="true"
-            [loading]="saving()"
-            (onClick)="doUpdate('Moved')"></p-button>
-          <p-button
-            [label]="t('common.back')"
-            [text]="true"
-            severity="secondary"
-            [disabled]="saving()"
-            (onClick)="confirmShared.set(false)"></p-button>
+          <button
+            mpButton
+            [disabled]="f().submitting()"
+            (click)="doUpdate('FixInPlace')"><i class="fa-solid" [class.fa-users]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('common.contact.address.fixForEveryone') }}</button>
+          <button
+            mpButton
+            variant="outline"
+            [disabled]="f().submitting()"
+            (click)="doUpdate('Moved')"><i class="fa-solid" [class.fa-truck-fast]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('common.contact.address.theyMoved') }}</button>
+          <button
+            mpButton
+            variant="ghost"
+            [disabled]="f().submitting()"
+            (click)="confirmShared.set(false)">{{ t('common.back') }}</button>
         </div>
       } @else {
         @switch (step()) {
           @case ('search') {
             <span class="relative">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-color"></i>
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
               <input
-                pInputText
+                mpInput
                 class="w-full pl-9"
                 [placeholder]="t('common.contact.address.searchPlaceholder')"
                 [ngModel]="searchTerm()"
                 (ngModelChange)="searchTerm.set($event)" />
               @if (searching()) {
-                <p-progressSpinner
+                <mp-spinner
                   class="absolute right-3 top-1/2 -translate-y-1/2"
-                  [style]="{ width: '1rem', height: '1rem' }"></p-progressSpinner>
+                  size="1rem"></mp-spinner>
               }
             </span>
 
@@ -73,7 +64,7 @@
                       class="w-full rounded p-2 text-left hover:bg-surface-100 dark:hover:bg-surface-800"
                       (click)="pickExisting(m)">
                       <div class="text-sm">{{ formatMatch(m) }}</div>
-                      <div class="text-xs text-muted-color">
+                      <div class="text-xs text-muted-foreground">
                         {{ t('common.contact.address.sharedBy', { count: m.linkedPersonCount }) }}
                       </div>
                     </button>
@@ -81,7 +72,7 @@
                 }
               </ul>
             } @else if (searchTerm().trim().length >= 2 && !searching()) {
-              <p class="text-sm text-muted-color">{{ t('common.contact.address.noMatches') }}</p>
+              <p class="text-sm text-muted-foreground">{{ t('common.contact.address.noMatches') }}</p>
             }
           }
 
@@ -90,92 +81,86 @@
 
             <div class="flex flex-col gap-1">
               <label class="text-sm font-medium">{{ t('common.contact.address.type') }}</label>
-              <p-select
+              <mp-select
                 [options]="addressTypes()"
                 optionLabel="description"
                 optionValue="id"
                 [placeholder]="t('common.contact.type')"
-                [ngModel]="form().typeId"
-                (ngModelChange)="patch({ typeId: $event })"></p-select>
+                [formField]="f.typeId"></mp-select>
             </div>
 
             <label class="flex items-center gap-2 text-sm">
-              <input type="checkbox" [ngModel]="form().isMain" (ngModelChange)="patch({ isMain: $event })" />
+              <input type="checkbox" [formField]="f.isMain" />
               {{ t('common.contact.address.main') }}
             </label>
 
-            <p-button
+            <button
+              mpButton
+              variant="ghost"
               class="self-start"
-              [label]="t('common.back')"
-              icon="fa-solid fa-arrow-left"
-              [text]="true"
-              severity="secondary"
-              (onClick)="backToSearch()"></p-button>
+              (click)="backToSearch()"><i class="fa-solid fa-arrow-left"></i> {{ t('common.back') }}</button>
           }
 
           @case ('form') {
             <div class="grid gap-3 md:grid-cols-2">
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.buildingNumber') }}</label>
-                <input pInputText [ngModel]="form().buildingNumber" (ngModelChange)="patch({ buildingNumber: $event })" />
+                <input mpInput [formField]="f.buildingNumber" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.buildingName') }}</label>
-                <input pInputText [ngModel]="form().buildingName" (ngModelChange)="patch({ buildingName: $event })" />
+                <input mpInput [formField]="f.buildingName" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.apartment') }}</label>
-                <input pInputText [ngModel]="form().apartment" (ngModelChange)="patch({ apartment: $event })" />
+                <input mpInput [formField]="f.apartment" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.street') }}</label>
-                <input pInputText [ngModel]="form().street" (ngModelChange)="patch({ street: $event })" />
+                <input mpInput [formField]="f.street" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.district') }}</label>
-                <input pInputText [ngModel]="form().district" (ngModelChange)="patch({ district: $event })" />
+                <input mpInput [formField]="f.district" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.town') }}</label>
-                <input pInputText [ngModel]="form().town" (ngModelChange)="patch({ town: $event })" />
+                <input mpInput [formField]="f.town" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.county') }}</label>
-                <input pInputText [ngModel]="form().county" (ngModelChange)="patch({ county: $event })" />
+                <input mpInput [formField]="f.county" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.postcode') }}</label>
-                <input pInputText [ngModel]="form().postcode" (ngModelChange)="patch({ postcode: $event })" />
+                <input mpInput [formField]="f.postcode" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.country') }}</label>
-                <input pInputText [ngModel]="form().country" (ngModelChange)="patch({ country: $event })" />
+                <input mpInput [formField]="f.country" />
               </div>
               <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium">{{ t('common.contact.address.type') }}</label>
-                <p-select
+                <mp-select
                   [options]="addressTypes()"
                   optionLabel="description"
                   optionValue="id"
                   [placeholder]="t('common.contact.type')"
-                  [ngModel]="form().typeId"
-                  (ngModelChange)="patch({ typeId: $event })"></p-select>
+                  [formField]="f.typeId"></mp-select>
               </div>
             </div>
 
             <label class="flex items-center gap-2 text-sm">
-              <input type="checkbox" [ngModel]="form().isMain" (ngModelChange)="patch({ isMain: $event })" />
+              <input type="checkbox" [formField]="f.isMain" />
               {{ t('common.contact.address.main') }}
             </label>
 
             @if (!isEdit()) {
-              <p-button
+              <button
+                mpButton
+                variant="ghost"
                 class="self-start"
-                [label]="t('common.back')"
-                icon="fa-solid fa-arrow-left"
-                [text]="true"
-                severity="secondary"
-                (onClick)="backToSearch()"></p-button>
+                (click)="backToSearch()"><i class="fa-solid fa-arrow-left"></i> {{ t('common.back') }}</button>
             }
           }
         }
@@ -183,29 +168,23 @@
     </div>
 
     @if (!confirmShared()) {
-      <div class="flex items-center justify-end gap-2 p-4 border-t border-surface bg-emphasis rounded-b-md">
-        <p-button
-          [label]="t('common.cancel')"
-          severity="secondary"
-          [text]="true"
-          [disabled]="saving()"
-          (onClick)="onCancel()"></p-button>
+      <div class="flex shrink-0 items-center justify-end gap-2 p-4 border-t border-border bg-muted rounded-b-md">
+        <button
+          mpButton
+          variant="ghost"
+          [disabled]="f().submitting()"
+          (click)="onCancel()">{{ t('common.cancel') }}</button>
         @if (step() === 'search') {
-          <p-button
-            [label]="t('common.contact.address.enterManually')"
-            icon="fa-solid fa-pen"
-            severity="primary"
-            (onClick)="enterManually()"></p-button>
+          <button
+            mpButton
+            (click)="enterManually()"><i class="fa-solid fa-pen"></i> {{ t('common.contact.address.enterManually') }}</button>
         } @else {
-          <p-button
-            [label]="t('common.save')"
-            icon="fa-solid fa-check"
-            severity="primary"
-            [disabled]="!canSave()"
-            [loading]="saving()"
-            (onClick)="save()"></p-button>
+          <button
+            mpButton
+            [disabled]="!canSave() || f().submitting()"
+            (click)="save()"><i class="fa-solid" [class.fa-check]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('common.save') }}</button>
         }
       </div>
     }
-  </p-dialog>
+  </mp-dialog>
 </ng-container>

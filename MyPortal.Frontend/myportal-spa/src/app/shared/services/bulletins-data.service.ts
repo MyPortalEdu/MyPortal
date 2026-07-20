@@ -18,8 +18,6 @@ import {
 export class BulletinsDataService {
   private readonly http = inject(HttpClient);
 
-  // Cached active-categories observable so the feed widget and the form dialog
-  // share a single round-trip. Invalidated on any category mutation.
   private activeCategories$?: Observable<BulletinCategoryResponse[]>;
 
   list(page = 1, pageSize = 25): Observable<PageResult<BulletinSummaryResponse>> {
@@ -54,9 +52,6 @@ export class BulletinsDataService {
   }
 
   listCategories(includeInactive = false): Observable<BulletinCategoryResponse[]> {
-    // Active-only is cached because every form-open and feed-refresh wants the
-    // same set. The inactive variant skips the cache — it's for management
-    // screens where you want fresh data after edits.
     if (includeInactive) {
       const params = new HttpParams().set('includeInactive', 'true');
       return this.http.get<BulletinCategoryResponse[]>('/api/v1/bulletincategories', { params });

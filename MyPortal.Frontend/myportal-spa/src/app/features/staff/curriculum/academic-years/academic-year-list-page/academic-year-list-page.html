@@ -5,30 +5,25 @@
   [actions]="headerActions()"
 ></mp-page-header>
 
-<p-card>
+<mp-card>
   @if (loading()) {
     <ul class="list-none m-0 p-0 flex flex-col gap-2" aria-busy="true">
       @for (_ of [0, 1, 2]; track $index) {
-        <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface">
+        <li class="flex items-center gap-3 px-3 py-2 rounded-lg border border-border">
           <div class="flex-1 min-w-0 flex flex-col gap-1.5">
-            <p-skeleton width="30%" height="1rem"></p-skeleton>
-            <p-skeleton width="50%" height="0.75rem"></p-skeleton>
+            <mp-skeleton width="30%" height="1rem"></mp-skeleton>
+            <mp-skeleton width="50%" height="0.75rem"></mp-skeleton>
           </div>
         </li>
       }
     </ul>
   } @else if (years().length === 0) {
     <mp-empty-state icon="fa-solid fa-calendar-days" [message]="t('emptyNone')">
-      <p-button
-        [label]="t('new')"
-        icon="fa-solid fa-plus"
-        severity="primary"
-        size="small"
-        (click)="openCreateWizard()"></p-button>
+      <button mpButton size="sm" (click)="openCreateWizard()"><i class="fa-solid fa-plus"></i> {{ t('new') }}</button>
     </mp-empty-state>
   } @else {
-    <p-table [value]="years()" dataKey="id" selectionMode="single" [scrollable]="true">
-      <ng-template pTemplate="header">
+    <mp-table [value]="years()" dataKey="id" [scrollable]="true">
+      <ng-template mpTableHeader>
         <tr>
           <th>{{ t('columns.name') }}</th>
           <th style="width: 10rem">{{ t('columns.startDate') }}</th>
@@ -39,8 +34,8 @@
           <th style="width: 12rem"></th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-year>
-        <tr [pSelectableRow]="year" class="cursor-pointer" (click)="onRowClick($event, year)">
+      <ng-template mpTableBody let-year>
+        <tr class="cursor-pointer" (click)="onRowClick($event, year)">
           <td class="font-medium">{{ year.name }}</td>
           <td>{{ year.startDate ? (year.startDate | date:'mediumDate') : '—' }}</td>
           <td>{{ year.endDate ? (year.endDate | date:'mediumDate') : '—' }}</td>
@@ -48,41 +43,40 @@
           <td class="text-right">{{ year.schoolWeekLength }}</td>
           <td>
             @if (year.isLocked) {
-              <p-tag [value]="t('locked')" severity="warn" icon="fa-solid fa-lock"></p-tag>
+              <mp-badge [value]="t('locked')" severity="warn" icon="fa-solid fa-lock"></mp-badge>
             } @else {
-              <p-tag [value]="t('open')" severity="success"></p-tag>
+              <mp-badge [value]="t('open')" severity="success"></mp-badge>
             }
           </td>
           <td>
             <div class="flex items-center justify-end gap-1"
-                 [pTooltip]="!canMutate(year) ? mutateBlockReason(year) : ''"
+                 [mpTooltip]="!canMutate(year) ? mutateBlockReason(year) : ''"
                  tooltipPosition="left">
-              <p-button
-                [label]="bp.isMobile() ? '' : (canMutate(year) ? t('edit') : t('view'))"
-                [ariaLabel]="canMutate(year) ? t('edit') : t('view')"
-                [icon]="canMutate(year) ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-eye'"
-                severity="secondary"
-                size="small"
-                [text]="true"
+              <button mpButton
+                variant="ghost"
+                size="sm"
+                [attr.aria-label]="canMutate(year) ? t('edit') : t('view')"
                 (click)="openYear(year)">
-              </p-button>
-              <p-button
-                [label]="bp.isMobile() ? '' : t('delete')"
-                [ariaLabel]="t('delete')"
-                icon="fa-solid fa-trash-can"
-                severity="danger"
-                size="small"
-                [text]="true"
+                <i [class]="canMutate(year) ? 'fa-solid fa-pen-to-square' : 'fa-solid fa-eye'"></i>
+                @if (!bp.isMobile()) { {{ canMutate(year) ? t('edit') : t('view') }} }
+              </button>
+              <button mpButton
+                variant="ghost"
+                size="sm"
+                class="text-destructive hover:text-destructive"
+                [attr.aria-label]="t('delete')"
                 [disabled]="!canMutate(year)"
                 (click)="deleteYear(year)">
-              </p-button>
+                <i class="fa-solid fa-trash-can"></i>
+                @if (!bp.isMobile()) { {{ t('delete') }} }
+              </button>
             </div>
           </td>
         </tr>
       </ng-template>
-    </p-table>
+    </mp-table>
   }
-</p-card>
+</mp-card>
 
 <mp-academic-year-wizard-dialog
   [visible]="wizardOpen()"

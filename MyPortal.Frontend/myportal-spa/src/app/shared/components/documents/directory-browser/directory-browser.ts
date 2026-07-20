@@ -14,12 +14,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
-import { Button } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { ProgressSpinner } from 'primeng/progressspinner';
-import { Select } from 'primeng/select';
-import { TableModule } from 'primeng/table';
+import { MpSelect, MpDialog, MpButton, MpInput, MpSpinner, MpTable, MpTableHeader, MpTableBody } from '@myportal/ui';
 
 import { DirectoryDataService } from '../../../services/directory-data.service';
 import { LookupResponse } from '../../../types/lookup';
@@ -42,22 +37,11 @@ type Row = DirRow | FileRow;
 
 type FlatDir = { dir: DirectoryDetailsResponse; depth: number };
 
-/**
- * Reusable directory browser for any entity that owns an attachments tree.
- * Generic via the `baseUrl` input (e.g. `/api/v1/staffmembers/{id}/attachments`)
- * — the route shape is identical across entities, so one component + one data
- * service serve staff, students, bulletins, etc. The entity's root directory is
- * the browser's root; navigation never escapes it (the server scopes by subtree).
- *
- * Self-contained: loads its own data and commits every action immediately.
- * `canEdit` toggles the mutating affordances (new folder / upload / rename /
- * move / delete); the server enforces regardless.
- */
 @Component({
   selector: 'mp-directory-browser',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule, Button, Dialog, InputText, ProgressSpinner, Select, TableModule, TranslocoDirective],
+  imports: [DatePipe, FormsModule, MpButton, MpDialog, MpInput, MpSpinner, MpSelect, MpTable, MpTableHeader, MpTableBody, TranslocoDirective],
   providers: [provideTranslocoScope('documents')],
   templateUrl: './directory-browser.html',
   host: { class: 'block' },
@@ -70,27 +54,12 @@ export class DirectoryBrowser {
 
   readonly baseUrl = input.required<string>();
   readonly canEdit = input<boolean>(false);
-  /** Friendly label for the root crumb (the raw root dir name is an internal slug). */
   readonly rootLabel = input<string>('');
-  /**
-   * Whether folders/files created here are private (staff-only). Defaults to false
-   * for a neutral file-browser. Set true where the tree is sensitive and shared —
-   * e.g. staff documents hang off the Person directory, which a student/parent
-   * portal could surface, so HR records must stay staff-only.
-   */
   readonly defaultPrivate = input<boolean>(false);
-  /**
-   * Document types offered for upload classification (already facet-filtered by
-   * the caller, e.g. Staff types only). When empty, the type picker / column are
-   * hidden and uploads fall back to whatever the server defaults to. Keeping the
-   * fetch in the host lets each entity scope the catalogue to its own facet.
-   */
   readonly documentTypes = input<LookupResponse[]>([]);
 
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
-  // The type applied to the next upload batch. Toolbar-level (not per-file) to
-  // stay low-friction; per-row "change type" handles reclassifying afterwards.
   readonly selectedTypeId = signal<string | null>(null);
   readonly hasTypes = computed(() => this.documentTypes().length > 0);
   private readonly typeNameById = computed(
@@ -101,9 +70,7 @@ export class DirectoryBrowser {
     return this.typeNameById().get(doc.typeId) ?? doc.typeDescription;
   }
 
-  // Breadcrumb chain root→current; the current directory is the last element.
   readonly path = signal<DirectoryDetailsResponse[]>([]);
-  // Browser-style history: each entry is a whole path snapshot.
   private readonly backStack = signal<DirectoryDetailsResponse[][]>([]);
   private readonly fwdStack = signal<DirectoryDetailsResponse[][]>([]);
 
@@ -148,7 +115,6 @@ export class DirectoryBrowser {
     if (!r) return '';
     return r.kind === 'dir' ? r.dir.name : (r.doc.title ?? r.doc.fileName);
   });
-  // The container the item already lives in — offered as a disabled "(current)" row.
   readonly moveCurrentContainerId = computed(() => {
     const r = this.moveTarget();
     if (!r) return null;
@@ -163,9 +129,6 @@ export class DirectoryBrowser {
       });
     });
 
-    // Default the upload type once the catalogue arrives: prefer "Other" (the
-    // catch-all), else the first available. Only sets when nothing is chosen yet
-    // so it doesn't clobber a user's selection.
     effect(() => {
       const types = this.documentTypes();
       untracked(() => {
@@ -350,8 +313,6 @@ export class DirectoryBrowser {
     });
   }
 
-  // Flatten the tree to an indented list, skipping `excludeId` and its subtree
-  // (a folder can't be moved into itself or a descendant).
   private flattenTree(
     node: DirectoryTreeResponse,
     depth: number,
@@ -445,8 +406,6 @@ export class DirectoryBrowser {
     this.dragOver.set(false);
   }
 
-  // Dropping on the listing opens the upload dialog with the files staged, so a
-  // type can be chosen before committing (rather than uploading immediately).
   onDrop(event: DragEvent): void {
     event.preventDefault();
     this.dragOver.set(false);
@@ -478,8 +437,6 @@ export class DirectoryBrowser {
     return this.data.downloadUrl(this.baseUrl(), doc.id);
   }
 
-  // Validate size client-side and add to the pending list (deduping by name+size
-  // so a double drop/browse doesn't queue the same file twice).
   private stageFiles(files: File[]): void {
     const accepted: File[] = [];
     for (const f of files) {
@@ -501,7 +458,6 @@ export class DirectoryBrowser {
     });
   }
 
-  // Sequential to keep failure handling simple and avoid N concurrent large uploads.
   async confirmUpload(): Promise<void> {
     const cur = this.current();
     const files = this.stagedFiles();

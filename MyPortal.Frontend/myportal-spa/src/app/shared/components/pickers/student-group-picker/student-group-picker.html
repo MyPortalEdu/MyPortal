@@ -1,110 +1,87 @@
 <ng-container *transloco="let t">
-  <p-button
-    [label]="buttonLabel() ?? t('common.studentGroupPicker.add')"
-    icon="fa-solid fa-plus"
-    severity="secondary"
-    (click)="open($event)">
-  </p-button>
+  <button mpButton variant="secondary" (click)="open()">
+    <i class="fa-solid fa-plus"></i> {{ buttonLabel() ?? t('common.studentGroupPicker.add') }}
+  </button>
 
-  <!-- dismissable=false so PrimeNG overlay panels (column-filter menu, Kind
-       select dropdown) — which render in body-attached portals — don't fire
-       the popover's outside-click handler. The user closes via the explicit
-       Cancel / Confirm buttons, or by clicking the trigger again. -->
-  <p-popover #op [style]="{ width: 'min(48rem, 92vw)' }" styleClass="mp-student-group-picker" [dismissable]="false">
+  <mp-dialog [(visible)]="visible" panelClass="w-[min(48rem,92vw)]" (closed)="cancel()"
+             [ariaLabel]="t('common.studentGroupPicker.title')">
     <div class="flex flex-col gap-3 p-2">
-      <!-- Inline close affordance for the single-select case, which has no
-           Cancel button in its footer. -->
-      <div class="flex items-center justify-end">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold">{{ t('common.studentGroupPicker.title') }}</span>
         <button type="button" class="mp-icon-button" (click)="cancel()" [attr.aria-label]="'common.close' | transloco">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <p-table
+
+      <mp-table
         [lazy]="true"
         [paginator]="true"
         [rows]="25"
         [totalRecords]="totalRecords()"
         [loading]="loading()"
         [value]="rows()"
-        (onLazyLoad)="load($event)"
+        (lazyLoad)="load($event)"
         [filterDelay]="300"
         dataKey="id"
-        [(selection)]="selection"
+        [selection]="selection"
+        (selectionChange)="selection = $any($event)"
         [selectionMode]="allowMultiple() ? 'multiple' : 'single'"
-        (onRowSelect)="onRowSelect($any($event).data)"
+        [rowDisabled]="rowDisabledFn"
+        (rowSelect)="onRowSelect($any($event))"
         [scrollable]="true"
         scrollHeight="20rem">
 
-        <ng-template pTemplate="caption">
-          <span class="text-sm font-semibold">{{ t('common.studentGroupPicker.title') }}</span>
-        </ng-template>
-
-        <ng-template pTemplate="header">
+        <ng-template mpTableHeader>
           <tr>
             @if (allowMultiple()) {
-              <th style="width: 2.5rem">
-                <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-              </th>
+              <th style="width: 2.5rem"><mp-table-header-checkbox></mp-table-header-checkbox></th>
             }
-            <!-- Column filters live inside the sortable <th>, so clicks on
-                 their icon / inline widgets would otherwise bubble up to
-                 pSortableColumn and toggle the sort. Wrap each filter in a
-                 stop-propagation span. -->
-            <th pSortableColumn="code" style="width: 8rem">
-              {{ t('common.studentGroupPicker.code') }}
-              <p-sortIcon field="code"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="code" display="menu"></p-columnFilter>
-              </span>
+            <th mpSortable="code" style="width: 8rem">
+              {{ t('common.studentGroupPicker.code') }} <mp-sort-icon field="code"></mp-sort-icon>
             </th>
-            <th pSortableColumn="name">
-              {{ t('common.studentGroupPicker.name') }}
-              <p-sortIcon field="name"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter type="text" field="name" display="menu"></p-columnFilter>
-              </span>
+            <th mpSortable="name">
+              {{ t('common.studentGroupPicker.name') }} <mp-sort-icon field="name"></mp-sort-icon>
             </th>
-            <th pSortableColumn="kind" style="width: 12rem">
-              {{ t('common.studentGroupPicker.kind.header') }}
-              <p-sortIcon field="kind"></p-sortIcon>
-              <span (click)="$event.stopPropagation()">
-                <p-columnFilter field="kind" matchMode="equals" [showMenu]="false">
-                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                    <p-select
-                      [options]="kindOptions"
-                      [ngModel]="value"
-                      (ngModelChange)="filter($event)"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="true"
-                      [placeholder]="t('common.studentGroupPicker.kind.allKinds')"
-                      appendTo="body"
-                      [style]="{ minWidth: '8rem' }">
-                    </p-select>
-                  </ng-template>
-                </p-columnFilter>
-              </span>
+            <th mpSortable="kind" style="width: 12rem">
+              {{ t('common.studentGroupPicker.kind.header') }} <mp-sort-icon field="kind"></mp-sort-icon>
+            </th>
+          </tr>
+          <tr>
+            @if (allowMultiple()) {
+              <th></th>
+            }
+            <th><mp-column-filter field="code" matchMode="contains"></mp-column-filter></th>
+            <th><mp-column-filter field="name" matchMode="contains"></mp-column-filter></th>
+            <th>
+              <mp-select
+                [options]="kindOptions"
+                [ngModel]="kindFilter()"
+                (ngModelChange)="onKindFilter($event)"
+                optionLabel="label"
+                optionValue="value"
+                [showClear]="true"
+                [placeholder]="t('common.studentGroupPicker.kind.allKinds')"
+                class="min-w-32">
+              </mp-select>
             </th>
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-row>
-          <tr [pSelectableRow]="row" [class.opacity-50]="isAlreadyPicked(row)">
+        <ng-template mpTableBody let-row>
+          <tr [mpSelectableRow]="row" [class.opacity-50]="isAlreadyPicked(row)">
             @if (allowMultiple()) {
-              <td>
-                <p-tableCheckbox [value]="row" [disabled]="isAlreadyPicked(row)"></p-tableCheckbox>
-              </td>
+              <td><mp-table-checkbox [value]="row"></mp-table-checkbox></td>
             }
             <td class="font-mono text-xs">{{ row.code }}</td>
             <td>
               {{ row.name }}
               @if (!row.active) {
-                <span class="ml-2 text-[0.6875rem] text-muted-color">
+                <span class="ml-2 text-[0.6875rem] text-muted-foreground">
                   ({{ t('common.studentGroupPicker.inactive') }})
                 </span>
               }
               @if (isAlreadyPicked(row)) {
-                <span class="ml-2 text-[0.6875rem] text-muted-color">
+                <span class="ml-2 text-[0.6875rem] text-muted-foreground">
                   ({{ t('common.studentGroupPicker.alreadyPicked') }})
                 </span>
               }
@@ -117,25 +94,23 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="emptymessage">
+        <ng-template mpTableEmpty>
           <tr>
-            <td [attr.colspan]="allowMultiple() ? 4 : 3" class="text-center text-sm text-muted-color py-4">
+            <td [attr.colspan]="allowMultiple() ? 4 : 3" class="text-center text-sm text-muted-foreground py-4">
               {{ t('common.studentGroupPicker.empty') }}
             </td>
           </tr>
         </ng-template>
-      </p-table>
+      </mp-table>
 
       @if (allowMultiple()) {
-        <div class="flex items-center justify-end gap-2 pt-2 border-t border-surface">
-          <p-button [label]="'common.cancel' | transloco" severity="secondary" [text]="true" (click)="cancel()"></p-button>
-          <p-button
-            [label]="t('common.studentGroupPicker.confirm', { count: selection.length })"
-            [disabled]="selection.length === 0"
-            (click)="confirm()">
-          </p-button>
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
+          <button mpButton variant="ghost" (click)="cancel()">{{ 'common.cancel' | transloco }}</button>
+          <button mpButton [disabled]="selection.length === 0" (click)="confirm()">
+            {{ t('common.studentGroupPicker.confirm', { count: selection.length }) }}
+          </button>
         </div>
       }
     </div>
-  </p-popover>
+  </mp-dialog>
 </ng-container>

@@ -1,32 +1,21 @@
 <ng-container *transloco="let t; prefix: 'topbar.yearSwitcher'">
-<p-dialog
+<mp-dialog
   [visible]="visible()"
   (visibleChange)="$event ? null : onHide()"
   [modal]="true"
-  [closable]="false"
   [closeOnEscape]="true"
-  [dismissableMask]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: 'min(28rem, 95vw)' }"
-  styleClass="mp-flush-dialog"
-  [showHeader]="false">
+  [dismissable]="true"
+  panelClass="w-[min(28rem,95vw)]"
+  [title]="t('title')"
+  [closeAriaLabel]="'common.close' | transloco">
 
-  <div class="flex items-center justify-between p-4 border-b border-surface">
-    <h3 class="text-base font-semibold m-0">{{ t('title') }}</h3>
-    <button type="button" class="mp-icon-button" (click)="onHide()"
-            [attr.aria-label]="'common.close' | transloco">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
-
-  <div class="p-4 flex flex-col gap-3 min-h-[12rem]">
+  <div class="flex flex-col gap-3 min-h-[12rem]">
     @if (loading()) {
       <div class="flex flex-col items-center justify-center min-h-[12rem] gap-3">
-        <p-progress-spinner [style]="{ width: '2rem', height: '2rem' }"></p-progress-spinner>
+        <mp-spinner size="2rem"></mp-spinner>
       </div>
     } @else if (rows().length === 0) {
-      <div class="text-sm text-muted-color py-6 text-center border border-dashed border-surface rounded-lg">
+      <div class="text-sm text-muted-foreground py-6 text-center border border-dashed border-border rounded-lg">
         {{ t('empty') }}
       </div>
     } @else {
@@ -39,8 +28,7 @@
                            focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary
                            text-left"
                     [class.!border-primary]="year.id === selectedId()"
-                    [class.bg-primary-50]="year.id === selectedId()"
-                    [class.dark:bg-primary-900\/30]="year.id === selectedId()"
+                    [class]="year.id === selectedId() ? 'bg-primary-50 dark:bg-primary-900/30' : ''"
                     (click)="pick(year)">
               <i class="fa-solid fa-check text-primary"
                  [class.invisible]="year.id !== selectedId()"></i>
@@ -48,10 +36,10 @@
                 <div class="flex items-center gap-2">
                   <span class="font-medium truncate">{{ year.name }}</span>
                   @if (year.id === currentId()) {
-                    <p-tag [value]="t('currentBadge')" severity="success"></p-tag>
+                    <mp-badge [value]="t('currentBadge')" severity="success"></mp-badge>
                   }
                   @if (year.isLocked) {
-                    <p-tag [value]="t('lockedBadge')" severity="warn" icon="fa-solid fa-lock"></p-tag>
+                    <mp-badge [value]="t('lockedBadge')" severity="warn" icon="fa-solid fa-lock"></mp-badge>
                   }
                 </div>
               </div>
@@ -61,5 +49,5 @@
       </ul>
     }
   </div>
-</p-dialog>
+</mp-dialog>
 </ng-container>

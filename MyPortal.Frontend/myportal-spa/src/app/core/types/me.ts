@@ -11,9 +11,6 @@ export interface Me {
   permissions?: string[];
 }
 
-// Mirrors MyPortal.Contracts.Models.System.Users.UserChangePasswordRequest.
-// Self-service change (requires the current password); distinct from the admin
-// set-password on /api/users/{id}/password.
 export interface MeChangePasswordRequest {
   currentPassword: string;
   password: string;

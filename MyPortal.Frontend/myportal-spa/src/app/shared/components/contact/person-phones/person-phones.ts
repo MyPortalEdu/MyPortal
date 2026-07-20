@@ -1,23 +1,17 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
-import { Select } from 'primeng/select';
+import { MpButton, MpInput, MpSelect } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 import { LookupResponse } from '../../../types/lookup';
 import { PersonPhoneUpsertItem } from '../../../types/staff-contact-details';
 import { CopyButton } from '../../copy-button/copy-button';
 
-/**
- * Presentational list-editor for a person's phone numbers. Owner-agnostic — the host owns the
- * model and persistence; this just renders/edits the list and enforces one-main-per-list.
- */
 @Component({
   selector: 'mp-person-phones',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Button, InputText, Select, CopyButton, TranslocoDirective],
+  imports: [FormsModule, MpButton, MpInput, MpSelect, CopyButton, TranslocoDirective],
   templateUrl: './person-phones.html',
 })
 export class PersonPhones {
@@ -29,7 +23,6 @@ export class PersonPhones {
     return this.types().find(t => t.id === typeId)?.description ?? '';
   }
 
-  // tel: URIs shouldn't contain spaces; keep digits and a leading +/() dashes.
   protected telHref(number: string): string {
     return 'tel:' + number.replace(/[^\d+]/g, '');
   }

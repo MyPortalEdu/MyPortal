@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   effect,
   inject,
   input,
@@ -11,12 +10,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { FormField, applyWhen, form, required, submit, validate, validateHttp } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
-import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
-import { Dialog } from 'primeng/dialog';
-import { InputText } from 'primeng/inputtext';
-import { ProgressSpinner } from 'primeng/progressspinner';
+import { MpDatePicker, MpDialog, MpDialogFooter, MpButton, MpFormField, MpInput, MpSpinner } from '@myportal/ui';
 import {
   catchError,
   debounceTime,
@@ -38,33 +34,34 @@ import { StaffMembersDataService } from '../../../../../shared/services/staff-me
 import { StaffBasicDetailsUpsertRequest } from '../../../../../shared/types/staff-basic-details';
 import { PersonMatchResponse } from '../../../../../shared/types/person-match';
 
-/**
- * "New staff member" flow. Because this is a thin joiner form (not the full staff
- * record), it searches existing People as you type — a person may already be on file
- * as a contact/agent/former student, and the shared Person record should be reused
- * rather than duplicated.
- *
- * The create-new form is the default: with no matches the user just fills it in. When
- * the search turns up people, they're listed above the form so the user can pick an
- * existing person (→ attach a staff role, code only) instead of creating a duplicate.
- * Picking someone who is already staff jumps to their profile via `openExisting`.
- *
- * Emits `created` with the new StaffMember id (both create-new and attach paths). The
- * listing page owns navigation.
- */
+interface CreateModel {
+  code: string;
+  title: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  preferredFirstName: string;
+  preferredLastName: string;
+  gender: string;
+  dob: Date | null;
+}
+
 @Component({
   selector: 'mp-staff-member-create-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
+    FormField,
     DatePipe,
-    Button,
-    DatePicker,
-    Dialog,
-    InputText,
+    MpButton,
+    MpDatePicker,
+    MpDialog,
+    MpDialogFooter,
+    MpFormField,
+    MpInput,
     GenderSelect,
-    ProgressSpinner,
+    MpSpinner,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('staff-members')],
@@ -80,10 +77,7 @@ export class StaffMemberCreateDialog {
   readonly created = output<string>();
   readonly openExisting = output<string>();
 
-  /** 'search' shows the live search + create-new form; 'attach' captures the code for
-   *  a picked existing person. */
   protected readonly step = signal<'search' | 'attach'>('search');
-  protected readonly saving = signal(false);
 
   protected readonly searchTerm = signal('');
   protected readonly results = signal<PersonMatchResponse[]>([]);
@@ -91,40 +85,50 @@ export class StaffMemberCreateDialog {
 
   protected readonly selectedPerson = signal<PersonMatchResponse | null>(null);
 
-  protected readonly title = signal<string | null>(null);
-  protected readonly firstName = signal('');
-  protected readonly middleName = signal<string | null>(null);
-  protected readonly lastName = signal('');
-  protected readonly preferredFirstName = signal<string | null>(null);
-  protected readonly preferredLastName = signal<string | null>(null);
-  protected readonly gender = signal('');
-  protected readonly dob = signal<Date | null>(null);
-
-  // Staff code — shared by the create-new form and the attach step.
-  protected readonly code = signal('');
-
-  protected readonly newPersonValid = computed(
-    () =>
-      this.firstName().trim().length > 0 &&
-      this.lastName().trim().length > 0 &&
-      this.gender().trim().length > 0 &&
-      this.code().trim().length > 0,
-  );
-
-  protected readonly attachValid = computed(() => this.code().trim().length > 0);
+  protected readonly model = signal<CreateModel>({
+    code: '',
+    title: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    preferredFirstName: '',
+    preferredLastName: '',
+    gender: '',
+    dob: null,
+  });
+  protected readonly f = form(this.model, path => {
+    required(path.code);
+    validate(path.code, ({ value }) =>
+      value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+    );
+    validateHttp(path.code, {
+      request: ({ value }) =>
+        `/api/v1/staffmembers/code-available?code=${encodeURIComponent(value().trim())}`,
+      onSuccess: (result: unknown) =>
+        (result as { available: boolean }).available
+          ? undefined
+          : { kind: 'taken', message: 'staff-members.create.codeTaken' },
+      onError: () => undefined,
+      when: ({ value }) => value().trim().length > 0,
+      debounce: 400,
+    });
+    applyWhen(path, () => this.step() === 'search', p => {
+      for (const field of [p.firstName, p.lastName, p.gender]) {
+        required(field);
+        validate(field, ({ value }) =>
+          value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+        );
+      }
+    });
+  });
 
   constructor() {
-    // Reset the whole flow whenever the dialog reopens so a previous draft doesn't
-    // bleed into a fresh create.
     effect(() => {
       if (this.open()) {
         untracked(() => this.reset());
       }
     });
 
-    // Debounced live search. Terms shorter than 2 chars clear the list without hitting
-    // the server (mirrors the service-side guard). No results simply means "nothing to
-    // reuse" — the create-new form stays on screen, no warning shown.
     toObservable(this.searchTerm)
       .pipe(
         map(term => term.trim()),
@@ -156,74 +160,68 @@ export class StaffMemberCreateDialog {
   }
 
   protected onClose(): void {
-    if (this.saving()) return;
+    if (this.f().submitting()) return;
     this.closed.emit();
   }
 
   protected pickPerson(person: PersonMatchResponse): void {
     if (person.isStaffMember) {
-      // Already staff — don't duplicate; jump to the existing profile instead.
       if (person.existingStaffMemberId) {
         this.openExisting.emit(person.existingStaffMemberId);
       }
       return;
     }
     this.selectedPerson.set(person);
-    this.code.set('');
+    this.model.update(m => ({ ...m, code: '' }));
     this.step.set('attach');
   }
 
   protected backToSearch(): void {
     this.selectedPerson.set(null);
-    this.code.set('');
+    this.model.update(m => ({ ...m, code: '' }));
     this.step.set('search');
   }
 
   protected async attach(): Promise<void> {
     const person = this.selectedPerson();
-    if (!person || !this.attachValid() || this.saving()) return;
-    this.saving.set(true);
-
-    try {
-      const { id } = await firstValueFrom(
-        this.data.createForPerson({ personId: person.personId, code: this.code().trim() }),
-      );
-      this.notify.success(this.transloco.translate('staff-members.createdToast'));
-      this.created.emit(id);
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.createError'));
-    } finally {
-      this.saving.set(false);
-    }
+    if (!person) return;
+    await submit(this.f, async () => {
+      try {
+        const { id } = await firstValueFrom(
+          this.data.createForPerson({ personId: person.personId, code: this.model().code.trim() }),
+        );
+        this.notify.success(this.transloco.translate('staff-members.createdToast'));
+        this.created.emit(id);
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.createError'));
+      }
+    });
   }
 
   protected async save(): Promise<void> {
-    if (!this.newPersonValid() || this.saving()) return;
-    this.saving.set(true);
-
-    const payload: StaffBasicDetailsUpsertRequest = {
-      title: this.normalise(this.title()),
-      firstName: this.firstName().trim(),
-      middleName: this.normalise(this.middleName()),
-      lastName: this.lastName().trim(),
-      preferredFirstName: this.normalise(this.preferredFirstName()),
-      preferredLastName: this.normalise(this.preferredLastName()),
-      photoId: null,
-      gender: this.gender().trim(),
-      dob: this.dob()?.toISOString() ?? null,
-      deceased: null,
-      code: this.code().trim(),
-    };
-
-    try {
-      const { id } = await firstValueFrom(this.data.create(payload));
-      this.notify.success(this.transloco.translate('staff-members.createdToast'));
-      this.created.emit(id);
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.createError'));
-    } finally {
-      this.saving.set(false);
-    }
+    await submit(this.f, async () => {
+      const m = this.model();
+      const payload: StaffBasicDetailsUpsertRequest = {
+        title: this.normalise(m.title),
+        firstName: m.firstName.trim(),
+        middleName: this.normalise(m.middleName),
+        lastName: m.lastName.trim(),
+        preferredFirstName: this.normalise(m.preferredFirstName),
+        preferredLastName: this.normalise(m.preferredLastName),
+        photoId: null,
+        gender: m.gender.trim(),
+        dob: m.dob?.toISOString() ?? null,
+        deceased: null,
+        code: m.code.trim(),
+      };
+      try {
+        const { id } = await firstValueFrom(this.data.create(payload));
+        this.notify.success(this.transloco.translate('staff-members.createdToast'));
+        this.created.emit(id);
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.createError'));
+      }
+    });
   }
 
   private reset(): void {
@@ -233,15 +231,18 @@ export class StaffMemberCreateDialog {
     this.searching.set(false);
     this.selectedPerson.set(null);
 
-    this.title.set(null);
-    this.firstName.set('');
-    this.middleName.set(null);
-    this.lastName.set('');
-    this.preferredFirstName.set(null);
-    this.preferredLastName.set(null);
-    this.gender.set('');
-    this.dob.set(null);
-    this.code.set('');
+    this.model.set({
+      code: '',
+      title: '',
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      preferredFirstName: '',
+      preferredLastName: '',
+      gender: '',
+      dob: null,
+    });
+    this.f().reset();
   }
 
   private normalise(value: string | null | undefined): string | null {

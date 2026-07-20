@@ -46,6 +46,7 @@
     "loading": "Loading role…",
     "create": "Create",
     "save": "Save Changes",
+    "nameBlank": "Enter a name that isn't only spaces.",
     "createdToast": "Role created",
     "updatedToast": "Role updated",
     "errorCreate": "Couldn't create role",

@@ -180,7 +180,7 @@ namespace MyPortal.Services.System
         private async Task<bool> UpdateRolePermissionsAsync(ApplicationRole role, IList<Guid> permissionIds, CancellationToken cancellationToken)
         {
             await EnsurePermissionsMatchRoleAudienceAsync(role, permissionIds, cancellationToken);
-            await EnsureActorCanGrantPermissionsAsync(role, permissionIds, cancellationToken);
+            await EnsureActorCanManagePermissionsAsync(role, permissionIds, cancellationToken);
 
             bool changesMade = false;
 
@@ -262,16 +262,32 @@ namespace MyPortal.Services.System
             }
         }
 
-        // An actor may only grant a Staff role *administrative* permissions they themselves hold —
-        // otherwise a user with EditRoles could mint a role carrying access-control power above their own
-        // and escalate by assigning it (to a staff user, or to themselves). Ordinary functional
-        // permissions are not gated, so account provisioning (e.g. granting a Teacher role its
-        // register/marks permissions) works regardless of what the actor personally holds. Student/Parent
-        // roles are exempt (cross-portal), and SysAdmin holds every permission so it is unaffected.
-        private async Task EnsureActorCanGrantPermissionsAsync(ApplicationRole role, IList<Guid> permissionIds,
+        // An actor may only add or remove a Staff role's *administrative* permissions they themselves
+        // hold. Adding one above their own would let a user with EditRoles mint access-control power and
+        // escalate by assigning it; removing one they don't hold would let them sabotage access control
+        // (e.g. strip an admin capability from a role). Only the permissions actually being CHANGED are
+        // gated — permissions the role already carried and that stay untouched are left alone, so the
+        // actor can still edit the rest of the role without stripping admin perms above their own.
+        // Ordinary functional permissions are not gated (provisioning works under least privilege).
+        // Student/Parent roles are exempt (cross-portal), and SysAdmin holds every permission.
+        private async Task EnsureActorCanManagePermissionsAsync(ApplicationRole role, IList<Guid> permissionIds,
             CancellationToken cancellationToken)
         {
-            if (role.UserType != UserType.Staff || permissionIds.Count == 0)
+            if (role.UserType != UserType.Staff)
+            {
+                return;
+            }
+
+            var existingIds = (await rolePermissionRepository.GetByRoleIdAsync(role.Id, cancellationToken))
+                .Select(rp => rp.PermissionId)
+                .ToHashSet();
+            var desiredIds = permissionIds.ToHashSet();
+
+            var changed = existingIds.Except(desiredIds)
+                .Union(desiredIds.Except(existingIds))
+                .ToList();
+
+            if (changed.Count == 0)
             {
                 return;
             }
@@ -280,7 +296,7 @@ namespace MyPortal.Services.System
             var permissions = await permissionRepository.GetListAsync(cancellationToken: cancellationToken);
             var byId = permissions.ToDictionary(p => p.Id);
 
-            var beyondActor = permissionIds
+            var beyondActor = changed
                 .Where(id => byId.TryGetValue(id, out var p)
                              && Permissions.IsProtected(p.Name)
                              && !actorPermissions.Contains(p.Name))
@@ -290,7 +306,7 @@ namespace MyPortal.Services.System
             if (beyondActor.Count > 0)
             {
                 throw new ForbiddenException(
-                    $"You cannot grant administrative permissions you do not hold yourself: {string.Join(", ", beyondActor)}.");
+                    $"You cannot change administrative permissions you do not hold yourself: {string.Join(", ", beyondActor)}.");
             }
         }
     }

@@ -1,79 +1,58 @@
 <ng-container *transloco="let t; prefix: 'roles'">
   <mp-page-header
-    [title]="loading() ? t('form.loading') : (name() || t('form.titleView'))"
+    [title]="loading() ? t('form.loading') : (model().name || t('form.titleView'))"
     icon="fa-solid fa-user-shield"
     [actions]="headerActions()"></mp-page-header>
 
   @if (loading()) {
-    <p-card>
+    <mp-card>
       <div class="flex flex-col gap-3">
         @for (i of skeletonRows; track i) {
-          <p-skeleton height="2rem"></p-skeleton>
+          <mp-skeleton height="2rem"></mp-skeleton>
         }
       </div>
-    </p-card>
+    </mp-card>
   } @else if (notFound()) {
-    <p-card>
-      <div class="py-12 text-center text-muted-color">{{ t('form.errorLoad') }}</div>
-    </p-card>
+    <mp-card>
+      <div class="py-12 text-center text-muted-foreground">{{ t('form.errorLoad') }}</div>
+    </mp-card>
   } @else {
-    <form class="flex flex-col gap-4 max-w-5xl" #f="ngForm">
+    <form class="flex flex-col gap-4 max-w-5xl">
       @if (readOnly()) {
-        <div class="flex items-start gap-2 p-3 rounded-lg bg-emphasis text-sm text-muted-color">
+        <div class="flex items-start gap-2 p-3 rounded-lg bg-muted text-sm text-muted-foreground">
           <i class="fa-solid fa-lock mt-0.5"></i>
           <span>{{ t('form.systemReadonly') }}</span>
         </div>
       }
 
-      <!-- Details -->
-      <p-card>
+      <mp-card>
         <div class="flex flex-col gap-4">
           <mp-section-header [title]="t('form.details')" icon="fa-solid fa-circle-info"></mp-section-header>
-          <mp-field
+          <mp-form-field
             [label]="t('form.name')"
-            [required]="!readOnly()"
-            [error]="nameRef.touched && nameRef.invalid ? ('common.validation.required' | transloco) : undefined">
-            <input
-              pInputText
-              name="name"
-              [ngModel]="name()"
-              (ngModelChange)="name.set($event)"
-              [disabled]="nameLocked()"
-              required
-              #nameRef="ngModel"
-              [invalid]="nameRef.touched && nameRef.invalid" />
-            @if (nameLocked() && !readOnly()) {
-              <small class="text-muted-color">{{ t('form.defaultNameLocked') }}</small>
-            }
-          </mp-field>
+            [hint]="nameLocked() && !readOnly() ? t('form.defaultNameLocked') : undefined">
+            <input mpInput [formField]="f.name" />
+          </mp-form-field>
 
-          <mp-field [label]="t('form.description')">
-            <textarea
-              pTextarea
-              name="description"
-              [ngModel]="description()"
-              (ngModelChange)="description.set($event)"
-              rows="2"
-              [autoResize]="true"
-              [disabled]="readOnly()"></textarea>
-          </mp-field>
+          <mp-form-field [label]="t('form.description')">
+            <textarea mpTextarea [formField]="f.description" rows="2"></textarea>
+          </mp-form-field>
 
           <mp-field [label]="t('form.audience')">
-            <div><p-tag [value]="audienceLabel()"></p-tag></div>
+            <div><mp-badge [value]="audienceLabel()"></mp-badge></div>
           </mp-field>
         </div>
-      </p-card>
+      </mp-card>
 
-      <!-- Permissions -->
-      <p-card>
+      <mp-card>
         <div class="flex flex-col gap-2">
           <mp-section-header [title]="t('form.permissions')" icon="fa-solid fa-key"></mp-section-header>
-          <span class="text-xs text-muted-color">{{ t('form.permissionsHint') }}</span>
+          <span class="text-xs text-muted-foreground">{{ t('form.permissionsHint') }}</span>
 
           @if (treeNodes().length === 0) {
             <mp-empty-state [message]="t('form.noPermissions')"></mp-empty-state>
           } @else {
-            <div class="border border-surface rounded-lg p-2 max-h-[28rem] overflow-auto">
+            <div class="border border-border rounded-lg p-2 max-h-[28rem] overflow-auto">
               <mp-permission-tree
                 [nodes]="treeNodes()"
                 [selectedIds]="selectedPermissionIds()"
@@ -82,7 +61,7 @@
             </div>
           }
         </div>
-      </p-card>
+      </mp-card>
     </form>
   }
 </ng-container>

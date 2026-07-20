@@ -1,6 +1,5 @@
 import { LookupResponse } from './lookup';
 
-// Mirrors MyPortal.Contracts.Models.People.DbsCheckResponse.
 export interface DbsCheckResponse {
   id: string;
   dbsCheckTypeId: string;
@@ -12,7 +11,6 @@ export interface DbsCheckResponse {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.DbsCheckUpsertItem.
 export interface DbsCheckUpsertItem {
   id?: string | null;
   dbsCheckTypeId: string | null;
@@ -24,7 +22,6 @@ export interface DbsCheckUpsertItem {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.RightToWorkCheckResponse.
 export interface RightToWorkCheckResponse {
   id: string;
   documentTypeId: string;
@@ -35,7 +32,6 @@ export interface RightToWorkCheckResponse {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.RightToWorkCheckUpsertItem.
 export interface RightToWorkCheckUpsertItem {
   id?: string | null;
   documentTypeId: string | null;
@@ -46,7 +42,6 @@ export interface RightToWorkCheckUpsertItem {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffReferenceResponse.
 export interface StaffReferenceResponse {
   id: string;
   referenceTypeId?: string | null;
@@ -59,7 +54,6 @@ export interface StaffReferenceResponse {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffReferenceUpsertItem.
 export interface StaffReferenceUpsertItem {
   id?: string | null;
   referenceTypeId?: string | null;
@@ -72,7 +66,6 @@ export interface StaffReferenceUpsertItem {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffOverseasCheckResponse.
 export interface StaffOverseasCheckResponse {
   id: string;
   nationalityId: string;
@@ -81,7 +74,6 @@ export interface StaffOverseasCheckResponse {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffOverseasCheckUpsertItem.
 export interface StaffOverseasCheckUpsertItem {
   id?: string | null;
   nationalityId: string | null;
@@ -90,7 +82,6 @@ export interface StaffOverseasCheckUpsertItem {
   notes?: string | null;
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffPreEmploymentChecksResponse.
 export interface StaffPreEmploymentChecksResponse {
   identityCheckedDate?: string | null;
   prohibitionFromTeachingCheckedDate?: string | null;
@@ -112,7 +103,6 @@ export interface StaffPreEmploymentChecksResponse {
   countries: LookupResponse[];
 }
 
-// Mirrors MyPortal.Contracts.Models.People.StaffPreEmploymentChecksUpsertRequest.
 export interface StaffPreEmploymentChecksUpsertRequest {
   identityCheckedDate?: string | null;
   prohibitionFromTeachingCheckedDate?: string | null;
