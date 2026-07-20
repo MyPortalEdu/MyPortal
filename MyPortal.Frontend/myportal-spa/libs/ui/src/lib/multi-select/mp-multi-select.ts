@@ -80,7 +80,7 @@ export class MpMultiSelect implements ControlValueAccessor {
   );
 
   protected readonly contentClass =
-    'z-50 max-h-72 min-w-[14rem] max-w-[22rem] overflow-y-auto rounded-surface ' +
+    'z-50 max-h-72 min-w-[14rem] max-w-[min(22rem,calc(100vw_-_1rem))] overflow-y-auto rounded-surface ' +
     'border border-border bg-background p-1 shadow-overlay';
 
   protected readonly itemClass =

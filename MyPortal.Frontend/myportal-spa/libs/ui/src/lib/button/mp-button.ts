@@ -20,7 +20,7 @@ export const mpButtonVariants = cva(
         default: 'h-8 px-3 py-1',
         sm: 'h-7 rounded-control px-2.5 text-xs',
         lg: 'h-10 px-6',
-        icon: 'h-8 w-8',
+        icon: 'h-9 w-9',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },
