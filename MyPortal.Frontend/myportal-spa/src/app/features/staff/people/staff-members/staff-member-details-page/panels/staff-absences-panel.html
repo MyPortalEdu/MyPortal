@@ -3,7 +3,7 @@
     <mp-loading></mp-loading>
   } @else if (absences()) {
     <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.absences') }}</h3>
-    <p class="text-sm text-muted-foreground mb-4">{{ t('staff-members.absences.hint') }}</p>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('staff-members.absences.hint') }}</p>
 
     @if (!model().absences.length) {
       <mp-empty-state icon="fa-solid fa-calendar-xmark" [message]="t('staff-members.absences.none')"></mp-empty-state>

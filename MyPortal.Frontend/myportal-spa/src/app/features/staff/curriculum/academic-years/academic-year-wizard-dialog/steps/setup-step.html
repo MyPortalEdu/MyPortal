@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-5">
     <div>
       <h3 class="text-base font-semibold m-0 mb-1">{{ t('title') }}</h3>
-      <p class="text-sm text-muted-foreground m-0">{{ t('description') }}</p>
+      <p class="hidden sm:block text-sm text-muted-foreground m-0">{{ t('description') }}</p>
     </div>
 
     @if (yearName(); as name) {
@@ -63,7 +63,7 @@
       <div class="flex items-center justify-between">
         <div>
           <h4 class="text-sm font-semibold m-0">{{ t('termsSection') }}</h4>
-          <p class="text-xs text-muted-foreground m-0">{{ t('termsHint') }}</p>
+          <p class="hidden sm:block text-xs text-muted-foreground m-0">{{ t('termsHint') }}</p>
         </div>
         @if (!readOnly()) {
           <button mpButton variant="secondary" size="sm" (click)="addTerm()"><i class="fa-solid fa-plus"></i> {{ t('addTerm') }}</button>
@@ -114,7 +114,7 @@
     @if (priorYears().length > 0 && !editMode()) {
       <section class="flex flex-col gap-2">
         <h4 class="text-sm font-semibold m-0">{{ t('pastoralSection') }}</h4>
-        <p class="text-xs text-muted-foreground m-0">{{ t('pastoralHint') }}</p>
+        <p class="hidden sm:block text-xs text-muted-foreground m-0">{{ t('pastoralHint') }}</p>
         <mp-select
           [ngModel]="model().copyPastoralStructureFromAcademicYearId"
           (ngModelChange)="onPastoralYearPicked($event)"

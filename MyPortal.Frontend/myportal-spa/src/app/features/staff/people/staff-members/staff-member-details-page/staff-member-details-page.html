@@ -312,7 +312,7 @@
           }
           @case ('timetable') {
             <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.timetable') }}</h3>
-            <p class="text-sm text-muted-foreground mb-4">{{ t('staff-members.timetable.hint') }}</p>
+            <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('staff-members.timetable.hint') }}</p>
             <mp-staff-timetable [staffMemberId]="staffMemberId()"></mp-staff-timetable>
           }
           @case ('performanceDetails') {
@@ -324,7 +324,7 @@
           }
           @case ('documents') {
             <h3 class="text-base font-semibold mb-1">{{ t('staff-members.areas.documents') }}</h3>
-            <p class="text-sm text-muted-foreground mb-4">{{ t('staff-members.details.documentsHint') }}</p>
+            <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('staff-members.details.documentsHint') }}</p>
             <mp-directory-browser
               [baseUrl]="documentsBaseUrl()"
               [canEdit]="canEditDocuments()"
