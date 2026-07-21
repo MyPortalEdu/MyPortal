@@ -4,7 +4,7 @@ import { MpButton, MpInput, MpSelect } from '@myportal/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 import { LookupResponse } from '../../../types/lookup';
-import { PersonPhoneUpsertItem } from '../../../types/staff-contact-details';
+import { PersonPhoneUpsertItem } from '../../../types/person-contact-details';
 import { CopyButton } from '../../copy-button/copy-button';
 
 @Component({

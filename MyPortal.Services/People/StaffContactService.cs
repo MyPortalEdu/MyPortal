@@ -21,7 +21,7 @@ public class StaffContactService(
     IPersonContactService personContactService)
     : BaseService(authorizationService, logger), IStaffContactService
 {
-    public async Task<StaffContactDetailsResponse> GetContactDetailsAsync(Guid staffMemberId,
+    public async Task<PersonContactDetailsResponse> GetContactDetailsAsync(Guid staffMemberId,
         CancellationToken cancellationToken)
     {
         // Contact methods live under the BasicDetails permission domain (see StaffMemberAccessService).
@@ -33,7 +33,7 @@ public class StaffContactService(
         return await personContactService.GetContactDetailsAsync(personId, cancellationToken);
     }
 
-    public async Task UpdateContactDetailsAsync(Guid staffMemberId, StaffContactDetailsUpsertRequest model,
+    public async Task UpdateContactDetailsAsync(Guid staffMemberId, PersonContactDetailsUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await accessService.RequireAsync(staffMemberId, StaffArea.BasicDetails,

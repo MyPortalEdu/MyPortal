@@ -50,7 +50,18 @@
   "areas": {
     "basicDetails": "Basic Details",
     "registration": "Registration",
+    "contact": "Contact Details",
     "comingSoon": "Coming soon"
+  },
+  "contact": {
+    "hint": "Email addresses, phone numbers, and addresses for this student.",
+    "emailsHeading": "Email Addresses",
+    "phonesHeading": "Phone Numbers",
+    "addressesHeading": "Addresses",
+    "addressesHint": "Address changes save immediately — they aren't part of Save or Cancel above.",
+    "loadError": "Couldn't load contact details",
+    "saveError": "Couldn't save contact details",
+    "savedToast": "Contact details saved"
   },
   "registration": {
     "hint": "Enrolment status, admission date, and statutory pupil identifiers (UPN, ULN, LA child ID).",

@@ -28,6 +28,8 @@ public class StudentService(
     IStudentRepository studentRepository,
     IPersonRepository personRepository,
     IPersonService personService,
+    IPersonContactService personContactService,
+    IPersonAddressService personAddressService,
     IPhotoService photoService,
     IEnrolmentStatusRepository enrolmentStatusRepository,
     IBoarderStatusRepository boarderStatusRepository,
@@ -209,6 +211,70 @@ public class StudentService(
         {
             Upn = Upn.Compose(localAuthority.LeaCode, school.EstablishmentNumber, year, serial)
         };
+    }
+
+    public async Task<PersonContactDetailsResponse> GetContactDetailsAsync(Guid id,
+        CancellationToken cancellationToken)
+    {
+        var personId = await ResolvePersonIdAsync(id, cancellationToken);
+
+        return await personContactService.GetContactDetailsAsync(personId, cancellationToken);
+    }
+
+    public async Task UpdateContactDetailsAsync(Guid id, PersonContactDetailsUpsertRequest model,
+        CancellationToken cancellationToken)
+    {
+        var personId = await ResolvePersonIdAsync(id, cancellationToken);
+
+        await personContactService.UpdateContactDetailsAsync(personId, model, cancellationToken);
+    }
+
+    public async Task<AddressListResponse> GetAddressesAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var personId = await ResolvePersonIdAsync(id, cancellationToken);
+
+        return await personAddressService.GetAddressesAsync(personId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AddressMatchResponse>> SearchAddressesAsync(string? query,
+        CancellationToken cancellationToken)
+    {
+        return await personAddressService.SearchAddressesAsync(query, cancellationToken);
+    }
+
+    public async Task<Guid> AddAddressAsync(Guid id, PersonAddressUpsertRequest model,
+        CancellationToken cancellationToken)
+    {
+        var personId = await ResolvePersonIdAsync(id, cancellationToken);
+
+        return await personAddressService.AddAddressAsync(personId, model, cancellationToken);
+    }
+
+    public async Task UpdateAddressAsync(Guid id, Guid addressPersonId, PersonAddressUpdateRequest model,
+        CancellationToken cancellationToken)
+    {
+        var personId = await ResolvePersonIdAsync(id, cancellationToken);
+
+        await personAddressService.UpdateAddressAsync(personId, addressPersonId, model, cancellationToken);
+    }
+
+    public async Task RemoveAddressAsync(Guid id, Guid addressPersonId, CancellationToken cancellationToken)
+    {
+        var personId = await ResolvePersonIdAsync(id, cancellationToken);
+
+        await personAddressService.RemoveAddressAsync(personId, addressPersonId, cancellationToken);
+    }
+
+    private async Task<Guid> ResolvePersonIdAsync(Guid studentId, CancellationToken cancellationToken)
+    {
+        var student = await studentRepository.GetByIdAsync(studentId, cancellationToken);
+
+        if (student == null)
+        {
+            throw new NotFoundException("Student not found.");
+        }
+
+        return student.PersonId;
     }
 
     public async Task SetPhotoAsync(Guid id, Stream image, string contentType, string fileName,

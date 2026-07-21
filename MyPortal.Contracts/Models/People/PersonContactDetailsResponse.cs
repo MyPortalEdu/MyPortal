@@ -5,7 +5,7 @@ namespace MyPortal.Contracts.Models.People;
 /// the active type options for each so the editor's dropdowns are self-contained in one fetch.
 /// Addresses are shared entities and land in a later slice with their own search-before-add flow.
 /// </summary>
-public class StaffContactDetailsResponse
+public class PersonContactDetailsResponse
 {
     public List<PersonEmailResponse> Emails { get; set; } = [];
     public List<PersonPhoneResponse> Phones { get; set; } = [];

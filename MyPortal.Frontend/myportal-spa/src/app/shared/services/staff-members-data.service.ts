@@ -9,9 +9,9 @@ import {
   StaffBasicDetailsUpsertRequest,
 } from '../types/staff-basic-details';
 import {
-  StaffContactDetailsResponse,
-  StaffContactDetailsUpsertRequest,
-} from '../types/staff-contact-details';
+  PersonContactDetailsResponse,
+  PersonContactDetailsUpsertRequest,
+} from '../types/person-contact-details';
 import {
   StaffEqualityDetailsResponse,
   StaffEqualityDetailsUpsertRequest,
@@ -100,15 +100,15 @@ export class StaffMembersDataService {
     return this.http.delete<IdResponse>(`/api/v1/staffmembers/${staffMemberId}/photo`);
   }
 
-  getContactDetails(staffMemberId: string): Observable<StaffContactDetailsResponse> {
-    return this.http.get<StaffContactDetailsResponse>(
+  getContactDetails(staffMemberId: string): Observable<PersonContactDetailsResponse> {
+    return this.http.get<PersonContactDetailsResponse>(
       `/api/v1/staffmembers/${staffMemberId}/contact-details`,
     );
   }
 
   updateContactDetails(
     staffMemberId: string,
-    payload: StaffContactDetailsUpsertRequest,
+    payload: PersonContactDetailsUpsertRequest,
   ): Observable<IdResponse> {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/contact-details`,

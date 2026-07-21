@@ -3,7 +3,7 @@ import { MpBadge, MpButton, MpSpinner } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
-import { StaffMembersDataService } from '../../../services/staff-members-data.service';
+import { PersonAddressDataSource } from '../person-address-data-source';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { LookupResponse } from '../../../types/lookup';
@@ -19,7 +19,7 @@ import { CopyButton } from '../../copy-button/copy-button';
   templateUrl: './person-addresses.html',
 })
 export class PersonAddresses implements OnInit {
-  private readonly data = inject(StaffMembersDataService);
+  private readonly data = inject(PersonAddressDataSource);
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);

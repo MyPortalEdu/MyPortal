@@ -129,7 +129,7 @@ public sealed class StaffMembersController(
     /// <param name="staffMemberId">The StaffMember id.</param>
     [HttpGet("{staffMemberId:guid}/contact-details")]
     [UserType(UserType.Staff)]
-    [ProducesResponseType(typeof(StaffContactDetailsResponse), 200)]
+    [ProducesResponseType(typeof(PersonContactDetailsResponse), 200)]
     public async Task<IActionResult> GetContactDetailsAsync([FromRoute] Guid staffMemberId)
     {
         var result = await staffContactService.GetContactDetailsAsync(staffMemberId, CancellationToken);
@@ -144,7 +144,7 @@ public sealed class StaffMembersController(
     [UserType(UserType.Staff)]
     [ProducesResponseType(typeof(IdResponse), 200)]
     public async Task<IActionResult> UpdateContactDetailsAsync([FromRoute] Guid staffMemberId,
-        [FromBody] StaffContactDetailsUpsertRequest model)
+        [FromBody] PersonContactDetailsUpsertRequest model)
     {
         await staffContactService.UpdateContactDetailsAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });

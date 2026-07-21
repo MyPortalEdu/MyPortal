@@ -4,6 +4,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { createSpyObj, type SpyObj } from '@testing/spy';
 
 import { AddressFormDialog } from './address-form-dialog';
+import { PersonAddressDataSource } from '../person-address-data-source';
 import { StaffMembersDataService } from '../../../services/staff-members-data.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
@@ -73,7 +74,7 @@ describe('AddressFormDialog (applyWhen step-conditional)', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        { provide: StaffMembersDataService, useValue: data },
+        { provide: PersonAddressDataSource, useValue: data },
         { provide: NotificationService, useValue: notify },
         { provide: ConfirmationDialog, useValue: createSpyObj<ConfirmationDialog>(['confirm']) },
         { provide: TranslocoService, useValue: translocoStub },

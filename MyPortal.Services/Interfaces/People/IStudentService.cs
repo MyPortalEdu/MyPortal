@@ -38,6 +38,31 @@ public interface IStudentService
     Task UpdateBasicDetailsAsync(Guid id, StudentBasicDetailsUpsertRequest model,
         CancellationToken cancellationToken);
 
+    /// <summary>Contact-details area read (the student's own emails + phone numbers). Part of the
+    /// BasicDetails permission domain. 404 if not found.</summary>
+    Task<PersonContactDetailsResponse> GetContactDetailsAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Contact-details area write — whole-collection replace of emails + phones.</summary>
+    Task UpdateContactDetailsAsync(Guid id, PersonContactDetailsUpsertRequest model,
+        CancellationToken cancellationToken);
+
+    /// <summary>List the student's linked addresses.</summary>
+    Task<AddressListResponse> GetAddressesAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Search existing addresses to link (part of editing the area).</summary>
+    Task<IReadOnlyList<AddressMatchResponse>> SearchAddressesAsync(string? query,
+        CancellationToken cancellationToken);
+
+    /// <summary>Link an existing address or create a new one. Returns the new link (AddressPerson) id.</summary>
+    Task<Guid> AddAddressAsync(Guid id, PersonAddressUpsertRequest model, CancellationToken cancellationToken);
+
+    /// <summary>Update an address link (or the shared address, per AddressEditMode).</summary>
+    Task UpdateAddressAsync(Guid id, Guid addressPersonId, PersonAddressUpdateRequest model,
+        CancellationToken cancellationToken);
+
+    /// <summary>Unlink an address from the student.</summary>
+    Task RemoveAddressAsync(Guid id, Guid addressPersonId, CancellationToken cancellationToken);
+
     /// <summary>Adds or replaces the student's photo (part of basic details). The image is resized
     /// before storage.</summary>
     Task SetPhotoAsync(Guid id, Stream image, string contentType, string fileName,

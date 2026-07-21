@@ -9,9 +9,9 @@ namespace MyPortal.Services.Interfaces.People;
 /// </summary>
 public interface IStaffContactService
 {
-    Task<StaffContactDetailsResponse> GetContactDetailsAsync(Guid staffMemberId,
+    Task<PersonContactDetailsResponse> GetContactDetailsAsync(Guid staffMemberId,
         CancellationToken cancellationToken);
 
-    Task UpdateContactDetailsAsync(Guid staffMemberId, StaffContactDetailsUpsertRequest model,
+    Task UpdateContactDetailsAsync(Guid staffMemberId, PersonContactDetailsUpsertRequest model,
         CancellationToken cancellationToken);
 }

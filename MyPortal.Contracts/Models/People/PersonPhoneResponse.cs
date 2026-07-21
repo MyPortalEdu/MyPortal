@@ -2,7 +2,7 @@ namespace MyPortal.Contracts.Models.People;
 
 /// <summary>
 /// A single phone number owned by a person. <see cref="TypeId"/> resolves against the
-/// PhoneTypes list on <see cref="StaffContactDetailsResponse"/>.
+/// PhoneTypes list on <see cref="PersonContactDetailsResponse"/>.
 /// </summary>
 public class PersonPhoneResponse
 {

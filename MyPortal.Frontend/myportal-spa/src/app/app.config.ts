@@ -7,6 +7,8 @@ import {provideHttpClient, withInterceptors, withXsrfConfiguration, withXhr} fro
 import {provideTransloco} from '@jsverse/transloco';
 import {MENU_CONTRIBUTORS} from './layout/menu/menu-token';
 import {StaffMenuContributor} from './features/staff/staff-menu-contributor';
+import {PersonAddressDataSource} from './shared/components/contact/person-address-data-source';
+import {StaffMembersDataService} from './shared/services/staff-members-data.service';
 import {apiBaseInterceptor} from './core/interceptors/api-base-interceptor';
 import {authErrorInterceptor} from './core/interceptors/auth-error-interceptor';
 import {AppErrorHandler} from './core/error/app-error-handler';
@@ -34,6 +36,7 @@ export const appConfig: ApplicationConfig = {
       loader: TranslocoHttpLoader,
     }),
     { provide: MENU_CONTRIBUTORS, useClass: StaffMenuContributor, multi: true },
+    { provide: PersonAddressDataSource, useExisting: StaffMembersDataService },
     { provide: ErrorHandler, useClass: AppErrorHandler }
   ]
 };

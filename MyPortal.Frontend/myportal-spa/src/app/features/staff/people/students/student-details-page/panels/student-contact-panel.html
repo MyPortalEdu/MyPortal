@@ -1,0 +1,40 @@
+<ng-container *transloco="let t">
+  @if (loading() && !contact()) {
+    <mp-loading></mp-loading>
+  } @else if (contact()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('students.areas.contact') }}</h3>
+    <p class="text-sm text-muted-foreground mb-4">
+      {{ t('students.contact.hint') }}
+    </p>
+
+    <div class="flex flex-col gap-6">
+      <section>
+        <mp-section-header icon="fa-solid fa-envelope" [title]="t('students.contact.emailsHeading')"></mp-section-header>
+        <mp-person-emails
+          [emails]="emails()"
+          (emailsChange)="emails.set($event)"
+          [types]="emailTypes()"
+          [editing]="editing()"></mp-person-emails>
+      </section>
+
+      <section>
+        <mp-section-header icon="fa-solid fa-phone" [title]="t('students.contact.phonesHeading')"></mp-section-header>
+        <mp-person-phones
+          [phones]="phones()"
+          (phonesChange)="phones.set($event)"
+          [types]="phoneTypes()"
+          [editing]="editing()"></mp-person-phones>
+      </section>
+
+      <section class="border-t border-border pt-6">
+        <mp-section-header icon="fa-solid fa-location-dot" [title]="t('students.contact.addressesHeading')"></mp-section-header>
+        <p class="text-sm text-muted-foreground -mt-2 mb-3">
+          {{ t('students.contact.addressesHint') }}
+        </p>
+        <mp-person-addresses
+          [staffMemberId]="studentId()"
+          [canEdit]="canEdit()"></mp-person-addresses>
+      </section>
+    </div>
+  }
+</ng-container>

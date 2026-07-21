@@ -2,7 +2,7 @@ namespace MyPortal.Contracts.Models.People;
 
 /// <summary>
 /// A single email address owned by a person. <see cref="TypeId"/> resolves against the
-/// EmailTypes list on <see cref="StaffContactDetailsResponse"/>.
+/// EmailTypes list on <see cref="PersonContactDetailsResponse"/>.
 /// </summary>
 public class PersonEmailResponse
 {

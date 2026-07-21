@@ -3,9 +3,9 @@ using MyPortal.Contracts.Models.People;
 
 namespace MyPortal.Services.Validation.People;
 
-public class StaffContactDetailsUpsertRequestValidator : AbstractValidator<StaffContactDetailsUpsertRequest>
+public class PersonContactDetailsUpsertRequestValidator : AbstractValidator<PersonContactDetailsUpsertRequest>
 {
-    public StaffContactDetailsUpsertRequestValidator()
+    public PersonContactDetailsUpsertRequestValidator()
     {
         RuleForEach(x => x.Emails).ChildRules(email =>
         {

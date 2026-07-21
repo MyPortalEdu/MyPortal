@@ -15,7 +15,7 @@ export interface PersonPhoneResponse {
   isMain: boolean;
 }
 
-export interface StaffContactDetailsResponse {
+export interface PersonContactDetailsResponse {
   emails: PersonEmailResponse[];
   phones: PersonPhoneResponse[];
   emailTypes: LookupResponse[];
@@ -37,7 +37,7 @@ export interface PersonPhoneUpsertItem {
   isMain: boolean;
 }
 
-export interface StaffContactDetailsUpsertRequest {
+export interface PersonContactDetailsUpsertRequest {
   emails: PersonEmailUpsertItem[];
   phones: PersonPhoneUpsertItem[];
 }

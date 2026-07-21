@@ -261,6 +261,12 @@
               [permissions]="heldPerms()"
             ></mp-student-registration-panel>
           }
+          @case ('contact') {
+            <mp-student-contact-panel
+              [studentId]="studentId()"
+              [permissions]="heldPerms()"
+            ></mp-student-contact-panel>
+          }
           @default {
             <mp-empty-state [message]="t('students.details.areaComingSoon')"></mp-empty-state>
           }

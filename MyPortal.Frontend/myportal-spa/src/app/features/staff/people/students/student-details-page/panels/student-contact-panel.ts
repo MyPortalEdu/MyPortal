@@ -17,40 +17,40 @@ import {
 
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { Permissions } from '../../../../../../core/constants/permissions';
-import { StaffMembersDataService } from '../../../../../../shared/services/staff-members-data.service';
-import { StaffRelationship } from '../../../../../../shared/types/staff-member-header';
+import { StudentsDataService } from '../../../../../../shared/services/students-data.service';
 import { Loading } from '../../../../../../shared/components/loading/loading';
 import { SectionHeader } from '../../../../../../shared/components/section-header/section-header';
 import { PersonEmails } from '../../../../../../shared/components/contact/person-emails/person-emails';
 import { PersonPhones } from '../../../../../../shared/components/contact/person-phones/person-phones';
 import { PersonAddresses } from '../../../../../../shared/components/contact/person-addresses/person-addresses';
+import { PersonAddressDataSource } from '../../../../../../shared/components/contact/person-address-data-source';
 import {
   PersonEmailUpsertItem,
   PersonPhoneUpsertItem,
   PersonContactDetailsResponse,
   PersonContactDetailsUpsertRequest,
 } from '../../../../../../shared/types/person-contact-details';
-import { StaffAreaPanel } from './staff-area-panel';
+import { StudentAreaPanel } from './student-area-panel';
 
 @Component({
-  selector: 'mp-staff-contact-panel',
+  selector: 'mp-student-contact-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Loading, SectionHeader, PersonEmails, PersonPhones, PersonAddresses, TranslocoDirective],
   providers: [
-    provideTranslocoScope('staff-members'),
-    { provide: StaffAreaPanel, useExisting: forwardRef(() => StaffContactPanel) },
+    provideTranslocoScope('students'),
+    { provide: StudentAreaPanel, useExisting: forwardRef(() => StudentContactPanel) },
+    { provide: PersonAddressDataSource, useExisting: StudentsDataService },
   ],
-  templateUrl: './staff-contact-panel.html',
+  templateUrl: './student-contact-panel.html',
 })
-export class StaffContactPanel extends StaffAreaPanel implements OnInit {
-  private readonly data = inject(StaffMembersDataService);
+export class StudentContactPanel extends StudentAreaPanel implements OnInit {
+  private readonly data = inject(StudentsDataService);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
 
-  readonly staffMemberId = input.required<string>();
+  readonly studentId = input.required<string>();
   readonly permissions = input.required<Set<string>>();
-  readonly relationship = input<StaffRelationship>();
 
   protected readonly loading = signal(false);
   override readonly saving = signal(false);
@@ -63,13 +63,9 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
   protected readonly phoneTypes = computed(() => this.contact()?.phoneTypes ?? []);
   private readonly snapshot = signal<string>('');
 
-  override readonly canEdit = computed(() => {
-    const perms = this.permissions();
-    const rel = this.relationship();
-    if (perms.has(Permissions.Staff.EditAllStaffBasicDetails)) return true;
-    if (rel === 'LineManaged' && perms.has(Permissions.Staff.EditManagedStaffBasicDetails)) return true;
-    return false;
-  });
+  override readonly canEdit = computed(() =>
+    this.permissions().has(Permissions.Student.EditStudentBasicDetails),
+  );
 
   override readonly valid = computed(
     () =>
@@ -91,7 +87,7 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
 
   private load(): void {
     this.loading.set(true);
-    this.data.getContactDetails(this.staffMemberId()).subscribe({
+    this.data.getContactDetails(this.studentId()).subscribe({
       next: row => {
         this.contact.set(row);
         this.apply(row);
@@ -99,7 +95,7 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
       },
       error: err => {
         this.loading.set(false);
-        this.notify.apiError(err, this.transloco.translate('staff-members.loadContactError'));
+        this.notify.apiError(err, this.transloco.translate('students.contact.loadError'));
       },
     });
   }
@@ -123,12 +119,12 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
     };
 
     try {
-      await firstValueFrom(this.data.updateContactDetails(this.staffMemberId(), payload));
-      this.notify.success(this.transloco.translate('staff-members.savedContactToast'));
+      await firstValueFrom(this.data.updateContactDetails(this.studentId(), payload));
+      this.notify.success(this.transloco.translate('students.contact.savedToast'));
       this.editing.set(false);
       this.load();
     } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.saveContactError'));
+      this.notify.apiError(err, this.transloco.translate('students.contact.saveError'));
     } finally {
       this.saving.set(false);
     }

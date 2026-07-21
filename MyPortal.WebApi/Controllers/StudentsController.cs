@@ -103,6 +103,97 @@ public sealed class StudentsController(
         return Ok(new IdResponse { Id = studentId });
     }
 
+    /// <summary>Get the contact details area (emails + phone numbers).</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpGet("{studentId:guid}/contact-details")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentBasicDetails)]
+    [ProducesResponseType(typeof(PersonContactDetailsResponse), 200)]
+    public async Task<IActionResult> GetContactDetailsAsync([FromRoute] Guid studentId)
+    {
+        var result = await studentService.GetContactDetailsAsync(studentId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Replace the contact details area.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new emails and phone numbers.</param>
+    [HttpPut("{studentId:guid}/contact-details")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentBasicDetails)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateContactDetailsAsync([FromRoute] Guid studentId,
+        [FromBody] PersonContactDetailsUpsertRequest model)
+    {
+        await studentService.UpdateContactDetailsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Get the addresses section.</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpGet("{studentId:guid}/addresses")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentBasicDetails)]
+    [ProducesResponseType(typeof(AddressListResponse), 200)]
+    public async Task<IActionResult> GetAddressesAsync([FromRoute] Guid studentId)
+    {
+        var result = await studentService.GetAddressesAsync(studentId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Search for existing addresses to add.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="query">Postcode / street / building fragment to search for.</param>
+    [HttpGet("{studentId:guid}/address-matches")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentBasicDetails)]
+    [ProducesResponseType(typeof(IReadOnlyList<AddressMatchResponse>), 200)]
+    public async Task<IActionResult> SearchAddressMatchesAsync([FromRoute] Guid studentId,
+        [FromQuery] string? query)
+    {
+        var result = await studentService.SearchAddressesAsync(query, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Add an address to a student.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The address to link/create, with type and main flag.</param>
+    [HttpPost("{studentId:guid}/addresses")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentBasicDetails)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> AddAddressAsync([FromRoute] Guid studentId,
+        [FromBody] PersonAddressUpsertRequest model)
+    {
+        var addressPersonId = await studentService.AddAddressAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = addressPersonId });
+    }
+
+    /// <summary>Update an address link.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="addressPersonId">The address-link id (from the address list).</param>
+    /// <param name="model">The updated address + link details and edit mode.</param>
+    [HttpPut("{studentId:guid}/addresses/{addressPersonId:guid}")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentBasicDetails)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateAddressAsync([FromRoute] Guid studentId,
+        [FromRoute] Guid addressPersonId, [FromBody] PersonAddressUpdateRequest model)
+    {
+        await studentService.UpdateAddressAsync(studentId, addressPersonId, model, CancellationToken);
+        return Ok(new IdResponse { Id = addressPersonId });
+    }
+
+    /// <summary>Unlink an address from a student.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="addressPersonId">The address-link id to remove.</param>
+    [HttpDelete("{studentId:guid}/addresses/{addressPersonId:guid}")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentBasicDetails)]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> RemoveAddressAsync([FromRoute] Guid studentId,
+        [FromRoute] Guid addressPersonId)
+    {
+        await studentService.RemoveAddressAsync(studentId, addressPersonId, CancellationToken);
+        return NoContent();
+    }
+
     /// <summary>Generate a suggested permanent UPN for the registration editor. Returns 400 if the
     /// school's LA / establishment number aren't configured.</summary>
     [HttpPost("generate-upn")]

@@ -14,6 +14,16 @@ import {
   StudentRegistrationDetailsResponse,
   StudentRegistrationDetailsUpsertRequest,
 } from '../types/student-registration';
+import {
+  PersonContactDetailsResponse,
+  PersonContactDetailsUpsertRequest,
+} from '../types/person-contact-details';
+import {
+  AddressListResponse,
+  AddressMatchResponse,
+  PersonAddressUpdateRequest,
+  PersonAddressUpsertRequest,
+} from '../types/staff-address';
 import { QueryKitParams } from '../utils/querykit';
 import { environment } from '../../../environments/environment';
 
@@ -65,6 +75,52 @@ export class StudentsDataService {
 
   generateUpn(): Observable<GeneratedUpnResponse> {
     return this.http.post<GeneratedUpnResponse>('/api/v1/students/generate-upn', {});
+  }
+
+  getContactDetails(studentId: string): Observable<PersonContactDetailsResponse> {
+    return this.http.get<PersonContactDetailsResponse>(
+      `/api/v1/students/${studentId}/contact-details`,
+    );
+  }
+
+  updateContactDetails(
+    studentId: string,
+    payload: PersonContactDetailsUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(`/api/v1/students/${studentId}/contact-details`, payload);
+  }
+
+  getAddresses(studentId: string): Observable<AddressListResponse> {
+    return this.http.get<AddressListResponse>(`/api/v1/students/${studentId}/addresses`);
+  }
+
+  searchAddressMatches(studentId: string, query: string): Observable<AddressMatchResponse[]> {
+    const params = new HttpParams().set('query', query);
+    return this.http.get<AddressMatchResponse[]>(
+      `/api/v1/students/${studentId}/address-matches`,
+      { params },
+    );
+  }
+
+  addAddress(studentId: string, payload: PersonAddressUpsertRequest): Observable<IdResponse> {
+    return this.http.post<IdResponse>(`/api/v1/students/${studentId}/addresses`, payload);
+  }
+
+  updateAddress(
+    studentId: string,
+    addressPersonId: string,
+    payload: PersonAddressUpdateRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/students/${studentId}/addresses/${addressPersonId}`,
+      payload,
+    );
+  }
+
+  removeAddress(studentId: string, addressPersonId: string): Observable<void> {
+    return this.http.delete<void>(
+      `/api/v1/students/${studentId}/addresses/${addressPersonId}`,
+    );
   }
 
   photoUrl(studentId: string, photoId: string): string {

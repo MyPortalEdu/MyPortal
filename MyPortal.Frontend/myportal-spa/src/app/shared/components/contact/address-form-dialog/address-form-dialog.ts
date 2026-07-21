@@ -18,7 +18,7 @@ import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from '
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
-import { StaffMembersDataService } from '../../../services/staff-members-data.service';
+import { PersonAddressDataSource } from '../person-address-data-source';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ConfirmationDialog } from '../../../../core/services/confirmation.service';
 import { LookupResponse } from '../../../types/lookup';
@@ -66,7 +66,7 @@ const EMPTY_FORM: AddressForm = {
   templateUrl: './address-form-dialog.html',
 })
 export class AddressFormDialog {
-  private readonly data = inject(StaffMembersDataService);
+  private readonly data = inject(PersonAddressDataSource);
   private readonly notify = inject(NotificationService);
   private readonly transloco = inject(TranslocoService);
   private readonly confirmDialog = inject(ConfirmationDialog);

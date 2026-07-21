@@ -48,6 +48,7 @@ import { GenderSelect } from '../../../../../shared/components/gender-select/gen
 import { GenderLabelPipe } from '../../../../../shared/pipes/gender-label.pipe';
 import { StudentAreaPanel } from './panels/student-area-panel';
 import { StudentRegistrationPanel } from './panels/student-registration-panel';
+import { StudentContactPanel } from './panels/student-contact-panel';
 
 type BasicFormSnapshot = {
   title: string | null;
@@ -60,7 +61,7 @@ type BasicFormSnapshot = {
   dob: string | null;
 };
 
-type AreaKey = 'basicDetails' | 'registration';
+type AreaKey = 'basicDetails' | 'registration' | 'contact';
 
 interface AreaTab {
   key: AreaKey;
@@ -71,6 +72,7 @@ interface AreaTab {
 const AREAS: AreaTab[] = [
   { key: 'basicDetails', icon: 'fa-solid fa-user',           enabled: true  },
   { key: 'registration', icon: 'fa-solid fa-clipboard-list', enabled: false },
+  { key: 'contact',      icon: 'fa-solid fa-address-book',    enabled: false },
 ];
 
 @Component({
@@ -97,6 +99,7 @@ const AREAS: AreaTab[] = [
     GenderSelect,
     GenderLabelPipe,
     StudentRegistrationPanel,
+    StudentContactPanel,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('students')],
@@ -115,12 +118,16 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly areas = computed<AreaTab[]>(() =>
     AREAS.map(a => {
       if (a.key === 'registration') return { ...a, enabled: this.canViewRegistration() };
+      if (a.key === 'contact') return { ...a, enabled: this.canViewContact() };
       return a;
     }),
   );
   protected readonly activeArea = signal<AreaKey>('basicDetails');
 
-  private static readonly EXTRACTED_AREAS: ReadonlySet<AreaKey> = new Set<AreaKey>(['registration']);
+  private static readonly EXTRACTED_AREAS: ReadonlySet<AreaKey> = new Set<AreaKey>([
+    'registration',
+    'contact',
+  ]);
   private readonly activePanel = viewChild(StudentAreaPanel);
 
   protected readonly loadingHeader = signal(false);
@@ -157,12 +164,18 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
     );
   });
 
+  protected readonly canViewContact = computed(() =>
+    this.heldPerms().has(Permissions.Student.ViewStudentBasicDetails),
+  );
+
   protected readonly canEditActiveArea = computed(() => {
     switch (this.activeArea()) {
       case 'basicDetails':
         return this.canEditBasic();
       case 'registration':
         return this.heldPerms().has(Permissions.Student.EditStudentRegistration);
+      case 'contact':
+        return this.heldPerms().has(Permissions.Student.EditStudentBasicDetails);
       default:
         return false;
     }

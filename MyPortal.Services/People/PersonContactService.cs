@@ -25,7 +25,7 @@ public class PersonContactService(
     IUnitOfWorkFactory unitOfWorkFactory)
     : IPersonContactService
 {
-    public async Task<StaffContactDetailsResponse> GetContactDetailsAsync(Guid personId,
+    public async Task<PersonContactDetailsResponse> GetContactDetailsAsync(Guid personId,
         CancellationToken cancellationToken)
     {
         var emails = await emailRepository.GetByPersonIdAsync(personId, cancellationToken);
@@ -33,7 +33,7 @@ public class PersonContactService(
         var emailTypes = await emailTypeRepository.GetListAsync(cancellationToken: cancellationToken);
         var phoneTypes = await phoneTypeRepository.GetListAsync(cancellationToken: cancellationToken);
 
-        return new StaffContactDetailsResponse
+        return new PersonContactDetailsResponse
         {
             Emails = emails.Select(e => new PersonEmailResponse
             {
@@ -55,7 +55,7 @@ public class PersonContactService(
         };
     }
 
-    public async Task UpdateContactDetailsAsync(Guid personId, StaffContactDetailsUpsertRequest model,
+    public async Task UpdateContactDetailsAsync(Guid personId, PersonContactDetailsUpsertRequest model,
         CancellationToken cancellationToken)
     {
         await validationService.ValidateAsync(model);
