@@ -73,6 +73,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPersonEqualityService, PersonEqualityService>();
         services.AddScoped<IStaffMemberService, StaffMemberService>();
         services.AddScoped<IStaffMemberAccessService, StaffMemberAccessService>();
+        services.AddScoped<IStudentService, StudentService>();
         services.AddScoped<IStaffContactService, StaffContactService>();
         services.AddScoped<IStaffAddressService, StaffAddressService>();
         services.AddScoped<IStaffEqualityService, StaffEqualityService>();

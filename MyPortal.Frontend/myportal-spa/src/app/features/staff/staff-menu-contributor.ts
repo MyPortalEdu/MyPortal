@@ -20,6 +20,11 @@ export class StaffMenuContributor implements AppMenuContributor {
             label: 'nav.staffMembers',
             routerLink: ['/staff/people/staff-members'],
             permissionsAny: [Permissions.Staff.ViewAllStaffBasicDetails]
+          },
+          {
+            label: 'nav.students',
+            routerLink: ['/staff/people/students'],
+            permissionsAny: [Permissions.Student.ViewStudentBasicDetails]
           }
         ]
       },

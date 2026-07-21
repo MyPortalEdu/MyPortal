@@ -144,22 +144,60 @@ public static class Permissions
         public const string PinSchoolBulletins      = "School.PinSchoolBulletins";
     }
 
+    // Student-profile permissions: Student.{Verb}Student{Area}. Held by staff (UserType.Staff).
+    // Flat, all-pupils — access is gated by data-sensitivity area + role, NOT by any viewer→student
+    // relationship (matches SIMS: a teacher profile sees the whole pupil population). Enforced with
+    // the standard [Permission] attribute; no bespoke access service. Areas are permission domains,
+    // not UI sections. See docs/student-profile-access.md.
     public static class Student
     {
-        // public const string ViewSenDetails      = "Student.ViewSenDetails";
-        // public const string EditSenDetails      = "Student.EditSenDetails";
-        // public const string ViewStudentDetails  = "Student.ViewStudentDetails";
-        // public const string EditStudentDetails  = "Student.EditStudentDetails";
+        // Basic details (identity, contact methods, addresses). Broadly viewable by teaching staff;
+        // edit is office/admin. Legal-name / DOB / UPN corrections route through the office.
+        public const string ViewStudentBasicDetails   = "Student.ViewStudentBasicDetails";
+        public const string EditStudentBasicDetails   = "Student.EditStudentBasicDetails";
+
+        // Registration (enrolment/boarder status, UPN/ULN, admission, year/reg/house).
+        public const string ViewStudentRegistration   = "Student.ViewStudentRegistration";
+        public const string EditStudentRegistration   = "Student.EditStudentRegistration";
+
+        // Family & contacts (guardians, parental responsibility, emergency contacts, siblings).
+        public const string ViewStudentFamily         = "Student.ViewStudentFamily";
+        public const string EditStudentFamily         = "Student.EditStudentFamily";
+
+        // Cultural / ethnic (ethnicity, language, religion, nationality) — GDPR special-category.
+        public const string ViewStudentCultural       = "Student.ViewStudentCultural";
+        public const string EditStudentCultural       = "Student.EditStudentCultural";
+
+        // Medical (conditions, dietary, disabilities, events) — health data.
+        public const string ViewStudentMedical        = "Student.ViewStudentMedical";
+        public const string EditStudentMedical        = "Student.EditStudentMedical";
+
+        // Welfare / safeguarding (in-care, child protection, young carer, pupil premium). The most
+        // sharply gated area — SENCO / SLT / office only, NOT class teachers or tutors.
+        public const string ViewStudentWelfare        = "Student.ViewStudentWelfare";
+        public const string EditStudentWelfare        = "Student.EditStudentWelfare";
+
+        // SEN (needs, status, provision). Broadly viewable; teaching staff may edit (SENCO-led).
+        public const string ViewStudentSen            = "Student.ViewStudentSen";
+        public const string EditStudentSen            = "Student.EditStudentSen";
+
+        // Funding (FSM eligibility, top-up, pupil premium indicator).
+        public const string ViewStudentFunding        = "Student.ViewStudentFunding";
+        public const string EditStudentFunding        = "Student.EditStudentFunding";
+
+        // School history (previous schools, leaving reason, destination).
+        public const string ViewStudentSchoolHistory  = "Student.ViewStudentSchoolHistory";
+        public const string EditStudentSchoolHistory  = "Student.EditStudentSchoolHistory";
+
+        // Documents.
+        public const string ViewStudentDocuments      = "Student.ViewStudentDocuments";
+        public const string EditStudentDocuments      = "Student.EditStudentDocuments";
+
+        // Not yet modelled — kept as markers for future slices.
         // public const string ViewStudentLogNotes = "Student.ViewStudentLogNotes";
         // public const string EditStudentLogNotes = "Student.EditStudentLogNotes";
         // public const string ViewStudentTasks    = "Student.ViewStudentTasks";
         // public const string EditStudentTasks    = "Student.EditStudentTasks";
-        // public const string ViewStudentDocuments= "Student.ViewStudentDocuments";
-        // public const string EditStudentDocuments= "Student.EditStudentDocuments";
-        // public const string ViewMedicalEvents   = "Student.ViewMedicalEvents";
-        // public const string EditMedicalEvents   = "Student.EditMedicalEvents";
-        // public const string ViewFinanceDetails  = "Student.ViewFinanceDetails";
-        // public const string EditFinanceDetails  = "Student.EditFinanceDetails";
     }
 
     // Scoped staff-profile permissions: Staff.{Verb}{Scope}Staff{Area}, Scope ∈ {Own, Managed, All}.

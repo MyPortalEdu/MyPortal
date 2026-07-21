@@ -110,6 +110,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISchoolRepository, SchoolRepository>();
         services.AddScoped<ISchoolHolidayRepository, SchoolHolidayRepository>();
         services.AddScoped<IStaffMemberRepository, StaffMemberRepository>();
+        services.AddScoped<IStudentRepository, StudentRepository>();
+        services.AddScoped<IEnrolmentStatusRepository, EnrolmentStatusRepository>();
+        services.AddScoped<IBoarderStatusRepository, BoarderStatusRepository>();
+        services.AddScoped<IUpnUnknownReasonRepository, UpnUnknownReasonRepository>();
         services.AddScoped<IStudentGroupRepository, StudentGroupRepository>();
         services.AddScoped<IStudentGroupSupervisorRepository, StudentGroupSupervisorRepository>();
         services.AddScoped<ITimetableRepository, TimetableRepository>();

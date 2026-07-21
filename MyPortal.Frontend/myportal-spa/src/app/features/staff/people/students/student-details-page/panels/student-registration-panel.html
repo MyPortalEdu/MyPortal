@@ -1,0 +1,110 @@
+<ng-container *transloco="let t">
+  @if (loading() && !registration()) {
+    <mp-loading></mp-loading>
+  } @else if (registration()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('students.areas.registration') }}</h3>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('students.registration.hint') }}</p>
+
+    <div class="flex flex-col gap-6">
+      <section>
+        <mp-section-header icon="fa-solid fa-clipboard-list" [title]="t('students.registration.enrolmentHeading')"></mp-section-header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-field [label]="t('students.registration.admissionNumber')" for="reg-admissionNumber">
+            <span class="font-mono">{{ admissionNumber() ?? '—' }}</span>
+          </mp-field>
+
+          <mp-field [label]="t('students.registration.enrolmentStatus')" for="reg-enrolmentStatus">
+            @if (editing()) {
+              <mp-lookup-select inputId="reg-enrolmentStatus" [options]="enrolmentStatuses()" [formField]="f.enrolmentStatusId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(enrolmentStatuses(), model().enrolmentStatusId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.registration.boarderStatus')" for="reg-boarderStatus">
+            @if (editing()) {
+              <mp-lookup-select inputId="reg-boarderStatus" [options]="boarderStatuses()" [formField]="f.boarderStatusId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(boarderStatuses(), model().boarderStatusId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.registration.dateStarting')" for="reg-dateStarting">
+            @if (editing()) {
+              <mp-date-picker inputId="reg-dateStarting" [formField]="f.dateStarting" [showIcon]="true" class="w-full"></mp-date-picker>
+            } @else {
+              <span>{{ model().dateStarting ? (model().dateStarting | date:'mediumDate') : '—' }}</span>
+            }
+          </mp-field>
+
+          <div class="flex flex-col gap-1">
+            @if (editing()) {
+              <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                <mp-checkbox id="reg-isPartTime" [formField]="f.isPartTime"></mp-checkbox>
+                {{ t('students.registration.isPartTime') }}
+              </label>
+            } @else {
+              <label class="text-sm font-medium">{{ t('students.registration.isPartTime') }}</label>
+              <span>{{ model().isPartTime ? t('common.yes') : t('common.no') }}</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <mp-section-header icon="fa-solid fa-hashtag" [title]="t('students.registration.identifiersHeading')"></mp-section-header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-field [label]="t('students.registration.upn')" for="reg-upn">
+            @if (editing()) {
+              <div class="flex items-center gap-2">
+                <input mpInput id="reg-upn" class="flex-1" [formField]="f.upn" />
+                @if (canEdit()) {
+                  <button mpButton
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    [disabled]="generatingUpn()"
+                    (click)="generateUpn()"><i class="fa-solid" [class.fa-wand-magic-sparkles]="!generatingUpn()" [class.fa-spinner]="generatingUpn()" [class.fa-spin]="generatingUpn()"></i> {{ t('students.registration.generateUpn') }}</button>
+                }
+              </div>
+            } @else {
+              <span class="font-mono">{{ model().upn || '—' }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.registration.formerUpn')" for="reg-formerUpn">
+            @if (editing()) {
+              <input mpInput id="reg-formerUpn" [formField]="f.formerUpn" />
+            } @else {
+              <span class="font-mono">{{ model().formerUpn || '—' }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.registration.upnUnknownReason')" for="reg-upnUnknownReason">
+            @if (editing()) {
+              <mp-lookup-select inputId="reg-upnUnknownReason" [options]="upnUnknownReasons()" [formField]="f.upnUnknownReasonId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(upnUnknownReasons(), model().upnUnknownReasonId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.registration.uln')" for="reg-uln">
+            @if (editing()) {
+              <input mpInput id="reg-uln" [formField]="f.uln" />
+            } @else {
+              <span class="font-mono">{{ model().uln || '—' }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.registration.laChildId')" for="reg-laChildId">
+            @if (editing()) {
+              <input mpInput id="reg-laChildId" [formField]="f.laChildId" />
+            } @else {
+              <span class="font-mono">{{ model().laChildId || '—' }}</span>
+            }
+          </mp-field>
+        </div>
+      </section>
+    </div>
+  }
+</ng-container>

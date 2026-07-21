@@ -1,0 +1,200 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [closeOnEscape]="!f().submitting()"
+    panelClass="w-[min(40rem,92vw)]"
+    [dismissable]="false"
+    [title]="step() === 'attach' ? t('students.create.attachHeader') : t('students.create.header')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="f().submitting()">
+
+    @if (step() === 'search') {
+      <div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="create-search">
+            {{ t('students.create.searchLabel') }}
+          </label>
+          <span class="relative">
+            <input mpInput id="create-search" class="w-full"
+                   [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+                   [placeholder]="t('students.create.searchPlaceholder')"
+                   autocomplete="off" />
+            @if (searching()) {
+              <mp-spinner
+                size="1.25rem"
+                class="absolute right-3 top-1/2 -translate-y-1/2"></mp-spinner>
+            }
+          </span>
+          <span class="text-xs text-muted-foreground">{{ t('students.create.searchHint') }}</span>
+        </div>
+
+        @if (results().length > 0) {
+          <div class="mt-4">
+            <p class="text-sm font-medium mb-2">{{ t('students.create.matchesLabel') }}</p>
+            <ul class="flex flex-col divide-y divide-surface border border-border rounded-lg overflow-hidden">
+              @for (p of results(); track p.personId) {
+                <li>
+                  <button type="button"
+                          class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-muted"
+                          (click)="pickPerson(p)">
+                    <span class="flex flex-col">
+                      <span class="text-sm font-medium">{{ fullName(p) }}</span>
+                      @if (p.dob) {
+                        <span class="text-xs text-muted-foreground">
+                          {{ t('students.fields.dob') }}: {{ p.dob | date: 'dd/MM/yyyy' }}
+                        </span>
+                      }
+                    </span>
+                    @if (p.isStudent) {
+                      <span class="flex items-center gap-2 whitespace-nowrap">
+                        <span class="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
+                          {{ t('students.create.alreadyStudent') }}
+                        </span>
+                        <i class="fa-solid fa-arrow-up-right-from-square text-muted-foreground text-xs"></i>
+                      </span>
+                    } @else {
+                      <i class="fa-solid fa-chevron-right text-muted-foreground text-xs"></i>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div class="flex items-center gap-3 my-4">
+            <span class="flex-1 border-t border-border"></span>
+            <span class="text-xs uppercase tracking-wide text-muted-foreground">
+              {{ t('students.create.orCreateNew') }}
+            </span>
+            <span class="flex-1 border-t border-border"></span>
+          </div>
+        } @else {
+          <p class="text-sm text-muted-foreground mt-4 mb-3">
+            {{ t('students.create.hint') }}
+          </p>
+        }
+
+        <div class="grid gap-3 md:grid-cols-2">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-title">
+              {{ t('students.fields.title') }}
+            </label>
+            <input mpInput id="create-title"
+                   [formField]="f.title"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-firstName">
+              {{ t('students.fields.firstName') }}
+            </label>
+            <input mpInput id="create-firstName"
+                   [formField]="f.firstName"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-middleName">
+              {{ t('students.fields.middleName') }}
+            </label>
+            <input mpInput id="create-middleName"
+                   [formField]="f.middleName"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-lastName">
+              {{ t('students.fields.lastName') }}
+            </label>
+            <input mpInput id="create-lastName"
+                   [formField]="f.lastName"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-preferredFirst">
+              {{ t('students.fields.preferredFirstName') }}
+            </label>
+            <input mpInput id="create-preferredFirst"
+                   [formField]="f.preferredFirstName"
+                   (keydown.enter)="save()" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-gender">
+              {{ t('students.fields.gender') }}
+            </label>
+            <mp-gender-select inputId="create-gender"
+                              [formField]="f.gender"></mp-gender-select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium" for="create-dob">
+              {{ t('students.fields.dob') }}
+            </label>
+            <mp-date-picker inputId="create-dob"
+                          [formField]="f.dob"
+                          [showIcon]="true"></mp-date-picker>
+          </div>
+        </div>
+      </div>
+
+    }
+
+    @if (step() === 'attach') {
+      <div>
+        <p class="text-sm text-muted-foreground mb-4">
+          {{ t('students.create.attachHint') }}
+        </p>
+
+        @if (selectedPerson(); as person) {
+          <div class="flex items-center gap-3 p-3 border border-border rounded-lg bg-muted">
+            <i class="fa-solid fa-user text-muted-foreground"></i>
+            <span class="flex flex-col">
+              <span class="text-sm font-medium">{{ fullName(person) }}</span>
+              @if (person.dob) {
+                <span class="text-xs text-muted-foreground">
+                  {{ t('students.fields.dob') }}: {{ person.dob | date: 'dd/MM/yyyy' }}
+                </span>
+              }
+            </span>
+          </div>
+        }
+      </div>
+    }
+
+    <div mpDialogFooter>
+      @if (step() === 'search') {
+        <div class="flex items-center justify-end gap-2">
+          <button mpButton
+            variant="outline"
+            [disabled]="f().submitting()"
+            (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
+          <button mpButton
+            [disabled]="!f().valid() || f().submitting()"
+            (click)="save()"><i class="fa-solid" [class.fa-plus]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('students.create.submit') }}</button>
+        </div>
+      }
+      @if (step() === 'attach') {
+        <div class="flex items-center justify-between gap-2">
+          <button mpButton
+            variant="ghost"
+            [disabled]="f().submitting()"
+            (click)="backToSearch()"><i class="fa-solid fa-arrow-left"></i> {{ t('common.back') }}</button>
+          <div class="flex items-center gap-2">
+            <button mpButton
+              variant="outline"
+              [disabled]="f().submitting()"
+              (click)="onClose()">{{ t('common.cancel') }}</button>
+            <button mpButton
+              [disabled]="f().submitting()"
+              (click)="attach()"><i class="fa-solid" [class.fa-plus]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('students.create.attachSubmit') }}</button>
+          </div>
+        </div>
+      }
+    </div>
+  </mp-dialog>
+</ng-container>

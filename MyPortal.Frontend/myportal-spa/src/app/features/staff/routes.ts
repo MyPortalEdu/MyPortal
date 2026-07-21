@@ -12,6 +12,8 @@ import { SchoolDetailsPage } from './school/school-details/school-details-page';
 import { AcademicYearListPage } from './curriculum/academic-years/academic-year-list-page/academic-year-list-page';
 import { StaffMemberListPage } from './people/staff-members/staff-member-list-page/staff-member-list-page';
 import { StaffMemberDetailsPage } from './people/staff-members/staff-member-details-page/staff-member-details-page';
+import { StudentListPage } from './people/students/student-list-page/student-list-page';
+import { StudentDetailsPage } from './people/students/student-details-page/student-details-page';
 import { Permissions } from '../../core/constants/permissions';
 export const STAFF_ROUTES: Routes = [
   {
@@ -123,6 +125,28 @@ export const STAFF_ROUTES: Routes = [
             Permissions.Staff.EditAllStaffBasicDetails
           ],
           breadcrumb: 'Staff profile'
+        }
+      },
+      {
+        path: 'people/students',
+        component: StudentListPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Student.ViewStudentBasicDetails],
+          breadcrumb: 'Students'
+        }
+      },
+      {
+        path: 'people/students/:id',
+        component: StudentDetailsPage,
+        canActivate: [AuthGuard],
+        canDeactivate: [canDeactivateGuard],
+        data: {
+          permissionsAny: [
+            Permissions.Student.ViewStudentBasicDetails,
+            Permissions.Student.EditStudentBasicDetails
+          ],
+          breadcrumb: 'Student profile'
         }
       }
     ]

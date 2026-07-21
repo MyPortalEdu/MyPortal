@@ -1,0 +1,118 @@
+{
+  "title": "Students",
+  "new": "New",
+  "emptyNone": "No students yet.",
+  "emptyFiltered": "No students match your search or filter.",
+  "clearSearch": "Clear Search",
+  "clearFilters": "Clear Filters",
+  "searchPlaceholder": "Search by name…",
+  "loadError": "Couldn't load students",
+  "loadHeaderError": "Couldn't load student profile",
+  "loadBasicError": "Couldn't load basic details",
+  "saveError": "Couldn't save basic details",
+  "savedToast": "Basic details saved",
+  "createError": "Couldn't create student",
+  "createdToast": "Student created",
+  "create": {
+    "header": "New Student",
+    "searchLabel": "Search existing people",
+    "searchPlaceholder": "Type a name…",
+    "searchHint": "They may already be on file (e.g. as a contact or applicant) — pick the existing record to avoid duplicates.",
+    "searchError": "Couldn't search people",
+    "matchesLabel": "Possible matches",
+    "orCreateNew": "or add someone new",
+    "alreadyStudent": "Already a student",
+    "attachHeader": "Add student record",
+    "attachHint": "This person is already on file. Confirming creates their student record — their existing details are reused, not duplicated.",
+    "attachSubmit": "Create",
+    "hint": "Capture the joiner data — name, gender, optional DOB. The admission number is assigned automatically. Other areas are filled in afterwards from the student profile page.",
+    "submit": "Create"
+  },
+  "columns": {
+    "name": "Name",
+    "admissionNumber": "Admission no.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "title": "Title",
+    "status": "Status"
+  },
+  "statusFilter": {
+    "label": "Filter by status",
+    "all": "All Statuses"
+  },
+  "status": {
+    "Active": "Active",
+    "Future": "Future",
+    "Leaver": "Leaver",
+    "None": "No Enrolment",
+    "Archived": "Archived"
+  },
+  "areas": {
+    "basicDetails": "Basic Details",
+    "registration": "Registration",
+    "comingSoon": "Coming soon"
+  },
+  "registration": {
+    "hint": "Enrolment status, admission date, and statutory pupil identifiers (UPN, ULN, LA child ID).",
+    "enrolmentHeading": "Enrolment",
+    "identifiersHeading": "Identifiers",
+    "admissionNumber": "Admission number",
+    "enrolmentStatus": "Enrolment status",
+    "boarderStatus": "Boarder status",
+    "dateStarting": "Admission date",
+    "isPartTime": "Part-time",
+    "upn": "UPN",
+    "generateUpn": "Generate",
+    "upnGenerateError": "Couldn't generate a UPN",
+    "formerUpn": "Former UPN",
+    "upnUnknownReason": "UPN unknown reason",
+    "uln": "ULN",
+    "laChildId": "LA child ID",
+    "loadError": "Couldn't load registration details",
+    "saveError": "Couldn't save registration details",
+    "savedToast": "Registration details saved"
+  },
+  "delete": {
+    "menu": "More actions",
+    "menuItem": "Delete Student",
+    "header": "Delete Student",
+    "confirm": "This removes the student record entirely. If this student has simply left, set a leaving date instead. The record can be restored by an administrator.",
+    "toast": "Student deleted",
+    "error": "Couldn't delete the student"
+  },
+  "details": {
+    "pageTitle": "Student Details",
+    "backToList": "Back to list",
+    "groups": {
+      "identity": "Identity",
+      "name": "Name",
+      "personal": "Personal"
+    },
+    "basicHint": "Name, photo, date of birth, and admission number.",
+    "areaComingSoon": "This area's endpoint is on the roadmap — not wired up yet."
+  },
+  "fields": {
+    "admissionNumber": "Admission number",
+    "title": "Title",
+    "firstName": "First name",
+    "middleName": "Middle name",
+    "lastName": "Last name",
+    "preferredFirstName": "Preferred first name",
+    "preferredLastName": "Preferred last name",
+    "gender": "Gender",
+    "dob": "Date of birth"
+  },
+  "photo": {
+    "add": "Add photo",
+    "replace": "Replace photo",
+    "remove": "Remove",
+    "invalidType": "That file isn't an image. Please choose a JPG, PNG, or similar.",
+    "tooLarge": "That image is too large (max {{size}}).",
+    "savedToast": "Photo updated",
+    "removedToast": "Photo removed",
+    "saveError": "Couldn't upload the photo",
+    "removeError": "Couldn't remove the photo",
+    "removeHeader": "Remove Photo",
+    "removeConfirm": "Remove this student's photo?"
+  }
+}

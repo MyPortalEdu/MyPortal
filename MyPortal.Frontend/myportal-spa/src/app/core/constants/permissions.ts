@@ -67,6 +67,37 @@ export const Permissions = {
     EditManagedStaffPerformanceDetails:  'Staff.EditManagedStaffPerformanceDetails',
     EditAllStaffPerformanceDetails:      'Staff.EditAllStaffPerformanceDetails',
   },
+  Student: {
+    ViewStudentBasicDetails:    'Student.ViewStudentBasicDetails',
+    EditStudentBasicDetails:    'Student.EditStudentBasicDetails',
+
+    ViewStudentRegistration:    'Student.ViewStudentRegistration',
+    EditStudentRegistration:    'Student.EditStudentRegistration',
+
+    ViewStudentFamily:          'Student.ViewStudentFamily',
+    EditStudentFamily:          'Student.EditStudentFamily',
+
+    ViewStudentCultural:        'Student.ViewStudentCultural',
+    EditStudentCultural:        'Student.EditStudentCultural',
+
+    ViewStudentMedical:         'Student.ViewStudentMedical',
+    EditStudentMedical:         'Student.EditStudentMedical',
+
+    ViewStudentWelfare:         'Student.ViewStudentWelfare',
+    EditStudentWelfare:         'Student.EditStudentWelfare',
+
+    ViewStudentSen:             'Student.ViewStudentSen',
+    EditStudentSen:             'Student.EditStudentSen',
+
+    ViewStudentFunding:         'Student.ViewStudentFunding',
+    EditStudentFunding:         'Student.EditStudentFunding',
+
+    ViewStudentSchoolHistory:   'Student.ViewStudentSchoolHistory',
+    EditStudentSchoolHistory:   'Student.EditStudentSchoolHistory',
+
+    ViewStudentDocuments:       'Student.ViewStudentDocuments',
+    EditStudentDocuments:       'Student.EditStudentDocuments',
+  },
 } as const;
 
 export type Permission = {
