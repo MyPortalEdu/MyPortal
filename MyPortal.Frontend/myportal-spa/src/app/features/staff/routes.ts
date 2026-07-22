@@ -12,6 +12,7 @@ import { SchoolDetailsPage } from './school/school-details/school-details-page';
 import { AcademicYearListPage } from './curriculum/academic-years/academic-year-list-page/academic-year-list-page';
 import { StaffMemberListPage } from './people/staff-members/staff-member-list-page/staff-member-list-page';
 import { StaffMemberDetailsPage } from './people/staff-members/staff-member-details-page/staff-member-details-page';
+import { PostListPage } from './setup/posts/post-list-page/post-list-page';
 import { Permissions } from '../../core/constants/permissions';
 export const STAFF_ROUTES: Routes = [
   {
@@ -98,6 +99,15 @@ export const STAFF_ROUTES: Routes = [
         data: {
           permissionsAny: [Permissions.Curriculum.EditAcademicYears],
           breadcrumb: 'Academic Years'
+        }
+      },
+      {
+        path: 'setup/posts',
+        component: PostListPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup],
+          breadcrumb: 'Posts'
         }
       },
       {

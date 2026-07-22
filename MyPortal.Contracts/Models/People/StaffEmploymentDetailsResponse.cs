@@ -29,5 +29,8 @@ public class StaffEmploymentDetailsResponse
     public List<LookupResponse> ServiceTerms { get; set; } = [];
     public List<LookupResponse> Departments { get; set; } = [];
     public List<LookupResponse> PayScales { get; set; } = [];
+    public List<LookupResponse> AdditionalPaymentTypes { get; set; } = [];
+    public List<SuperannuationSchemeResponse> SuperannuationSchemes { get; set; } = [];
+    public List<LookupResponse> Posts { get; set; } = [];
     public List<PayScalePointResponse> PayScalePoints { get; set; } = [];
 }

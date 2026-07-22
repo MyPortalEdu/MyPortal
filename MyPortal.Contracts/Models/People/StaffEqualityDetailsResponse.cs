@@ -17,10 +17,12 @@ public class StaffEqualityDetailsResponse
     public Guid? SexualOrientationId { get; set; }
     public Guid? GenderIdentityId { get; set; }
 
-    // Staff-level disability declaration + multi-select.
+    // Staff-level disability declaration + per-disability Equality Act detail.
     public bool HasDisability { get; set; }
     public string? DisabilityDetails { get; set; }
-    public List<Guid> DisabilityIds { get; set; } = [];
+    public Guid? ImpairmentEffectId { get; set; }
+    public string? DisabilityNumber { get; set; }
+    public List<StaffDisabilityResponse> DeclaredDisabilities { get; set; } = [];
 
     // Option lists (active only).
     public List<LookupResponse> Ethnicities { get; set; } = [];
@@ -31,4 +33,5 @@ public class StaffEqualityDetailsResponse
     public List<LookupResponse> SexualOrientations { get; set; } = [];
     public List<LookupResponse> GenderIdentities { get; set; } = [];
     public List<LookupResponse> Disabilities { get; set; } = [];
+    public List<LookupResponse> ImpairmentEffects { get; set; } = [];
 }

@@ -13,6 +13,8 @@ public enum StaffArea
     ProfessionalDetails,
     EmploymentDetails,
     PreEmploymentChecks,
+    EmergencyContacts,
+    Responsibilities,
     Absences,
     Timetable,
     Documents,

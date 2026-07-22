@@ -79,7 +79,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffProfessionalService, StaffProfessionalService>();
         services.AddScoped<IStaffEmploymentService, StaffEmploymentService>();
         services.AddScoped<IStaffPreEmploymentService, StaffPreEmploymentService>();
+        services.AddScoped<IStaffNextOfKinService, StaffNextOfKinService>();
         services.AddScoped<IStaffAbsenceService, StaffAbsenceService>();
+        services.AddScoped<IStaffResponsibilityService, StaffResponsibilityService>();
+        services.AddScoped<IPostService, PostService>();
         services.AddScoped<IStaffTimetableService, StaffTimetableService>();
         services.AddScoped<IStaffPerformanceService, StaffPerformanceService>();
         services.AddScoped<IStaffAttachmentsService, StaffAttachmentsService>();

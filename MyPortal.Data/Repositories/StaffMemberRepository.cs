@@ -75,6 +75,39 @@ public class StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationS
         }
     }
 
+    public async Task<StaffManagementResponse?> GetManagementByIdAsync(Guid staffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition("[dbo].[usp_staff_member_get_management_by_id]",
+                new { staffMemberId }, transaction, commandType: CommandType.StoredProcedure,
+                cancellationToken: cancellationToken);
+
+            using var multi = await conn.QueryMultipleAsync(command);
+
+            var manager = await multi.ReadFirstOrDefaultAsync<StaffManagementResponse>();
+
+            if (manager == null)
+            {
+                return null;
+            }
+
+            manager.DirectReports = (await multi.ReadAsync<StaffDirectReportResponse>()).AsList();
+
+            return manager;
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
     public async Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {

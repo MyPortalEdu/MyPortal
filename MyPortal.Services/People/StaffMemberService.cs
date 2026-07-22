@@ -14,6 +14,7 @@ using MyPortal.Data.Models;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.People;
+using MyPortal.Services.Interfaces.Providers;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;
@@ -27,6 +28,8 @@ public class StaffMemberService(
     ILogger<StaffMemberService> logger,
     IStaffMemberRepository staffMemberRepository,
     IPersonRepository personRepository,
+    IStaffLineManagerRepository lineManagerRepository,
+    IDateTimeProvider dateTimeProvider,
     IStaffMemberAccessService accessService,
     IPersonService personService,
     IPhotoService photoService,
@@ -142,6 +145,119 @@ public class StaffMemberService(
                 ownedUow.Transaction);
             await personService.UpdateBasicBioAsync(staffMember.PersonId, bio, cancellationToken, ownedUow);
             await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, ownedUow.Transaction);
+        }, cancellationToken);
+    }
+
+    public async Task<StaffManagementResponse> GetManagementAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await accessService.RequireAsync(id, StaffArea.BasicDetails,
+            StaffAccess.ViewOwn | StaffAccess.ViewManaged | StaffAccess.ViewAll, cancellationToken);
+
+        var management = await staffMemberRepository.GetManagementByIdAsync(id, cancellationToken)
+                         ?? throw new NotFoundException("Staff member not found.");
+
+        // Setting the manager is HR-owned (EditAll); the picker roster is only handed to those
+        // who can actually use it, so a self-viewer never sees the full staff list.
+        management.CanEdit = await accessService.CanAsync(id, StaffArea.BasicDetails,
+            StaffAccess.EditAll, cancellationToken);
+
+        if (management.CanEdit)
+        {
+            var options = await staffMemberRepository.GetStaffLookupAsync(cancellationToken);
+            management.ManagerOptions = options.Where(o => o.Id != id).ToList();
+        }
+
+        var history = await lineManagerRepository.GetHistoryAsync(id, cancellationToken);
+        management.History = history
+            .Select(h => new StaffLineManagerHistoryResponse
+            {
+                Id = h.Id,
+                LineManagerId = h.LineManagerId,
+                LineManagerName = h.LineManagerName,
+                LineManagerCode = h.LineManagerCode,
+                StartDate = h.StartDate,
+                EndDate = h.EndDate
+            })
+            .ToList();
+
+        return management;
+    }
+
+    public async Task SetLineManagerAsync(Guid id, SetStaffLineManagerRequest model,
+        CancellationToken cancellationToken)
+    {
+        await accessService.RequireAsync(id, StaffArea.BasicDetails, StaffAccess.EditAll, cancellationToken);
+
+        var staffMember = await staffMemberRepository.GetByIdAsync(id, cancellationToken)
+                          ?? throw new NotFoundException("Staff member not found.");
+
+        if (model.LineManagerId is { } managerId)
+        {
+            if (managerId == id)
+            {
+                throw new ValidationException([new ValidationFailure(nameof(model.LineManagerId),
+                    "A staff member cannot be their own line manager.")]);
+            }
+
+            var manager = await staffMemberRepository.GetByIdAsync(managerId, cancellationToken);
+
+            if (manager == null || manager.IsDeleted)
+            {
+                throw new ValidationException([new ValidationFailure(nameof(model.LineManagerId),
+                    "The selected line manager was not found.")]);
+            }
+
+            // Cycle guard: the proposed manager must not already sit below the subject in the chain.
+            if (await staffMemberRepository.IsManagedByAsync(managerId, id, cancellationToken))
+            {
+                throw new ValidationException([new ValidationFailure(nameof(model.LineManagerId),
+                    "That assignment would create a line-management cycle.")]);
+            }
+        }
+
+        // The reporting line is date-ranged history: close today's row and open a new one rather
+        // than overwriting, so "who managed them in 2023" stays answerable.
+        var today = dateTimeProvider.UtcNow.Date;
+
+        await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
+        {
+            var current = await lineManagerRepository.GetCurrentAsync(id, today, cancellationToken,
+                uow.Transaction);
+
+            if (current != null && current.LineManagerId == model.LineManagerId)
+            {
+                return;
+            }
+
+            if (current != null)
+            {
+                // A same-day correction replaces the row outright — otherwise we'd leave a
+                // zero-length period behind.
+                if (current.StartDate.Date == today)
+                {
+                    await lineManagerRepository.DeleteAsync(current.Id, cancellationToken, true, uow.Transaction);
+                }
+                else
+                {
+                    current.EndDate = today.AddDays(-1);
+                    await lineManagerRepository.UpdateAsync(current, cancellationToken, uow.Transaction);
+                }
+            }
+
+            if (model.LineManagerId is { } newManagerId)
+            {
+                await lineManagerRepository.InsertAsync(new StaffLineManager
+                {
+                    Id = SqlConvention.SequentialGuid(),
+                    StaffMemberId = id,
+                    LineManagerId = newManagerId,
+                    StartDate = today
+                }, cancellationToken, uow.Transaction);
+            }
+
+            // Convenience copy — no longer authoritative (the procs read the history table).
+            staffMember.LineManagerId = model.LineManagerId;
+            await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, uow.Transaction);
         }, cancellationToken);
     }
 

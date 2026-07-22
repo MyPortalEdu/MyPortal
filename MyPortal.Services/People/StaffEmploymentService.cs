@@ -3,9 +3,11 @@ using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
+using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.People;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
+using MyPortal.Data.Models;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.People;
@@ -28,6 +30,13 @@ public class StaffEmploymentService(
     IStaffMemberRepository staffMemberRepository,
     IStaffEmploymentRepository employmentRepository,
     IStaffContractRepository contractRepository,
+    IStaffContractAllowanceRepository allowanceRepository,
+    IAdditionalPaymentTypeRepository additionalPaymentTypeRepository,
+    IStaffContractSuspensionRepository suspensionRepository,
+    IStaffContractSalaryChangeRepository salaryChangeRepository,
+    IPostRepository postRepository,
+    ISuperannuationSchemeRepository superannuationSchemeRepository,
+    ISuperannuationSchemeRateRepository superannuationSchemeRateRepository,
     ILeavingReasonRepository leavingReasonRepository,
     IStaffOriginRepository originRepository,
     IStaffDestinationRepository destinationRepository,
@@ -66,6 +75,23 @@ public class StaffEmploymentService(
             .GroupBy(c => c.StaffEmploymentId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        var contractIds = contracts.Select(c => c.Id).ToList();
+
+        var allowances = await allowanceRepository.GetByContractIdsAsync(contractIds, cancellationToken);
+        var allowancesByContract = allowances
+            .GroupBy(a => a.StaffContractId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var suspensions = await suspensionRepository.GetByContractIdsAsync(contractIds, cancellationToken);
+        var suspensionsByContract = suspensions
+            .GroupBy(s => s.StaffContractId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var salaryChanges = await salaryChangeRepository.GetByContractIdsAsync(contractIds, cancellationToken);
+        var salaryChangesByContract = salaryChanges
+            .GroupBy(s => s.StaffContractId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         var leavingReasons = await leavingReasonRepository.GetListAsync(cancellationToken: cancellationToken);
         var origins = await originRepository.GetListAsync(cancellationToken: cancellationToken);
         var destinations = await destinationRepository.GetListAsync(cancellationToken: cancellationToken);
@@ -75,6 +101,20 @@ public class StaffEmploymentService(
         var departments = await departmentRepository.GetListAsync(cancellationToken: cancellationToken);
         var payScales = await payScaleRepository.GetListAsync(cancellationToken: cancellationToken);
         var payScalePoints = await payScalePointRepository.GetListAsync(cancellationToken: cancellationToken);
+        var additionalPaymentTypes =
+            await additionalPaymentTypeRepository.GetListAsync(cancellationToken: cancellationToken);
+
+        // Pension schemes carry the employer rate in effect today, so the editor can show the
+        // indicative employer cost next to the salary.
+        var posts = await postRepository.GetAllWithUsageAsync(cancellationToken);
+
+        var schemes = await superannuationSchemeRepository.GetListAsync(cancellationToken: cancellationToken);
+        var schemeRates =
+            await superannuationSchemeRateRepository.GetCurrentAsync(dateTimeProvider.UtcNow.Date, cancellationToken);
+        var employerRateByScheme = schemeRates
+            .OrderBy(r => r.EffectiveFrom)
+            .GroupBy(r => r.SuperannuationSchemeId)
+            .ToDictionary(g => g.Key, g => g.Last().EmployerRate);
 
         // Resolve the school's pay zone and the statutory salary in effect today for each spine
         // point, so the editor can pre-fill a contract's salary as (full-time rate × FTE).
@@ -118,7 +158,8 @@ public class StaffEmploymentService(
                     Notes = e.Notes,
                     Contracts = (contractsByEmployment.TryGetValue(e.Id, out var rows) ? rows : new List<StaffContract>())
                         .OrderByDescending(c => c.StartDate)
-                        .Select(MapContract)
+                        .Select(c => MapContract(c, allowancesByContract, suspensionsByContract,
+                            salaryChangesByContract))
                         .ToList()
                 })
                 .ToList(),
@@ -130,6 +171,22 @@ public class StaffEmploymentService(
             ServiceTerms = serviceTerms.ToAlphabeticalLookup(),
             Departments = departments.ToAlphabeticalLookup(),
             PayScales = payScales.ToAlphabeticalLookup(),
+            AdditionalPaymentTypes = additionalPaymentTypes.ToOrderedLookup(),
+            // Reference + title so the picker disambiguates similarly-titled posts.
+            Posts = posts
+                .Select(p => new LookupResponse { Id = p.Id, Description = $"{p.Reference} — {p.Description}" })
+                .ToList(),
+            SuperannuationSchemes = schemes
+                .WhereActive()
+                .OrderBy(s => s.DisplayOrder)
+                .ThenBy(s => s.Description)
+                .Select(s => new SuperannuationSchemeResponse
+                {
+                    Id = s.Id,
+                    Description = s.Description,
+                    EmployerRate = employerRateByScheme.TryGetValue(s.Id, out var rate) ? rate : null
+                })
+                .ToList(),
             PayScalePoints = payScalePoints
                 .WhereActive()
                 .OrderBy(p => p.DisplayOrder)
@@ -188,7 +245,14 @@ public class StaffEmploymentService(
         if (droppedEmploymentIds.Count > 0)
         {
             var orphanedContracts =
-                await contractRepository.GetByEmploymentIdsAsync(droppedEmploymentIds, cancellationToken, transaction);
+                (await contractRepository.GetByEmploymentIdsAsync(droppedEmploymentIds, cancellationToken, transaction))
+                .ToList();
+
+            // Allowances hang off the contract, so they go first — nothing is left orphaned.
+            await SoftDeleteAllowancesForContractsAsync(orphanedContracts.Select(c => c.Id), transaction,
+                cancellationToken);
+            await SoftDeleteSuspensionsForContractsAsync(orphanedContracts.Select(c => c.Id), transaction,
+                cancellationToken);
 
             foreach (var contract in orphanedContracts)
             {
@@ -245,20 +309,35 @@ public class StaffEmploymentService(
         var existingById = existing.ToDictionary(c => c.Id);
         var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
 
-        foreach (var row in existing)
+        var droppedContractIds = existing.Where(row => !keptIds.Contains(row.Id)).Select(row => row.Id).ToList();
+
+        if (droppedContractIds.Count > 0)
         {
-            if (!keptIds.Contains(row.Id))
+            await SoftDeleteAllowancesForContractsAsync(droppedContractIds, transaction, cancellationToken);
+            await SoftDeleteSuspensionsForContractsAsync(droppedContractIds, transaction, cancellationToken);
+
+            foreach (var contractId in droppedContractIds)
             {
-                await contractRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+                await contractRepository.DeleteAsync(contractId, cancellationToken, true, transaction);
             }
         }
 
         foreach (var item in incoming)
         {
+            Guid contractId;
+
             if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
             {
+                // Capture the pay position before the update so a movement can be logged.
+                var previousPointId = entity.PayScalePointId;
+                var previousSalary = entity.AnnualSalary;
+
                 ApplyContract(entity, item);
                 await contractRepository.UpdateAsync(entity, cancellationToken, transaction);
+                contractId = entity.Id;
+
+                await RecordSalaryChangeAsync(entity, previousPointId, previousSalary, transaction,
+                    cancellationToken);
             }
             else
             {
@@ -269,8 +348,143 @@ public class StaffEmploymentService(
                 };
                 ApplyContract(contract, item);
                 await contractRepository.InsertAsync(contract, cancellationToken, transaction);
+                contractId = contract.Id;
+            }
+
+            await ReconcileAllowancesAsync(contractId, item.Allowances, transaction, cancellationToken);
+            await ReconcileSuspensionsAsync(contractId, item.Suspensions, transaction, cancellationToken);
+        }
+    }
+
+    // Append-only: only written when the point or the salary actually moved. The repository stamps
+    // CreatedById / CreatedAt, which is the changed-by / changed-on.
+    private async Task RecordSalaryChangeAsync(StaffContract contract, Guid? previousPointId,
+        decimal? previousSalary, IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        if (previousPointId == contract.PayScalePointId && previousSalary == contract.AnnualSalary)
+        {
+            return;
+        }
+
+        await salaryChangeRepository.InsertAsync(new StaffContractSalaryChange
+        {
+            Id = SqlConvention.SequentialGuid(),
+            StaffContractId = contract.Id,
+            OldPayScalePointId = previousPointId,
+            NewPayScalePointId = contract.PayScalePointId,
+            OldAnnualSalary = previousSalary,
+            NewAnnualSalary = contract.AnnualSalary
+        }, cancellationToken, transaction);
+    }
+
+    private async Task ReconcileSuspensionsAsync(Guid contractId, List<StaffContractSuspensionUpsertItem> incoming,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var existing =
+            (await suspensionRepository.GetByContractIdsAsync(new[] { contractId }, cancellationToken, transaction))
+            .ToList();
+        var existingById = existing.ToDictionary(s => s.Id);
+        var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
+
+        foreach (var row in existing.Where(row => !keptIds.Contains(row.Id)))
+        {
+            await suspensionRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+        }
+
+        foreach (var item in incoming)
+        {
+            if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
+            {
+                ApplySuspension(entity, item);
+                await suspensionRepository.UpdateAsync(entity, cancellationToken, transaction);
+            }
+            else
+            {
+                var suspension = new StaffContractSuspension
+                {
+                    Id = SqlConvention.SequentialGuid(),
+                    StaffContractId = contractId
+                };
+                ApplySuspension(suspension, item);
+                await suspensionRepository.InsertAsync(suspension, cancellationToken, transaction);
             }
         }
+    }
+
+    private async Task SoftDeleteSuspensionsForContractsAsync(IEnumerable<Guid> contractIds,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var orphaned = await suspensionRepository.GetByContractIdsAsync(contractIds, cancellationToken, transaction);
+
+        foreach (var suspension in orphaned)
+        {
+            await suspensionRepository.DeleteAsync(suspension.Id, cancellationToken, true, transaction);
+        }
+    }
+
+    private static void ApplySuspension(StaffContractSuspension entity, StaffContractSuspensionUpsertItem item)
+    {
+        entity.StartDate = item.StartDate;
+        entity.EndDate = item.EndDate;
+        entity.Reason = item.Reason;
+    }
+
+    private async Task ReconcileAllowancesAsync(Guid contractId, List<StaffContractAllowanceUpsertItem> incoming,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var existing =
+            (await allowanceRepository.GetByContractIdsAsync(new[] { contractId }, cancellationToken, transaction))
+            .ToList();
+        var existingById = existing.ToDictionary(a => a.Id);
+        var keptIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
+
+        foreach (var row in existing.Where(row => !keptIds.Contains(row.Id)))
+        {
+            await allowanceRepository.DeleteAsync(row.Id, cancellationToken, true, transaction);
+        }
+
+        foreach (var item in incoming)
+        {
+            if (item.Id.HasValue && existingById.TryGetValue(item.Id.Value, out var entity))
+            {
+                ApplyAllowance(entity, item);
+                await allowanceRepository.UpdateAsync(entity, cancellationToken, transaction);
+            }
+            else
+            {
+                var allowance = new StaffContractAllowance
+                {
+                    Id = SqlConvention.SequentialGuid(),
+                    StaffContractId = contractId
+                };
+                ApplyAllowance(allowance, item);
+                await allowanceRepository.InsertAsync(allowance, cancellationToken, transaction);
+            }
+        }
+    }
+
+    private async Task SoftDeleteAllowancesForContractsAsync(IEnumerable<Guid> contractIds,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var orphaned = await allowanceRepository.GetByContractIdsAsync(contractIds, cancellationToken, transaction);
+
+        foreach (var allowance in orphaned)
+        {
+            await allowanceRepository.DeleteAsync(allowance.Id, cancellationToken, true, transaction);
+        }
+    }
+
+    private static void ApplyAllowance(StaffContractAllowance entity, StaffContractAllowanceUpsertItem item)
+    {
+        entity.AdditionalPaymentTypeId = item.AdditionalPaymentTypeId;
+        entity.Amount = item.Amount;
+        entity.PayFactor = item.PayFactor;
+        entity.StartDate = item.StartDate;
+        entity.EndDate = item.EndDate;
+        entity.IsSuperannuable = item.IsSuperannuable;
+        entity.IsSubjectToNi = item.IsSubjectToNi;
+        entity.IsBenefitInKind = item.IsBenefitInKind;
+        entity.Reason = item.Reason;
     }
 
     private static void ApplyContract(StaffContract entity, StaffContractUpsertItem item)
@@ -281,6 +495,9 @@ public class StaffEmploymentService(
         entity.DepartmentId = item.DepartmentId;
         entity.PayScaleId = item.PayScaleId;
         entity.PayScalePointId = item.PayScalePointId;
+        entity.PostId = item.PostId;
+        entity.SuperannuationSchemeId = item.SuperannuationSchemeId;
+        entity.NiContractedOut = item.NiContractedOut;
         entity.PostTitle = item.PostTitle;
         entity.StartDate = item.StartDate;
         entity.EndDate = item.EndDate;
@@ -293,8 +510,25 @@ public class StaffEmploymentService(
         entity.DailyRate = item.DailyRate;
     }
 
-    private static StaffContractResponse MapContract(StaffContract c) => new()
+    private static StaffContractResponse MapContract(StaffContract c,
+        IReadOnlyDictionary<Guid, List<StaffContractAllowance>> allowancesByContract,
+        IReadOnlyDictionary<Guid, List<StaffContractSuspension>> suspensionsByContract,
+        IReadOnlyDictionary<Guid, List<StaffContractSalaryChangeRow>> salaryChangesByContract) => new()
     {
+        Allowances = (allowancesByContract.TryGetValue(c.Id, out var rows) ? rows : [])
+            .OrderByDescending(a => a.StartDate)
+            .Select(MapAllowance)
+            .ToList(),
+        Suspensions = (suspensionsByContract.TryGetValue(c.Id, out var suspensions) ? suspensions : [])
+            .OrderByDescending(s => s.StartDate)
+            .Select(MapSuspension)
+            .ToList(),
+        SalaryChanges = (salaryChangesByContract.TryGetValue(c.Id, out var changes) ? changes : [])
+            .Select(MapSalaryChange)
+            .ToList(),
+        PostId = c.PostId,
+        SuperannuationSchemeId = c.SuperannuationSchemeId,
+        NiContractedOut = c.NiContractedOut,
         Id = c.Id,
         ContractTypeId = c.ContractTypeId,
         StaffRoleId = c.StaffRoleId,
@@ -312,5 +546,38 @@ public class StaffEmploymentService(
         IsAgencySupply = c.IsAgencySupply,
         SafeguardedSalary = c.SafeguardedSalary,
         DailyRate = c.DailyRate
+    };
+
+    private static StaffContractAllowanceResponse MapAllowance(StaffContractAllowance a) => new()
+    {
+        Id = a.Id,
+        AdditionalPaymentTypeId = a.AdditionalPaymentTypeId,
+        Amount = a.Amount,
+        PayFactor = a.PayFactor,
+        StartDate = a.StartDate,
+        EndDate = a.EndDate,
+        IsSuperannuable = a.IsSuperannuable,
+        IsSubjectToNi = a.IsSubjectToNi,
+        IsBenefitInKind = a.IsBenefitInKind,
+        Reason = a.Reason
+    };
+
+    private static StaffContractSuspensionResponse MapSuspension(StaffContractSuspension s) => new()
+    {
+        Id = s.Id,
+        StartDate = s.StartDate,
+        EndDate = s.EndDate,
+        Reason = s.Reason
+    };
+
+    private static StaffContractSalaryChangeResponse MapSalaryChange(StaffContractSalaryChangeRow s) => new()
+    {
+        Id = s.Id,
+        OldPayScalePointId = s.OldPayScalePointId,
+        NewPayScalePointId = s.NewPayScalePointId,
+        OldAnnualSalary = s.OldAnnualSalary,
+        NewAnnualSalary = s.NewAnnualSalary,
+        ChangedAt = s.ChangedAt,
+        ChangedBy = s.ChangedBy
     };
 }

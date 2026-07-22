@@ -251,6 +251,178 @@
                             </div>
                           </div>
                         </div>
+
+                        <div class="mt-4">
+                          <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+                            <i class="fa-solid fa-piggy-bank"></i>
+                            {{ t('staff-members.employment.groupPension') }}
+                          </div>
+                          <div class="grid gap-3 md:grid-cols-2">
+                            <mp-field class="md:col-span-2" [label]="t('staff-members.employment.establishedPost')"
+                              [hint]="t('staff-members.employment.establishedPostHint')">
+                              <mp-lookup-select [options]="posts()" [value]="c.postId ?? null"
+                                (valueChange)="patchContract(ei, ci, 'postId', $event)"></mp-lookup-select>
+                            </mp-field>
+                            <mp-field [label]="t('staff-members.employment.pensionScheme')">
+                              <mp-lookup-select [options]="superannuationSchemes()" [value]="c.superannuationSchemeId ?? null"
+                                (valueChange)="patchContract(ei, ci, 'superannuationSchemeId', $event)"></mp-lookup-select>
+                            </mp-field>
+                            <mp-field [label]="t('staff-members.employment.employerContribution')">
+                              @if (employerPensionCost(c); as cost) {
+                                <span class="text-sm">{{ formatMoney(cost) }} <span class="text-muted-foreground">{{ t('staff-members.employment.perYear') }}</span></span>
+                              } @else {
+                                <span class="text-sm text-muted-foreground">—</span>
+                              }
+                            </mp-field>
+                            <label class="flex items-center gap-2 text-sm cursor-pointer md:col-span-2">
+                              <mp-checkbox [ngModel]="c.niContractedOut" (ngModelChange)="patchContract(ei, ci, 'niContractedOut', $event)"></mp-checkbox>
+                              {{ t('staff-members.employment.niContractedOut') }}
+                            </label>
+                          </div>
+                        </div>
+
+                        <div class="mt-4">
+                          <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+                            <i class="fa-solid fa-ban"></i>
+                            {{ t('staff-members.employment.groupSuspensions') }}
+                          </div>
+                          <div class="flex flex-col gap-2">
+                            @for (s of c.suspensions; track $index; let si = $index) {
+                              <div class="rounded border border-border p-3">
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                  <span class="text-sm font-medium text-muted-foreground">
+                                    {{ t('staff-members.employment.suspension') }} {{ si + 1 }}
+                                  </span>
+                                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                                    [attr.aria-label]="t('staff-members.employment.removeSuspension')" (click)="removeSuspension(ei, ci, si)">
+                                    <i class="fa-solid fa-trash"></i>
+                                  </button>
+                                </div>
+                                <div class="grid gap-3 md:grid-cols-2">
+                                  <mp-field [label]="t('staff-members.employment.suspensionStart')" [required]="true">
+                                    <mp-date-picker [ngModel]="toDate(s.startDate)" (ngModelChange)="onSuspensionDate(ei, ci, si, 'startDate', $event)"
+                                      [showIcon]="true" class="w-full" [invalid]="!s.startDate"></mp-date-picker>
+                                  </mp-field>
+                                  <mp-field [label]="t('staff-members.employment.suspensionEnd')" [hint]="t('staff-members.employment.suspensionEndHint')">
+                                    <mp-date-picker [ngModel]="toDate(s.endDate)" (ngModelChange)="onSuspensionDate(ei, ci, si, 'endDate', $event)"
+                                      [showIcon]="true" class="w-full"></mp-date-picker>
+                                  </mp-field>
+                                  <mp-field class="md:col-span-2" [label]="t('staff-members.employment.suspensionReason')">
+                                    <input mpInput [ngModel]="s.reason" (ngModelChange)="patchSuspension(ei, ci, si, 'reason', $event)" />
+                                  </mp-field>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                          <div class="mt-2">
+                            <button mpButton variant="outline" size="sm" (click)="addSuspension(ei, ci)">
+                              <i class="fa-solid fa-plus"></i>
+                              {{ t('staff-members.employment.addSuspension') }}
+                            </button>
+                          </div>
+                        </div>
+
+                        @if (c.salaryChanges.length) {
+                          <div class="mt-4">
+                            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+                              <i class="fa-solid fa-clock-rotate-left"></i>
+                              {{ t('staff-members.employment.groupSalaryHistory') }}
+                            </div>
+                            <ul class="flex flex-col gap-1">
+                              @for (sc of c.salaryChanges; track sc.id) {
+                                <li class="text-sm text-muted-foreground">
+                                  {{ sc.changedAt | date:'mediumDate' }}
+                                  @if (sc.oldAnnualSalary != null) { · {{ formatMoney(sc.oldAnnualSalary) }} } @else { · — }
+                                  →
+                                  @if (sc.newAnnualSalary != null) { {{ formatMoney(sc.newAnnualSalary) }} } @else { — }
+                                  @if (sc.newPayScalePointId) { <span class="text-muted-foreground">({{ lookupLabel(payScalePoints(), sc.newPayScalePointId) }})</span> }
+                                  @if (sc.changedBy) { · {{ sc.changedBy }} }
+                                </li>
+                              }
+                            </ul>
+                          </div>
+                        }
+
+                        <div class="mt-4">
+                          <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+                            <i class="fa-solid fa-coins"></i>
+                            {{ t('staff-members.employment.groupAllowances') }}
+                            @if (c.allowances.length) {
+                              <span class="ml-auto normal-case tracking-normal font-medium">
+                                {{ t('staff-members.employment.allowanceTotal') }} {{ formatMoney(allowanceTotal(c)) }}
+                              </span>
+                            }
+                          </div>
+                          <div class="flex flex-col gap-2">
+                            @for (a of c.allowances; track $index; let ai = $index) {
+                              <div class="rounded border border-border p-3">
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                  <span class="text-sm font-medium text-muted-foreground">
+                                    {{ t('staff-members.employment.allowance') }} {{ ai + 1 }}
+                                  </span>
+                                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                                    [attr.aria-label]="t('staff-members.employment.removeAllowance')" (click)="removeAllowance(ei, ci, ai)">
+                                    <i class="fa-solid fa-trash"></i>
+                                  </button>
+                                </div>
+                                <div class="grid gap-3 md:grid-cols-2">
+                                  <mp-field [label]="t('staff-members.employment.allowanceType')" [required]="true">
+                                    <mp-lookup-select [options]="additionalPaymentTypes()" [value]="a.additionalPaymentTypeId"
+                                      (valueChange)="patchAllowance(ei, ci, ai, 'additionalPaymentTypeId', $event)"
+                                      [invalid]="!a.additionalPaymentTypeId"></mp-lookup-select>
+                                  </mp-field>
+                                  <mp-field [label]="t('staff-members.employment.allowanceAmount')" [required]="true">
+                                    <mp-input-number mode="currency" currency="GBP" locale="en-GB" [min]="0"
+                                      [ngModel]="a.amount" (ngModelChange)="patchAllowance(ei, ci, ai, 'amount', $event ?? 0)"
+                                      class="w-full"></mp-input-number>
+                                  </mp-field>
+                                  <mp-field [label]="t('staff-members.employment.allowanceStart')" [required]="true">
+                                    <mp-date-picker [ngModel]="toDate(a.startDate)"
+                                      (ngModelChange)="onAllowanceDate(ei, ci, ai, 'startDate', $event)"
+                                      [showIcon]="true" class="w-full" [invalid]="!a.startDate"></mp-date-picker>
+                                  </mp-field>
+                                  <mp-field [label]="t('staff-members.employment.allowanceEnd')">
+                                    <mp-date-picker [ngModel]="toDate(a.endDate)"
+                                      (ngModelChange)="onAllowanceDate(ei, ci, ai, 'endDate', $event)"
+                                      [showIcon]="true" class="w-full"></mp-date-picker>
+                                  </mp-field>
+                                  <mp-field [label]="t('staff-members.employment.allowancePayFactor')"
+                                    [hint]="t('staff-members.employment.allowancePayFactorHint')">
+                                    <mp-input-number mode="decimal" [minFractionDigits]="2" [maxFractionDigits]="4" [min]="0" [max]="1"
+                                      [ngModel]="a.payFactor" (ngModelChange)="patchAllowance(ei, ci, ai, 'payFactor', $event)"
+                                      class="w-full"></mp-input-number>
+                                  </mp-field>
+                                  <mp-field [label]="t('staff-members.employment.allowanceReason')">
+                                    <input mpInput [ngModel]="a.reason" (ngModelChange)="patchAllowance(ei, ci, ai, 'reason', $event)" />
+                                  </mp-field>
+                                  <div class="md:col-span-2 flex flex-wrap gap-x-6 gap-y-2">
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                      <mp-checkbox [ngModel]="a.isSuperannuable"
+                                        (ngModelChange)="patchAllowance(ei, ci, ai, 'isSuperannuable', $event)"></mp-checkbox>
+                                      {{ t('staff-members.employment.allowanceSuperannuable') }}
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                      <mp-checkbox [ngModel]="a.isSubjectToNi"
+                                        (ngModelChange)="patchAllowance(ei, ci, ai, 'isSubjectToNi', $event)"></mp-checkbox>
+                                      {{ t('staff-members.employment.allowanceNi') }}
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                                      <mp-checkbox [ngModel]="a.isBenefitInKind"
+                                        (ngModelChange)="patchAllowance(ei, ci, ai, 'isBenefitInKind', $event)"></mp-checkbox>
+                                      {{ t('staff-members.employment.allowanceBik') }}
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                          <div class="mt-2">
+                            <button mpButton variant="outline" size="sm" (click)="addAllowance(ei, ci)">
+                              <i class="fa-solid fa-plus"></i>
+                              {{ t('staff-members.employment.addAllowance') }}
+                            </button>
+                          </div>
+                        </div>
                       } @else {
                         <div class="font-medium">{{ c.postTitle }}</div>
                         <div class="text-sm text-muted-foreground">
@@ -260,6 +432,25 @@
                           @if (c.departmentId) { · {{ lookupLabel(departments(), c.departmentId) }} }
                           @if (c.annualSalary != null) { · {{ formatMoney(c.annualSalary) }} }
                         </div>
+                        @if (c.superannuationSchemeId || c.suspensions.length) {
+                          <div class="text-sm text-muted-foreground">
+                            @if (c.superannuationSchemeId) { {{ lookupLabel(superannuationSchemes(), c.superannuationSchemeId) }} }
+                            @if (c.suspensions.length) { · {{ c.suspensions.length }} {{ c.suspensions.length === 1 ? t('staff-members.employment.suspension') : t('staff-members.employment.suspensions') }} }
+                          </div>
+                        }
+                        @if (c.allowances.length) {
+                          <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            @for (a of c.allowances; track $index) {
+                              <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700">
+                                {{ lookupLabel(additionalPaymentTypes(), a.additionalPaymentTypeId) }}
+                                <span class="font-medium">{{ formatMoney(a.amount) }}</span>
+                              </span>
+                            }
+                            <span class="text-xs text-muted-foreground">
+                              · {{ t('staff-members.employment.allowanceTotal') }} {{ formatMoney(allowanceTotal(c)) }}
+                            </span>
+                          </div>
+                        }
                       }
                     </div>
                   }

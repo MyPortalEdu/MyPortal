@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormField, applyEach, form, maxLength, required, submit, validate } from '@angular/forms/signals';
-import { MpButton, MpCheckbox, MpDatePicker, MpTextarea } from '@myportal/ui';
+import { MpButton, MpCheckbox, MpDatePicker, MpInput, MpInputNumber, MpTextarea } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -33,6 +33,16 @@ import {
 } from '../../../../../../shared/types/staff-absences';
 import { StaffAreaPanel } from './staff-area-panel';
 
+interface CertificateFormRow {
+  id: string | null;
+  dateReceived: Date | null;
+  dateSigned: Date | null;
+  isSelfCertified: boolean;
+  isReturnToWork: boolean;
+  signedBy: string;
+  notes: string;
+}
+
 interface AbsenceFormRow {
   id: string | null;
   absenceTypeId: string | null;
@@ -41,6 +51,13 @@ interface AbsenceFormRow {
   endDate: Date | null;
   isConfidential: boolean;
   notes: string;
+  authorisedPayRateId: string | null;
+  payrollReasonId: string | null;
+  sspExcluded: boolean;
+  workingDaysLost: number | null;
+  hoursLost: number | null;
+  isIndustrialInjury: boolean;
+  certificates: CertificateFormRow[];
 }
 
 function absencesOverlap(rows: readonly AbsenceFormRow[]): boolean {
@@ -63,6 +80,8 @@ function absencesOverlap(rows: readonly AbsenceFormRow[]): boolean {
     FormField,
     MpButton,
     MpDatePicker,
+    MpInput,
+    MpInputNumber,
     MpTextarea,
     MpCheckbox,
     LookupSelect,
@@ -105,6 +124,19 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
           ? undefined
           : { kind: 'endBeforeStart', message: 'staff-members.absences.endBeforeStart' };
       });
+
+      applyEach(item.certificates, cert => {
+        required(cert.dateReceived);
+        maxLength(cert.signedBy, 256);
+        maxLength(cert.notes, 256);
+        validate(cert.dateSigned, ({ value, valueOf }) => {
+          const signed = value();
+          const received = valueOf(cert.dateReceived);
+          return !signed || !received || signed.getTime() <= received.getTime()
+            ? undefined
+            : { kind: 'signedAfterReceived', message: 'staff-members.absences.signedAfterReceived' };
+        });
+      });
     });
     validate(path.absences, ({ value }) =>
       absencesOverlap(value())
@@ -116,6 +148,11 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
 
   protected readonly absenceTypes = computed(() => this.absences()?.absenceTypes ?? []);
   protected readonly illnessTypes = computed(() => this.absences()?.illnessTypes ?? []);
+  protected readonly payRates = computed(() => this.absences()?.payRates ?? []);
+  protected readonly payrollReasons = computed(() => this.absences()?.payrollReasons ?? []);
+
+  /** The statutory pay treatment is HR's (All scope) — the server decides and tells us. */
+  protected readonly canEditPayroll = computed(() => this.absences()?.canEditPayroll ?? false);
 
   override readonly canEdit = computed(() => {
     const perms = this.permissions();
@@ -180,6 +217,21 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
           endDate: a.endDate?.toISOString() ?? null,
           isConfidential: a.isConfidential,
           notes: this.normalise(a.notes),
+          authorisedPayRateId: a.authorisedPayRateId,
+          payrollReasonId: a.payrollReasonId,
+          sspExcluded: a.sspExcluded,
+          workingDaysLost: a.workingDaysLost,
+          hoursLost: a.hoursLost,
+          isIndustrialInjury: a.isIndustrialInjury,
+          certificates: a.certificates.map(c => ({
+            id: c.id,
+            dateReceived: c.dateReceived?.toISOString() ?? null,
+            dateSigned: c.dateSigned?.toISOString() ?? null,
+            isSelfCertified: c.isSelfCertified,
+            isReturnToWork: c.isReturnToWork,
+            signedBy: this.normalise(c.signedBy),
+            notes: this.normalise(c.notes),
+          })),
         })),
       };
       try {
@@ -204,6 +256,21 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
         endDate: a.endDate ? new Date(a.endDate) : null,
         isConfidential: a.isConfidential,
         notes: a.notes ?? '',
+        authorisedPayRateId: a.authorisedPayRateId ?? null,
+        payrollReasonId: a.payrollReasonId ?? null,
+        sspExcluded: a.sspExcluded,
+        workingDaysLost: a.workingDaysLost ?? null,
+        hoursLost: a.hoursLost ?? null,
+        isIndustrialInjury: a.isIndustrialInjury,
+        certificates: (a.certificates ?? []).map(c => ({
+          id: c.id,
+          dateReceived: c.dateReceived ? new Date(c.dateReceived) : null,
+          dateSigned: c.dateSigned ? new Date(c.dateSigned) : null,
+          isSelfCertified: c.isSelfCertified,
+          isReturnToWork: c.isReturnToWork,
+          signedBy: c.signedBy ?? '',
+          notes: c.notes ?? '',
+        })),
       })),
     });
     this.f().reset();
@@ -222,6 +289,13 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
           endDate: null,
           isConfidential: false,
           notes: '',
+          authorisedPayRateId: null,
+          payrollReasonId: null,
+          sspExcluded: false,
+          workingDaysLost: null,
+          hoursLost: null,
+          isIndustrialInjury: false,
+          certificates: [],
         },
       ],
     }));
@@ -229,6 +303,37 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
 
   protected removeAbsence(index: number): void {
     this.model.update(m => ({ absences: m.absences.filter((_, i) => i !== index) }));
+  }
+
+  protected addCertificate(absenceIndex: number): void {
+    this.mutateAbsence(absenceIndex, a => ({
+      ...a,
+      certificates: [
+        ...a.certificates,
+        {
+          id: null,
+          dateReceived: null,
+          dateSigned: null,
+          isSelfCertified: true,
+          isReturnToWork: false,
+          signedBy: '',
+          notes: '',
+        },
+      ],
+    }));
+  }
+
+  protected removeCertificate(absenceIndex: number, certificateIndex: number): void {
+    this.mutateAbsence(absenceIndex, a => ({
+      ...a,
+      certificates: a.certificates.filter((_, j) => j !== certificateIndex),
+    }));
+  }
+
+  private mutateAbsence(index: number, fn: (a: AbsenceFormRow) => AbsenceFormRow): void {
+    this.model.update(m => ({
+      absences: m.absences.map((a, i) => (i === index ? fn(a) : a)),
+    }));
   }
 
   protected absenceDays(a: AbsenceFormRow): number | null {

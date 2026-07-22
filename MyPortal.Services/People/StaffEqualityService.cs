@@ -28,6 +28,7 @@ public class StaffEqualityService(
     IPersonEqualityService personEqualityService,
     IDisabilityRepository disabilityRepository,
     IStaffMemberDisabilityRepository staffMemberDisabilityRepository,
+    IImpairmentEffectRepository impairmentEffectRepository,
     IValidationService validationService,
     IUnitOfWorkFactory unitOfWorkFactory)
     : BaseService(authorizationService, logger), IStaffEqualityService
@@ -51,12 +52,26 @@ public class StaffEqualityService(
         // Staff-level disability bits the person service doesn't own.
         response.HasDisability = staffMember.HasDisability;
         response.DisabilityDetails = staffMember.DisabilityDetails;
+        response.ImpairmentEffectId = staffMember.ImpairmentEffectId;
+        response.DisabilityNumber = staffMember.DisabilityNumber;
 
         var links = await staffMemberDisabilityRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
-        response.DisabilityIds = links.Select(l => l.DisabilityId).ToList();
+        response.DeclaredDisabilities = links
+            .Select(l => new StaffDisabilityResponse
+            {
+                DisabilityId = l.DisabilityId,
+                DateAdvised = l.DateAdvised,
+                IsLongTerm = l.IsLongTerm,
+                AffectsWorkingAbility = l.AffectsWorkingAbility,
+                AssistanceRequired = l.AssistanceRequired
+            })
+            .ToList();
 
         var disabilities = await disabilityRepository.GetListAsync(cancellationToken: cancellationToken);
         response.Disabilities = disabilities.ToOrderedLookup();
+
+        var impairmentEffects = await impairmentEffectRepository.GetListAsync(cancellationToken: cancellationToken);
+        response.ImpairmentEffects = impairmentEffects.ToOrderedLookup();
 
         return response;
     }
@@ -79,44 +94,65 @@ public class StaffEqualityService(
 
         staffMember.HasDisability = model.HasDisability;
         staffMember.DisabilityDetails = model.DisabilityDetails;
+        staffMember.ImpairmentEffectId = model.ImpairmentEffectId;
+        staffMember.DisabilityNumber = model.DisabilityNumber;
 
         await unitOfWorkFactory.RunInTransactionAsync(null, async uow =>
         {
             await personEqualityService.UpdateEqualityDetailsAsync(staffMember.PersonId, model, cancellationToken, uow);
             await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, uow.Transaction);
-            await ReconcileDisabilitiesAsync(staffMemberId, model.DisabilityIds, uow.Transaction, cancellationToken);
+            await ReconcileDisabilitiesAsync(staffMemberId, model.DeclaredDisabilities, uow.Transaction,
+                cancellationToken);
         }, cancellationToken);
     }
 
-    private async Task ReconcileDisabilitiesAsync(Guid staffMemberId, List<Guid> incoming, IDbTransaction? transaction,
-        CancellationToken cancellationToken)
+    // Matched on DisabilityId — the same disability can't be declared twice, so it's the natural
+    // key. Matched rows have their Equality Act detail updated in place.
+    private async Task ReconcileDisabilitiesAsync(Guid staffMemberId, List<StaffDisabilityUpsertItem> incoming,
+        IDbTransaction? transaction, CancellationToken cancellationToken)
     {
-        var wanted = incoming.Distinct().ToHashSet();
+        var wanted = incoming
+            .GroupBy(i => i.DisabilityId)
+            .ToDictionary(g => g.Key, g => g.First());
 
         var existing =
-            await staffMemberDisabilityRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken, transaction);
-        var existingIds = existing.Select(e => e.DisabilityId).ToHashSet();
+            (await staffMemberDisabilityRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken,
+                transaction)).ToList();
 
         // Hard-delete links the payload dropped (the join row carries no soft-delete column).
-        foreach (var row in existing)
+        foreach (var row in existing.Where(row => !wanted.ContainsKey(row.DisabilityId)))
         {
-            if (!wanted.Contains(row.DisabilityId))
-            {
-                await staffMemberDisabilityRepository.DeleteAsync(row.Id, cancellationToken, false, transaction);
-            }
+            await staffMemberDisabilityRepository.DeleteAsync(row.Id, cancellationToken, false, transaction);
         }
 
-        foreach (var disabilityId in wanted)
+        var existingByDisability = existing.ToDictionary(e => e.DisabilityId);
+
+        foreach (var (disabilityId, item) in wanted)
         {
-            if (!existingIds.Contains(disabilityId))
+            if (existingByDisability.TryGetValue(disabilityId, out var entity))
             {
-                await staffMemberDisabilityRepository.InsertAsync(new StaffMemberDisability
+                ApplyDisability(entity, item);
+                await staffMemberDisabilityRepository.UpdateAsync(entity, cancellationToken, transaction);
+            }
+            else
+            {
+                var link = new StaffMemberDisability
                 {
                     Id = SqlConvention.SequentialGuid(),
                     StaffMemberId = staffMemberId,
                     DisabilityId = disabilityId
-                }, cancellationToken, transaction);
+                };
+                ApplyDisability(link, item);
+                await staffMemberDisabilityRepository.InsertAsync(link, cancellationToken, transaction);
             }
         }
+    }
+
+    private static void ApplyDisability(StaffMemberDisability entity, StaffDisabilityUpsertItem item)
+    {
+        entity.DateAdvised = item.DateAdvised;
+        entity.IsLongTerm = item.IsLongTerm;
+        entity.AffectsWorkingAbility = item.AffectsWorkingAbility;
+        entity.AssistanceRequired = item.AssistanceRequired;
     }
 }

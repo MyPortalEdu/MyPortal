@@ -15,7 +15,7 @@ import {
 interface EqualityModel {
   hasDisability: boolean;
   disabilityDetails: string;
-  disabilityIds: string[];
+  declaredDisabilities: { disabilityId: string | null }[];
   ethnicityId: string | null;
 }
 interface Internals {
@@ -33,7 +33,9 @@ function makeEquality(overrides: Partial<StaffEqualityDetailsResponse> = {}): St
     genderIdentityId: null,
     hasDisability: false,
     disabilityDetails: null,
-    disabilityIds: [],
+    declaredDisabilities: [],
+    impairmentEffectId: null,
+    disabilityNumber: null,
     ethnicities: [{ id: 'eth-1', description: 'Ethnicity 1' }],
     nationalities: [],
     languages: [],
@@ -42,6 +44,7 @@ function makeEquality(overrides: Partial<StaffEqualityDetailsResponse> = {}): St
     sexualOrientations: [],
     genderIdentities: [],
     disabilities: [{ id: 'dis-1', description: 'Disability 1' }],
+    impairmentEffects: [],
     ...overrides,
   } as StaffEqualityDetailsResponse;
 }
@@ -92,14 +95,20 @@ describe('StaffEqualityPanel', () => {
   it('clearing hasDisability wipes the disability fields (effect)', () => {
     configure(
       [Permissions.Staff.EditAllStaffEqualityDetails],
-      makeEquality({ hasDisability: true, disabilityIds: ['dis-1'], disabilityDetails: 'x' }),
+      makeEquality({
+        hasDisability: true,
+        declaredDisabilities: [
+          { disabilityId: 'dis-1', dateAdvised: null, isLongTerm: false, affectsWorkingAbility: false, assistanceRequired: null },
+        ],
+        disabilityDetails: 'x',
+      }),
     );
-    expect(internals.model().disabilityIds).toEqual(['dis-1']);
+    expect(internals.model().declaredDisabilities.map(d => d.disabilityId)).toEqual(['dis-1']);
 
     internals.model.update(m => ({ ...m, hasDisability: false }));
     fixture.detectChanges();
 
-    expect(internals.model().disabilityIds).toEqual([]);
+    expect(internals.model().declaredDisabilities).toEqual([]);
     expect(internals.model().disabilityDetails).toBe('');
   });
 

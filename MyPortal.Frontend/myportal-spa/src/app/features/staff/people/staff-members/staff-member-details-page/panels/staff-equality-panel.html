@@ -83,22 +83,96 @@
           </div>
 
           @if (model().hasDisability) {
-            <mp-field [label]="t('staff-members.equality.disabilities')" for="disabilities">
+            <mp-field [label]="t('staff-members.equality.impairmentEffect')"
+              [hint]="t('staff-members.equality.impairmentEffectHint')">
               @if (editing()) {
-                <mp-multi-select
-                  inputId="disabilities"
-                  [options]="disabilities()"
-                  optionLabel="description"
-                  optionValue="id"
-                  class="w-full"
-                  [placeholder]="t('staff-members.equality.disabilitiesPlaceholder')"
-                  [formField]="f.disabilityIds"></mp-multi-select>
+                <mp-lookup-select [options]="impairmentEffects()" [formField]="f.impairmentEffectId"></mp-lookup-select>
               } @else {
-                <span>{{ selectedLabels(disabilities(), model().disabilityIds) }}</span>
+                <span>{{ lookupLabel(impairmentEffects(), model().impairmentEffectId) }}</span>
               }
             </mp-field>
 
-            <mp-field [label]="t('staff-members.equality.details')" for="disabilityDetails">
+            <mp-field [label]="t('staff-members.equality.disabilityNumber')">
+              @if (editing()) {
+                <input mpInput [formField]="f.disabilityNumber" />
+              } @else {
+                <span>{{ model().disabilityNumber || '—' }}</span>
+              }
+            </mp-field>
+
+            <div class="md:col-span-2">
+              <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+                <i class="fa-solid fa-list-check"></i>
+                {{ t('staff-members.equality.disabilities') }}
+              </div>
+
+              @if (!model().declaredDisabilities.length) {
+                <p class="text-sm text-muted-foreground">{{ t('staff-members.equality.noDisabilities') }}</p>
+              }
+
+              <div class="flex flex-col gap-2">
+                @for (field of f.declaredDisabilities; track $index; let i = $index) {
+                  @let d = field().value();
+                  <div class="rounded border border-border p-3">
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                      <span class="text-sm font-medium">
+                        {{ editing() ? t('staff-members.equality.disability') + ' ' + (i + 1) : lookupLabel(disabilities(), d.disabilityId) }}
+                      </span>
+                      @if (editing()) {
+                        <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                          [attr.aria-label]="t('staff-members.equality.removeDisability')" (click)="removeDisability(i)">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      }
+                    </div>
+                    @if (editing()) {
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <mp-field [label]="t('staff-members.equality.disability')">
+                          <mp-lookup-select [options]="disabilities()" [formField]="field.disabilityId"></mp-lookup-select>
+                        </mp-field>
+                        <mp-field [label]="t('staff-members.equality.dateAdvised')">
+                          <mp-date-picker [formField]="field.dateAdvised" [showIcon]="true" class="w-full"></mp-date-picker>
+                        </mp-field>
+                        <mp-field class="md:col-span-2" [label]="t('staff-members.equality.assistanceRequired')"
+                          [hint]="t('staff-members.equality.assistanceRequiredHint')">
+                          <textarea mpTextarea rows="2" [formField]="field.assistanceRequired"></textarea>
+                        </mp-field>
+                        <div class="md:col-span-2 flex flex-wrap gap-x-6 gap-y-2">
+                          <label class="flex items-center gap-2 text-sm cursor-pointer">
+                            <mp-checkbox [formField]="field.isLongTerm"></mp-checkbox>
+                            {{ t('staff-members.equality.isLongTerm') }}
+                          </label>
+                          <label class="flex items-center gap-2 text-sm cursor-pointer">
+                            <mp-checkbox [formField]="field.affectsWorkingAbility"></mp-checkbox>
+                            {{ t('staff-members.equality.affectsWorkingAbility') }}
+                          </label>
+                        </div>
+                      </div>
+                    } @else {
+                      <div class="text-sm text-muted-foreground">
+                        @if (d.dateAdvised) { {{ t('staff-members.equality.advised') }} {{ d.dateAdvised | date:'mediumDate' }} }
+                        @if (d.isLongTerm) { · {{ t('staff-members.equality.isLongTerm') }} }
+                        @if (d.affectsWorkingAbility) { · {{ t('staff-members.equality.affectsWorkingAbility') }} }
+                      </div>
+                      @if (d.assistanceRequired) {
+                        <div class="text-sm mt-1 whitespace-pre-wrap">{{ d.assistanceRequired }}</div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+
+              @if (editing()) {
+                <div class="mt-2">
+                  <button mpButton variant="outline" size="sm" (click)="addDisability()">
+                    <i class="fa-solid fa-plus"></i>
+                    {{ t('staff-members.equality.addDisability') }}
+                  </button>
+                </div>
+              }
+            </div>
+
+            <mp-field class="md:col-span-2" [label]="t('staff-members.equality.details')" for="disabilityDetails">
               @if (editing()) {
                 <textarea
                   mpTextarea

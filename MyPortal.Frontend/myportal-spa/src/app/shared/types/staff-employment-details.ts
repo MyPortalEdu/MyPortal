@@ -7,6 +7,62 @@ export interface PayScalePointResponse {
   fullTimeSalary?: number | null;
 }
 
+export interface SuperannuationSchemeResponse {
+  id: string;
+  description: string;
+  employerRate?: number | null;
+}
+
+export interface StaffContractSuspensionResponse {
+  id: string;
+  startDate: string;
+  endDate?: string | null;
+  reason?: string | null;
+}
+
+export interface StaffContractSuspensionUpsertItem {
+  id?: string | null;
+  startDate: string | null;
+  endDate?: string | null;
+  reason?: string | null;
+}
+
+export interface StaffContractSalaryChangeResponse {
+  id: string;
+  oldPayScalePointId?: string | null;
+  newPayScalePointId?: string | null;
+  oldAnnualSalary?: number | null;
+  newAnnualSalary?: number | null;
+  changedAt: string;
+  changedBy?: string | null;
+}
+
+export interface StaffContractAllowanceResponse {
+  id: string;
+  additionalPaymentTypeId: string;
+  amount: number;
+  payFactor?: number | null;
+  startDate: string;
+  endDate?: string | null;
+  isSuperannuable: boolean;
+  isSubjectToNi: boolean;
+  isBenefitInKind: boolean;
+  reason?: string | null;
+}
+
+export interface StaffContractAllowanceUpsertItem {
+  id?: string | null;
+  additionalPaymentTypeId: string | null;
+  amount: number;
+  payFactor?: number | null;
+  startDate: string | null;
+  endDate?: string | null;
+  isSuperannuable: boolean;
+  isSubjectToNi: boolean;
+  isBenefitInKind: boolean;
+  reason?: string | null;
+}
+
 export interface StaffContractResponse {
   id: string;
   contractTypeId: string;
@@ -25,6 +81,12 @@ export interface StaffContractResponse {
   isAgencySupply: boolean;
   safeguardedSalary: boolean;
   dailyRate: boolean;
+  postId?: string | null;
+  superannuationSchemeId?: string | null;
+  niContractedOut: boolean;
+  allowances: StaffContractAllowanceResponse[];
+  suspensions: StaffContractSuspensionResponse[];
+  salaryChanges: StaffContractSalaryChangeResponse[];
 }
 
 export interface StaffContractUpsertItem {
@@ -45,6 +107,12 @@ export interface StaffContractUpsertItem {
   isAgencySupply: boolean;
   safeguardedSalary: boolean;
   dailyRate: boolean;
+  postId?: string | null;
+  superannuationSchemeId?: string | null;
+  niContractedOut: boolean;
+  allowances: StaffContractAllowanceUpsertItem[];
+  suspensions: StaffContractSuspensionUpsertItem[];
+  salaryChanges: StaffContractSalaryChangeResponse[];
 }
 
 export interface StaffEmploymentResponse {
@@ -88,6 +156,9 @@ export interface StaffEmploymentDetailsResponse {
   serviceTerms: LookupResponse[];
   departments: LookupResponse[];
   payScales: LookupResponse[];
+  additionalPaymentTypes: LookupResponse[];
+  superannuationSchemes: SuperannuationSchemeResponse[];
+  posts: LookupResponse[];
   payScalePoints: PayScalePointResponse[];
 }
 

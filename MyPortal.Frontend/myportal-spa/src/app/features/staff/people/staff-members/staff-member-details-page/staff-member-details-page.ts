@@ -59,6 +59,9 @@ import { StaffEqualityPanel } from './panels/staff-equality-panel';
 import { StaffProfessionalPanel } from './panels/staff-professional-panel';
 import { StaffEmploymentPanel } from './panels/staff-employment-panel';
 import { StaffPreEmploymentPanel } from './panels/staff-pre-employment-panel';
+import { StaffNextOfKinPanel } from './panels/staff-next-of-kin-panel';
+import { StaffResponsibilitiesPanel } from './panels/staff-responsibilities-panel';
+import { StaffManagementSection } from './panels/staff-management-section';
 import { StaffPerformancePanel } from './panels/staff-performance-panel';
 import { StaffContactPanel } from './panels/staff-contact-panel';
 
@@ -81,6 +84,8 @@ type AreaKey =
   | 'professionalDetails'
   | 'employmentDetails'
   | 'preEmploymentChecks'
+  | 'nextOfKin'
+  | 'responsibilities'
   | 'absences'
   | 'timetable'
   | 'performanceDetails'
@@ -99,6 +104,8 @@ const AREAS: AreaTab[] = [
   { key: 'professionalDetails',  icon: 'fa-solid fa-graduation-cap',  enabled: false },
   { key: 'employmentDetails',    icon: 'fa-solid fa-briefcase',       enabled: false },
   { key: 'preEmploymentChecks',  icon: 'fa-solid fa-shield-halved',   enabled: false },
+  { key: 'nextOfKin',            icon: 'fa-solid fa-phone-volume',    enabled: false },
+  { key: 'responsibilities',     icon: 'fa-solid fa-user-shield',     enabled: false },
   { key: 'absences',             icon: 'fa-solid fa-calendar-xmark',  enabled: false },
   { key: 'timetable',            icon: 'fa-solid fa-calendar-days',   enabled: false },
   { key: 'performanceDetails',   icon: 'fa-solid fa-chart-line',      enabled: false },
@@ -135,6 +142,9 @@ const AREAS: AreaTab[] = [
     StaffProfessionalPanel,
     StaffEmploymentPanel,
     StaffPreEmploymentPanel,
+    StaffNextOfKinPanel,
+    StaffResponsibilitiesPanel,
+    StaffManagementSection,
     StaffPerformancePanel,
     StaffContactPanel,
     TranslocoDirective,
@@ -159,6 +169,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       if (a.key === 'professionalDetails') return { ...a, enabled: this.canViewProfessional() };
       if (a.key === 'employmentDetails') return { ...a, enabled: this.canViewEmployment() };
       if (a.key === 'preEmploymentChecks') return { ...a, enabled: this.canViewPreEmployment() };
+      if (a.key === 'nextOfKin') return { ...a, enabled: this.canViewNextOfKin() };
+      if (a.key === 'responsibilities') return { ...a, enabled: this.canViewResponsibilities() };
       if (a.key === 'absences') return { ...a, enabled: this.canViewAbsences() };
       if (a.key === 'timetable') return { ...a, enabled: this.canViewTimetable() };
       if (a.key === 'performanceDetails') return { ...a, enabled: this.canViewPerformance() };
@@ -174,9 +186,12 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     'professionalDetails',
     'employmentDetails',
     'preEmploymentChecks',
+    'nextOfKin',
+    'responsibilities',
     'performanceDetails',
   ]);
   private readonly activePanel = viewChild(StaffAreaPanel);
+  private readonly managementSection = viewChild(StaffManagementSection);
 
   protected readonly loadingHeader = signal(false);
   protected readonly headerError = signal(false);
@@ -269,6 +284,27 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
       perms.has(Permissions.Staff.ViewAllStaffPreEmploymentChecks) ||
       perms.has(Permissions.Staff.EditAllStaffPreEmploymentChecks)
     );
+  });
+
+  protected readonly canViewNextOfKin = computed(() => {
+    const perms = this.heldPerms();
+    return (
+      perms.has(Permissions.Staff.ViewAllStaffEmergencyContacts) ||
+      perms.has(Permissions.Staff.EditAllStaffEmergencyContacts)
+    );
+  });
+
+  protected readonly canViewResponsibilities = computed(() => {
+    const perms = this.heldPerms();
+    const rel = this.header()?.relationship;
+    if (
+      perms.has(Permissions.Staff.ViewAllStaffResponsibilities) ||
+      perms.has(Permissions.Staff.EditAllStaffResponsibilities)
+    )
+      return true;
+    if (rel === 'LineManaged' && perms.has(Permissions.Staff.ViewManagedStaffResponsibilities)) return true;
+    if (rel === 'Self' && perms.has(Permissions.Staff.ViewOwnStaffResponsibilities)) return true;
+    return false;
   });
 
   protected readonly canViewAbsences = computed(() => {
@@ -371,7 +407,9 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     return JSON.stringify(s) !== JSON.stringify(this.currentForm());
   });
 
-  protected readonly isDirty = computed(() => this.basicDirty());
+  protected readonly isDirty = computed(
+    () => this.basicDirty() || (this.managementSection()?.dirty() ?? false),
+  );
 
   private readonly activeEdit = computed(() => {
     const panel = this.activePanel();
@@ -435,13 +473,20 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   });
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id') ?? '';
-    this.staffMemberId.set(id);
-
     this.me.me().subscribe(me => this.heldPerms.set(new Set(me.permissions ?? [])));
 
-    this.loadHeader();
-    this.loadBasic();
+    // React to the :id param (not just the initial snapshot) so navigating between staff records
+    // — e.g. clicking a direct report — reloads rather than reusing the previous member's data.
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id') ?? '';
+      if (id === this.staffMemberId()) return;
+      this.staffMemberId.set(id);
+      this.editing.set(false);
+      this.activeArea.set('basicDetails');
+      this.documentTypesLoaded = false;
+      this.loadHeader();
+      this.loadBasic();
+    });
   }
 
   private loadHeader(): void {
@@ -596,6 +641,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected cancelEdit(): void {
     this.applyToForm(this.current());
+    this.managementSection()?.reset();
     this.basicSubmitAttempted.set(false);
     this.editing.set(false);
   }
@@ -630,7 +676,12 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     };
 
     try {
-      await firstValueFrom(this.data.updateBasicDetails(this.staffMemberId(), payload));
+      // Only write the bio endpoint when the bio actually changed — a manager-only edit shouldn't
+      // bump the basic-details audit/version. The line manager is a separate HR-gated endpoint.
+      if (this.basicDirty()) {
+        await firstValueFrom(this.data.updateBasicDetails(this.staffMemberId(), payload));
+      }
+      await this.managementSection()?.commit();
       this.notify.success(this.transloco.translate('staff-members.savedToast'));
       this.basicSubmitAttempted.set(false);
       this.editing.set(false);

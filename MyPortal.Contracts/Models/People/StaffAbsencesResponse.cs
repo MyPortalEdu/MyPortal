@@ -12,4 +12,11 @@ public class StaffAbsencesResponse
 
     public List<LookupResponse> AbsenceTypes { get; set; } = [];
     public List<LookupResponse> IllnessTypes { get; set; } = [];
+
+    /// <summary>Statutory pay-treatment option lists — only populated for All-scope (HR) viewers.</summary>
+    public List<LookupResponse> PayRates { get; set; } = [];
+    public List<LookupResponse> PayrollReasons { get; set; } = [];
+
+    /// <summary>True when the caller may set the statutory / payroll fields (All scope).</summary>
+    public bool CanEditPayroll { get; set; }
 }

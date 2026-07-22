@@ -47,15 +47,103 @@
               <mp-field [label]="t('staff-members.absences.endDate')">
                 <mp-date-picker [formField]="field.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
               </mp-field>
+              <mp-field [label]="t('staff-members.absences.workingDaysLost')" [hint]="t('staff-members.absences.daysLostHint')">
+                <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" [formField]="field.workingDaysLost" class="w-full"></mp-input-number>
+              </mp-field>
+              <mp-field [label]="t('staff-members.absences.hoursLost')">
+                <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" [formField]="field.hoursLost" class="w-full"></mp-input-number>
+              </mp-field>
               <mp-field class="md:col-span-2" [label]="t('staff-members.absences.notes')">
                 <textarea mpTextarea rows="2" [formField]="field.notes"></textarea>
               </mp-field>
-              @if (canManageConfidential()) {
-                <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
-                  <mp-checkbox [formField]="field.isConfidential"></mp-checkbox>
-                  {{ t('staff-members.absences.markConfidential') }}
+              <div class="md:col-span-2 flex flex-wrap gap-x-6 gap-y-2">
+                <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                  <mp-checkbox [formField]="field.isIndustrialInjury"></mp-checkbox>
+                  {{ t('staff-members.absences.industrialInjury') }}
                 </label>
-              }
+                @if (canManageConfidential()) {
+                  <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                    <mp-checkbox [formField]="field.isConfidential"></mp-checkbox>
+                    {{ t('staff-members.absences.markConfidential') }}
+                  </label>
+                }
+              </div>
+            </div>
+
+            @if (canEditPayroll()) {
+              <div class="mt-4">
+                <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+                  <i class="fa-solid fa-sterling-sign"></i>
+                  {{ t('staff-members.absences.groupPayTreatment') }}
+                </div>
+                <div class="grid gap-3 md:grid-cols-2">
+                  <mp-field [label]="t('staff-members.absences.payRate')">
+                    <mp-lookup-select [options]="payRates()" [formField]="field.authorisedPayRateId"></mp-lookup-select>
+                  </mp-field>
+                  <mp-field [label]="t('staff-members.absences.payrollReason')">
+                    <mp-lookup-select [options]="payrollReasons()" [formField]="field.payrollReasonId"></mp-lookup-select>
+                  </mp-field>
+                  <label class="flex items-center gap-2 text-sm font-medium cursor-pointer md:col-span-2">
+                    <mp-checkbox [formField]="field.sspExcluded"></mp-checkbox>
+                    {{ t('staff-members.absences.sspExcluded') }}
+                  </label>
+                </div>
+              </div>
+            }
+
+            <div class="mt-4">
+              <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+                <i class="fa-solid fa-file-medical"></i>
+                {{ t('staff-members.absences.groupCertificates') }}
+              </div>
+              <div class="flex flex-col gap-2">
+                @for (cert of field.certificates; track $index; let ci = $index) {
+                  @let cv = cert().value();
+                  <div class="rounded border border-border p-3">
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                      <span class="text-sm font-medium text-muted-foreground">
+                        {{ cv.isReturnToWork ? t('staff-members.absences.returnToWork') : (cv.isSelfCertified ? t('staff-members.absences.selfCertified') : t('staff-members.absences.doctorsNote')) }}
+                      </span>
+                      <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                        [attr.aria-label]="t('staff-members.absences.removeCertificate')" (click)="removeCertificate(i, ci)">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </div>
+                    <div class="grid gap-3 md:grid-cols-2">
+                      <mp-field [label]="t('staff-members.absences.dateReceived')">
+                        <mp-date-picker [formField]="cert.dateReceived" [showIcon]="true" class="w-full"></mp-date-picker>
+                      </mp-field>
+                      <mp-field [label]="t('staff-members.absences.dateSigned')">
+                        <mp-date-picker [formField]="cert.dateSigned" [showIcon]="true" class="w-full"></mp-date-picker>
+                      </mp-field>
+                      @if (!cv.isSelfCertified) {
+                        <mp-field class="md:col-span-2" [label]="t('staff-members.absences.signedBy')">
+                          <input mpInput [formField]="cert.signedBy" />
+                        </mp-field>
+                      }
+                      <mp-field class="md:col-span-2" [label]="t('staff-members.absences.certificateNotes')">
+                        <input mpInput [formField]="cert.notes" />
+                      </mp-field>
+                      <div class="md:col-span-2 flex flex-wrap gap-x-6 gap-y-2">
+                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                          <mp-checkbox [formField]="cert.isSelfCertified"></mp-checkbox>
+                          {{ t('staff-members.absences.selfCertified') }}
+                        </label>
+                        <label class="flex items-center gap-2 text-sm cursor-pointer">
+                          <mp-checkbox [formField]="cert.isReturnToWork"></mp-checkbox>
+                          {{ t('staff-members.absences.returnToWork') }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+              <div class="mt-2">
+                <button mpButton variant="outline" size="sm" (click)="addCertificate(i)">
+                  <i class="fa-solid fa-plus"></i>
+                  {{ t('staff-members.absences.addCertificate') }}
+                </button>
+              </div>
             </div>
           } @else {
             <div class="text-sm">
@@ -66,6 +154,31 @@
               {{ a.startDate | date:'mediumDate' }} – {{ a.endDate | date:'mediumDate' }}
               @if (absenceDays(a); as days) { · {{ days }} {{ days === 1 ? t('staff-members.absences.day') : t('staff-members.absences.days') }} }
             </div>
+            @if (a.workingDaysLost != null || a.hoursLost != null || a.isIndustrialInjury) {
+              <div class="text-sm text-muted-foreground">
+                @if (a.workingDaysLost != null) { {{ a.workingDaysLost }} {{ t('staff-members.absences.daysLostShort') }} }
+                @if (a.hoursLost != null) { @if (a.workingDaysLost != null) { · } {{ a.hoursLost }} {{ t('staff-members.absences.hoursLostShort') }} }
+                @if (a.isIndustrialInjury) { · {{ t('staff-members.absences.industrialInjury') }} }
+              </div>
+            }
+            @if (canEditPayroll() && (a.authorisedPayRateId || a.payrollReasonId || a.sspExcluded)) {
+              <div class="text-sm text-muted-foreground">
+                @if (a.authorisedPayRateId) { {{ lookupLabel(payRates(), a.authorisedPayRateId) }} }
+                @if (a.payrollReasonId) { · {{ lookupLabel(payrollReasons(), a.payrollReasonId) }} }
+                @if (a.sspExcluded) { · {{ t('staff-members.absences.sspExcluded') }} }
+              </div>
+            }
+            @if (a.certificates.length) {
+              <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                @for (cert of a.certificates; track $index) {
+                  <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-surface-200 dark:bg-surface-700">
+                    <i class="fa-solid fa-file-medical"></i>
+                    {{ cert.isReturnToWork ? t('staff-members.absences.returnToWork') : (cert.isSelfCertified ? t('staff-members.absences.selfCertified') : t('staff-members.absences.doctorsNote')) }}
+                    <span class="text-muted-foreground">{{ cert.dateReceived | date:'d MMM' }}</span>
+                  </span>
+                }
+              </div>
+            }
             @if (a.notes) {
               <div class="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{{ a.notes }}</div>
             }

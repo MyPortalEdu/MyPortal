@@ -24,6 +24,9 @@ export interface StaffQualificationUpsertItem {
 
 export interface StaffProfessionalDetailsResponse {
   isTeachingStaff: boolean;
+  teacherCategoryId?: string | null;
+  teacherStatusId?: string | null;
+  eligibleForSwr: boolean;
   hasQts: boolean;
   hasHlta: boolean;
   hasQtls: boolean;
@@ -43,6 +46,8 @@ export interface StaffProfessionalDetailsResponse {
   qualifications: StaffQualificationResponse[];
 
   qtsRoutes: LookupResponse[];
+  teacherCategories: LookupResponse[];
+  teacherStatuses: LookupResponse[];
   inductionStatuses: LookupResponse[];
   qualificationLevels: LookupResponse[];
   classesOfDegree: LookupResponse[];
@@ -50,6 +55,9 @@ export interface StaffProfessionalDetailsResponse {
 
 export interface StaffProfessionalDetailsUpsertRequest {
   isTeachingStaff: boolean;
+  teacherCategoryId?: string | null;
+  teacherStatusId?: string | null;
+  eligibleForSwr: boolean;
   hasQts: boolean;
   hasHlta: boolean;
   hasQtls: boolean;

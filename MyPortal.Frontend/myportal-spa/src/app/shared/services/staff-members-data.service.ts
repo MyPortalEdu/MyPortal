@@ -9,6 +9,10 @@ import {
   StaffBasicDetailsUpsertRequest,
 } from '../types/staff-basic-details';
 import {
+  SetStaffLineManagerRequest,
+  StaffManagementResponse,
+} from '../types/staff-management';
+import {
   StaffContactDetailsResponse,
   StaffContactDetailsUpsertRequest,
 } from '../types/staff-contact-details';
@@ -32,6 +36,14 @@ import {
   StaffAbsencesResponse,
   StaffAbsencesUpsertRequest,
 } from '../types/staff-absences';
+import {
+  StaffResponsibilitiesResponse,
+  StaffResponsibilitiesUpsertRequest,
+} from '../types/staff-responsibilities';
+import {
+  StaffNextOfKinAreaResponse,
+  StaffNextOfKinAreaUpsertRequest,
+} from '../types/staff-next-of-kin';
 import { StaffCalendarResponse } from '../types/staff-timetable';
 import {
   StaffPerformanceResponse,
@@ -82,6 +94,22 @@ export class StaffMembersDataService {
   ): Observable<IdResponse> {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/basic-details`,
+      payload,
+    );
+  }
+
+  getManagement(staffMemberId: string): Observable<StaffManagementResponse> {
+    return this.http.get<StaffManagementResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/management`,
+    );
+  }
+
+  setLineManager(
+    staffMemberId: string,
+    payload: SetStaffLineManagerRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/line-manager`,
       payload,
     );
   }
@@ -180,6 +208,22 @@ export class StaffMembersDataService {
     );
   }
 
+  getNextOfKin(staffMemberId: string): Observable<StaffNextOfKinAreaResponse> {
+    return this.http.get<StaffNextOfKinAreaResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/next-of-kin`,
+    );
+  }
+
+  updateNextOfKin(
+    staffMemberId: string,
+    payload: StaffNextOfKinAreaUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/next-of-kin`,
+      payload,
+    );
+  }
+
   getTimetable(
     staffMemberId: string,
     from: string,
@@ -225,6 +269,22 @@ export class StaffMembersDataService {
   ): Observable<IdResponse> {
     return this.http.put<IdResponse>(
       `/api/v1/staffmembers/${staffMemberId}/absences`,
+      payload,
+    );
+  }
+
+  getResponsibilities(staffMemberId: string): Observable<StaffResponsibilitiesResponse> {
+    return this.http.get<StaffResponsibilitiesResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/responsibilities`,
+    );
+  }
+
+  updateResponsibilities(
+    staffMemberId: string,
+    payload: StaffResponsibilitiesUpsertRequest,
+  ): Observable<IdResponse> {
+    return this.http.put<IdResponse>(
+      `/api/v1/staffmembers/${staffMemberId}/responsibilities`,
       payload,
     );
   }

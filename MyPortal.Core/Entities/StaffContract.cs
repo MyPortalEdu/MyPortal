@@ -22,6 +22,15 @@ namespace MyPortal.Core.Entities
 
         public Guid? PayScalePointId { get; set; }
 
+        // The established post this contract is held against (Staff Setup reference data).
+        public Guid? PostId { get; set; }
+
+        // Pension scheme this contract is enrolled in (TPS / LGPS / opted out).
+        public Guid? SuperannuationSchemeId { get; set; }
+
+        // NI contracted-out status (pre-2016 schemes / payroll export).
+        public bool NiContractedOut { get; set; }
+
         [Required]
         [StringLength(256)]
         public string PostTitle { get; set; } = null!;
@@ -62,6 +71,8 @@ namespace MyPortal.Core.Entities
         public Department? Department { get; set; }
         public PayScale? PayScale { get; set; }
         public PayScalePoint? PayScalePoint { get; set; }
+        public SuperannuationScheme? SuperannuationScheme { get; set; }
+        public Post? Post { get; set; }
 
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;

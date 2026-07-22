@@ -59,6 +59,16 @@ public class StaffMemberAccessService(
             [(StaffArea.PreEmploymentChecks, StaffAccess.ViewAll)]     = Permissions.Staff.ViewAllStaffPreEmploymentChecks,
             [(StaffArea.PreEmploymentChecks, StaffAccess.EditAll)]     = Permissions.Staff.EditAllStaffPreEmploymentChecks,
 
+            // Emergency contacts / next of kin (HR-maintained, All scope only)
+            [(StaffArea.EmergencyContacts, StaffAccess.ViewAll)]       = Permissions.Staff.ViewAllStaffEmergencyContacts,
+            [(StaffArea.EmergencyContacts, StaffAccess.EditAll)]       = Permissions.Staff.EditAllStaffEmergencyContacts,
+
+            // Designated responsibilities (view self/manager/HR; HR edit only)
+            [(StaffArea.Responsibilities, StaffAccess.ViewOwn)]        = Permissions.Staff.ViewOwnStaffResponsibilities,
+            [(StaffArea.Responsibilities, StaffAccess.ViewManaged)]    = Permissions.Staff.ViewManagedStaffResponsibilities,
+            [(StaffArea.Responsibilities, StaffAccess.ViewAll)]        = Permissions.Staff.ViewAllStaffResponsibilities,
+            [(StaffArea.Responsibilities, StaffAccess.EditAll)]        = Permissions.Staff.EditAllStaffResponsibilities,
+
             // Absences (health data)
             [(StaffArea.Absences, StaffAccess.ViewOwn)]                = Permissions.Staff.ViewOwnStaffAbsences,
             [(StaffArea.Absences, StaffAccess.ViewManaged)]            = Permissions.Staff.ViewManagedStaffAbsences,

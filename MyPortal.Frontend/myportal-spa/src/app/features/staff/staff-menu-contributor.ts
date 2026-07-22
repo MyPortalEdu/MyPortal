@@ -24,6 +24,17 @@ export class StaffMenuContributor implements AppMenuContributor {
         ]
       },
       {
+        label: 'nav.staffSetup',
+        icon: 'fa-sliders',
+        children: [
+          {
+            label: 'nav.posts',
+            routerLink: ['/staff/setup/posts'],
+            permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
+          }
+        ]
+      },
+      {
         label: 'nav.school',
         icon: 'fa-school',
         children: [

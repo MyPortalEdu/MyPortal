@@ -47,6 +47,9 @@ interface QualificationRow {
 }
 interface ProfessionalModel {
   isTeachingStaff: boolean;
+  teacherCategoryId: string | null;
+  teacherStatusId: string | null;
+  eligibleForSwr: boolean;
   hasQts: boolean;
   hasHlta: boolean;
   hasQtls: boolean;
@@ -102,6 +105,9 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
 
   protected readonly model = signal<ProfessionalModel>({
     isTeachingStaff: false,
+    teacherCategoryId: null,
+    teacherStatusId: null,
+    eligibleForSwr: false,
     hasQts: false,
     hasHlta: false,
     hasQtls: false,
@@ -136,6 +142,8 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
   private readonly snapshot = signal<string>('');
 
   protected readonly qtsRoutes = computed(() => this.professional()?.qtsRoutes ?? []);
+  protected readonly teacherCategories = computed(() => this.professional()?.teacherCategories ?? []);
+  protected readonly teacherStatuses = computed(() => this.professional()?.teacherStatuses ?? []);
   protected readonly inductionStatuses = computed(() => this.professional()?.inductionStatuses ?? []);
   protected readonly qualificationLevels = computed(() => this.professional()?.qualificationLevels ?? []);
   protected readonly classesOfDegree = computed(() => this.professional()?.classesOfDegree ?? []);
@@ -147,6 +155,7 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
     { key: 'hasQtls', field: this.f.hasQtls },
     { key: 'hasEyts', field: this.f.hasEyts },
     { key: 'isSeniorLeadership', field: this.f.isSeniorLeadership },
+    { key: 'eligibleForSwr', field: this.f.eligibleForSwr },
   ];
 
   override readonly canEdit = computed(() => {
@@ -235,6 +244,9 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
       const m = this.model();
       const payload: StaffProfessionalDetailsUpsertRequest = {
         isTeachingStaff: m.isTeachingStaff,
+        teacherCategoryId: m.teacherCategoryId,
+        teacherStatusId: m.teacherStatusId,
+        eligibleForSwr: m.eligibleForSwr,
         hasQts: m.hasQts,
         hasHlta: m.hasHlta,
         hasQtls: m.hasQtls,
@@ -273,6 +285,9 @@ export class StaffProfessionalPanel extends StaffAreaPanel implements OnInit {
   private apply(row: StaffProfessionalDetailsResponse | null): void {
     this.model.set({
       isTeachingStaff: row?.isTeachingStaff ?? false,
+      teacherCategoryId: row?.teacherCategoryId ?? null,
+      teacherStatusId: row?.teacherStatusId ?? null,
+      eligibleForSwr: row?.eligibleForSwr ?? false,
       hasQts: row?.hasQts ?? false,
       hasHlta: row?.hasHlta ?? false,
       hasQtls: row?.hasQtls ?? false,

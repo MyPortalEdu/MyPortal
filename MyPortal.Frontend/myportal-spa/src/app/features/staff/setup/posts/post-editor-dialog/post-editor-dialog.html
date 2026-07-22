@@ -1,0 +1,104 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [dismissable]="false"
+    [closeOnEscape]="!f().submitting()"
+    panelClass="w-[min(48rem,94vw)]"
+    [title]="isEdit() ? t('staff-setup.posts.edit') : t('staff-setup.posts.add')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="f().submitting()">
+
+    <div class="flex flex-col gap-4">
+      <div class="grid gap-4 md:grid-cols-2">
+        <mp-form-field [label]="t('staff-setup.posts.reference')">
+          <input mpInput [formField]="f.reference" />
+        </mp-form-field>
+        <mp-form-field [label]="t('staff-setup.posts.establishedFte')">
+          <mp-input-number mode="decimal" [minFractionDigits]="1" [maxFractionDigits]="4" [min]="0"
+            [formField]="f.establishedFte" class="w-full"></mp-input-number>
+        </mp-form-field>
+        <mp-form-field class="md:col-span-2" [label]="t('staff-setup.posts.postTitle')">
+          <input mpInput [formField]="f.description" />
+        </mp-form-field>
+        <mp-form-field [label]="t('staff-setup.posts.category')">
+          <mp-lookup-select [options]="categories()" [formField]="f.postCategoryId"></mp-lookup-select>
+        </mp-form-field>
+        <mp-form-field [label]="t('staff-setup.posts.serviceTerm')">
+          <mp-lookup-select [options]="serviceTerms()" [formField]="f.serviceTermId"></mp-lookup-select>
+        </mp-form-field>
+        <mp-form-field [label]="t('staff-setup.posts.swrPostCode')">
+          <input mpInput [formField]="f.swrPostCode" />
+        </mp-form-field>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+          <i class="fa-solid fa-user-slash"></i>
+          {{ t('staff-setup.posts.vacancies') }}
+        </div>
+
+        @if (!model().vacancies.length) {
+          <p class="text-sm text-muted-foreground">{{ t('staff-setup.posts.noVacancies') }}</p>
+        }
+
+        <div class="flex flex-col gap-2">
+          @for (field of f.vacancies; track $index; let i = $index) {
+            <div class="rounded border border-border p-3">
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <span class="text-sm font-medium text-muted-foreground">
+                  {{ t('staff-setup.posts.vacancies') }} {{ i + 1 }}
+                </span>
+                <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                  [attr.aria-label]="t('staff-setup.posts.removeVacancy')" (click)="removeVacancy(i)">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+              <div class="grid gap-3 md:grid-cols-2">
+                <mp-form-field [label]="t('staff-setup.posts.vacancyFrom')">
+                  <mp-date-picker [formField]="field.startDate" [showIcon]="true" class="w-full"></mp-date-picker>
+                </mp-form-field>
+                <mp-form-field [label]="t('staff-setup.posts.vacancyTo')" [hint]="t('staff-setup.posts.vacancyToHint')">
+                  <mp-date-picker [formField]="field.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
+                </mp-form-field>
+                <mp-form-field [label]="t('staff-setup.posts.subject')">
+                  <mp-lookup-select [options]="subjects()" [formField]="field.subjectId"></mp-lookup-select>
+                </mp-form-field>
+                <mp-form-field [label]="t('staff-setup.posts.vacancyNotes')">
+                  <input mpInput [formField]="field.notes" />
+                </mp-form-field>
+                <div class="md:col-span-2 flex flex-wrap gap-x-6 gap-y-2">
+                  <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <mp-checkbox [formField]="field.isAdvertised"></mp-checkbox>
+                    {{ t('staff-setup.posts.advertised') }}
+                  </label>
+                  <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <mp-checkbox [formField]="field.isTemporarilyFilled"></mp-checkbox>
+                    {{ t('staff-setup.posts.temporarilyFilled') }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="mt-2">
+          <button mpButton variant="outline" size="sm" (click)="addVacancy()">
+            <i class="fa-solid fa-plus"></i>
+            {{ t('staff-setup.posts.addVacancy') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div mpDialogFooter class="flex items-center justify-end gap-2">
+      <button mpButton variant="outline" (click)="onClose()" [disabled]="f().submitting()">
+        {{ t('common.cancel') }}
+      </button>
+      <button mpButton (click)="save()" [disabled]="f().submitting()">
+        {{ t('common.save') }}
+      </button>
+    </div>
+  </mp-dialog>
+</ng-container>
