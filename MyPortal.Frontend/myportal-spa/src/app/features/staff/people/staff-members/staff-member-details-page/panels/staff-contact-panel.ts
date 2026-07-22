@@ -8,6 +8,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { applyEach, form, submit, validate } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -25,8 +26,8 @@ import { PersonEmails } from '../../../../../../shared/components/contact/person
 import { PersonPhones } from '../../../../../../shared/components/contact/person-phones/person-phones';
 import { PersonAddresses } from '../../../../../../shared/components/contact/person-addresses/person-addresses';
 import {
-  PersonEmailUpsertItem,
-  PersonPhoneUpsertItem,
+  PersonEmailFormRow,
+  PersonPhoneFormRow,
   PersonContactDetailsResponse,
   PersonContactDetailsUpsertRequest,
 } from '../../../../../../shared/types/person-contact-details';
@@ -53,14 +54,26 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
   readonly relationship = input<StaffRelationship>();
 
   protected readonly loading = signal(false);
-  override readonly saving = signal(false);
   override readonly editing = signal(false);
 
   protected readonly contact = signal<PersonContactDetailsResponse | null>(null);
-  protected readonly emails = signal<PersonEmailUpsertItem[]>([]);
-  protected readonly phones = signal<PersonPhoneUpsertItem[]>([]);
   protected readonly emailTypes = computed(() => this.contact()?.emailTypes ?? []);
   protected readonly phoneTypes = computed(() => this.contact()?.phoneTypes ?? []);
+
+  protected readonly model = signal<{ emails: PersonEmailFormRow[]; phones: PersonPhoneFormRow[] }>({
+    emails: [],
+    phones: [],
+  });
+  protected readonly f = form(this.model, path => {
+    applyEach(path.emails, item => {
+      validate(item.typeId, ({ value }) => (value() ? undefined : { kind: 'required' }));
+      validate(item.address, ({ value }) => (value().trim().length ? undefined : { kind: 'required' }));
+    });
+    applyEach(path.phones, item => {
+      validate(item.typeId, ({ value }) => (value() ? undefined : { kind: 'required' }));
+      validate(item.number, ({ value }) => (value().trim().length ? undefined : { kind: 'required' }));
+    });
+  });
   private readonly snapshot = signal<string>('');
 
   override readonly canEdit = computed(() => {
@@ -71,18 +84,13 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
     return false;
   });
 
-  override readonly valid = computed(
-    () =>
-      this.emails().every(e => !!e.typeId && e.address.trim().length > 0) &&
-      this.phones().every(p => !!p.typeId && p.number.trim().length > 0),
-  );
+  override readonly saving = computed(() => this.f().submitting());
+  override readonly valid = computed(() => this.f().valid());
 
-  private readonly form = computed(() =>
-    JSON.stringify({ emails: this.emails(), phones: this.phones() }),
-  );
+  private readonly formState = computed(() => JSON.stringify(this.model()));
 
   override readonly dirty = computed(
-    () => this.contact() != null && this.snapshot() !== this.form(),
+    () => this.contact() != null && this.snapshot() !== this.formState(),
   );
 
   ngOnInit(): void {
@@ -114,44 +122,102 @@ export class StaffContactPanel extends StaffAreaPanel implements OnInit {
   }
 
   override async save(): Promise<void> {
-    if (!this.canEdit() || !this.valid() || this.saving()) return;
-    this.saving.set(true);
-
-    const payload: PersonContactDetailsUpsertRequest = {
-      emails: this.emails(),
-      phones: this.phones(),
-    };
-
-    try {
-      await firstValueFrom(this.data.updateContactDetails(this.staffMemberId(), payload));
+    if (!this.canEdit()) return;
+    await submit(this.f, async () => {
+      const payload: PersonContactDetailsUpsertRequest = {
+        emails: this.model().emails.map(e => ({
+          id: e.id,
+          typeId: e.typeId,
+          address: e.address.trim(),
+          isMain: e.isMain,
+          notes: e.notes.trim() ? e.notes.trim() : null,
+        })),
+        phones: this.model().phones.map(p => ({
+          id: p.id,
+          typeId: p.typeId,
+          number: p.number.trim(),
+          isMain: p.isMain,
+        })),
+      };
+      try {
+        await firstValueFrom(this.data.updateContactDetails(this.staffMemberId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.saveContactError'));
+        return;
+      }
       this.notify.success(this.transloco.translate('staff-members.savedContactToast'));
       this.editing.set(false);
       this.load();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.saveContactError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
+  }
+
+  protected addEmail(): void {
+    this.model.update(m => ({
+      ...m,
+      emails: [
+        ...m.emails,
+        { id: null, typeId: this.emailTypes()[0]?.id ?? '', address: '', isMain: m.emails.length === 0, notes: '' },
+      ],
+    }));
+  }
+
+  protected removeEmail(index: number): void {
+    this.model.update(m => {
+      const emails = m.emails.filter((_, i) => i !== index);
+      if (emails.length && !emails.some(e => e.isMain)) emails[0] = { ...emails[0], isMain: true };
+      return { ...m, emails };
+    });
+  }
+
+  protected setMainEmail(index: number): void {
+    this.model.update(m => ({
+      ...m,
+      emails: m.emails.map((e, i) => ({ ...e, isMain: i === index })),
+    }));
+  }
+
+  protected addPhone(): void {
+    this.model.update(m => ({
+      ...m,
+      phones: [
+        ...m.phones,
+        { id: null, typeId: this.phoneTypes()[0]?.id ?? '', number: '', isMain: m.phones.length === 0 },
+      ],
+    }));
+  }
+
+  protected removePhone(index: number): void {
+    this.model.update(m => {
+      const phones = m.phones.filter((_, i) => i !== index);
+      if (phones.length && !phones.some(p => p.isMain)) phones[0] = { ...phones[0], isMain: true };
+      return { ...m, phones };
+    });
+  }
+
+  protected setMainPhone(index: number): void {
+    this.model.update(m => ({
+      ...m,
+      phones: m.phones.map((p, i) => ({ ...p, isMain: i === index })),
+    }));
   }
 
   private apply(row: PersonContactDetailsResponse | null): void {
-    this.emails.set(
-      (row?.emails ?? []).map(e => ({
+    this.model.set({
+      emails: (row?.emails ?? []).map(e => ({
         id: e.id,
         typeId: e.typeId,
         address: e.address,
         isMain: e.isMain,
-        notes: e.notes ?? null,
+        notes: e.notes ?? '',
       })),
-    );
-    this.phones.set(
-      (row?.phones ?? []).map(p => ({
+      phones: (row?.phones ?? []).map(p => ({
         id: p.id,
         typeId: p.typeId,
         number: p.number,
         isMain: p.isMain,
       })),
-    );
-    this.snapshot.set(this.form());
+    });
+    this.f().reset();
+    this.snapshot.set(this.formState());
   }
 }

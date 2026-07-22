@@ -1,0 +1,49 @@
+<ng-container *transloco="let t">
+  @if (loading() && !loaded()) {
+    <mp-loading></mp-loading>
+  } @else if (loaded()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('contacts.areas.associatedStudents') }}</h3>
+    <p class="text-sm text-muted-foreground mb-4">{{ t('contacts.associatedStudents.hint') }}</p>
+
+    <section>
+      <mp-section-header icon="fa-solid fa-graduation-cap" [title]="t('contacts.associatedStudents.heading')"></mp-section-header>
+
+      @if (students().length) {
+        <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
+          @for (rel of students(); track rel.id) {
+            <div class="flex items-start gap-3 py-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <a [routerLink]="['/staff/people/students', rel.studentId]" class="font-medium hover:underline">{{ rel.studentName }}</a>
+                  <span class="text-xs text-muted-foreground font-mono">{{ rel.admissionNumber }}</span>
+                  @if (rel.relationshipTypeName) {
+                    <span class="text-sm text-muted-foreground">{{ rel.relationshipTypeName }}</span>
+                  }
+                  @if (rel.contactOrder > 0) {
+                    <span class="text-xs text-muted-foreground">{{ t('contacts.associatedStudents.priorityShort', { order: rel.contactOrder }) }}</span>
+                  }
+                </div>
+                <div class="mt-1 flex flex-wrap gap-1">
+                  @if (rel.hasParentalResponsibility) {
+                    <mp-badge [value]="t('contacts.associatedStudents.flags.parentalResponsibility')" severity="info"></mp-badge>
+                  }
+                  @if (rel.hasCorrespondence) {
+                    <mp-badge [value]="t('contacts.associatedStudents.flags.correspondence')" severity="secondary"></mp-badge>
+                  }
+                  @if (rel.hasPupilReport) {
+                    <mp-badge [value]="t('contacts.associatedStudents.flags.pupilReport')" severity="secondary"></mp-badge>
+                  }
+                  @if (rel.hasCourtOrder) {
+                    <mp-badge [value]="t('contacts.associatedStudents.flags.courtOrder')" severity="warn"></mp-badge>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <span class="text-sm text-muted-foreground">{{ t('contacts.associatedStudents.empty') }}</span>
+      }
+    </section>
+  }
+</ng-container>

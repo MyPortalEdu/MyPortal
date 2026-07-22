@@ -1,31 +1,34 @@
 <ng-container *transloco="let t">
   <div class="flex flex-col gap-3">
     @if (editing()) {
-      @for (phone of phones(); track $index) {
-        <div class="flex flex-wrap items-center gap-2 rounded border border-surface-200 dark:border-surface-700 p-3">
-          <mp-select
-            class="w-40"
-            [options]="types()"
-            optionLabel="description"
-            optionValue="id"
-            [placeholder]="t('common.contact.type')"
-            [ngModel]="phone.typeId"
-            (ngModelChange)="patch($index, { typeId: $event })"></mp-select>
+      @for (row of field(); track $index) {
+        @let v = row().value();
+        <div class="flex flex-wrap items-start gap-2 rounded border border-surface-200 dark:border-surface-700 p-3">
+          <mp-field class="w-40" [label]="t('common.contact.type')" [field]="row.typeId">
+            <mp-select
+              class="w-full"
+              [options]="types()"
+              optionLabel="description"
+              optionValue="id"
+              [placeholder]="t('common.contact.type')"
+              [formField]="row.typeId"></mp-select>
+          </mp-field>
 
-          <input
-            mpInput
-            type="tel"
-            class="flex-1 min-w-48"
-            [placeholder]="t('common.contact.phonePlaceholder')"
-            [ngModel]="phone.number"
-            (ngModelChange)="patch($index, { number: $event })" />
+          <mp-field class="flex-1 min-w-48" [label]="t('common.contact.phone')" [field]="row.number">
+            <input
+              mpInput
+              type="tel"
+              class="w-full"
+              [placeholder]="t('common.contact.phonePlaceholder')"
+              [formField]="row.number" />
+          </mp-field>
 
           <button
             type="button"
-            class="flex items-center gap-1 text-sm"
-            [attr.aria-pressed]="phone.isMain"
-            (click)="setMain($index)">
-            <i [class]="phone.isMain ? 'fa-solid fa-circle-dot text-primary-600' : 'fa-regular fa-circle text-muted-foreground'"></i>
+            class="mt-7 flex items-center gap-1 text-sm"
+            [attr.aria-pressed]="v.isMain"
+            (click)="setMain.emit($index)">
+            <i [class]="v.isMain ? 'fa-solid fa-circle-dot text-primary-600' : 'fa-regular fa-circle text-muted-foreground'"></i>
             {{ t('common.contact.main') }}
           </button>
 
@@ -34,8 +37,9 @@
             variant="ghost"
             size="icon"
             type="button"
+            class="mt-6"
             [attr.aria-label]="t('common.delete')"
-            (click)="removePhone($index)">
+            (click)="remove.emit($index)">
             <i class="fa-solid fa-trash text-destructive"></i>
           </button>
         </div>
@@ -48,15 +52,15 @@
           size="sm"
           type="button"
           [disabled]="!types().length"
-          (click)="addPhone()">
+          (click)="add.emit()">
           <i class="fa-solid fa-plus"></i>
           {{ t('common.contact.addPhone') }}
         </button>
       </div>
     } @else {
-      @if (phones().length) {
+      @if (items().length) {
         <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
-          @for (phone of phones(); track $index) {
+          @for (phone of items(); track $index) {
             <div class="flex items-center gap-3 py-2">
               <span class="w-20 shrink-0 text-xs text-muted-foreground">{{ typeName(phone.typeId) }}</span>
               <span class="flex-1 min-w-0 truncate font-medium">{{ phone.number }}</span>

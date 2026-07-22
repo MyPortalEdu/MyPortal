@@ -1,0 +1,68 @@
+<ng-container *transloco="let t">
+  @if (loading() && !cultural()) {
+    <mp-loading></mp-loading>
+  } @else if (cultural()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('students.areas.cultural') }}</h3>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('students.cultural.hint') }}</p>
+
+    <div class="flex flex-col gap-6">
+      <section>
+        <mp-section-header icon="fa-solid fa-globe" [title]="t('students.cultural.backgroundHeading')"></mp-section-header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-field [label]="t('students.cultural.ethnicity')" for="cultural-ethnicity">
+            @if (editing()) {
+              <mp-lookup-select inputId="cultural-ethnicity" [options]="ethnicities()" [formField]="f.ethnicityId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(ethnicities(), model().ethnicityId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.cultural.religion')" for="cultural-religion">
+            @if (editing()) {
+              <mp-lookup-select inputId="cultural-religion" [options]="religions()" [formField]="f.religionId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(religions(), model().religionId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.cultural.nationality')" for="cultural-nationality">
+            @if (editing()) {
+              <mp-lookup-select inputId="cultural-nationality" [options]="nationalities()" [formField]="f.nationalityId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(nationalities(), model().nationalityId) }}</span>
+            }
+          </mp-field>
+        </div>
+      </section>
+
+      <section>
+        <mp-section-header icon="fa-solid fa-language" [title]="t('students.cultural.languageHeading')"></mp-section-header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-field [label]="t('students.cultural.firstLanguage')" for="cultural-firstLanguage">
+            @if (editing()) {
+              <mp-lookup-select inputId="cultural-firstLanguage" [options]="languages()" [formField]="f.firstLanguageId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(languages(), model().firstLanguageId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.cultural.englishProficiency')" for="cultural-englishProficiency">
+            @if (editing()) {
+              <mp-lookup-select inputId="cultural-englishProficiency" [options]="englishProficiencies()" [formField]="f.englishProficiencyId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(englishProficiencies(), model().englishProficiencyId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('students.cultural.englishProficiencyDate')" for="cultural-englishProficiencyDate">
+            @if (editing()) {
+              <mp-date-picker inputId="cultural-englishProficiencyDate" [formField]="f.englishProficiencyDate" [showIcon]="true" class="w-full"></mp-date-picker>
+            } @else {
+              <span>{{ model().englishProficiencyDate ? (model().englishProficiencyDate | date:'mediumDate') : '—' }}</span>
+            }
+          </mp-field>
+        </div>
+      </section>
+    </div>
+  }
+</ng-container>

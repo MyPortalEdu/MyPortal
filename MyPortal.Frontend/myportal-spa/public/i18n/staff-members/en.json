@@ -155,6 +155,7 @@
     "hint": "Bank, pay, employment history and contracts. The most sensitive area — visible to the staff member and HR; only HR can edit it.",
     "overlap": "Employment periods must not overlap.",
     "contractOutOfRange": "Each contract must fall within its employment period.",
+    "datesReversed": "End date must be on or after the start date.",
     "bankHeading": "Bank & National Insurance",
     "bankName": "Bank name",
     "bankAccount": "Account number",

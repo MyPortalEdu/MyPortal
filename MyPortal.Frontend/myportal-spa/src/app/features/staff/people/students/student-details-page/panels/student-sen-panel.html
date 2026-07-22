@@ -1,0 +1,255 @@
+<ng-container *transloco="let t">
+  @if (loading() && !sen()) {
+    <mp-loading></mp-loading>
+  } @else if (sen()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('students.areas.sen') }}</h3>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('students.sen.hint') }}</p>
+
+    <div class="flex flex-col gap-6">
+      <section>
+        <mp-section-header icon="fa-solid fa-hands-holding-child" [title]="t('students.sen.status.heading')"></mp-section-header>
+
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="flex flex-col gap-1">
+            @if (currentStatusName(); as name) {
+              <span class="font-medium">{{ name }}</span>
+              @if (currentStartDate()) {
+                <span class="text-xs text-muted-foreground">{{ t('students.sen.status.sinceLine', { date: (currentStartDate() | date: 'mediumDate') }) }}</span>
+              }
+            } @else {
+              <span class="text-sm text-muted-foreground">{{ t('students.sen.status.noStatus') }}</span>
+            }
+          </div>
+          @if (canEdit()) {
+            <div class="flex items-center gap-2">
+              @if (currentStatusName()) {
+                <button mpButton variant="ghost" size="sm" class="text-destructive hover:text-destructive" (click)="undoLatestStatus()"><i class="fa-solid fa-rotate-left"></i> {{ t('students.sen.status.undo') }}</button>
+              }
+              <button mpButton variant="outline" size="sm" (click)="openStatusDialog()"><i class="fa-solid fa-pen"></i> {{ t('students.sen.status.change') }}</button>
+            </div>
+          }
+        </div>
+
+        @if (statusHistory().length) {
+          <div class="mt-3 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-muted-foreground">
+                  <th class="py-1 pr-3 font-medium">{{ t('students.sen.status.colStatus') }}</th>
+                  <th class="py-1 pr-3 font-medium">{{ t('students.sen.status.colFrom') }}</th>
+                  <th class="py-1 font-medium">{{ t('students.sen.status.colTo') }}</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
+                @for (row of statusHistory(); track row.id) {
+                  <tr>
+                    <td class="py-2 pr-3">{{ statusName(row.senStatusId) }}</td>
+                    <td class="py-2 pr-3 text-muted-foreground">{{ row.startDate | date: 'mediumDate' }}</td>
+                    <td class="py-2 text-muted-foreground">
+                      @if (row.endDate) {
+                        {{ row.endDate | date: 'mediumDate' }}
+                      } @else {
+                        <mp-badge [value]="t('students.sen.status.current')" severity="success"></mp-badge>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <section class="border-t border-border pt-6">
+        <mp-section-header icon="fa-solid fa-list-ol" [title]="t('students.sen.needs.heading')"></mp-section-header>
+
+        @if (needs().length) {
+          <div class="flex flex-col gap-3">
+            @for (need of needs(); track need.id) {
+              <div class="rounded border border-border p-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="font-medium">{{ needTypeName(need) }}</span>
+                      @if (need.rank === 1) {
+                        <mp-badge [value]="t('students.sen.needs.primary')" severity="info"></mp-badge>
+                      } @else {
+                        <mp-badge [value]="t('students.sen.needs.rankBadge', { rank: need.rank })" severity="secondary"></mp-badge>
+                      }
+                    </div>
+                    @if (need.description) {
+                      <div class="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{{ need.description }}</div>
+                    }
+                    <div class="text-xs text-muted-foreground mt-1">
+                      {{ t('students.sen.needs.fromLine', { date: (need.startDate | date: 'mediumDate') }) }}
+                      @if (need.endDate) {
+                        · {{ t('students.sen.needs.toLine', { date: (need.endDate | date: 'mediumDate') }) }}
+                      }
+                    </div>
+                  </div>
+                  @if (canEdit()) {
+                    <div class="flex items-center gap-1 shrink-0">
+                      <button mpButton variant="ghost" size="icon" [attr.aria-label]="t('common.edit')" (click)="openEditNeed(need)"><i class="fa-solid fa-pen"></i></button>
+                      <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive" [attr.aria-label]="t('common.delete')" (click)="removeNeed(need)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <mp-empty-state icon="fa-solid fa-list-ol" [message]="t('students.sen.needs.empty')"></mp-empty-state>
+        }
+
+        @if (canEdit()) {
+          <div class="mt-3">
+            <button mpButton variant="outline" size="sm" (click)="openAddNeed()"><i class="fa-solid fa-plus"></i> {{ t('students.sen.needs.add') }}</button>
+          </div>
+        }
+      </section>
+
+      <section class="border-t border-border pt-6">
+        <mp-section-header icon="fa-solid fa-hand-holding-heart" [title]="t('students.sen.provisions.heading')"></mp-section-header>
+
+        @if (provisions().length) {
+          <div class="flex flex-col gap-3">
+            @for (provision of provisions(); track provision.id) {
+              <div class="rounded border border-border p-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="font-medium">{{ provisionTypeName(provision) }}</div>
+                    <div class="text-xs text-muted-foreground mt-1">
+                      {{ t('students.sen.provisions.fromLine', { date: (provision.startDate | date: 'mediumDate') }) }}
+                      @if (provision.endDate) {
+                        · {{ t('students.sen.provisions.toLine', { date: (provision.endDate | date: 'mediumDate') }) }}
+                      }
+                    </div>
+                    <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      @if (provision.frequency) {
+                        <span>{{ t('students.sen.provisions.frequencyLine', { value: provision.frequency }) }}</span>
+                      }
+                      @if (provision.cost != null) {
+                        <span>{{ t('students.sen.provisions.costLine', { value: (provision.cost | currency: 'GBP') }) }}</span>
+                      }
+                    </div>
+                    @if (provision.note) {
+                      <div class="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{{ provision.note }}</div>
+                    }
+                  </div>
+                  @if (canEdit()) {
+                    <div class="flex items-center gap-1 shrink-0">
+                      <button mpButton variant="ghost" size="icon" [attr.aria-label]="t('common.edit')" (click)="openEditProvision(provision)"><i class="fa-solid fa-pen"></i></button>
+                      <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive" [attr.aria-label]="t('common.delete')" (click)="removeProvision(provision)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <mp-empty-state icon="fa-solid fa-hand-holding-heart" [message]="t('students.sen.provisions.empty')"></mp-empty-state>
+        }
+
+        @if (canEdit()) {
+          <div class="mt-3">
+            <button mpButton variant="outline" size="sm" (click)="openAddProvision()"><i class="fa-solid fa-plus"></i> {{ t('students.sen.provisions.add') }}</button>
+          </div>
+        }
+      </section>
+
+      <section class="border-t border-border pt-6">
+        <mp-section-header icon="fa-solid fa-file-contract" [title]="t('students.sen.statements.heading')"></mp-section-header>
+
+        @if (statements().length) {
+          <div class="flex flex-col gap-3">
+            @for (statement of statements(); track statement.id) {
+              <div class="rounded border border-border p-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      @if (statement.isEhcp) {
+                        <mp-badge [value]="t('students.sen.statements.ehcpBadge')" severity="info"></mp-badge>
+                      } @else {
+                        <mp-badge [value]="t('students.sen.statements.statementBadge')" severity="secondary"></mp-badge>
+                      }
+                      @if (statement.subjectToTribunal) {
+                        <mp-badge [value]="t('students.sen.statements.tribunalBadge')" severity="warn"></mp-badge>
+                      }
+                      @if (statement.undergoingMediation) {
+                        <mp-badge [value]="t('students.sen.statements.mediationBadge')" severity="warn"></mp-badge>
+                      }
+                    </div>
+                    <div class="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                      <span>{{ t('students.sen.statements.requestedLine', { date: (statement.assessmentRequestDate | date: 'mediumDate') }) }}</span>
+                      @if (statement.finalisedDate) {
+                        <span>{{ t('students.sen.statements.finalisedLine', { date: (statement.finalisedDate | date: 'mediumDate') }) }}</span>
+                      }
+                      @if (statement.ceasedDate) {
+                        <span>{{ t('students.sen.statements.ceasedLine', { date: (statement.ceasedDate | date: 'mediumDate') }) }}</span>
+                      }
+                    </div>
+                    @if (statement.comments) {
+                      <div class="text-sm text-muted-foreground whitespace-pre-wrap mt-1">{{ statement.comments }}</div>
+                    }
+                  </div>
+                  @if (canEdit()) {
+                    <div class="flex items-center gap-1 shrink-0">
+                      <button mpButton variant="ghost" size="icon" [attr.aria-label]="t('common.edit')" (click)="openEditStatement(statement)"><i class="fa-solid fa-pen"></i></button>
+                      <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive" [attr.aria-label]="t('common.delete')" (click)="removeStatement(statement)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <mp-empty-state icon="fa-solid fa-file-contract" [message]="t('students.sen.statements.empty')"></mp-empty-state>
+        }
+
+        @if (canEdit()) {
+          <div class="mt-3">
+            <button mpButton variant="outline" size="sm" (click)="openAddStatement()"><i class="fa-solid fa-plus"></i> {{ t('students.sen.statements.add') }}</button>
+          </div>
+        }
+      </section>
+    </div>
+
+    <mp-student-sen-status-dialog
+      [open]="statusDialogOpen()"
+      [senStatuses]="senStatuses()"
+      [currentSenStatusId]="currentStatusId()"
+      [currentStartDate]="currentStartDate()"
+      [saving]="savingStatus()"
+      (closed)="statusDialogOpen.set(false)"
+      (save)="onStatusSave($event)"
+    ></mp-student-sen-status-dialog>
+
+    <mp-student-sen-need-dialog
+      [open]="needDialogOpen()"
+      [senTypes]="senTypes()"
+      [editTarget]="needTarget()"
+      [saving]="savingNeed()"
+      (closed)="needDialogOpen.set(false)"
+      (save)="onNeedSave($event)"
+    ></mp-student-sen-need-dialog>
+
+    <mp-student-sen-provision-dialog
+      [open]="provisionDialogOpen()"
+      [provisionTypes]="provisionTypes()"
+      [editTarget]="provisionTarget()"
+      [saving]="savingProvision()"
+      (closed)="provisionDialogOpen.set(false)"
+      (save)="onProvisionSave($event)"
+    ></mp-student-sen-provision-dialog>
+
+    <mp-student-sen-statement-dialog
+      [open]="statementDialogOpen()"
+      [assessmentAgreedOptions]="assessmentAgreedOptions()"
+      [assessmentOutcomeOptions]="assessmentOutcomeOptions()"
+      [editTarget]="statementTarget()"
+      [saving]="savingStatement()"
+      (closed)="statementDialogOpen.set(false)"
+      (save)="onStatementSave($event)"
+    ></mp-student-sen-statement-dialog>
+  }
+</ng-container>

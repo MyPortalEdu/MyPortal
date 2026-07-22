@@ -11,6 +11,8 @@ public class PersonAddressResponse
     public Guid AddressId { get; set; }
     public Guid TypeId { get; set; }
     public bool IsMain { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     public string? BuildingNumber { get; set; }
     public string? BuildingName { get; set; }

@@ -1,0 +1,55 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [closeOnEscape]="!saving()"
+    panelClass="w-[min(36rem,92vw)]"
+    [dismissable]="false"
+    [title]="isEdit() ? t('students.sen.needs.editTitle') : t('students.sen.needs.addTitle')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="saving()">
+
+    <div class="flex flex-col gap-4">
+      <mp-field [label]="t('students.sen.needs.type')" for="sen-need-type" [required]="true" [field]="f.senTypeId">
+        <mp-select
+          inputId="sen-need-type"
+          [options]="senTypes()"
+          optionLabel="description"
+          optionValue="id"
+          [formField]="f.senTypeId"
+          [placeholder]="t('students.sen.needs.typePlaceholder')"
+          class="w-full"></mp-select>
+      </mp-field>
+
+      <mp-field [label]="t('students.sen.needs.rank')" for="sen-need-rank" [required]="true" [field]="f.rank">
+        <mp-input-number inputId="sen-need-rank" [min]="1" [formField]="f.rank" class="w-full"></mp-input-number>
+      </mp-field>
+
+      <mp-field [label]="t('students.sen.needs.description')" [field]="f.description">
+        <textarea mpTextarea rows="2" [formField]="f.description"></textarea>
+      </mp-field>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <mp-field [label]="t('students.sen.needs.startDate')" [required]="true" [field]="f.startDate">
+          <mp-date-picker [formField]="f.startDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+        <mp-field [label]="t('students.sen.needs.endDate')" [field]="f.endDate">
+          <mp-date-picker [formField]="f.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+      </div>
+    </div>
+
+    <div mpDialogFooter>
+      <div class="flex items-center justify-end gap-2">
+        <button mpButton
+          variant="outline"
+          [disabled]="saving()"
+          (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
+        <button mpButton
+          [disabled]="saving()"
+          (click)="submit()"><i class="fa-solid" [class.fa-check]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> {{ t('common.save') }}</button>
+      </div>
+    </div>
+  </mp-dialog>
+</ng-container>

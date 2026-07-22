@@ -93,15 +93,6 @@
                 {{ t('staff-members.details.basicHint') }}
               </p>
 
-              @if (editing() && basicSubmitAttempted() && !isValid()) {
-                <mp-callout
-                  severity="warn"
-                  [title]="t('common.validation.missingTitle')"
-                  class="mb-4 block">
-                  {{ t('common.validation.missingBody') }}
-                </mp-callout>
-              }
-
               <div class="flex flex-col gap-6 md:flex-row md:gap-8">
 
                 <div class="w-40 md:shrink-0">
@@ -146,18 +137,11 @@
                         [label]="t('staff-members.fields.code')"
                         for="code"
                         [required]="editing()"
-                        [error]="basicFieldError(code())">
+                        [field]="f.code">
                         @if (editing()) {
-                          <input
-                            mpInput
-                            id="code"
-                            [ngModel]="code()"
-                            (ngModelChange)="code.set($event)"
-                            required
-                            #codeRef="ngModel"
-                            [invalid]="(codeRef.touched || basicSubmitAttempted()) && codeRef.invalid" />
+                          <input mpInput id="code" [formField]="f.code" />
                         } @else {
-                          <span class="font-mono">{{ code() }}</span>
+                          <span class="font-mono">{{ model().code }}</span>
                         }
                       </mp-field>
                     </div>
@@ -168,9 +152,9 @@
                     <div class="grid gap-4 md:grid-cols-2">
                       <mp-field [label]="t('staff-members.fields.title')" for="title">
                         @if (editing()) {
-                          <input mpInput id="title" [ngModel]="title() ?? ''" (ngModelChange)="title.set($event)" />
+                          <input mpInput id="title" [formField]="f.title" />
                         } @else {
-                          <span>{{ title() || '—' }}</span>
+                          <span>{{ model().title || '—' }}</span>
                         }
                       </mp-field>
 
@@ -178,26 +162,19 @@
                         [label]="t('staff-members.fields.firstName')"
                         for="firstName"
                         [required]="editing()"
-                        [error]="basicFieldError(firstName())">
+                        [field]="f.firstName">
                         @if (editing()) {
-                          <input
-                            mpInput
-                            id="firstName"
-                            [ngModel]="firstName()"
-                            (ngModelChange)="firstName.set($event)"
-                            required
-                            #firstNameRef="ngModel"
-                            [invalid]="(firstNameRef.touched || basicSubmitAttempted()) && firstNameRef.invalid" />
+                          <input mpInput id="firstName" [formField]="f.firstName" />
                         } @else {
-                          <span>{{ firstName() }}</span>
+                          <span>{{ model().firstName }}</span>
                         }
                       </mp-field>
 
                       <mp-field [label]="t('staff-members.fields.middleName')" for="middleName">
                         @if (editing()) {
-                          <input mpInput id="middleName" [ngModel]="middleName() ?? ''" (ngModelChange)="middleName.set($event)" />
+                          <input mpInput id="middleName" [formField]="f.middleName" />
                         } @else {
-                          <span>{{ middleName() || '—' }}</span>
+                          <span>{{ model().middleName || '—' }}</span>
                         }
                       </mp-field>
 
@@ -205,34 +182,27 @@
                         [label]="t('staff-members.fields.lastName')"
                         for="lastName"
                         [required]="editing()"
-                        [error]="basicFieldError(lastName())">
+                        [field]="f.lastName">
                         @if (editing()) {
-                          <input
-                            mpInput
-                            id="lastName"
-                            [ngModel]="lastName()"
-                            (ngModelChange)="lastName.set($event)"
-                            required
-                            #lastNameRef="ngModel"
-                            [invalid]="(lastNameRef.touched || basicSubmitAttempted()) && lastNameRef.invalid" />
+                          <input mpInput id="lastName" [formField]="f.lastName" />
                         } @else {
-                          <span>{{ lastName() }}</span>
+                          <span>{{ model().lastName }}</span>
                         }
                       </mp-field>
 
                       <mp-field [label]="t('staff-members.fields.preferredFirstName')" for="preferredFirst">
                         @if (editing()) {
-                          <input mpInput id="preferredFirst" [ngModel]="preferredFirstName() ?? ''" (ngModelChange)="preferredFirstName.set($event)" />
+                          <input mpInput id="preferredFirst" [formField]="f.preferredFirstName" />
                         } @else {
-                          <span>{{ preferredFirstName() || '—' }}</span>
+                          <span>{{ model().preferredFirstName || '—' }}</span>
                         }
                       </mp-field>
 
                       <mp-field [label]="t('staff-members.fields.preferredLastName')" for="preferredLast">
                         @if (editing()) {
-                          <input mpInput id="preferredLast" [ngModel]="preferredLastName() ?? ''" (ngModelChange)="preferredLastName.set($event)" />
+                          <input mpInput id="preferredLast" [formField]="f.preferredLastName" />
                         } @else {
-                          <span>{{ preferredLastName() || '—' }}</span>
+                          <span>{{ model().preferredLastName || '—' }}</span>
                         }
                       </mp-field>
                     </div>
@@ -246,23 +216,19 @@
                         [label]="t('staff-members.fields.gender')"
                         for="gender"
                         [required]="editing()"
-                        [error]="basicFieldError(gender())">
+                        [field]="f.gender">
                         @if (editing()) {
-                          <mp-gender-select
-                            inputId="gender"
-                            [value]="gender()"
-                            (valueChange)="gender.set($event ?? '')"
-                            [invalid]="basicSubmitAttempted() && !gender().trim()"></mp-gender-select>
+                          <mp-gender-select inputId="gender" [formField]="f.gender"></mp-gender-select>
                         } @else {
-                          <span>{{ gender() | genderLabel }}</span>
+                          <span>{{ model().gender | genderLabel }}</span>
                         }
                       </mp-field>
 
                       <mp-field [label]="t('staff-members.fields.dob')" for="dob">
                         @if (editing()) {
-                          <mp-date-picker inputId="dob" [ngModel]="dob()" (ngModelChange)="dob.set($event)" [showIcon]="true" class="w-full"></mp-date-picker>
+                          <mp-date-picker inputId="dob" [formField]="f.dob" [showIcon]="true" class="w-full"></mp-date-picker>
                         } @else {
-                          <span>{{ dob() ? (dob() | date:'mediumDate') : '—' }}</span>
+                          <span>{{ model().dob ? (model().dob | date:'mediumDate') : '—' }}</span>
                         }
                       </mp-field>
                     </div>

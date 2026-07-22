@@ -37,6 +37,21 @@ export interface PersonPhoneUpsertItem {
   isMain: boolean;
 }
 
+export interface PersonEmailFormRow {
+  id: string | null;
+  typeId: string;
+  address: string;
+  isMain: boolean;
+  notes: string;
+}
+
+export interface PersonPhoneFormRow {
+  id: string | null;
+  typeId: string;
+  number: string;
+  isMain: boolean;
+}
+
 export interface PersonContactDetailsUpsertRequest {
   emails: PersonEmailUpsertItem[];
   phones: PersonPhoneUpsertItem[];

@@ -9,6 +9,13 @@ export abstract class StudentAreaPanel {
   abstract readonly canEdit: Signal<boolean>;
   abstract readonly saving: Signal<boolean>;
 
+  readonly selfManaged: boolean = false;
+
+  // The panel surfaces its own invalid state inline (Signal Forms field errors, revealed on
+  // submit), so the container keeps Save enabled while invalid and a click invokes the validation
+  // display rather than silently blocking.
+  readonly explainsInvalid: boolean = true;
+
   abstract startEdit(): void;
   abstract cancel(): void;
   abstract save(): Promise<void>;

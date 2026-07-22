@@ -3,11 +3,14 @@ import {
   Component,
   OnInit,
   computed,
+  effect,
   forwardRef,
   inject,
   input,
   signal,
+  untracked,
 } from '@angular/core';
+import { FormField, applyEach, form, maxLength, submit, validate } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MpBadge, MpButton, MpCheckbox, MpDatePicker, MpInput, MpInputNumber } from '@myportal/ui';
@@ -29,18 +32,56 @@ import { Field } from '../../../../../../shared/components/field/field';
 import { Callout } from '../../../../../../shared/components/callout/callout';
 import {
   PayScalePointResponse,
-  StaffContractUpsertItem,
   StaffEmploymentDetailsResponse,
   StaffEmploymentDetailsUpsertRequest,
-  StaffEmploymentUpsertItem,
 } from '../../../../../../shared/types/staff-employment-details';
 import { StaffAreaPanel } from './staff-area-panel';
+
+interface ContractRow {
+  id: string | null;
+  contractTypeId: string | null;
+  staffRoleId: string | null;
+  serviceTermId: string | null;
+  departmentId: string | null;
+  payScaleId: string | null;
+  payScalePointId: string | null;
+  postTitle: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  fte: number | null;
+  hoursPerWeek: number | null;
+  weeksPerYear: number | null;
+  annualSalary: number | null;
+  isAgencySupply: boolean;
+  safeguardedSalary: boolean;
+  dailyRate: boolean;
+}
+
+interface EmploymentRow {
+  id: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
+  leavingReasonId: string | null;
+  originId: string | null;
+  destinationId: string | null;
+  notes: string;
+  contracts: ContractRow[];
+}
+
+interface EmploymentModel {
+  bankName: string;
+  bankAccount: string;
+  bankSortCode: string;
+  niNumber: string;
+  employments: EmploymentRow[];
+}
 
 @Component({
   selector: 'mp-staff-employment-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    FormField,
     DatePipe,
     FormsModule,
     MpButton,
@@ -72,17 +113,72 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   readonly permissions = input.required<Set<string>>();
 
   protected readonly loading = signal(false);
-  override readonly saving = signal(false);
   override readonly editing = signal(false);
 
   protected readonly employment = signal<StaffEmploymentDetailsResponse | null>(null);
 
-  protected readonly bankName = signal<string | null>(null);
-  protected readonly bankAccount = signal<string | null>(null);
-  protected readonly bankSortCode = signal<string | null>(null);
-  protected readonly niNumber = signal<string | null>(null);
-  protected readonly employments = signal<StaffEmploymentUpsertItem[]>([]);
+  protected readonly model = signal<EmploymentModel>({
+    bankName: '',
+    bankAccount: '',
+    bankSortCode: '',
+    niNumber: '',
+    employments: [],
+  });
+  protected readonly f = form(this.model, path => {
+    maxLength(path.bankName, 50);
+    maxLength(path.bankAccount, 15);
+    maxLength(path.bankSortCode, 10);
+    maxLength(path.niNumber, 9);
+    applyEach(path.employments, emp => {
+      maxLength(emp.notes, 1024);
+      validate(emp.startDate, ({ value }) => (value() ? undefined : { kind: 'required' }));
+      validate(emp.endDate, ({ value, valueOf }) => {
+        const start = valueOf(emp.startDate);
+        const end = value();
+        return start && end && end.getTime() < start.getTime()
+          ? { kind: 'range', message: 'staff-members.employment.datesReversed' }
+          : undefined;
+      });
+      applyEach(emp.contracts, c => {
+        validate(c.contractTypeId, ({ value }) => (value() ? undefined : { kind: 'required' }));
+        validate(c.postTitle, ({ value }) => (value().trim().length ? undefined : { kind: 'required' }));
+        validate(c.startDate, ({ value }) => (value() ? undefined : { kind: 'required' }));
+        validate(c.fte, ({ value }) => {
+          const v = value();
+          if (v == null) return { kind: 'required' };
+          if (v < 0) return { kind: 'min' };
+          if (v > 1) return { kind: 'max' };
+          return undefined;
+        });
+        validate(c.endDate, ({ value, valueOf }) => {
+          const start = valueOf(c.startDate);
+          const end = value();
+          return start && end && end.getTime() < start.getTime()
+            ? { kind: 'range', message: 'staff-members.employment.datesReversed' }
+            : undefined;
+        });
+      });
+    });
+  });
   private readonly snapshot = signal<string>('');
+
+  constructor() {
+    super();
+    effect(() => {
+      const employments = this.model().employments;
+      if (!employments.some(e => !e.endDate && (e.leavingReasonId || e.destinationId))) return;
+      untracked(() =>
+        this.model.update(m => ({
+          ...m,
+          employments: m.employments.map(e =>
+            !e.endDate && (e.leavingReasonId || e.destinationId)
+              ? { ...e, leavingReasonId: null, destinationId: null }
+              : e,
+          ),
+        })),
+      );
+    });
+  }
 
   protected readonly leavingReasons = computed(() => this.employment()?.leavingReasons ?? []);
   protected readonly origins = computed(() => this.employment()?.origins ?? []);
@@ -110,43 +206,25 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     this.permissions().has(Permissions.Staff.EditAllStaffEmploymentDetails),
   );
 
-  override readonly valid = computed(() =>
-    this.employments().every(
-      e =>
-        !!e.startDate &&
-        e.contracts.every(
-          c =>
-            !!c.contractTypeId &&
-            c.postTitle.trim().length > 0 &&
-            !!c.startDate &&
-            c.fte != null &&
-            c.fte >= 0 &&
-            c.fte <= 1,
-        ),
-    ) &&
-    employmentsDoNotOverlap(this.employments()) &&
-    this.employments().every(contractsWithinEmployment),
-  );
-
   protected readonly employmentsOverlap = computed(
-    () => !employmentsDoNotOverlap(this.employments()),
+    () => !employmentsDoNotOverlap(this.model().employments),
   );
   protected readonly contractOutOfRange = computed(
-    () => !this.employments().every(contractsWithinEmployment),
+    () => !this.model().employments.every(contractsWithinEmployment),
   );
 
-  private readonly form = computed(() =>
-    JSON.stringify({
-      bankName: this.bankName(),
-      bankAccount: this.bankAccount(),
-      bankSortCode: this.bankSortCode(),
-      niNumber: this.niNumber(),
-      employments: this.employments(),
-    }),
+  override readonly saving = computed(() => this.f().submitting());
+  override readonly valid = computed(
+    () =>
+      this.f().valid() &&
+      employmentsDoNotOverlap(this.model().employments) &&
+      this.model().employments.every(contractsWithinEmployment),
   );
+
+  private readonly formState = computed(() => JSON.stringify(this.model()));
 
   override readonly dirty = computed(
-    () => this.employment() != null && this.snapshot() !== this.form(),
+    () => this.employment() != null && this.snapshot() !== this.formState(),
   );
 
   ngOnInit(): void {
@@ -178,70 +256,76 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   }
 
   override async save(): Promise<void> {
-    if (!this.canEdit() || !this.valid() || this.saving()) return;
-    this.saving.set(true);
+    if (!this.canEdit()) return;
+    await submit(this.f, async () => {
+      const employments = this.model().employments;
+      if (
+        !employmentsDoNotOverlap(employments) ||
+        !employments.every(contractsWithinEmployment)
+      )
+        return;
 
-    const payload: StaffEmploymentDetailsUpsertRequest = {
-      bankName: this.normalise(this.bankName()),
-      bankAccount: this.normalise(this.bankAccount()),
-      bankSortCode: this.normalise(this.bankSortCode()),
-      niNumber: this.normalise(this.niNumber()),
-      employments: this.employments().map(e => ({
-        id: e.id ?? null,
-        startDate: e.startDate,
-        endDate: e.endDate ?? null,
-        leavingReasonId: e.leavingReasonId ?? null,
-        originId: e.originId ?? null,
-        destinationId: e.destinationId ?? null,
-        notes: this.normalise(e.notes),
-        contracts: e.contracts.map(c => ({
-          id: c.id ?? null,
-          contractTypeId: c.contractTypeId,
-          staffRoleId: c.staffRoleId ?? null,
-          serviceTermId: c.serviceTermId ?? null,
-          departmentId: c.departmentId ?? null,
-          payScaleId: c.payScaleId ?? null,
-          payScalePointId: c.payScalePointId ?? null,
-          postTitle: c.postTitle.trim(),
-          startDate: c.startDate,
-          endDate: c.endDate ?? null,
-          fte: c.fte,
-          hoursPerWeek: c.hoursPerWeek ?? null,
-          weeksPerYear: c.weeksPerYear ?? null,
-          annualSalary: c.annualSalary ?? null,
-          isAgencySupply: c.isAgencySupply,
-          safeguardedSalary: c.safeguardedSalary,
-          dailyRate: c.dailyRate,
+      const payload: StaffEmploymentDetailsUpsertRequest = {
+        bankName: this.normalise(this.model().bankName),
+        bankAccount: this.normalise(this.model().bankAccount),
+        bankSortCode: this.normalise(this.model().bankSortCode),
+        niNumber: this.normalise(this.model().niNumber),
+        employments: employments.map(e => ({
+          id: e.id,
+          startDate: e.startDate?.toISOString() ?? null,
+          endDate: e.endDate?.toISOString() ?? null,
+          leavingReasonId: e.leavingReasonId,
+          originId: e.originId,
+          destinationId: e.destinationId,
+          notes: this.normalise(e.notes),
+          contracts: e.contracts.map(c => ({
+            id: c.id,
+            contractTypeId: c.contractTypeId as string,
+            staffRoleId: c.staffRoleId,
+            serviceTermId: c.serviceTermId,
+            departmentId: c.departmentId,
+            payScaleId: c.payScaleId,
+            payScalePointId: c.payScalePointId,
+            postTitle: c.postTitle.trim(),
+            startDate: c.startDate?.toISOString() ?? null,
+            endDate: c.endDate?.toISOString() ?? null,
+            fte: c.fte ?? 0,
+            hoursPerWeek: c.hoursPerWeek,
+            weeksPerYear: c.weeksPerYear,
+            annualSalary: c.annualSalary,
+            isAgencySupply: c.isAgencySupply,
+            safeguardedSalary: c.safeguardedSalary,
+            dailyRate: c.dailyRate,
+          })),
         })),
-      })),
-    };
+      };
 
-    try {
-      await firstValueFrom(this.data.updateEmploymentDetails(this.staffMemberId(), payload));
+      try {
+        await firstValueFrom(this.data.updateEmploymentDetails(this.staffMemberId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('staff-members.saveEmploymentError'));
+        return;
+      }
       this.notify.success(this.transloco.translate('staff-members.savedEmploymentToast'));
       this.editing.set(false);
       this.load();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('staff-members.saveEmploymentError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   private apply(row: StaffEmploymentDetailsResponse | null): void {
-    this.bankName.set(row?.bankName ?? null);
-    this.bankAccount.set(row?.bankAccount ?? null);
-    this.bankSortCode.set(row?.bankSortCode ?? null);
-    this.niNumber.set(row?.niNumber ?? null);
-    this.employments.set(
-      (row?.employments ?? []).map(e => ({
+    this.model.set({
+      bankName: row?.bankName ?? '',
+      bankAccount: row?.bankAccount ?? '',
+      bankSortCode: row?.bankSortCode ?? '',
+      niNumber: row?.niNumber ?? '',
+      employments: (row?.employments ?? []).map(e => ({
         id: e.id,
-        startDate: e.startDate,
-        endDate: e.endDate ?? null,
+        startDate: e.startDate ? new Date(e.startDate) : null,
+        endDate: e.endDate ? new Date(e.endDate) : null,
         leavingReasonId: e.leavingReasonId ?? null,
         originId: e.originId ?? null,
         destinationId: e.destinationId ?? null,
-        notes: e.notes ?? null,
+        notes: e.notes ?? '',
         contracts: (e.contracts ?? []).map(c => ({
           id: c.id,
           contractTypeId: c.contractTypeId,
@@ -251,8 +335,8 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
           payScaleId: c.payScaleId ?? null,
           payScalePointId: c.payScalePointId ?? null,
           postTitle: c.postTitle,
-          startDate: c.startDate,
-          endDate: c.endDate ?? null,
+          startDate: c.startDate ? new Date(c.startDate) : null,
+          endDate: c.endDate ? new Date(c.endDate) : null,
           fte: c.fte,
           hoursPerWeek: c.hoursPerWeek ?? null,
           weeksPerYear: c.weeksPerYear ?? null,
@@ -262,54 +346,52 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
           dailyRate: c.dailyRate,
         })),
       })),
-    );
-    this.snapshot.set(this.form());
+    });
+    this.f().reset();
+    this.snapshot.set(this.formState());
   }
 
   protected addEmployment(): void {
-    this.employments.update(rows => [
-      ...rows,
-      {
-        id: null,
-        startDate: null,
-        endDate: null,
-        leavingReasonId: null,
-        originId: null,
-        destinationId: null,
-        notes: null,
-        contracts: [],
-      },
-    ]);
+    this.model.update(m => ({
+      ...m,
+      employments: [
+        ...m.employments,
+        {
+          id: null,
+          startDate: null,
+          endDate: null,
+          leavingReasonId: null,
+          originId: null,
+          destinationId: null,
+          notes: '',
+          contracts: [],
+        },
+      ],
+    }));
   }
 
   protected removeEmployment(index: number): void {
-    this.employments.update(rows => rows.filter((_, i) => i !== index));
+    this.model.update(m => ({
+      ...m,
+      employments: m.employments.filter((_, i) => i !== index),
+    }));
   }
 
-  protected patchEmployment<K extends keyof StaffEmploymentUpsertItem>(
+  protected patchEmployment<K extends keyof EmploymentRow>(
     index: number,
     key: K,
-    value: StaffEmploymentUpsertItem[K],
+    value: EmploymentRow[K],
   ): void {
-    this.employments.update(rows =>
-      rows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
-    );
-  }
-
-  protected onEmploymentEndDate(index: number, value: Date | null): void {
-    const iso = value ? value.toISOString() : null;
-    this.employments.update(rows =>
-      rows.map((row, i) => {
-        if (i !== index) return row;
-        if (iso) return { ...row, endDate: iso };
-        return { ...row, endDate: null, leavingReasonId: null, destinationId: null };
-      }),
-    );
+    this.model.update(m => ({
+      ...m,
+      employments: m.employments.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    }));
   }
 
   protected addContract(employmentIndex: number): void {
-    this.employments.update(rows =>
-      rows.map((row, i) =>
+    this.model.update(m => ({
+      ...m,
+      employments: m.employments.map((row, i) =>
         i === employmentIndex
           ? {
               ...row,
@@ -338,51 +420,42 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
             }
           : row,
       ),
-    );
+    }));
   }
 
   protected removeContract(employmentIndex: number, contractIndex: number): void {
-    this.employments.update(rows =>
-      rows.map((row, i) =>
+    this.model.update(m => ({
+      ...m,
+      employments: m.employments.map((row, i) =>
         i === employmentIndex
           ? { ...row, contracts: row.contracts.filter((_, j) => j !== contractIndex) }
           : row,
       ),
-    );
+    }));
   }
 
-  protected patchContract<K extends keyof StaffContractUpsertItem>(
+  protected patchContract<K extends keyof ContractRow>(
     employmentIndex: number,
     contractIndex: number,
     key: K,
-    value: StaffContractUpsertItem[K],
+    value: ContractRow[K],
   ): void {
-    this.employments.update(rows =>
-      rows.map((row, i) =>
-        i === employmentIndex
-          ? {
-              ...row,
-              contracts: row.contracts.map((c, j) =>
-                j === contractIndex ? { ...c, [key]: value } : c,
-              ),
-            }
-          : row,
-      ),
-    );
+    this.mutateContract(employmentIndex, contractIndex, c => ({ ...c, [key]: value }));
   }
 
   private mutateContract(
     employmentIndex: number,
     contractIndex: number,
-    fn: (c: StaffContractUpsertItem) => StaffContractUpsertItem,
+    fn: (c: ContractRow) => ContractRow,
   ): void {
-    this.employments.update(rows =>
-      rows.map((row, i) =>
+    this.model.update(m => ({
+      ...m,
+      employments: m.employments.map((row, i) =>
         i === employmentIndex
           ? { ...row, contracts: row.contracts.map((c, j) => (j === contractIndex ? fn(c) : c)) }
           : row,
       ),
-    );
+    }));
   }
 
   protected statutoryFor(payScalePointId: string | null | undefined): number | null {
@@ -396,7 +469,7 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     return Math.round(statutory * fte * 100) / 100;
   }
 
-  private salaryIsAuto(c: StaffContractUpsertItem): boolean {
+  private salaryIsAuto(c: ContractRow): boolean {
     if (c.annualSalary == null) return true;
     const auto = this.autoSalaryFor(c.payScalePointId, c.fte);
     return auto != null && Math.abs(c.annualSalary - auto) < 0.5;
@@ -418,7 +491,7 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   protected onContractFte(employmentIndex: number, contractIndex: number, fte: number | null): void {
     this.mutateContract(employmentIndex, contractIndex, c => {
       const auto = this.salaryIsAuto(c);
-      const next = { ...c, fte: fte ?? 0 };
+      const next = { ...c, fte };
       if (auto) next.annualSalary = this.autoSalaryFor(c.payScalePointId, next.fte);
       return next;
     });
@@ -443,8 +516,8 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   }
 
   protected periodStatus(
-    startDate: string | null | undefined,
-    endDate: string | null | undefined,
+    startDate: Date | null,
+    endDate: Date | null,
   ): 'upcoming' | 'current' | 'ended' {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -468,7 +541,7 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     return status === 'current' ? 'success' : status === 'upcoming' ? 'info' : 'secondary';
   }
 
-  protected spellFteTotal(e: StaffEmploymentUpsertItem): number {
+  protected spellFteTotal(e: EmploymentRow): number {
     const total = e.contracts.reduce((sum, c) => sum + (c.fte ?? 0), 0);
     return Math.round(total * 100) / 100;
   }
@@ -478,29 +551,29 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   }
 }
 
-function employmentsDoNotOverlap(employments: StaffEmploymentUpsertItem[]): boolean {
+function employmentsDoNotOverlap(employments: EmploymentRow[]): boolean {
   const ordered = employments
     .filter(e => e.startDate)
     .slice()
-    .sort((a, b) => new Date(a.startDate!).getTime() - new Date(b.startDate!).getTime());
+    .sort((a, b) => a.startDate!.getTime() - b.startDate!.getTime());
   for (let i = 1; i < ordered.length; i++) {
-    const previousEnd = ordered[i - 1].endDate ? new Date(ordered[i - 1].endDate!).getTime() : Infinity;
-    if (new Date(ordered[i].startDate!).getTime() <= previousEnd) return false;
+    const previousEnd = ordered[i - 1].endDate ? ordered[i - 1].endDate!.getTime() : Infinity;
+    if (ordered[i].startDate!.getTime() <= previousEnd) return false;
   }
   return true;
 }
 
-function contractsWithinEmployment(employment: StaffEmploymentUpsertItem): boolean {
+function contractsWithinEmployment(employment: EmploymentRow): boolean {
   if (!employment.startDate) return true;
-  const empStart = new Date(employment.startDate).getTime();
-  const empEnd = employment.endDate ? new Date(employment.endDate).getTime() : null;
+  const empStart = employment.startDate.getTime();
+  const empEnd = employment.endDate ? employment.endDate.getTime() : null;
   for (const contract of employment.contracts) {
     if (!contract.startDate) continue;
-    const contractStart = new Date(contract.startDate).getTime();
+    const contractStart = contract.startDate.getTime();
     if (contractStart < empStart) return false;
     if (empEnd !== null) {
       if (contractStart > empEnd) return false;
-      if (contract.endDate && new Date(contract.endDate).getTime() > empEnd) return false;
+      if (contract.endDate && contract.endDate.getTime() > empEnd) return false;
     }
   }
   return true;

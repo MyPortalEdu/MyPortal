@@ -1,0 +1,105 @@
+<ng-container *transloco="let t">
+  @if (loading() && !family()) {
+    <mp-loading></mp-loading>
+  } @else if (family()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('students.areas.family') }}</h3>
+    <p class="text-sm text-muted-foreground mb-4">{{ t('students.family.hint') }}</p>
+
+    <div class="flex flex-col gap-6">
+      <section>
+        <mp-section-header icon="fa-solid fa-users" [title]="t('students.family.contactsHeading')"></mp-section-header>
+
+        @if (contacts().length) {
+          <div class="flex flex-col divide-y divide-surface-200 dark:divide-surface-700">
+            @for (rel of contacts(); track rel.id) {
+              <div class="flex items-start gap-3 py-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-medium">{{ rel.contactName }}</span>
+                    @if (rel.relationshipTypeName) {
+                      <span class="text-sm text-muted-foreground">{{ rel.relationshipTypeName }}</span>
+                    }
+                    @if (rel.contactOrder > 0) {
+                      <span class="text-xs text-muted-foreground">{{ t('students.family.priorityShort', { order: rel.contactOrder }) }}</span>
+                    }
+                  </div>
+                  @if (rel.jobTitle) {
+                    <div class="text-xs text-muted-foreground">{{ rel.jobTitle }}</div>
+                  }
+                  <div class="mt-1 flex flex-wrap gap-1">
+                    @if (rel.hasParentalResponsibility) {
+                      <mp-badge [value]="t('students.family.flags.parentalResponsibility')" severity="info"></mp-badge>
+                    }
+                    @if (rel.hasCorrespondence) {
+                      <mp-badge [value]="t('students.family.flags.correspondence')" severity="secondary"></mp-badge>
+                    }
+                    @if (rel.hasPupilReport) {
+                      <mp-badge [value]="t('students.family.flags.pupilReport')" severity="secondary"></mp-badge>
+                    }
+                    @if (rel.hasCourtOrder) {
+                      <mp-badge [value]="t('students.family.flags.courtOrder')" severity="warn"></mp-badge>
+                    }
+                  </div>
+                </div>
+                @if (canEdit()) {
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button
+                      mpButton
+                      variant="ghost"
+                      size="icon"
+                      [attr.aria-label]="t('common.edit')"
+                      (click)="openEdit(rel)"><i class="fa-solid fa-pen"></i></button>
+                    <button
+                      mpButton
+                      variant="ghost"
+                      class="text-destructive hover:text-destructive"
+                      size="icon"
+                      [attr.aria-label]="t('common.delete')"
+                      (click)="remove(rel)"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <span class="text-sm text-muted-foreground">{{ t('students.family.noContacts') }}</span>
+        }
+
+        @if (canEdit()) {
+          <div class="mt-3">
+            <button
+              mpButton
+              variant="outline"
+              (click)="openAdd()"><i class="fa-solid fa-plus"></i> {{ t('students.family.addContact') }}</button>
+          </div>
+        }
+      </section>
+
+      <section class="border-t border-border pt-6">
+        <mp-section-header icon="fa-solid fa-children" [title]="t('students.family.siblingsHeading')"></mp-section-header>
+        @if (siblings().length) {
+          <ul class="flex flex-col gap-1">
+            @for (sibling of siblings(); track sibling.id) {
+              <li class="flex items-center gap-2 text-sm">
+                <i class="fa-solid fa-user-graduate text-muted-foreground text-xs"></i>
+                <a [routerLink]="['/staff/people/students', sibling.id]" class="font-medium hover:underline">{{ sibling.displayName }}</a>
+                <span class="text-xs text-muted-foreground font-mono">{{ sibling.admissionNumber }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <span class="text-sm text-muted-foreground">{{ t('students.family.noSiblings') }}</span>
+        }
+      </section>
+    </div>
+
+    <mp-student-family-relationship-dialog
+      [open]="dialogOpen()"
+      [studentId]="studentId()"
+      [relationshipTypes]="relationshipTypes()"
+      [editTarget]="editTarget()"
+      (closed)="onDialogClosed()"
+      (saved)="onSaved()"
+    ></mp-student-family-relationship-dialog>
+  }
+</ng-container>

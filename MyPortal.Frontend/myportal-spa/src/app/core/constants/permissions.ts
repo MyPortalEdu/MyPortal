@@ -98,6 +98,10 @@ export const Permissions = {
     ViewStudentDocuments:       'Student.ViewStudentDocuments',
     EditStudentDocuments:       'Student.EditStudentDocuments',
   },
+  Contact: {
+    ViewContactDetails: 'Contact.ViewContactDetails',
+    EditContactDetails: 'Contact.EditContactDetails',
+  },
 } as const;
 
 export type Permission = {

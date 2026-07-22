@@ -1,0 +1,274 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('contacts.details.pageTitle')"
+    icon="fa-solid fa-address-book"
+    [actions]="headerActions()"
+  ></mp-page-header>
+
+  @if (loadingHeader() && !header()) {
+    <mp-loading></mp-loading>
+  } @else if (headerError() && !header()) {
+    <mp-card>
+      <mp-error-state [message]="t('contacts.loadHeaderError')">
+        <button mpButton
+          variant="outline"
+          size="sm"
+          (click)="retry()"
+        ><i class="fa-solid fa-rotate-right"></i> {{ t('common.retry') }}</button>
+      </mp-error-state>
+    </mp-card>
+  } @else if (header(); as h) {
+    <mp-card class="mb-4 max-w-7xl">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-lg font-semibold text-primary-700 dark:bg-primary-900 dark:text-primary-200">
+          @if (h.photoId) {
+            <img [src]="photoSrc(h.photoId)" alt="" class="h-full w-full object-cover" />
+          } @else {
+            {{ initials() }}
+          }
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-lg font-semibold">{{ h.displayName }}</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 w-full justify-end sm:w-auto">
+          <button mpButton
+            variant="outline"
+            size="sm"
+            (click)="backToList()"
+          ><i class="fa-solid fa-arrow-left"></i> {{ t('contacts.details.backToList') }}</button>
+          @if (canDelete()) {
+            <button mpButton
+              variant="outline"
+              size="icon"
+              [disabled]="deleting()"
+              [attr.aria-label]="t('contacts.delete.menu')"
+              (click)="contactActionsMenu.toggle($event)"
+            ><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <mp-menu #contactActionsMenu [model]="deleteMenuItems()"></mp-menu>
+          }
+        </div>
+      </div>
+    </mp-card>
+
+    <div class="flex flex-col gap-4 md:flex-row max-w-7xl">
+      <mp-card class="md:w-72 md:flex-shrink-0">
+        <div class="flex flex-col gap-1 text-sm">
+          @for (area of areas(); track area.key) {
+            <button
+              type="button"
+              class="flex items-center gap-2 rounded px-3 py-2 text-left transition-colors"
+              [class.mp-nav-item--active]="activeArea() === area.key && area.enabled"
+              [class.font-semibold]="activeArea() === area.key && area.enabled"
+              [class.text-muted-foreground]="!area.enabled"
+              [class.cursor-pointer]="area.enabled"
+              [class.cursor-not-allowed]="!area.enabled"
+              [class.mp-nav-item--hoverable]="area.enabled && activeArea() !== area.key"
+              [disabled]="!area.enabled"
+              (click)="pickArea(area)">
+              <i [class]="area.icon + ' w-4 text-center'"></i>
+              <span class="flex-1">{{ t('contacts.areas.' + area.key) }}</span>
+            </button>
+          }
+        </div>
+      </mp-card>
+
+      <mp-card class="flex-1">
+        @switch (activeArea()) {
+          @case ('basicDetails') {
+            @if (loadingBasic() && !current()) {
+              <mp-loading></mp-loading>
+            } @else if (current()) {
+              <h3 class="text-base font-semibold mb-1">{{ t('contacts.areas.basicDetails') }}</h3>
+              <p class="text-sm text-muted-foreground mb-4">
+                {{ t('contacts.details.basicHint') }}
+              </p>
+
+              <div class="flex flex-col gap-6 md:flex-row md:gap-8">
+
+                <div class="w-40 md:shrink-0">
+                  <div class="relative aspect-[3/4] w-full overflow-hidden rounded-md border border-border bg-muted">
+                    @if (current()?.photoId; as pid) {
+                      <img [src]="photoSrc(pid)" alt="" class="h-full w-full object-cover" />
+                    } @else {
+                      <div class="flex h-full w-full items-center justify-center text-muted-foreground">
+                        <i class="fa-solid fa-user text-5xl"></i>
+                      </div>
+                    }
+                    @if (photoUploading()) {
+                      <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <mp-spinner size="2rem"></mp-spinner>
+                      </div>
+                    }
+                  </div>
+                  @if (editing()) {
+                    <input #photoInput type="file" accept="image/*" class="hidden" (change)="onPhotoSelected($event)" />
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <button mpButton
+                        variant="outline"
+                        size="sm"
+                        [disabled]="photoUploading()"
+                        (click)="photoInput.click()"><i class="fa-solid fa-camera"></i> {{ current()?.photoId ? t('contacts.photo.replace') : t('contacts.photo.add') }}</button>
+                      @if (current()?.photoId) {
+                        <button mpButton
+                          variant="ghost" class="text-destructive hover:text-destructive"
+                          size="sm"
+                          [disabled]="photoUploading()"
+                          (click)="removePhoto()"><i class="fa-solid fa-trash"></i> {{ t('contacts.photo.remove') }}</button>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="flex flex-1 flex-col gap-6">
+                  <section>
+                    <mp-section-header icon="fa-solid fa-user" [title]="t('contacts.details.groups.name')"></mp-section-header>
+                    <div class="grid gap-4 md:grid-cols-2">
+                      <mp-field [label]="t('contacts.fields.title')" for="title">
+                        @if (editing()) {
+                          <input mpInput id="title" [formField]="f.title" />
+                        } @else {
+                          <span>{{ model().title || '—' }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field
+                        [label]="t('contacts.fields.firstName')"
+                        for="firstName"
+                        [required]="editing()"
+                        [field]="f.firstName">
+                        @if (editing()) {
+                          <input mpInput id="firstName" [formField]="f.firstName" />
+                        } @else {
+                          <span>{{ model().firstName }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field [label]="t('contacts.fields.middleName')" for="middleName">
+                        @if (editing()) {
+                          <input mpInput id="middleName" [formField]="f.middleName" />
+                        } @else {
+                          <span>{{ model().middleName || '—' }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field
+                        [label]="t('contacts.fields.lastName')"
+                        for="lastName"
+                        [required]="editing()"
+                        [field]="f.lastName">
+                        @if (editing()) {
+                          <input mpInput id="lastName" [formField]="f.lastName" />
+                        } @else {
+                          <span>{{ model().lastName }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field [label]="t('contacts.fields.preferredFirstName')" for="preferredFirst">
+                        @if (editing()) {
+                          <input mpInput id="preferredFirst" [formField]="f.preferredFirstName" />
+                        } @else {
+                          <span>{{ model().preferredFirstName || '—' }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field [label]="t('contacts.fields.preferredLastName')" for="preferredLast">
+                        @if (editing()) {
+                          <input mpInput id="preferredLast" [formField]="f.preferredLastName" />
+                        } @else {
+                          <span>{{ model().preferredLastName || '—' }}</span>
+                        }
+                      </mp-field>
+                    </div>
+                  </section>
+
+                  <section>
+                    <mp-section-header icon="fa-solid fa-circle-info" [title]="t('contacts.details.groups.personal')"></mp-section-header>
+                    <div class="grid gap-4 md:grid-cols-2">
+
+                      <mp-field
+                        [label]="t('contacts.fields.gender')"
+                        for="gender"
+                        [required]="editing()"
+                        [field]="f.gender">
+                        @if (editing()) {
+                          <mp-gender-select inputId="gender" [formField]="f.gender"></mp-gender-select>
+                        } @else {
+                          <span>{{ model().gender | genderLabel }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field [label]="t('contacts.fields.dob')" for="dob">
+                        @if (editing()) {
+                          <mp-date-picker inputId="dob" [formField]="f.dob" [showIcon]="true" class="w-full"></mp-date-picker>
+                        } @else {
+                          <span>{{ model().dob ? (model().dob | date:'mediumDate') : '—' }}</span>
+                        }
+                      </mp-field>
+                    </div>
+                  </section>
+
+                  <section>
+                    <mp-section-header icon="fa-solid fa-briefcase" [title]="t('contacts.details.groups.work')"></mp-section-header>
+                    <div class="grid gap-4 md:grid-cols-2">
+                      <mp-field [label]="t('contacts.fields.placeOfWork')" for="placeOfWork">
+                        @if (editing()) {
+                          <input mpInput id="placeOfWork" [formField]="f.placeOfWork" />
+                        } @else {
+                          <span>{{ model().placeOfWork || '—' }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field [label]="t('contacts.fields.jobTitle')" for="jobTitle">
+                        @if (editing()) {
+                          <input mpInput id="jobTitle" [formField]="f.jobTitle" />
+                        } @else {
+                          <span>{{ model().jobTitle || '—' }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field [label]="t('contacts.fields.niNumber')" for="niNumber">
+                        @if (editing()) {
+                          <input mpInput id="niNumber" [formField]="f.niNumber" />
+                        } @else {
+                          <span class="font-mono">{{ model().niNumber || '—' }}</span>
+                        }
+                      </mp-field>
+
+                      <mp-field [label]="t('contacts.fields.parentalBallot')" for="parentalBallot">
+                        @if (editing()) {
+                          <label class="flex items-center gap-2 text-sm cursor-pointer">
+                            <mp-checkbox id="parentalBallot" [formField]="f.parentalBallot"></mp-checkbox>
+                            {{ t('contacts.fields.parentalBallotLabel') }}
+                          </label>
+                        } @else {
+                          <span>{{ model().parentalBallot ? t('common.yes') : t('common.no') }}</span>
+                        }
+                      </mp-field>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            }
+          }
+          @case ('communications') {
+            <mp-contact-communications-panel
+              [contactId]="contactId()"
+              [permissions]="heldPerms()"
+            ></mp-contact-communications-panel>
+          }
+          @case ('associatedStudents') {
+            <mp-contact-associated-students-panel
+              [contactId]="contactId()"
+              [permissions]="heldPerms()"
+            ></mp-contact-associated-students-panel>
+          }
+          @default {
+            <mp-empty-state [message]="t('contacts.details.areaComingSoon')"></mp-empty-state>
+          }
+        }
+      </mp-card>
+    </div>
+  }
+</ng-container>

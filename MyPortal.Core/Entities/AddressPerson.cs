@@ -14,6 +14,12 @@ namespace MyPortal.Core.Entities
 
         public bool IsMain { get; set; }
 
+        // Occupancy window for this person at this address (SIMS residence dates). Both optional —
+        // an open-ended current address leaves them null.
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public Address? Address { get; set; }

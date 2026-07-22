@@ -1,0 +1,117 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [closeOnEscape]="!saving()"
+    panelClass="w-[min(44rem,92vw)]"
+    [dismissable]="false"
+    [title]="isEdit() ? t('students.sen.statements.editTitle') : t('students.sen.statements.addTitle')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="saving()">
+
+    <div class="flex flex-col gap-4">
+      <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+        <mp-checkbox id="sen-statement-ehcp" [formField]="f.isEhcp"></mp-checkbox>
+        {{ t('students.sen.statements.isEhcp') }}
+      </label>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <mp-field [label]="t('students.sen.statements.assessmentRequestDate')" [required]="true" [field]="f.assessmentRequestDate">
+          <mp-date-picker [formField]="f.assessmentRequestDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+        <mp-field [label]="t('students.sen.statements.parentConsultDate')" [field]="f.parentConsultDate">
+          <mp-date-picker [formField]="f.parentConsultDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+        <mp-field [label]="t('students.sen.statements.finalisedDate')" [field]="f.finalisedDate">
+          <mp-date-picker [formField]="f.finalisedDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+        <mp-field [label]="t('students.sen.statements.ceasedDate')" [field]="f.ceasedDate">
+          <mp-date-picker [formField]="f.ceasedDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <mp-field [label]="t('students.sen.statements.assessmentAgreed')" for="sen-statement-agreed">
+          <mp-select
+            inputId="sen-statement-agreed"
+            [options]="assessmentAgreedOptions()"
+            optionLabel="description"
+            optionValue="id"
+            [showClear]="true"
+            [formField]="f.statutoryAssessmentAgreedId"
+            [placeholder]="t('students.sen.statements.selectPlaceholder')"
+            class="w-full"></mp-select>
+        </mp-field>
+        <mp-field [label]="t('students.sen.statements.assessmentOutcome')" for="sen-statement-outcome">
+          <mp-select
+            inputId="sen-statement-outcome"
+            [options]="assessmentOutcomeOptions()"
+            optionLabel="description"
+            optionValue="id"
+            [showClear]="true"
+            [formField]="f.statutoryAssessmentOutcomeId"
+            [placeholder]="t('students.sen.statements.selectPlaceholder')"
+            class="w-full"></mp-select>
+        </mp-field>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="flex items-center gap-2 text-sm cursor-pointer">
+          <mp-checkbox id="sen-statement-tribunal" [formField]="f.subjectToTribunal"></mp-checkbox>
+          {{ t('students.sen.statements.subjectToTribunal') }}
+        </label>
+        <label class="flex items-center gap-2 text-sm cursor-pointer">
+          <mp-checkbox id="sen-statement-mediation" [formField]="f.undergoingMediation"></mp-checkbox>
+          {{ t('students.sen.statements.undergoingMediation') }}
+        </label>
+      </div>
+
+      <mp-field [label]="t('students.sen.statements.appealNotes')" [field]="f.appealNotes">
+        <textarea mpTextarea rows="2" [formField]="f.appealNotes"></textarea>
+      </mp-field>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <mp-field [label]="t('students.sen.statements.temporaryDisapplication')" for="sen-statement-temp">
+          <input mpInput id="sen-statement-temp" [formField]="f.temporaryDisapplicationSubjects" />
+        </mp-field>
+        <mp-field [label]="t('students.sen.statements.permanentDisapplication')" for="sen-statement-perm">
+          <input mpInput id="sen-statement-perm" [formField]="f.permanentDisapplicationSubjects" />
+        </mp-field>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium">{{ t('students.sen.statements.localAuthority') }}</label>
+        <div class="flex flex-wrap items-center gap-2">
+          @if (localAuthorityName(); as name) {
+            <span class="text-sm">{{ name }}</span>
+          } @else if (model().localAuthorityId) {
+            <span class="text-sm text-muted-foreground">{{ t('students.sen.statements.localAuthorityOnFile') }}</span>
+          } @else {
+            <span class="text-sm text-muted-foreground">{{ t('students.sen.statements.noLocalAuthority') }}</span>
+          }
+          <mp-local-authority-picker [buttonLabel]="t('students.sen.statements.pickLocalAuthority')" (picked)="onLocalAuthorityPicked($event)"></mp-local-authority-picker>
+          @if (model().localAuthorityId) {
+            <button mpButton variant="ghost" size="sm" (click)="clearLocalAuthority()"><i class="fa-solid fa-xmark"></i> {{ t('students.sen.statements.clearLocalAuthority') }}</button>
+          }
+        </div>
+      </div>
+
+      <mp-field [label]="t('students.sen.statements.comments')" [field]="f.comments">
+        <textarea mpTextarea rows="2" [formField]="f.comments"></textarea>
+      </mp-field>
+    </div>
+
+    <div mpDialogFooter>
+      <div class="flex items-center justify-end gap-2">
+        <button mpButton
+          variant="outline"
+          [disabled]="saving()"
+          (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
+        <button mpButton
+          [disabled]="saving()"
+          (click)="submit()"><i class="fa-solid" [class.fa-check]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> {{ t('common.save') }}</button>
+      </div>
+    </div>
+  </mp-dialog>
+</ng-container>

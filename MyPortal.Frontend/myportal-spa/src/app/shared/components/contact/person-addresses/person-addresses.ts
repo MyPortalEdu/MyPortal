@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { MpBadge, MpButton, MpSpinner } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -15,7 +16,7 @@ import { CopyButton } from '../../copy-button/copy-button';
   selector: 'mp-person-addresses',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MpButton, MpSpinner, MpBadge, TranslocoDirective, AddressFormDialog, CopyButton],
+  imports: [DatePipe, MpButton, MpSpinner, MpBadge, TranslocoDirective, AddressFormDialog, CopyButton],
   templateUrl: './person-addresses.html',
 })
 export class PersonAddresses implements OnInit {

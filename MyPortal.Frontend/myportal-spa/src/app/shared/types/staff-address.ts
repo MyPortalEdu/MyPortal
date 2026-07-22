@@ -15,6 +15,8 @@ export interface PersonAddressResponse {
   postcode: string;
   country: string;
   sharedCount: number;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface AddressMatchResponse {
@@ -51,6 +53,8 @@ export interface PersonAddressUpsertRequest {
   county?: string | null;
   postcode?: string | null;
   country?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
 export interface PersonAddressUpdateRequest {
@@ -66,4 +70,6 @@ export interface PersonAddressUpdateRequest {
   county: string;
   postcode: string;
   country: string;
+  startDate?: string | null;
+  endDate?: string | null;
 }

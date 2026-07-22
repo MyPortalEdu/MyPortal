@@ -10,6 +10,11 @@ public class PersonAddressUpsertRequestValidator : AbstractValidator<PersonAddre
         RuleFor(x => x.TypeId)
             .NotEmpty().WithMessage("Address type is required.");
 
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate!.Value)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
+            .WithMessage("End date must be on or after the start date.");
+
         // The address fields only matter when creating a new address; linking an existing one
         // ignores them entirely.
         When(x => x.ExistingAddressId == null, () =>

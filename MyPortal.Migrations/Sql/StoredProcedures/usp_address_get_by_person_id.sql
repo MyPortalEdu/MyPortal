@@ -15,6 +15,8 @@ SELECT
     [A].[Id] AS [AddressId],
     [AP].[AddressTypeId] AS [TypeId],
     [AP].[IsMain],
+    [AP].[StartDate],
+    [AP].[EndDate],
     [A].[BuildingNumber],
     [A].[BuildingName],
     [A].[Apartment],

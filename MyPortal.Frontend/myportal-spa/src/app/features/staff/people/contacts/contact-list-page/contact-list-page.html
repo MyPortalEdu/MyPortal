@@ -1,0 +1,118 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('contacts.title')"
+    icon="fa-solid fa-address-book"
+    [actions]="headerActions()"
+  ></mp-page-header>
+
+  <mp-contact-create-dialog
+    [open]="createOpen()"
+    (closed)="onCreateClosed()"
+    (created)="onCreated($event)"
+    (openExisting)="onOpenExisting($event)"
+  ></mp-contact-create-dialog>
+
+  <mp-card>
+    <mp-table
+      #dt
+      [lazy]="true"
+      [paginator]="true"
+      [first]="grid.initialState.first"
+      [rows]="grid.initialState.rows"
+      [sortField]="grid.initialState.sortField ?? null"
+      [sortOrder]="grid.initialState.sortOrder ?? 1"
+      [totalRecords]="grid.totalRecords()"
+      [loading]="grid.loading()"
+      [value]="grid.rows()"
+      (lazyLoad)="grid.load($event)"
+      [filterDelay]="300"
+      [filters]="grid.initialFilters"
+      [globalFilterFields]="['firstName', 'lastName', 'preferredFirstName', 'preferredLastName']"
+      dataKey="id"
+      selectionMode="single"
+      [scrollable]="true">
+
+      <ng-template mpTableCaption>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+          <span class="relative w-full sm:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
+            <input
+              mpInput
+              type="text"
+              class="w-full pl-9 pr-9"
+              [placeholder]="t('contacts.searchPlaceholder')"
+              [value]="grid.searchTerm()"
+              (input)="grid.onSearch($any($event.target).value)" />
+            @if (grid.searchTerm()) {
+              <button
+                type="button"
+                class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                [attr.aria-label]="t('contacts.clearSearch')"
+                (click)="grid.clearSearch()">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            }
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template mpTableHeader>
+        <tr>
+          <th style="width: 4rem"></th>
+          <th mpSortable="lastName">
+            {{ t('contacts.columns.name') }}
+            <mp-sort-icon field="lastName"></mp-sort-icon>
+          </th>
+          <th mpSortable="jobTitle" style="width: 14rem">
+            {{ t('contacts.columns.jobTitle') }}
+            <mp-sort-icon field="jobTitle"></mp-sort-icon>
+          </th>
+          <th mpSortable="linkedStudentCount" style="width: 8rem">
+            {{ t('contacts.columns.students') }}
+            <mp-sort-icon field="linkedStudentCount"></mp-sort-icon>
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableBody let-row>
+        <tr class="cursor-pointer" (click)="onRowClick($event, row)">
+          <td>
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
+              {{ initials(row) }}
+            </div>
+          </td>
+          <td>
+            <a
+              [routerLink]="['/staff/people/contacts', row.id]"
+              class="font-medium hover:underline">{{ displayName(row) }}</a>
+            @if (legalName(row); as legal) {
+              <div class="text-xs text-muted-foreground">{{ legal }}</div>
+            }
+          </td>
+          <td class="text-sm text-muted-foreground">{{ row.jobTitle || '—' }}</td>
+          <td class="font-mono text-xs text-muted-foreground">{{ row.linkedStudentCount }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableEmpty>
+        <tr>
+          <td [attr.colspan]="4" class="p-4">
+            @if (hasFilter()) {
+              <mp-empty-state
+                icon="fa-solid fa-magnifying-glass"
+                [message]="t('contacts.emptyFiltered')">
+                <button mpButton variant="outline" size="sm" (click)="clearFilters()"><i class="fa-solid fa-xmark"></i> {{ t('contacts.clearFilters') }}</button>
+              </mp-empty-state>
+            } @else {
+              <mp-empty-state icon="fa-solid fa-address-book" [message]="t('contacts.emptyNone')">
+                @if (canCreate()) {
+                  <button mpButton size="sm" (click)="createOpen.set(true)"><i class="fa-solid fa-plus"></i> {{ t('contacts.new') }}</button>
+                }
+              </mp-empty-state>
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </mp-table>
+  </mp-card>
+</ng-container>

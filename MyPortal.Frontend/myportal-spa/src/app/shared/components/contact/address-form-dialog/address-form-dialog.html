@@ -89,6 +89,20 @@
                 [formField]="f.typeId"></mp-select>
             </div>
 
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-medium">{{ t('common.contact.address.startDate') }}</label>
+                <mp-date-picker [formField]="f.startDate" [showIcon]="true" class="w-full"></mp-date-picker>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-medium">{{ t('common.contact.address.endDate') }}</label>
+                <mp-date-picker [formField]="f.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
+                @if (dateRangeInvalid()) {
+                  <span class="text-xs text-destructive">{{ t('common.contact.address.dateRangeError') }}</span>
+                }
+              </div>
+            </div>
+
             <label class="flex items-center gap-2 text-sm">
               <input type="checkbox" [formField]="f.isMain" />
               {{ t('common.contact.address.main') }}
@@ -147,6 +161,20 @@
                   optionValue="id"
                   [placeholder]="t('common.contact.type')"
                   [formField]="f.typeId"></mp-select>
+              </div>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-medium">{{ t('common.contact.address.startDate') }}</label>
+                <mp-date-picker [formField]="f.startDate" [showIcon]="true" class="w-full"></mp-date-picker>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-sm font-medium">{{ t('common.contact.address.endDate') }}</label>
+                <mp-date-picker [formField]="f.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
+                @if (dateRangeInvalid()) {
+                  <span class="text-xs text-destructive">{{ t('common.contact.address.dateRangeError') }}</span>
+                }
               </div>
             </div>
 

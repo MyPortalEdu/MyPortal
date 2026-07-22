@@ -9,7 +9,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { FormField, form, required, submit, validate } from '@angular/forms/signals';
+import { FormField, form, maxLength, required, submit, validate } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import {
   MpButton,
@@ -136,6 +136,7 @@ export class BulletinCategoryFormDialog {
   });
   protected readonly f = form(this.model, path => {
     required(path.name);
+    maxLength(path.name, 50);
     validate(path.name, ({ value }) =>
       value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
     );

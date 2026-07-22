@@ -131,7 +131,9 @@ public class PersonAddressService(
                 AddressId = addressId,
                 PersonId = personId,
                 AddressTypeId = model.TypeId,
-                IsMain = model.IsMain
+                IsMain = model.IsMain,
+                StartDate = model.StartDate,
+                EndDate = model.EndDate
             };
             await addressPersonRepository.InsertAsync(link, cancellationToken, tx);
 
@@ -209,6 +211,8 @@ public class PersonAddressService(
 
             link.AddressTypeId = model.TypeId;
             link.IsMain = model.IsMain;
+            link.StartDate = model.StartDate;
+            link.EndDate = model.EndDate;
             await addressPersonRepository.UpdateAsync(link, cancellationToken, tx);
         }, cancellationToken);
     }

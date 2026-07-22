@@ -1,0 +1,44 @@
+<ng-container *transloco="let t">
+  @if (loading() && !contact()) {
+    <mp-loading></mp-loading>
+  } @else if (contact()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('contacts.areas.communications') }}</h3>
+    <p class="text-sm text-muted-foreground mb-4">
+      {{ t('contacts.communications.hint') }}
+    </p>
+
+    <div class="flex flex-col gap-6">
+      <section>
+        <mp-section-header icon="fa-solid fa-envelope" [title]="t('contacts.communications.emailsHeading')"></mp-section-header>
+        <mp-person-emails
+          [field]="f.emails"
+          [types]="emailTypes()"
+          [editing]="editing()"
+          (add)="addEmail()"
+          (remove)="removeEmail($event)"
+          (setMain)="setMainEmail($event)"></mp-person-emails>
+      </section>
+
+      <section>
+        <mp-section-header icon="fa-solid fa-phone" [title]="t('contacts.communications.phonesHeading')"></mp-section-header>
+        <mp-person-phones
+          [field]="f.phones"
+          [types]="phoneTypes()"
+          [editing]="editing()"
+          (add)="addPhone()"
+          (remove)="removePhone($event)"
+          (setMain)="setMainPhone($event)"></mp-person-phones>
+      </section>
+
+      <section class="border-t border-border pt-6">
+        <mp-section-header icon="fa-solid fa-location-dot" [title]="t('contacts.communications.addressesHeading')"></mp-section-header>
+        <p class="text-sm text-muted-foreground -mt-2 mb-3">
+          {{ t('contacts.communications.addressesHint') }}
+        </p>
+        <mp-person-addresses
+          [staffMemberId]="contactId()"
+          [canEdit]="canEdit()"></mp-person-addresses>
+      </section>
+    </div>
+  }
+</ng-container>

@@ -24,9 +24,208 @@ namespace MyPortal.WebApi.Controllers;
 public sealed class StudentsController(
     ProblemDetailsFactory problemFactory,
     ILogger<StudentsController> logger,
-    IStudentService studentService)
+    IStudentService studentService,
+    IStudentFamilyService studentFamilyService,
+    IStudentCulturalService studentCulturalService,
+    IStudentMedicalService studentMedicalService,
+    IStudentSenService studentSenService,
+    IStudentWelfareService studentWelfareService)
     : BaseApiController(problemFactory, logger)
 {
+    /// <summary>Get the medical area (medical needs flag, conditions, dietary requirements, disabilities).</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpGet("{studentId:guid}/medical")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentMedical)]
+    [ProducesResponseType(typeof(StudentMedicalDetailsResponse), 200)]
+    public async Task<IActionResult> GetMedicalDetailsAsync([FromRoute] Guid studentId)
+    {
+        var result = await studentMedicalService.GetMedicalDetailsAsync(studentId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the medical area.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new medical payload.</param>
+    [HttpPut("{studentId:guid}/medical")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentMedical)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateMedicalDetailsAsync([FromRoute] Guid studentId,
+        [FromBody] StudentMedicalDetailsUpsertRequest model)
+    {
+        await studentMedicalService.UpdateMedicalDetailsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Get the SEN area (current status, status history, needs, provisions, statements).</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpGet("{studentId:guid}/sen")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentSen)]
+    [ProducesResponseType(typeof(StudentSenDetailsResponse), 200)]
+    public async Task<IActionResult> GetSenDetailsAsync([FromRoute] Guid studentId)
+    {
+        var result = await studentSenService.GetSenDetailsAsync(studentId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Set the student's current SEN status.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new SEN status.</param>
+    [HttpPut("{studentId:guid}/sen/status")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentSen)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> SetSenStatusAsync([FromRoute] Guid studentId,
+        [FromBody] SetSenStatusRequest model)
+    {
+        await studentSenService.SetSenStatusAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Undo the latest SEN status change (restores the previous status as current).</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpDelete("{studentId:guid}/sen/status/current")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentSen)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UndoLatestSenStatusAsync([FromRoute] Guid studentId)
+    {
+        await studentSenService.UndoLatestSenStatusAsync(studentId, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Reconcile the student's SEN needs.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new set of needs.</param>
+    [HttpPut("{studentId:guid}/sen/needs")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentSen)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateSenNeedsAsync([FromRoute] Guid studentId,
+        [FromBody] List<SenNeedUpsertRequest> model)
+    {
+        await studentSenService.UpdateSenNeedsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Reconcile the student's SEN provisions.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new set of provisions.</param>
+    [HttpPut("{studentId:guid}/sen/provisions")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentSen)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateSenProvisionsAsync([FromRoute] Guid studentId,
+        [FromBody] List<SenProvisionUpsertRequest> model)
+    {
+        await studentSenService.UpdateSenProvisionsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Reconcile the student's statutory SEN statements.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new set of statements.</param>
+    [HttpPut("{studentId:guid}/sen/statements")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentSen)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateSenStatementsAsync([FromRoute] Guid studentId,
+        [FromBody] List<SenStatementUpsertRequest> model)
+    {
+        await studentSenService.UpdateSenStatementsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Get the welfare / safeguarding area (care episodes, PEPs, child protection plans, indicators).</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpGet("{studentId:guid}/welfare")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentWelfare)]
+    [ProducesResponseType(typeof(StudentWelfareDetailsResponse), 200)]
+    public async Task<IActionResult> GetWelfareDetailsAsync([FromRoute] Guid studentId)
+    {
+        var result = await studentWelfareService.GetWelfareDetailsAsync(studentId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the flat welfare indicators held on the student.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new welfare indicators.</param>
+    [HttpPut("{studentId:guid}/welfare/indicators")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentWelfare)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateWelfareIndicatorsAsync([FromRoute] Guid studentId,
+        [FromBody] WelfareIndicatorsUpsertRequest model)
+    {
+        await studentWelfareService.UpdateWelfareIndicatorsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Reconcile the student's looked-after care episodes.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new set of care episodes.</param>
+    [HttpPut("{studentId:guid}/welfare/care-episodes")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentWelfare)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateCareEpisodesAsync([FromRoute] Guid studentId,
+        [FromBody] List<CareEpisodeUpsertRequest> model)
+    {
+        await studentWelfareService.UpdateCareEpisodesAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Reconcile the student's Personal Education Plans (and each plan's contributors).</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new set of PEPs.</param>
+    [HttpPut("{studentId:guid}/welfare/peps")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentWelfare)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdatePepsAsync([FromRoute] Guid studentId,
+        [FromBody] List<PepUpsertRequest> model)
+    {
+        await studentWelfareService.UpdatePepsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Reconcile the student's child protection plans.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new set of child protection plans.</param>
+    [HttpPut("{studentId:guid}/welfare/child-protection-plans")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentWelfare)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateChildProtectionPlansAsync([FromRoute] Guid studentId,
+        [FromBody] List<ChildProtectionPlanUpsertRequest> model)
+    {
+        await studentWelfareService.UpdateChildProtectionPlansAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Get the cultural area (ethnicity, language, religion, nationality, English proficiency).</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpGet("{studentId:guid}/cultural")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentCultural)]
+    [ProducesResponseType(typeof(StudentCulturalDetailsResponse), 200)]
+    public async Task<IActionResult> GetCulturalDetailsAsync([FromRoute] Guid studentId)
+    {
+        var result = await studentCulturalService.GetCulturalDetailsAsync(studentId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the cultural area.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The new cultural payload.</param>
+    [HttpPut("{studentId:guid}/cultural")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentCultural)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateCulturalDetailsAsync([FromRoute] Guid studentId,
+        [FromBody] StudentCulturalDetailsUpsertRequest model)
+    {
+        await studentCulturalService.UpdateCulturalDetailsAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = studentId });
+    }
     /// <summary>Page through student summaries for the student list / picker.</summary>
     [HttpGet]
     [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentBasicDetails)]
@@ -101,6 +300,60 @@ public sealed class StudentsController(
     {
         await studentService.UpdateRegistrationDetailsAsync(studentId, model, CancellationToken);
         return Ok(new IdResponse { Id = studentId });
+    }
+
+    /// <summary>Get the family area — the student's contacts (priority-ordered), siblings, and the
+    /// relationship-type options.</summary>
+    /// <param name="studentId">The Student id.</param>
+    [HttpGet("{studentId:guid}/family")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.ViewStudentFamily)]
+    [ProducesResponseType(typeof(StudentFamilyResponse), 200)]
+    public async Task<IActionResult> GetFamilyAsync([FromRoute] Guid studentId)
+    {
+        var result = await studentFamilyService.GetFamilyAsync(studentId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Link a contact to the student.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="model">The contact to link and its relationship details.</param>
+    [HttpPost("{studentId:guid}/family")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentFamily)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> AddContactRelationshipAsync([FromRoute] Guid studentId,
+        [FromBody] StudentContactRelationshipUpsertRequest model)
+    {
+        var id = await studentFamilyService.AddRelationshipAsync(studentId, model, CancellationToken);
+        return Ok(new IdResponse { Id = id });
+    }
+
+    /// <summary>Update a contact relationship (type, flags, priority).</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="relationshipId">The relationship (join) id.</param>
+    /// <param name="model">The updated relationship details.</param>
+    [HttpPut("{studentId:guid}/family/{relationshipId:guid}")]
+    [ValidateModel]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentFamily)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateContactRelationshipAsync([FromRoute] Guid studentId,
+        [FromRoute] Guid relationshipId, [FromBody] StudentContactRelationshipUpsertRequest model)
+    {
+        await studentFamilyService.UpdateRelationshipAsync(studentId, relationshipId, model, CancellationToken);
+        return Ok(new IdResponse { Id = relationshipId });
+    }
+
+    /// <summary>Unlink a contact from the student.</summary>
+    /// <param name="studentId">The Student id.</param>
+    /// <param name="relationshipId">The relationship (join) id.</param>
+    [HttpDelete("{studentId:guid}/family/{relationshipId:guid}")]
+    [Permission(PermissionMode.RequireAny, Permissions.Student.EditStudentFamily)]
+    [ProducesResponseType(204)]
+    public async Task<IActionResult> RemoveContactRelationshipAsync([FromRoute] Guid studentId,
+        [FromRoute] Guid relationshipId)
+    {
+        await studentFamilyService.RemoveRelationshipAsync(studentId, relationshipId, CancellationToken);
+        return NoContent();
     }
 
     /// <summary>Get the contact details area (emails + phone numbers).</summary>

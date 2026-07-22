@@ -270,6 +270,17 @@ public static class Permissions
         // public const string EditTrainingCourses             = "Staff.EditTrainingCourses";
     }
 
+    // Contact-profile permissions: Contact.{Verb}ContactDetails. Held by staff (UserType.Staff).
+    // Flat, all-contacts — a contact record (guardians/carers/emergency contacts) is identity +
+    // contact methods + addresses + job details, gated as one domain with the standard [Permission]
+    // attribute. Managing which students a contact relates to is a separate concern gated by
+    // Student.{View|Edit}StudentFamily. See docs/student-details-plan.md.
+    public static class Contact
+    {
+        public const string ViewContactDetails = "Contact.ViewContactDetails";
+        public const string EditContactDetails = "Contact.EditContactDetails";
+    }
+
     // Class name avoids the `System` namespace; the wire-string values keep the "System."
     // prefix so existing rows in dbo.Permissions and any pre-issued tokens still match.
     public static class SystemAdmin

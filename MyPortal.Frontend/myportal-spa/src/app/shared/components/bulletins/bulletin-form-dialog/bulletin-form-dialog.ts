@@ -10,7 +10,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { FormField, form, required, submit, validate } from '@angular/forms/signals';
+import { FormField, form, maxLength, required, submit, validate } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { MpSelect, MpDialog, MpDialogFooter, MpButton, MpFormField, MpInput, MpTextarea, MpCheckbox, MpDatePicker } from '@myportal/ui';
 import { TranslocoDirective, TranslocoPipe, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -98,10 +98,12 @@ export class BulletinFormDialog {
   });
   protected readonly f = form(this.model, path => {
     required(path.title);
+    maxLength(path.title, 50);
     validate(path.title, ({ value }) =>
       value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
     );
     required(path.detail);
+    maxLength(path.detail, 2000);
     validate(path.detail, ({ value }) =>
       value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
     );

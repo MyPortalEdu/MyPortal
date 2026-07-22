@@ -11,19 +11,23 @@
       <section>
         <mp-section-header icon="fa-solid fa-envelope" [title]="t('students.contact.emailsHeading')"></mp-section-header>
         <mp-person-emails
-          [emails]="emails()"
-          (emailsChange)="emails.set($event)"
+          [field]="f.emails"
           [types]="emailTypes()"
-          [editing]="editing()"></mp-person-emails>
+          [editing]="editing()"
+          (add)="addEmail()"
+          (remove)="removeEmail($event)"
+          (setMain)="setMainEmail($event)"></mp-person-emails>
       </section>
 
       <section>
         <mp-section-header icon="fa-solid fa-phone" [title]="t('students.contact.phonesHeading')"></mp-section-header>
         <mp-person-phones
-          [phones]="phones()"
-          (phonesChange)="phones.set($event)"
+          [field]="f.phones"
           [types]="phoneTypes()"
-          [editing]="editing()"></mp-person-phones>
+          [editing]="editing()"
+          (add)="addPhone()"
+          (remove)="removePhone($event)"
+          (setMain)="setMainPhone($event)"></mp-person-phones>
       </section>
 
       <section class="border-t border-border pt-6">

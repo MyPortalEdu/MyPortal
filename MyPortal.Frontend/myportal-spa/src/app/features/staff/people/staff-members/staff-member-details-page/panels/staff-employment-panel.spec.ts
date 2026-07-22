@@ -7,13 +7,30 @@ import { StaffEmploymentPanel } from './staff-employment-panel';
 import { StaffMembersDataService } from '../../../../../../shared/services/staff-members-data.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { Permissions } from '../../../../../../core/constants/permissions';
-import {
-  StaffContractUpsertItem,
-  StaffEmploymentDetailsResponse,
-  StaffEmploymentUpsertItem,
-} from '../../../../../../shared/types/staff-employment-details';
+import { StaffEmploymentDetailsResponse } from '../../../../../../shared/types/staff-employment-details';
 
-function contract(startDate: string | null, endDate: string | null): StaffContractUpsertItem {
+interface ContractRow {
+  startDate: Date | null;
+  endDate: Date | null;
+}
+interface EmploymentRow {
+  startDate: Date | null;
+  endDate: Date | null;
+  contracts: ContractRow[];
+}
+interface EmploymentModel {
+  bankName: string;
+  bankAccount: string;
+  bankSortCode: string;
+  niNumber: string;
+  employments: EmploymentRow[];
+}
+
+function toDate(value: string | null): Date | null {
+  return value ? new Date(value) : null;
+}
+
+function contract(startDate: string | null, endDate: string | null): unknown {
   return {
     id: null,
     contractTypeId: 'ct-1',
@@ -23,8 +40,8 @@ function contract(startDate: string | null, endDate: string | null): StaffContra
     payScaleId: null,
     payScalePointId: null,
     postTitle: 'Teacher',
-    startDate,
-    endDate,
+    startDate: toDate(startDate),
+    endDate: toDate(endDate),
     fte: 1,
     hoursPerWeek: null,
     weeksPerYear: null,
@@ -32,24 +49,20 @@ function contract(startDate: string | null, endDate: string | null): StaffContra
     isAgencySupply: false,
     safeguardedSalary: false,
     dailyRate: false,
-  } as unknown as StaffContractUpsertItem;
+  };
 }
 
-function emp(
-  startDate: string | null,
-  endDate: string | null,
-  contracts: StaffContractUpsertItem[],
-): StaffEmploymentUpsertItem {
+function emp(startDate: string | null, endDate: string | null, contracts: unknown[]): EmploymentRow {
   return {
     id: null,
-    startDate,
-    endDate,
+    startDate: toDate(startDate),
+    endDate: toDate(endDate),
     leavingReasonId: null,
     originId: null,
     destinationId: null,
-    notes: null,
+    notes: '',
     contracts,
-  } as unknown as StaffEmploymentUpsertItem;
+  } as unknown as EmploymentRow;
 }
 
 function emptyResponse(): StaffEmploymentDetailsResponse {
@@ -68,9 +81,13 @@ function emptyResponse(): StaffEmploymentDetailsResponse {
 }
 
 interface Internals {
-  employments: { set(v: StaffEmploymentUpsertItem[]): void };
+  model: { set(v: EmploymentModel): void };
   employmentsOverlap(): boolean;
   contractOutOfRange(): boolean;
+}
+
+function modelWith(employments: EmploymentRow[]): EmploymentModel {
+  return { bankName: '', bankAccount: '', bankSortCode: '', niNumber: '', employments };
 }
 
 describe('StaffEmploymentPanel validation', () => {
@@ -101,7 +118,7 @@ describe('StaffEmploymentPanel validation', () => {
 
   it('a single well-formed employment is valid', () => {
     make();
-    internals.employments.set([emp('2026-09-01', null, [contract('2026-09-01', null)])]);
+    internals.model.set(modelWith([emp('2026-09-01', null, [contract('2026-09-01', null)])]));
     expect(internals.employmentsOverlap()).toBe(false);
     expect(internals.contractOutOfRange()).toBe(false);
     expect(component.valid()).toBe(true);
@@ -109,28 +126,28 @@ describe('StaffEmploymentPanel validation', () => {
 
   it('rejects overlapping employment periods (open-ended prior spell runs forever)', () => {
     make();
-    internals.employments.set([
+    internals.model.set(modelWith([
       emp('2026-09-01', null, [contract('2026-09-01', null)]),
       emp('2027-01-01', null, [contract('2027-01-01', null)]),
-    ]);
+    ]));
     expect(internals.employmentsOverlap()).toBe(true);
     expect(component.valid()).toBe(false);
   });
 
   it('rejects a contract that starts before its employment period', () => {
     make();
-    internals.employments.set([
+    internals.model.set(modelWith([
       emp('2026-09-01', '2027-08-31', [contract('2026-08-01', '2027-01-01')]),
-    ]);
+    ]));
     expect(internals.contractOutOfRange()).toBe(true);
     expect(component.valid()).toBe(false);
   });
 
   it('rejects a contract that ends after a closed employment period', () => {
     make();
-    internals.employments.set([
+    internals.model.set(modelWith([
       emp('2026-09-01', '2027-08-31', [contract('2026-09-01', '2027-12-01')]),
-    ]);
+    ]));
     expect(internals.contractOutOfRange()).toBe(true);
     expect(component.valid()).toBe(false);
   });

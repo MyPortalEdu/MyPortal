@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { FormField, applyWhen, form, required, submit, validate } from '@angular/forms/signals';
+import { FormField, applyWhen, form, submit, validate } from '@angular/forms/signals';
 import { DatePipe } from '@angular/common';
 import { MpDatePicker, MpDialog, MpDialogFooter, MpButton, MpInput, MpSpinner } from '@myportal/ui';
 import {
@@ -29,6 +29,7 @@ import {
 } from '@jsverse/transloco';
 
 import { GenderSelect } from '../../../../../shared/components/gender-select/gender-select';
+import { Field } from '../../../../../shared/components/field/field';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { StudentsDataService } from '../../../../../shared/services/students-data.service';
 import { StudentBasicDetailsUpsertRequest } from '../../../../../shared/types/student-basic-details';
@@ -59,6 +60,7 @@ interface CreateModel {
     MpDialogFooter,
     MpInput,
     GenderSelect,
+    Field,
     MpSpinner,
     TranslocoDirective,
   ],
@@ -96,9 +98,8 @@ export class StudentCreateDialog {
   protected readonly f = form(this.model, path => {
     applyWhen(path, () => this.step() === 'search', p => {
       for (const field of [p.firstName, p.lastName, p.gender]) {
-        required(field);
         validate(field, ({ value }) =>
-          value().trim().length ? undefined : { kind: 'blank', message: 'common.validation.required' },
+          value().trim().length ? undefined : { kind: 'required' },
         );
       }
     });

@@ -13,6 +13,8 @@ public class PersonAddressUpsertRequest
 
     public Guid TypeId { get; set; }
     public bool IsMain { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     // Used only when creating a new address (ExistingAddressId is null).
     public string? BuildingNumber { get; set; }

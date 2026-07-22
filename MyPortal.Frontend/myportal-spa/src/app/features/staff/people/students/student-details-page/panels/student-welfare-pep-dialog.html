@@ -1,0 +1,86 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [closeOnEscape]="!saving()"
+    panelClass="w-[min(40rem,92vw)]"
+    [dismissable]="false"
+    [title]="isEdit() ? t('students.welfare.peps.editTitle') : t('students.welfare.peps.addTitle')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="saving()">
+
+    <div class="flex flex-col gap-4">
+      <div class="grid gap-4 md:grid-cols-2">
+        <mp-field [label]="t('students.welfare.peps.startDate')" [required]="true" [field]="f.startDate">
+          <mp-date-picker [formField]="f.startDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+        <mp-field [label]="t('students.welfare.peps.endDate')" [field]="f.endDate">
+          <mp-date-picker [formField]="f.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
+        </mp-field>
+      </div>
+
+      <mp-field [label]="t('students.welfare.peps.comment')" [field]="f.comment">
+        <textarea mpTextarea rows="2" [formField]="f.comment"></textarea>
+      </mp-field>
+
+      <div class="flex flex-col gap-2">
+        <label class="text-sm font-medium" for="pep-contributor-search">{{ t('students.welfare.peps.contributors') }}</label>
+
+        @if (contributors().length) {
+          <div class="flex flex-wrap gap-2">
+            @for (c of contributors(); track c.personId) {
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-2.5 py-1 text-xs">
+                {{ c.personName }}
+                <button type="button" class="hover:text-destructive" [attr.aria-label]="t('common.remove')" (click)="removeContributor(c.personId)"><i class="fa-solid fa-xmark"></i></button>
+              </span>
+            }
+          </div>
+        }
+
+        <span class="relative">
+          <input mpInput id="pep-contributor-search" class="w-full"
+                 [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+                 [placeholder]="t('students.welfare.peps.contributorsPlaceholder')"
+                 autocomplete="off" />
+          @if (searching()) {
+            <mp-spinner size="1.25rem" class="absolute right-3 top-1/2 -translate-y-1/2"></mp-spinner>
+          }
+        </span>
+        <span class="text-xs text-muted-foreground">{{ t('students.welfare.peps.contributorsHint') }}</span>
+
+        @if (results().length > 0) {
+          <ul class="flex flex-col divide-y divide-surface border border-border rounded-lg overflow-hidden">
+            @for (p of results(); track p.personId) {
+              <li>
+                <button type="button"
+                        class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-muted"
+                        (click)="addContributor(p)">
+                  <span class="flex flex-col">
+                    <span class="text-sm font-medium">{{ fullName(p) }}</span>
+                    @if (p.dob) {
+                      <span class="text-xs text-muted-foreground">{{ t('students.fields.dob') }}: {{ p.dob | date: 'dd/MM/yyyy' }}</span>
+                    }
+                  </span>
+                  <i class="fa-solid fa-plus text-muted-foreground text-xs"></i>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
+    <div mpDialogFooter>
+      <div class="flex items-center justify-end gap-2">
+        <button mpButton
+          variant="outline"
+          [disabled]="saving()"
+          (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
+        <button mpButton
+          [disabled]="saving()"
+          (click)="submit()"><i class="fa-solid" [class.fa-check]="!saving()" [class.fa-spinner]="saving()" [class.fa-spin]="saving()"></i> {{ t('common.save') }}</button>
+      </div>
+    </div>
+  </mp-dialog>
+</ng-container>

@@ -10,15 +10,24 @@
           @for (address of addresses(); track address.addressPersonId) {
             <div class="flex items-center gap-3 py-2">
               <span class="w-20 shrink-0 text-xs text-muted-foreground">{{ typeName(address.typeId) }}</span>
-              <span class="flex-1 min-w-0 font-medium">
-                {{ formatAddress(address) }}
-                @if (address.sharedCount > 1) {
-                  <mp-badge
-                    class="ml-2 align-middle"
-                    [value]="t('common.contact.address.sharedBy', { count: address.sharedCount })"
-                    severity="info"></mp-badge>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium">
+                  {{ formatAddress(address) }}
+                  @if (address.sharedCount > 1) {
+                    <mp-badge
+                      class="ml-2 align-middle"
+                      [value]="t('common.contact.address.sharedBy', { count: address.sharedCount })"
+                      severity="info"></mp-badge>
+                  }
+                </div>
+                @if (address.startDate && address.endDate) {
+                  <div class="text-xs text-muted-foreground">{{ t('common.contact.address.occupancyRange', { start: (address.startDate | date: 'mediumDate'), end: (address.endDate | date: 'mediumDate') }) }}</div>
+                } @else if (address.startDate) {
+                  <div class="text-xs text-muted-foreground">{{ t('common.contact.address.occupancyFrom', { start: (address.startDate | date: 'mediumDate') }) }}</div>
+                } @else if (address.endDate) {
+                  <div class="text-xs text-muted-foreground">{{ t('common.contact.address.occupancyUntil', { end: (address.endDate | date: 'mediumDate') }) }}</div>
                 }
-              </span>
+              </div>
               @if (address.isMain) {
                 <i class="fa-solid fa-star text-amber-400" [title]="t('common.contact.main')" [attr.aria-label]="t('common.contact.main')"></i>
               }

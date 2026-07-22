@@ -45,6 +45,9 @@
     "contact": {
       "type": "Type",
       "main": "Main",
+      "email": "Email address",
+      "phone": "Phone number",
+      "notes": "Notes",
       "sendEmail": "Send email",
       "call": "Call",
       "addEmail": "Add Email",
@@ -84,7 +87,13 @@
         "town": "Town",
         "county": "County",
         "postcode": "Postcode",
-        "country": "Country"
+        "country": "Country",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "dateRangeError": "End date must be on or after the start date.",
+        "occupancyFrom": "From {{ start }}",
+        "occupancyUntil": "Until {{ end }}",
+        "occupancyRange": "{{ start }} – {{ end }}"
       }
     },
     "timetable": {
@@ -179,7 +188,8 @@
     "academicYears": "Academic Years",
     "people": "People",
     "staffMembers": "Staff",
-    "students": "Students"
+    "students": "Students",
+    "contacts": "Contacts"
   },
   "pages": {
     "home": {

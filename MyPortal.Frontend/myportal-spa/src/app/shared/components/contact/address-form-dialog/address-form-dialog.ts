@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FormField, applyWhen, form, required, submit, validate } from '@angular/forms/signals';
-import { MpButton, MpDialog, MpInput, MpSelect, MpSpinner } from '@myportal/ui';
+import { MpButton, MpDatePicker, MpDialog, MpInput, MpSelect, MpSpinner } from '@myportal/ui';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
@@ -42,6 +42,8 @@ interface AddressForm {
   country: string;
   typeId: string;
   isMain: boolean;
+  startDate: Date | null;
+  endDate: Date | null;
 }
 
 const EMPTY_FORM: AddressForm = {
@@ -56,13 +58,15 @@ const EMPTY_FORM: AddressForm = {
   country: '',
   typeId: '',
   isMain: false,
+  startDate: null,
+  endDate: null,
 };
 
 @Component({
   selector: 'mp-address-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, FormField, MpButton, MpDialog, MpInput, MpSpinner, MpSelect, TranslocoDirective],
+  imports: [FormsModule, FormField, MpButton, MpDatePicker, MpDialog, MpInput, MpSpinner, MpSelect, TranslocoDirective],
   templateUrl: './address-form-dialog.html',
 })
 export class AddressFormDialog {
@@ -107,8 +111,15 @@ export class AddressFormDialog {
 
   protected readonly isEdit = computed(() => !!this.editTarget());
 
+  protected readonly dateRangeInvalid = computed(() => {
+    const start = this.model().startDate;
+    const end = this.model().endDate;
+    return !!start && !!end && end.getTime() < start.getTime();
+  });
+
   protected readonly canSave = computed(() => {
     if (this.step() === 'search') return false;
+    if (this.dateRangeInvalid()) return false;
     if (this.step() === 'link') return this.f().valid() && !!this.picked();
     return this.f().valid();
   });
@@ -226,6 +237,8 @@ export class AddressFormDialog {
         county: m.county.trim(),
         postcode: m.postcode.trim(),
         country: m.country.trim(),
+        startDate: m.startDate?.toISOString() ?? null,
+        endDate: m.endDate?.toISOString() ?? null,
       };
       try {
         await firstValueFrom(this.data.updateAddress(this.staffMemberId(), t.addressPersonId, payload));
@@ -244,7 +257,13 @@ export class AddressFormDialog {
       const m = this.model();
       const existing = this.picked();
       const payload: PersonAddressUpsertRequest = existing
-        ? { existingAddressId: existing.addressId, typeId: m.typeId, isMain: m.isMain }
+        ? {
+            existingAddressId: existing.addressId,
+            typeId: m.typeId,
+            isMain: m.isMain,
+            startDate: m.startDate?.toISOString() ?? null,
+            endDate: m.endDate?.toISOString() ?? null,
+          }
         : {
             typeId: m.typeId,
             isMain: m.isMain,
@@ -257,6 +276,8 @@ export class AddressFormDialog {
             county: m.county.trim(),
             postcode: m.postcode.trim(),
             country: m.country.trim(),
+            startDate: m.startDate?.toISOString() ?? null,
+            endDate: m.endDate?.toISOString() ?? null,
           };
       try {
         await firstValueFrom(this.data.addAddress(this.staffMemberId(), payload));
@@ -309,6 +330,8 @@ export class AddressFormDialog {
         country: target.country,
         typeId: target.typeId,
         isMain: target.isMain,
+        startDate: target.startDate ? new Date(target.startDate) : null,
+        endDate: target.endDate ? new Date(target.endDate) : null,
       });
     } else {
       this.step.set('search');

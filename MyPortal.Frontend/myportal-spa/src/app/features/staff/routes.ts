@@ -14,6 +14,8 @@ import { StaffMemberListPage } from './people/staff-members/staff-member-list-pa
 import { StaffMemberDetailsPage } from './people/staff-members/staff-member-details-page/staff-member-details-page';
 import { StudentListPage } from './people/students/student-list-page/student-list-page';
 import { StudentDetailsPage } from './people/students/student-details-page/student-details-page';
+import { ContactListPage } from './people/contacts/contact-list-page/contact-list-page';
+import { ContactDetailsPage } from './people/contacts/contact-details-page/contact-details-page';
 import { Permissions } from '../../core/constants/permissions';
 export const STAFF_ROUTES: Routes = [
   {
@@ -147,6 +149,28 @@ export const STAFF_ROUTES: Routes = [
             Permissions.Student.EditStudentBasicDetails
           ],
           breadcrumb: 'Student profile'
+        }
+      },
+      {
+        path: 'people/contacts',
+        component: ContactListPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Contact.ViewContactDetails],
+          breadcrumb: 'Contacts'
+        }
+      },
+      {
+        path: 'people/contacts/:id',
+        component: ContactDetailsPage,
+        canActivate: [AuthGuard],
+        canDeactivate: [canDeactivateGuard],
+        data: {
+          permissionsAny: [
+            Permissions.Contact.ViewContactDetails,
+            Permissions.Contact.EditContactDetails
+          ],
+          breadcrumb: 'Contact profile'
         }
       }
     ]

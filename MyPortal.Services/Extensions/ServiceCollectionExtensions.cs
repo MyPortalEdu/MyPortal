@@ -74,6 +74,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffMemberService, StaffMemberService>();
         services.AddScoped<IStaffMemberAccessService, StaffMemberAccessService>();
         services.AddScoped<IStudentService, StudentService>();
+        services.AddScoped<IStudentFamilyService, StudentFamilyService>();
+        services.AddScoped<IStudentCulturalService, StudentCulturalService>();
+        services.AddScoped<IStudentMedicalService, StudentMedicalService>();
+        services.AddScoped<IStudentSenService, StudentSenService>();
+        services.AddScoped<IStudentWelfareService, StudentWelfareService>();
+        services.AddScoped<IContactService, ContactService>();
         services.AddScoped<IStaffContactService, StaffContactService>();
         services.AddScoped<IStaffAddressService, StaffAddressService>();
         services.AddScoped<IStaffEqualityService, StaffEqualityService>();

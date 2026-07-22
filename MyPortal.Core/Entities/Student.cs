@@ -17,9 +17,8 @@ namespace MyPortal.Core.Entities
 
         public bool FreeSchoolMeals { get; set; }
 
+        // Denormalised cache of the current SEN status (source of truth: SenStatusHistories).
         public Guid? SenStatusId { get; set; }
-
-        public Guid? SenTypeId { get; set; }
 
         public Guid? EnrolmentStatusId { get; set; }
 
@@ -58,12 +57,8 @@ namespace MyPortal.Core.Entities
         [StringLength(20)]
         public string? LaChildId { get; set; }
 
-        // Looked-after-child flag + the caring local authority (reuses LocalAuthorities).
-        public bool InCare { get; set; }
-
-        public Guid? CaringAuthorityId { get; set; }
-
-        // Post-looked-after arrangement, e.g. adopted / SGO / CAO (CBDS CS087) — pupil-premium-plus.
+        // Looked-after status is now derived from dated StudentCareEpisodes (the caring authority moved
+        // onto the episode). Post-looked-after arrangement stays flat: adopted / SGO / CAO (CBDS CS087).
         public Guid? PostLookedAfterArrangementId { get; set; }
 
         // High-needs / top-up funding flag (school census).
@@ -97,14 +92,12 @@ namespace MyPortal.Core.Entities
 
         public Person? Person { get; set; }
         public SenStatus? SenStatus { get; set; }
-        public SenType? SenType { get; set; }
         public EnrolmentStatus? EnrolmentStatus { get; set; }
         public BoarderStatus? BoarderStatus { get; set; }
         public UpnUnknownReason? UpnUnknownReason { get; set; }
         public PupilPremiumIndicator? PupilPremiumIndicator { get; set; }
         public FsmCategory? FsmCategory { get; set; }
         public EnglishProficiency? EnglishProficiency { get; set; }
-        public LocalAuthority? CaringAuthority { get; set; }
         public PostLookedAfterArrangement? PostLookedAfterArrangement { get; set; }
         public ServiceChildIndicator? ServiceChildIndicator { get; set; }
         public YoungCarerIndicator? YoungCarerIndicator { get; set; }

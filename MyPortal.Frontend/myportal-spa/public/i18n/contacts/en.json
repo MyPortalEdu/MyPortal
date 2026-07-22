@@ -1,0 +1,115 @@
+{
+  "title": "Contacts",
+  "new": "New",
+  "emptyNone": "No contacts yet.",
+  "emptyFiltered": "No contacts match your search.",
+  "clearSearch": "Clear Search",
+  "clearFilters": "Clear Filters",
+  "searchPlaceholder": "Search by name…",
+  "loadError": "Couldn't load contacts",
+  "loadHeaderError": "Couldn't load contact profile",
+  "loadBasicError": "Couldn't load basic details",
+  "saveError": "Couldn't save basic details",
+  "savedToast": "Basic details saved",
+  "createError": "Couldn't create contact",
+  "createdToast": "Contact created",
+  "create": {
+    "header": "New Contact",
+    "searchLabel": "Search existing people",
+    "searchPlaceholder": "Type a name…",
+    "searchHint": "They may already be on file (e.g. as a student's relative or another contact) — pick the existing record to avoid duplicates.",
+    "searchError": "Couldn't search people",
+    "matchesLabel": "Possible matches",
+    "orCreateNew": "or add someone new",
+    "alreadyContact": "Already a contact",
+    "attachHeader": "Add contact record",
+    "attachHint": "This person is already on file. Confirming creates their contact record — their existing details are reused, not duplicated.",
+    "attachSubmit": "Create",
+    "hint": "Capture the basics — name, gender, optional DOB. Employer, contact methods and other details are filled in afterwards from the contact profile page.",
+    "submit": "Create"
+  },
+  "columns": {
+    "name": "Name",
+    "jobTitle": "Job Title",
+    "students": "Students",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "title": "Title"
+  },
+  "areas": {
+    "basicDetails": "Basic Details",
+    "communications": "Contact methods",
+    "associatedStudents": "Associated Students",
+    "comingSoon": "Coming soon"
+  },
+  "associatedStudents": {
+    "hint": "Students this contact is linked to, with their relationship and flags.",
+    "heading": "Students",
+    "empty": "This contact isn't linked to any students.",
+    "priorityShort": "Priority {{ order }}",
+    "flags": {
+      "correspondence": "Correspondence",
+      "parentalResponsibility": "Parental Responsibility",
+      "pupilReport": "Pupil Report",
+      "courtOrder": "Court Order"
+    },
+    "loadError": "Couldn't load associated students"
+  },
+  "communications": {
+    "hint": "Email addresses, phone numbers, and addresses for this contact.",
+    "emailsHeading": "Email Addresses",
+    "phonesHeading": "Phone Numbers",
+    "addressesHeading": "Addresses",
+    "addressesHint": "Address changes save immediately — they aren't part of Save or Cancel above.",
+    "loadError": "Couldn't load contact methods",
+    "saveError": "Couldn't save contact methods",
+    "savedToast": "Contact methods saved"
+  },
+  "delete": {
+    "menu": "More actions",
+    "menuItem": "Delete Contact",
+    "header": "Delete Contact",
+    "confirm": "This removes the contact record entirely. The record can be restored by an administrator.",
+    "toast": "Contact deleted",
+    "error": "Couldn't delete the contact"
+  },
+  "details": {
+    "pageTitle": "Contact Details",
+    "backToList": "Back to list",
+    "groups": {
+      "name": "Name",
+      "personal": "Personal",
+      "work": "Work"
+    },
+    "basicHint": "Name, photo, date of birth, employer, and parental ballot preference.",
+    "areaComingSoon": "This area's endpoint is on the roadmap — not wired up yet."
+  },
+  "fields": {
+    "title": "Title",
+    "firstName": "First name",
+    "middleName": "Middle name",
+    "lastName": "Last name",
+    "preferredFirstName": "Preferred first name",
+    "preferredLastName": "Preferred last name",
+    "gender": "Gender",
+    "dob": "Date of birth",
+    "parentalBallot": "Parental ballot",
+    "parentalBallotLabel": "Eligible to vote in parental ballots",
+    "placeOfWork": "Place of work",
+    "jobTitle": "Job title",
+    "niNumber": "National Insurance number"
+  },
+  "photo": {
+    "add": "Add photo",
+    "replace": "Replace photo",
+    "remove": "Remove",
+    "invalidType": "That file isn't an image. Please choose a JPG, PNG, or similar.",
+    "tooLarge": "That image is too large (max {{size}}).",
+    "savedToast": "Photo updated",
+    "removedToast": "Photo removed",
+    "saveError": "Couldn't upload the photo",
+    "removeError": "Couldn't remove the photo",
+    "removeHeader": "Remove Photo",
+    "removeConfirm": "Remove this contact's photo?"
+  }
+}

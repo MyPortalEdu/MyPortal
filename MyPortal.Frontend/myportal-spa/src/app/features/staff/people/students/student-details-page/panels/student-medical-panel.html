@@ -1,0 +1,148 @@
+<ng-container *transloco="let t">
+  @if (loading() && !medical()) {
+    <mp-loading></mp-loading>
+  } @else if (medical()) {
+    <h3 class="text-base font-semibold mb-1">{{ t('students.areas.medical') }}</h3>
+    <p class="hidden sm:block text-sm text-muted-foreground mb-4">{{ t('students.medical.hint') }}</p>
+
+    <div class="flex flex-col gap-6">
+      <section>
+        <mp-section-header icon="fa-solid fa-heart-pulse" [title]="t('students.medical.needsHeading')"></mp-section-header>
+        <div class="flex flex-col gap-1">
+          @if (editing()) {
+            <label class="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <mp-checkbox id="hasMedicalNeeds" [formField]="f.hasMedicalNeeds"></mp-checkbox>
+              {{ t('students.medical.hasMedicalNeeds') }}
+            </label>
+          } @else {
+            <label class="text-sm font-medium">{{ t('students.medical.hasMedicalNeeds') }}</label>
+            <span>{{ model().hasMedicalNeeds ? t('common.yes') : t('common.no') }}</span>
+          }
+        </div>
+      </section>
+
+      <section>
+        <mp-section-header icon="fa-solid fa-notes-medical" [title]="t('students.medical.conditionsHeading')"></mp-section-header>
+
+        @if (editing()) {
+          <div class="flex flex-col gap-3">
+            @for (field of f.conditions; track $index; let i = $index) {
+              @let c = field().value();
+              <div class="rounded border border-border p-3">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <span class="text-sm font-medium text-muted-foreground">#{{ i + 1 }}</span>
+                  <button mpButton variant="ghost" size="icon" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('students.medical.removeCondition')" (click)="removeCondition(i)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+                <div class="grid gap-3 md:grid-cols-2">
+                  <mp-field [label]="t('students.medical.condition')" [field]="field.medicalConditionId">
+                    <mp-lookup-select [options]="medicalConditions()" [formField]="field.medicalConditionId"></mp-lookup-select>
+                  </mp-field>
+                </div>
+
+                <label class="mt-3 flex items-center gap-2 text-sm cursor-pointer">
+                  <mp-checkbox [formField]="field.requiresMedication"></mp-checkbox>
+                  {{ t('students.medical.requiresMedication') }}
+                </label>
+
+                @if (c.requiresMedication) {
+                  <div class="mt-3">
+                    <mp-field [label]="t('students.medical.medication')" [field]="field.medication">
+                      <input mpInput [formField]="field.medication" />
+                    </mp-field>
+                  </div>
+                }
+
+                <div class="mt-3 grid gap-3 md:grid-cols-3">
+                  <mp-field [label]="t('students.medical.startDate')">
+                    <mp-date-picker [formField]="field.startDate" [showIcon]="true" class="w-full"></mp-date-picker>
+                  </mp-field>
+                  <mp-field [label]="t('students.medical.resolvedDate')" [field]="field.endDate">
+                    <mp-date-picker [formField]="field.endDate" [showIcon]="true" class="w-full"></mp-date-picker>
+                  </mp-field>
+                  <mp-field [label]="t('students.medical.infoReceivedDate')">
+                    <mp-date-picker [formField]="field.infoReceivedDate" [showIcon]="true" class="w-full"></mp-date-picker>
+                  </mp-field>
+                </div>
+
+                <div class="mt-3">
+                  <mp-field [label]="t('students.medical.notes')">
+                    <textarea mpTextarea rows="2" [formField]="field.notes"></textarea>
+                  </mp-field>
+                </div>
+              </div>
+            }
+            <div>
+              <button mpButton variant="outline" size="sm" (click)="addCondition()"><i class="fa-solid fa-plus"></i> {{ t('students.medical.addCondition') }}</button>
+            </div>
+          </div>
+        } @else {
+          @if (model().conditions.length) {
+            <div class="flex flex-col gap-3">
+              @for (c of model().conditions; track $index) {
+                <div class="rounded border border-border p-3 text-sm">
+                  <div class="font-medium">{{ conditionLabel(c) }}</div>
+                  @if (medicationLine(c); as med) {
+                    <div class="text-muted-foreground">{{ med }}</div>
+                  }
+                  @if (c.startDate) {
+                    <div class="text-xs text-muted-foreground">{{ t('students.medical.fromLine', { date: (c.startDate | date: 'mediumDate') }) }}</div>
+                  }
+                  @if (c.endDate) {
+                    <div class="text-xs text-muted-foreground">{{ t('students.medical.resolvedLine', { date: (c.endDate | date: 'mediumDate') }) }}</div>
+                  }
+                  @if (c.infoReceivedDate) {
+                    <div class="text-xs text-muted-foreground">{{ t('students.medical.infoReceivedLine', { date: (c.infoReceivedDate | date: 'mediumDate') }) }}</div>
+                  }
+                  @if (c.notes) {
+                    <div class="text-xs text-muted-foreground whitespace-pre-wrap mt-1">{{ c.notes }}</div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <span class="text-sm text-muted-foreground">{{ t('students.medical.noConditions') }}</span>
+          }
+        }
+      </section>
+
+      <section>
+        <mp-section-header icon="fa-solid fa-utensils" [title]="t('students.medical.dietaryHeading')"></mp-section-header>
+        <mp-field [label]="t('students.medical.dietaryRequirements')" for="dietary">
+          @if (editing()) {
+            <mp-multi-select
+              inputId="dietary"
+              [options]="dietaryRequirements()"
+              optionLabel="description"
+              optionValue="id"
+              class="w-full"
+              [placeholder]="t('students.medical.dietaryPlaceholder')"
+              [formField]="f.dietaryRequirementIds"></mp-multi-select>
+          } @else {
+            <span>{{ selectedLabels(dietaryRequirements(), model().dietaryRequirementIds) }}</span>
+          }
+        </mp-field>
+      </section>
+
+      <section>
+        <mp-section-header icon="fa-solid fa-wheelchair" [title]="t('students.medical.disabilitiesHeading')"></mp-section-header>
+        <mp-field [label]="t('students.medical.disabilities')" for="disabilities">
+          @if (editing()) {
+            <mp-multi-select
+              inputId="disabilities"
+              [options]="disabilities()"
+              optionLabel="description"
+              optionValue="id"
+              class="w-full"
+              [placeholder]="t('students.medical.disabilitiesPlaceholder')"
+              [formField]="f.disabilityIds"></mp-multi-select>
+          } @else {
+            <span>{{ selectedLabels(disabilities(), model().disabilityIds) }}</span>
+          }
+        </mp-field>
+      </section>
+    </div>
+  }
+</ng-container>

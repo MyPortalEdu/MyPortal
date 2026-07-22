@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   HostListener,
   OnInit,
   computed,
@@ -10,7 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormField, form, submit, validate } from '@angular/forms/signals';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MpDatePicker, MpButton, MpCard, MpInput, MpBadge, MpSpinner, MpMenu, type MpMenuItem } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
@@ -30,8 +29,6 @@ import { ErrorState } from '../../../../../shared/components/error-state/error-s
 import { EmptyState } from '../../../../../shared/components/empty-state/empty-state';
 import { SectionHeader } from '../../../../../shared/components/section-header/section-header';
 import { Field } from '../../../../../shared/components/field/field';
-import { Callout } from '../../../../../shared/components/callout/callout';
-import { focusFirstInvalid } from '../../../../../shared/utils/focus-first-invalid';
 import { HeaderAction } from '../../../../../shared/types/header-action.type';
 import { CanComponentDeactivate } from '../../../../../core/guards/can-deactivate.guard';
 import { ConfirmationDialog } from '../../../../../core/services/confirmation.service';
@@ -49,19 +46,32 @@ import { GenderLabelPipe } from '../../../../../shared/pipes/gender-label.pipe';
 import { StudentAreaPanel } from './panels/student-area-panel';
 import { StudentRegistrationPanel } from './panels/student-registration-panel';
 import { StudentContactPanel } from './panels/student-contact-panel';
+import { StudentFamilyPanel } from './panels/student-family-panel';
+import { StudentCulturalPanel } from './panels/student-cultural-panel';
+import { StudentMedicalPanel } from './panels/student-medical-panel';
+import { StudentSenPanel } from './panels/student-sen-panel';
+import { StudentWelfarePanel } from './panels/student-welfare-panel';
 
-type BasicFormSnapshot = {
-  title: string | null;
+interface BasicModel {
+  title: string;
   firstName: string;
-  middleName: string | null;
+  middleName: string;
   lastName: string;
-  preferredFirstName: string | null;
-  preferredLastName: string | null;
+  preferredFirstName: string;
+  preferredLastName: string;
   gender: string;
-  dob: string | null;
-};
+  dob: Date | null;
+}
 
-type AreaKey = 'basicDetails' | 'registration' | 'contact';
+type AreaKey =
+  | 'basicDetails'
+  | 'registration'
+  | 'contact'
+  | 'family'
+  | 'cultural'
+  | 'medical'
+  | 'sen'
+  | 'welfare';
 
 interface AreaTab {
   key: AreaKey;
@@ -73,6 +83,11 @@ const AREAS: AreaTab[] = [
   { key: 'basicDetails', icon: 'fa-solid fa-user',           enabled: true  },
   { key: 'registration', icon: 'fa-solid fa-clipboard-list', enabled: false },
   { key: 'contact',      icon: 'fa-solid fa-address-book',    enabled: false },
+  { key: 'family',       icon: 'fa-solid fa-users',           enabled: false },
+  { key: 'cultural',     icon: 'fa-solid fa-language',        enabled: false },
+  { key: 'medical',      icon: 'fa-solid fa-notes-medical',   enabled: false },
+  { key: 'sen',          icon: 'fa-solid fa-hands-holding-child', enabled: false },
+  { key: 'welfare',      icon: 'fa-solid fa-shield-heart',    enabled: false },
 ];
 
 @Component({
@@ -81,7 +96,7 @@ const AREAS: AreaTab[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DatePipe,
-    FormsModule,
+    FormField,
     MpButton,
     MpCard,
     MpDatePicker,
@@ -95,11 +110,15 @@ const AREAS: AreaTab[] = [
     EmptyState,
     SectionHeader,
     Field,
-    Callout,
     GenderSelect,
     GenderLabelPipe,
     StudentRegistrationPanel,
     StudentContactPanel,
+    StudentFamilyPanel,
+    StudentCulturalPanel,
+    StudentMedicalPanel,
+    StudentSenPanel,
+    StudentWelfarePanel,
     TranslocoDirective,
   ],
   providers: [provideTranslocoScope('students')],
@@ -113,12 +132,16 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
   private readonly notify = inject(NotificationService);
   private readonly confirm = inject(ConfirmationDialog);
   private readonly transloco = inject(TranslocoService);
-  private readonly host = inject(ElementRef<HTMLElement>);
 
   protected readonly areas = computed<AreaTab[]>(() =>
     AREAS.map(a => {
       if (a.key === 'registration') return { ...a, enabled: this.canViewRegistration() };
       if (a.key === 'contact') return { ...a, enabled: this.canViewContact() };
+      if (a.key === 'family') return { ...a, enabled: this.canViewFamily() };
+      if (a.key === 'cultural') return { ...a, enabled: this.canViewCultural() };
+      if (a.key === 'medical') return { ...a, enabled: this.canViewMedical() };
+      if (a.key === 'sen') return { ...a, enabled: this.canViewSen() };
+      if (a.key === 'welfare') return { ...a, enabled: this.canViewWelfare() };
       return a;
     }),
   );
@@ -127,13 +150,17 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
   private static readonly EXTRACTED_AREAS: ReadonlySet<AreaKey> = new Set<AreaKey>([
     'registration',
     'contact',
+    'family',
+    'cultural',
+    'medical',
+    'sen',
+    'welfare',
   ]);
   private readonly activePanel = viewChild(StudentAreaPanel);
 
   protected readonly loadingHeader = signal(false);
   protected readonly headerError = signal(false);
   protected readonly loadingBasic = signal(false);
-  protected readonly saving = signal(false);
   protected readonly editing = signal(false);
 
   protected readonly studentId = signal<string>('');
@@ -141,14 +168,25 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
   protected readonly current = signal<StudentBasicDetailsResponse | null>(null);
 
   protected readonly admissionNumber = signal<number | null>(null);
-  protected readonly title = signal<string | null>(null);
-  protected readonly firstName = signal('');
-  protected readonly middleName = signal<string | null>(null);
-  protected readonly lastName = signal('');
-  protected readonly preferredFirstName = signal<string | null>(null);
-  protected readonly preferredLastName = signal<string | null>(null);
-  protected readonly gender = signal('');
-  protected readonly dob = signal<Date | null>(null);
+
+  protected readonly model = signal<BasicModel>({
+    title: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    preferredFirstName: '',
+    preferredLastName: '',
+    gender: '',
+    dob: null,
+  });
+  protected readonly f = form(this.model, path => {
+    for (const field of [path.firstName, path.lastName, path.gender]) {
+      validate(field, ({ value }) =>
+        value().trim().length ? undefined : { kind: 'required' },
+      );
+    }
+  });
+  private readonly snapshot = signal<string>('');
 
   protected readonly heldPerms = signal<Set<string>>(new Set());
 
@@ -168,6 +206,46 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
     this.heldPerms().has(Permissions.Student.ViewStudentBasicDetails),
   );
 
+  protected readonly canViewFamily = computed(() => {
+    const perms = this.heldPerms();
+    return (
+      perms.has(Permissions.Student.ViewStudentFamily) ||
+      perms.has(Permissions.Student.EditStudentFamily)
+    );
+  });
+
+  protected readonly canViewCultural = computed(() => {
+    const perms = this.heldPerms();
+    return (
+      perms.has(Permissions.Student.ViewStudentCultural) ||
+      perms.has(Permissions.Student.EditStudentCultural)
+    );
+  });
+
+  protected readonly canViewMedical = computed(() => {
+    const perms = this.heldPerms();
+    return (
+      perms.has(Permissions.Student.ViewStudentMedical) ||
+      perms.has(Permissions.Student.EditStudentMedical)
+    );
+  });
+
+  protected readonly canViewSen = computed(() => {
+    const perms = this.heldPerms();
+    return (
+      perms.has(Permissions.Student.ViewStudentSen) ||
+      perms.has(Permissions.Student.EditStudentSen)
+    );
+  });
+
+  protected readonly canViewWelfare = computed(() => {
+    const perms = this.heldPerms();
+    return (
+      perms.has(Permissions.Student.ViewStudentWelfare) ||
+      perms.has(Permissions.Student.EditStudentWelfare)
+    );
+  });
+
   protected readonly canEditActiveArea = computed(() => {
     switch (this.activeArea()) {
       case 'basicDetails':
@@ -176,6 +254,16 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
         return this.heldPerms().has(Permissions.Student.EditStudentRegistration);
       case 'contact':
         return this.heldPerms().has(Permissions.Student.EditStudentBasicDetails);
+      case 'family':
+        return this.heldPerms().has(Permissions.Student.EditStudentFamily);
+      case 'cultural':
+        return this.heldPerms().has(Permissions.Student.EditStudentCultural);
+      case 'medical':
+        return this.heldPerms().has(Permissions.Student.EditStudentMedical);
+      case 'sen':
+        return this.heldPerms().has(Permissions.Student.EditStudentSen);
+      case 'welfare':
+        return this.heldPerms().has(Permissions.Student.EditStudentWelfare);
       default:
         return false;
     }
@@ -196,40 +284,11 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
     },
   ]);
 
-  private readonly basicValid = computed(
-    () =>
-      this.firstName().trim().length > 0 &&
-      this.lastName().trim().length > 0 &&
-      this.gender().trim().length > 0,
+  private readonly formState = computed(() => JSON.stringify(this.model()));
+
+  private readonly basicDirty = computed(
+    () => this.current() != null && this.snapshot() !== this.formState(),
   );
-
-  protected readonly isValid = computed(() => this.basicValid());
-
-  protected readonly basicSubmitAttempted = signal(false);
-
-  protected basicFieldError(value: string | null): string | undefined {
-    if (!this.editing() || !this.basicSubmitAttempted()) return undefined;
-    return value?.trim() ? undefined : this.transloco.translate('common.validation.required');
-  }
-
-  private readonly snapshot = signal<BasicFormSnapshot | null>(null);
-
-  private readonly currentForm = computed<BasicFormSnapshot>(() => ({
-    title: this.title(),
-    firstName: this.firstName(),
-    middleName: this.middleName(),
-    lastName: this.lastName(),
-    preferredFirstName: this.preferredFirstName(),
-    preferredLastName: this.preferredLastName(),
-    gender: this.gender(),
-    dob: this.dob()?.toISOString() ?? null,
-  }));
-
-  private readonly basicDirty = computed(() => {
-    const s = this.snapshot();
-    if (!s) return false;
-    return JSON.stringify(s) !== JSON.stringify(this.currentForm());
-  });
 
   protected readonly isDirty = computed(() => this.basicDirty());
 
@@ -242,7 +301,8 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
         dirty: panel.dirty(),
         valid: panel.valid(),
         saving: panel.saving(),
-        explainsInvalid: false,
+        explainsInvalid: panel.explainsInvalid,
+        selfManaged: panel.selfManaged,
         start: () => panel.startEdit(),
         cancel: () => panel.cancel(),
         save: () => panel.save(),
@@ -252,9 +312,10 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
       canEdit: this.canEditActiveArea(),
       editing: this.editing(),
       dirty: this.isDirty(),
-      valid: this.isValid(),
-      saving: this.saving(),
+      valid: this.f().valid(),
+      saving: this.f().submitting(),
       explainsInvalid: true,
+      selfManaged: false,
       start: () => this.startEdit(),
       cancel: () => this.cancelEdit(),
       save: () => this.save(),
@@ -263,7 +324,7 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
 
   protected readonly headerActions = computed<HeaderAction[]>(() => {
     const edit = this.activeEdit();
-    if (!edit.canEdit) return [];
+    if (!edit.canEdit || edit.selfManaged) return [];
     if (edit.editing) {
       return [
         {
@@ -372,8 +433,8 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   protected initials(): string {
-    const first = this.firstName().trim().charAt(0);
-    const last = this.lastName().trim().charAt(0);
+    const first = this.model().firstName.trim().charAt(0);
+    const last = this.model().lastName.trim().charAt(0);
     return (first + last).toUpperCase();
   }
 
@@ -436,56 +497,42 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   protected startEdit(): void {
-    this.basicSubmitAttempted.set(false);
     this.editing.set(true);
   }
 
   protected cancelEdit(): void {
     this.applyToForm(this.current());
-    this.basicSubmitAttempted.set(false);
     this.editing.set(false);
   }
 
   async save(): Promise<void> {
-    if (!this.canEditBasic() || this.saving()) return;
-    if (!this.basicValid()) {
-      this.basicSubmitAttempted.set(true);
-      focusFirstInvalid(this.host.nativeElement);
-      return;
-    }
-    await this.saveBasic();
-  }
-
-  private async saveBasic(): Promise<void> {
-    if (!this.canEditBasic() || !this.basicValid() || this.saving()) return;
-    this.saving.set(true);
-
-    const c = this.current();
-    const payload: StudentBasicDetailsUpsertRequest = {
-      title: this.normalise(this.title()),
-      firstName: this.firstName().trim(),
-      middleName: this.normalise(this.middleName()),
-      lastName: this.lastName().trim(),
-      preferredFirstName: this.normalise(this.preferredFirstName()),
-      preferredLastName: this.normalise(this.preferredLastName()),
-      gender: this.gender().trim(),
-      dob: this.dob()?.toISOString() ?? null,
-      photoId: c?.photoId ?? null,
-      deceased: c?.deceased ?? null,
-    };
-
-    try {
-      await firstValueFrom(this.data.updateBasicDetails(this.studentId(), payload));
+    if (!this.canEditBasic()) return;
+    await submit(this.f, async () => {
+      const m = this.model();
+      const c = this.current();
+      const payload: StudentBasicDetailsUpsertRequest = {
+        title: this.normalise(m.title),
+        firstName: m.firstName.trim(),
+        middleName: this.normalise(m.middleName),
+        lastName: m.lastName.trim(),
+        preferredFirstName: this.normalise(m.preferredFirstName),
+        preferredLastName: this.normalise(m.preferredLastName),
+        gender: m.gender.trim(),
+        dob: m.dob?.toISOString() ?? null,
+        photoId: c?.photoId ?? null,
+        deceased: c?.deceased ?? null,
+      };
+      try {
+        await firstValueFrom(this.data.updateBasicDetails(this.studentId(), payload));
+      } catch (err) {
+        this.notify.apiError(err, this.transloco.translate('students.saveError'));
+        return;
+      }
       this.notify.success(this.transloco.translate('students.savedToast'));
-      this.basicSubmitAttempted.set(false);
       this.editing.set(false);
       this.loadHeader();
       this.loadBasic();
-    } catch (err) {
-      this.notify.apiError(err, this.transloco.translate('students.saveError'));
-    } finally {
-      this.saving.set(false);
-    }
+    });
   }
 
   protected backToList(): void {
@@ -517,28 +564,19 @@ export class StudentDetailsPage implements OnInit, CanComponentDeactivate {
   }
 
   private applyToForm(row: StudentBasicDetailsResponse | null): void {
-    if (!row) {
-      this.admissionNumber.set(null);
-      this.title.set(null);
-      this.firstName.set('');
-      this.middleName.set(null);
-      this.lastName.set('');
-      this.preferredFirstName.set(null);
-      this.preferredLastName.set(null);
-      this.gender.set('');
-      this.dob.set(null);
-    } else {
-      this.admissionNumber.set(row.admissionNumber);
-      this.title.set(row.title ?? null);
-      this.firstName.set(row.firstName);
-      this.middleName.set(row.middleName ?? null);
-      this.lastName.set(row.lastName);
-      this.preferredFirstName.set(row.preferredFirstName ?? null);
-      this.preferredLastName.set(row.preferredLastName ?? null);
-      this.gender.set(row.gender);
-      this.dob.set(row.dob ? new Date(row.dob) : null);
-    }
-    this.snapshot.set(this.currentForm());
+    this.admissionNumber.set(row?.admissionNumber ?? null);
+    this.model.set({
+      title: row?.title ?? '',
+      firstName: row?.firstName ?? '',
+      middleName: row?.middleName ?? '',
+      lastName: row?.lastName ?? '',
+      preferredFirstName: row?.preferredFirstName ?? '',
+      preferredLastName: row?.preferredLastName ?? '',
+      gender: row?.gender ?? '',
+      dob: row?.dob ? new Date(row.dob) : null,
+    });
+    this.f().reset();
+    this.snapshot.set(this.formState());
   }
 
   private normalise(value: string | null | undefined): string | null {

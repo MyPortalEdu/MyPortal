@@ -87,14 +87,11 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="create-firstName">
-              {{ t('students.fields.firstName') }}
-            </label>
+          <mp-field [label]="t('students.fields.firstName')" [field]="f.firstName" for="create-firstName">
             <input mpInput id="create-firstName"
                    [formField]="f.firstName"
                    (keydown.enter)="save()" />
-          </div>
+          </mp-field>
 
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-middleName">
@@ -105,14 +102,11 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="create-lastName">
-              {{ t('students.fields.lastName') }}
-            </label>
+          <mp-field [label]="t('students.fields.lastName')" [field]="f.lastName" for="create-lastName">
             <input mpInput id="create-lastName"
                    [formField]="f.lastName"
                    (keydown.enter)="save()" />
-          </div>
+          </mp-field>
 
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-preferredFirst">
@@ -123,13 +117,10 @@
                    (keydown.enter)="save()" />
           </div>
 
-          <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium" for="create-gender">
-              {{ t('students.fields.gender') }}
-            </label>
+          <mp-field [label]="t('students.fields.gender')" [field]="f.gender" for="create-gender">
             <mp-gender-select inputId="create-gender"
                               [formField]="f.gender"></mp-gender-select>
-          </div>
+          </mp-field>
 
           <div class="flex flex-col gap-1">
             <label class="text-sm font-medium" for="create-dob">
@@ -174,7 +165,7 @@
             [disabled]="f().submitting()"
             (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
           <button mpButton
-            [disabled]="!f().valid() || f().submitting()"
+            [disabled]="f().submitting()"
             (click)="save()"><i class="fa-solid" [class.fa-plus]="!f().submitting()" [class.fa-spinner]="f().submitting()" [class.fa-spin]="f().submitting()"></i> {{ t('students.create.submit') }}</button>
         </div>
       }

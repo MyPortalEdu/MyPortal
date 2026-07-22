@@ -10,6 +10,11 @@ public class PersonAddressUpdateRequestValidator : AbstractValidator<PersonAddre
         RuleFor(x => x.TypeId)
             .NotEmpty().WithMessage("Address type is required.");
 
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate!.Value)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue)
+            .WithMessage("End date must be on or after the start date.");
+
         RuleFor(x => x.Street)
             .NotEmpty().WithMessage("Street is required.")
             .MaximumLength(256);

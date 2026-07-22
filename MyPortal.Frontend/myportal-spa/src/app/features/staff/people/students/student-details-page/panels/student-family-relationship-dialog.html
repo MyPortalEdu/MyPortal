@@ -1,0 +1,155 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [closeOnEscape]="!submitting() && !resolving()"
+    panelClass="w-[min(40rem,92vw)]"
+    [dismissable]="false"
+    [title]="isEdit() ? t('students.family.editHeader') : t('students.family.addHeader')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="submitting() || resolving()">
+
+    @if (step() === 'contact') {
+      <div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium" for="family-search">
+            {{ t('students.family.searchLabel') }}
+          </label>
+          <span class="relative">
+            <input mpInput id="family-search" class="w-full"
+                   [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+                   [placeholder]="t('students.family.searchPlaceholder')"
+                   autocomplete="off" />
+            @if (searching() || resolving()) {
+              <mp-spinner
+                size="1.25rem"
+                class="absolute right-3 top-1/2 -translate-y-1/2"></mp-spinner>
+            }
+          </span>
+          <span class="text-xs text-muted-foreground">{{ t('students.family.searchHint') }}</span>
+        </div>
+
+        @if (results().length > 0) {
+          <div class="mt-4">
+            <p class="text-sm font-medium mb-2">{{ t('students.family.matchesLabel') }}</p>
+            <ul class="flex flex-col divide-y divide-surface border border-border rounded-lg overflow-hidden">
+              @for (p of results(); track p.personId) {
+                <li>
+                  <button type="button"
+                          class="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-muted"
+                          [disabled]="resolving()"
+                          (click)="pickPerson(p)">
+                    <span class="flex flex-col">
+                      <span class="text-sm font-medium">{{ fullName(p) }}</span>
+                      @if (p.dob) {
+                        <span class="text-xs text-muted-foreground">
+                          {{ t('students.fields.dob') }}: {{ p.dob | date: 'dd/MM/yyyy' }}
+                        </span>
+                      }
+                    </span>
+                    @if (p.isContact) {
+                      <span class="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary whitespace-nowrap">
+                        {{ t('students.family.alreadyContact') }}
+                      </span>
+                    } @else {
+                      <i class="fa-solid fa-chevron-right text-muted-foreground text-xs"></i>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="flex items-center gap-3 my-4">
+          <span class="flex-1 border-t border-border"></span>
+          <span class="text-xs uppercase tracking-wide text-muted-foreground">
+            {{ t('students.family.orCreateNew') }}
+          </span>
+          <span class="flex-1 border-t border-border"></span>
+        </div>
+
+        <button mpButton
+          variant="outline"
+          [disabled]="resolving()"
+          (click)="openCreateContact()"><i class="fa-solid fa-user-plus"></i> {{ t('students.family.createContact') }}</button>
+      </div>
+    }
+
+    @if (step() === 'relationship') {
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center justify-between gap-3 p-3 border border-border rounded-lg bg-muted">
+          <span class="flex items-center gap-3">
+            <i class="fa-solid fa-user text-muted-foreground"></i>
+            <span class="text-sm font-medium">{{ selectedContactName() || t('students.family.selectedContact') }}</span>
+          </span>
+          @if (!isEdit()) {
+            <button mpButton
+              variant="ghost"
+              size="sm"
+              [disabled]="submitting()"
+              (click)="changeContact()"><i class="fa-solid fa-arrow-left"></i> {{ t('students.family.changeContact') }}</button>
+          }
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-2">
+          <mp-field [label]="t('students.family.relationshipType')" for="family-relationshipType" [field]="f.relationshipTypeId">
+            <mp-select
+              inputId="family-relationshipType"
+              [options]="relationshipTypes()"
+              optionLabel="description"
+              optionValue="id"
+              [formField]="f.relationshipTypeId"
+              [placeholder]="t('students.family.relationshipTypePlaceholder')"
+              class="w-full"></mp-select>
+          </mp-field>
+
+          <mp-field [label]="t('students.family.priority')" for="family-priority" [field]="f.contactOrder">
+            <input mpInput id="family-priority" type="number" [formField]="f.contactOrder" />
+          </mp-field>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox id="family-correspondence" [formField]="f.hasCorrespondence"></mp-checkbox>
+            {{ t('students.family.flags.correspondence') }}
+          </label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox id="family-parentalResponsibility" [formField]="f.hasParentalResponsibility"></mp-checkbox>
+            {{ t('students.family.flags.parentalResponsibility') }}
+          </label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox id="family-pupilReport" [formField]="f.hasPupilReport"></mp-checkbox>
+            {{ t('students.family.flags.pupilReport') }}
+          </label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox id="family-courtOrder" [formField]="f.hasCourtOrder"></mp-checkbox>
+            {{ t('students.family.flags.courtOrder') }}
+          </label>
+        </div>
+      </div>
+    }
+
+    <div mpDialogFooter>
+      <div class="flex items-center justify-end gap-2">
+        <button mpButton
+          variant="outline"
+          [disabled]="submitting()"
+          (click)="onClose()"><i class="fa-solid fa-xmark"></i> {{ t('common.cancel') }}</button>
+        @if (step() === 'relationship') {
+          <button mpButton
+            [disabled]="submitting()"
+            (click)="save()"><i class="fa-solid" [class.fa-check]="!submitting()" [class.fa-spinner]="submitting()" [class.fa-spin]="submitting()"></i> {{ t('common.save') }}</button>
+        }
+      </div>
+    </div>
+  </mp-dialog>
+
+  <mp-contact-create-dialog
+    [open]="childCreateOpen()"
+    (closed)="onChildClosed()"
+    (created)="onChildCreated($event)"
+    (openExisting)="onChildOpenExisting($event)"
+  ></mp-contact-create-dialog>
+</ng-container>
