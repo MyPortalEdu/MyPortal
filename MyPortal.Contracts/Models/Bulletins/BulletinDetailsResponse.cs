@@ -34,22 +34,10 @@ public class BulletinDetailsResponse
     public long Version { get; set; }
 
     public IList<BulletinAudienceResponse> Audiences { get; set; } = new List<BulletinAudienceResponse>();
-
-    /// <summary>
-    /// Whether the current caller has acknowledged this bulletin. Null when the
-    /// bulletin does not require acknowledgement.
-    /// </summary>
+    
     public bool? HasAcknowledged { get; set; }
-
-    /// <summary>
-    /// Total number of audience members who have acknowledged. Null when the
-    /// bulletin does not require acknowledgement.
-    /// </summary>
+    
     public int? AcknowledgedCount { get; set; }
-
-    /// <summary>
-    /// Number of (non-deleted) documents attached to the bulletin. Counts the
-    /// root directory only — bulletins don't expose sub-folders.
-    /// </summary>
+    
     public int AttachmentCount { get; set; }
 }

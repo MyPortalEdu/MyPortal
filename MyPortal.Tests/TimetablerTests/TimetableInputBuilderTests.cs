@@ -2,7 +2,6 @@ using MyPortal.Core.Entities;
 using MyPortal.Data.Timetabler;
 using MyPortal.Services.Curriculum.Timetable;
 using MyPortal.Timetabler.Solver;
-using Directory = MyPortal.Core.Entities.Directory;
 
 namespace MyPortal.Tests.TimetablerTests;
 

@@ -1,5 +1,4 @@
 using System.Data;
-using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Pastoral;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces.Base;

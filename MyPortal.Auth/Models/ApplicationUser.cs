@@ -6,13 +6,9 @@ namespace MyPortal.Auth.Models;
 public class ApplicationUser : IdentityUser<Guid>
 {
     public Guid? PersonId { get; set; }
-        
     public UserType UserType { get; set; }
-
     public bool IsEnabled { get; set; }
-    
     public bool IsSystem { get; set; }
-    
     public Guid? CreatedById { get; set; }
     public string CreatedByIpAddress { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

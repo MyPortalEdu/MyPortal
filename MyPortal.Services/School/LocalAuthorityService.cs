@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
-using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.School;
 using MyPortal.Data.Interfaces;
-using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces.School;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;

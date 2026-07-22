@@ -1,4 +1,5 @@
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Students;
 
 namespace MyPortal.Services.Interfaces.People;
 

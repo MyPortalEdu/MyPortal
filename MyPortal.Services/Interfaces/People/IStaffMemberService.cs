@@ -1,6 +1,6 @@
-using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.Documents;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Staff;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;

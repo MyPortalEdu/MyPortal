@@ -8,7 +8,6 @@ using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;
 using MyPortal.Data.Utilities;
 using MyPortal.Data.VisibilityScopes;
-using QueryKit.Extensions;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;
 using QueryKit.Repositories.Sorting;

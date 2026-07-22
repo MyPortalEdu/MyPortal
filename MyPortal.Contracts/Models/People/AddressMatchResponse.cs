@@ -1,10 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// An existing address surfaced by the search-before-add flow. The user links one of these
-/// (avoiding a duplicate) or creates a new address. <see cref="LinkedPersonCount"/> hints how
-/// many people already live there.
-/// </summary>
 public class AddressMatchResponse
 {
     public Guid AddressId { get; set; }

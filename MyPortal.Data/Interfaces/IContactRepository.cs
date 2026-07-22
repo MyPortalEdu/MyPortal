@@ -1,5 +1,6 @@
 using System.Data;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Contacts;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces.Base;
 using MyPortal.Data.Models;

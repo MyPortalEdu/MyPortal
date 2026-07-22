@@ -1,4 +1,5 @@
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Staff;
 using MyPortal.Services.Validation.People;
 
 namespace MyPortal.Tests.ValidatorTests;

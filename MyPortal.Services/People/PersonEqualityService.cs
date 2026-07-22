@@ -1,6 +1,7 @@
 using MyPortal.Common.Exceptions;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Staff;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Extensions;
 using MyPortal.Services.Interfaces.People;

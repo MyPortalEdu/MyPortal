@@ -5,10 +5,11 @@ using MyPortal.Auth.Constants;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Staff;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces.People;
-using MyPortal.Services.People;
+using MyPortal.Services.People.Staff;
 using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Tests.ServiceTests;

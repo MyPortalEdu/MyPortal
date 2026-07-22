@@ -6,6 +6,7 @@ using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Staff;
 using MyPortal.Core.Entities;
 using MyPortal.Services.Interfaces.People;
 using MyPortal.WebApi.Infrastructure.Attributes;

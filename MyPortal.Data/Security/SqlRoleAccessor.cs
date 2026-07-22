@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 

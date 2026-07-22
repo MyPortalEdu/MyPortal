@@ -1,6 +1,5 @@
 using System.Data;
 using MyPortal.Common.Interfaces;
-using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Pastoral;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;

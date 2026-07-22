@@ -1,5 +1,6 @@
 using FluentValidation;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Contacts;
 
 namespace MyPortal.Services.Validation.People;
 

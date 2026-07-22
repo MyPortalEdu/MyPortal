@@ -5,8 +5,7 @@ public class RegisterMarkResponse
     public Guid AttendanceMarkId { get; set; }
 
     public Guid StudentId { get; set; }
-
-    // Identifies which column of the day-of grid this mark belongs to.
+    
     public Guid AttendancePeriodId { get; set; }
 
     public Guid AttendanceCodeId { get; set; }

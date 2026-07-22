@@ -31,10 +31,7 @@ public class RegisterResponse
     public string? RoomName { get; set; }
 
     public bool IsCover { get; set; }
-
-    // Every period instance landing on the same calendar date as this register, so the
-    // teacher can see the rest of the day's marks alongside the one they're editing.
-    // The register UI is responsible for restricting edits to the target period.
+    
     public IList<RegisterPeriodResponse> Periods { get; set; } = new List<RegisterPeriodResponse>();
 
     public IList<RegisterStudentResponse> Students { get; set; } = new List<RegisterStudentResponse>();

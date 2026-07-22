@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
-using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.Pastoral;
 using MyPortal.Services.Interfaces.Pastoral;
 using QueryKit.Repositories.Filtering;

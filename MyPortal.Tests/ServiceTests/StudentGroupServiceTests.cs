@@ -8,7 +8,6 @@ using MyPortal.Contracts.Models.Pastoral;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Pastoral;
-using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Tests.ServiceTests;
 

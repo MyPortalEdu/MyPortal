@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using MyPortal.Auth.Interfaces;
-using MyPortal.Auth.Models;
 using MyPortal.Auth.Requirements;
 using MyPortal.Common.Enums;
 

@@ -1,6 +1,4 @@
 using Asp.Versioning;
-using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -31,7 +29,6 @@ using MyPortal.WebApi.Infrastructure.Extensions;
 using MyPortal.WebApi.Infrastructure.Json;
 using MyPortal.WebApi.Infrastructure.Middleware;
 using MyPortal.WebApi.Providers;
-using MyPortal.WebApi.Services;
 using MyPortal.WebApi.Services.Background;
 using MyPortal.WebApi.Swagger;
 using MyPortal.WebApi.Transformers;

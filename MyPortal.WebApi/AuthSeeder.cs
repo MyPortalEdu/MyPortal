@@ -1,7 +1,6 @@
 ﻿using System.Transactions;
 using Dapper;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace MyPortal.Contracts.Models.Documents
+﻿namespace MyPortal.Contracts.Models.Documents
 {
     public class DocumentDetailsResponse
     {

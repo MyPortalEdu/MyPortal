@@ -7,6 +7,7 @@ using MyPortal.Common.Constants;
 using MyPortal.Common.Enums;
 using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Students;
 using MyPortal.Services.Interfaces.People;
 using MyPortal.WebApi.Infrastructure.Attributes;
 using QueryKit.Repositories.Filtering;

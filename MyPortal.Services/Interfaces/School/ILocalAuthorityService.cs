@@ -1,4 +1,3 @@
-using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.School;
 using QueryKit.Repositories.Filtering;
 using QueryKit.Repositories.Paging;

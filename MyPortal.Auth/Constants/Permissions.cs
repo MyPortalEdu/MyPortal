@@ -1,11 +1,5 @@
 ﻿namespace MyPortal.Auth.Constants;
 
-/// <summary>
-/// Wire strings for permissions, grouped by area. A permission's portal audience (Staff / Student /
-/// Parent) is a DB attribute set by its seed migration — it is not encoded in the constant — so this
-/// stays a flat registry. Student and parent portal permissions get their own groups when those
-/// features are built.
-/// </summary>
 public static class Permissions
 {
     // Permissions to be uncommented as and when features are implemented

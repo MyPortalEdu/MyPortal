@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using MyPortal.Auth.Models;
 using MyPortal.Common.Interfaces;
-using QueryKit.Repositories.Interfaces;
 
 namespace MyPortal.Auth.Stores;
 
@@ -31,15 +30,10 @@ VALUES (@Id, @Name, @NormalizedName, @ConcurrencyStamp, @Description, @IsSystem,
     public async Task<IdentityResult> UpdateAsync(ApplicationRole role, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        // Compute new values into locals — only assign back to `role` after the UPDATE
-        // succeeds, so a concurrency rejection doesn't leave the in-memory entity in a state
-        // that disagrees with the DB.
+        
         var newConcurrencyStamp = Guid.NewGuid().ToString("N");
         var newNormalizedName = Normalize(role.Name);
-
-        // UserType and IsDefault are create/seed-time only and deliberately omitted here — a role's
-        // audience and its protected-default status never change through an update.
+        
         const string sql = @"
 UPDATE dbo.Roles SET
   Name=@Name,

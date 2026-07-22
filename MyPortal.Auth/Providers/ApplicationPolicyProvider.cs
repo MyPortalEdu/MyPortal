@@ -28,10 +28,7 @@ public sealed class ApplicationPolicyProvider(IServiceProvider sp) : IAuthorizat
         {
             var payload = policyName[PermPrefix.Length..];
             var parts = payload.Split(':', 2);
-
-            // Malformed policy name: fall through to the default provider (which returns null
-            // for unknown policies), so misconfigurations surface as "policy not found" rather
-            // than silently degrading to RequireAny with whatever permissions follow.
+            
             if (!Enum.TryParse(parts[0], ignoreCase: true, out PermissionMode mode))
             {
                 return _fallback.GetPolicyAsync(policyName);

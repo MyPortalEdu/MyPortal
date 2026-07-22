@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.Options;
-using MyPortal.Auth.Constants;
 using MyPortal.Common.Options;
 using MyPortal.Contracts.Interfaces.System.Users;
 using MyPortal.Contracts.Models.System.Users;

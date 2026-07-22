@@ -3,6 +3,8 @@ using Dapper;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Interfaces;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Contacts;
+using MyPortal.Contracts.Models.People.Students;
 using MyPortal.Core.Entities;
 using MyPortal.Data.Interfaces;
 using MyPortal.Data.Repositories.Base;

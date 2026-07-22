@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Contracts.Models.People;
+using MyPortal.Contracts.Models.People.Staff;
 using MyPortal.Contracts.Models.System.Users;
 using MyPortal.Services.Interfaces.People;
 using MyPortal.Services.Interfaces.System;

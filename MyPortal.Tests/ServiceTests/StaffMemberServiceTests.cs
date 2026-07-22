@@ -7,8 +7,9 @@ using MyPortal.Contracts.Models.People;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.People;
-using MyPortal.Services.People;
 using FluentValidation;
+using MyPortal.Contracts.Models.People.Staff;
+using MyPortal.Services.People.Staff;
 
 namespace MyPortal.Tests.ServiceTests;
 

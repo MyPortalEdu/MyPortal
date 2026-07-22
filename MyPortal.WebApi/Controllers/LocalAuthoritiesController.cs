@@ -4,7 +4,6 @@ using MyPortal.Auth.Attributes;
 using MyPortal.Auth.Constants;
 using MyPortal.Auth.Enums;
 using MyPortal.Common.Enums;
-using MyPortal.Contracts.Models;
 using MyPortal.Contracts.Models.School;
 using MyPortal.Services.Interfaces.School;
 using QueryKit.Repositories.Filtering;
