@@ -17,7 +17,6 @@ public class StaffEqualityDetailsResponse
     public Guid? SexualOrientationId { get; set; }
     public Guid? GenderIdentityId { get; set; }
 
-    // Staff-level disability declaration + per-disability Equality Act detail.
     public bool HasDisability { get; set; }
     public string? DisabilityDetails { get; set; }
     public Guid? ImpairmentEffectId { get; set; }

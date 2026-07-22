@@ -11,7 +11,6 @@ public class StaffAbsenceResponse
     public bool IsConfidential { get; set; }
     public string? Notes { get; set; }
 
-    // Statutory / payroll treatment — only All-scope (HR) editors may set these.
     public Guid? AuthorisedPayRateId { get; set; }
     public Guid? PayrollReasonId { get; set; }
     public bool SspExcluded { get; set; }

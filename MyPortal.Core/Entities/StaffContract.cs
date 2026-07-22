@@ -22,13 +22,10 @@ namespace MyPortal.Core.Entities
 
         public Guid? PayScalePointId { get; set; }
 
-        // The established post this contract is held against (Staff Setup reference data).
         public Guid? PostId { get; set; }
 
-        // Pension scheme this contract is enrolled in (TPS / LGPS / opted out).
         public Guid? SuperannuationSchemeId { get; set; }
 
-        // NI contracted-out status (pre-2016 schemes / payroll export).
         public bool NiContractedOut { get; set; }
 
         [Required]

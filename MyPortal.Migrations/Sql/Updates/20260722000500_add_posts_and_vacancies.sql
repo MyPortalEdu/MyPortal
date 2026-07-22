@@ -1,18 +1,6 @@
--- ============================================================================
--- Established posts & vacancies — the first slice of Staff Setup (school-level HR
--- reference data), and the last structural prerequisite for the School Workforce
--- Return:
---   * PostCategories  — Leadership / Teaching / Support / …
---   * Posts           — the establishment register (reference, title, category,
---     service term, SWR post code, established FTE). Contracts point at a post.
---   * Vacancies       — periods a post is unfilled, with the census fields
---     (advertised, temporarily filled, subject).
---   * StaffContracts.PostId
---
--- New permissions
--- Staff.ViewStaffSetup + Staff.EditStaffSetup (flat — this is school-level data,
--- not per staff member). Idempotent.
--- ============================================================================
+-- Established posts and vacancies — the school's staffing structure, which contracts are held
+-- against and vacancies reported for. Adds Staff.ViewStaffSetup / EditStaffSetup: school-level
+-- data, so these are flat permissions with no per-staff-member scopes. Idempotent.
 
 IF OBJECT_ID(N'[dbo].[PostCategories]', N'U') IS NULL
 BEGIN

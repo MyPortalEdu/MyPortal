@@ -3,9 +3,6 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // Append-only record of a contract's pay point / salary moving. Written by the service whenever
-    // an update changes either, so "who put them on M6, and when" stays answerable. The audit stamp
-    // (CreatedById / CreatedAt) is the changed-by / changed-on.
     [Table("StaffContractSalaryChanges")]
     public class StaffContractSalaryChange : Entity, IAuditableEntity
     {

@@ -1,9 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// One allowance in a contract's replace payload. A null <see cref="Id"/> is a new row; a populated
-/// one updates. Allowances present in the database but absent from the payload are soft-deleted.
-/// </summary>
 public class StaffContractAllowanceUpsertItem
 {
     public Guid? Id { get; set; }

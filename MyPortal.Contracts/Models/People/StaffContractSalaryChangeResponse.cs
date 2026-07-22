@@ -1,9 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// A recorded movement of a contract's pay point / salary. Read-only — the server writes these
-/// automatically when an update changes the point or the annual salary.
-/// </summary>
 public class StaffContractSalaryChangeResponse
 {
     public Guid Id { get; set; }

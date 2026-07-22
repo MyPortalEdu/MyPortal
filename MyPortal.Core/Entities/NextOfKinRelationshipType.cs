@@ -3,9 +3,8 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // Relationship of a staff member to their next of kin (Spouse, Partner, Sibling, …). A
-    // dedicated adult-oriented lookup, distinct from the DfE CBDS RelationshipTypes used for
-    // pupil contacts, which carries child-centric options (Childminder, Social Worker, …).
+    // Adult-oriented, deliberately separate from the CBDS RelationshipTypes used for pupil
+    // contacts — those are child-centric (Childminder, Social Worker, …).
     [Table("NextOfKinRelationshipTypes")]
     public class NextOfKinRelationshipType : LookupEntity, ISystemEntity, IOrderedLookupEntity
     {

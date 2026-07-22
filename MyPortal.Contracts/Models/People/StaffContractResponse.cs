@@ -27,12 +27,9 @@ public class StaffContractResponse
     public bool SafeguardedSalary { get; set; }
     public bool DailyRate { get; set; }
 
-    /// <summary>Allowances paid on top of this contract's base salary (TLR, SEN, R&amp;R, …).</summary>
     public List<StaffContractAllowanceResponse> Allowances { get; set; } = [];
 
-    /// <summary>Periods this contract was suspended.</summary>
     public List<StaffContractSuspensionResponse> Suspensions { get; set; } = [];
 
-    /// <summary>Recorded pay-point / salary movements, newest first. Read-only.</summary>
     public List<StaffContractSalaryChangeResponse> SalaryChanges { get; set; } = [];
 }

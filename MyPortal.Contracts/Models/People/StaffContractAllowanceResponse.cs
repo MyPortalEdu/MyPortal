@@ -1,10 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// An allowance paid on top of a contract's base salary (TLR, SEN, R&amp;R, London weighting).
-/// <see cref="AdditionalPaymentTypeId"/> resolves against <c>AdditionalPaymentTypes</c> on
-/// <see cref="StaffEmploymentDetailsResponse"/>.
-/// </summary>
 public class StaffContractAllowanceResponse
 {
     public Guid Id { get; set; }

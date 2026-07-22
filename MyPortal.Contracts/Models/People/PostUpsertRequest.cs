@@ -1,6 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>Create / update payload for an established post, including its vacancies.</summary>
 public class PostUpsertRequest
 {
     public string Reference { get; set; } = null!;

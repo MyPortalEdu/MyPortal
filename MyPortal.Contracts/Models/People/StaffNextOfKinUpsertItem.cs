@@ -1,12 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// A next-of-kin row in the upsert. A null <see cref="Id"/> is a new link; a populated id updates;
-/// omitted rows are soft-deleted (the link only — the shared Contact is never deleted here).
-///
-/// Set <see cref="PersonId"/> to reuse an existing person as the contact (search-before-add);
-/// leave it null to create a fresh contact from the name fields.
-/// </summary>
 public class StaffNextOfKinUpsertItem
 {
     public Guid? Id { get; set; }

@@ -1,16 +1,9 @@
--- ============================================================================
--- Emergency Contacts / Next of Kin — repoint the join at a shared Contact.
+-- Emergency contacts / next of kin — repoint the join at a shared Contact (a Person facet) so a
+-- contact can be reused across relationships and carry their own phones/emails, and add a
+-- dedicated adult-oriented relationship lookup.
 --
--- The orphaned NextOfKin table linked a staff member to a raw Person and used a
--- bespoke NextOfKinRelationshipTypes lookup. Neither was ever wired up. This
--- reshapes it to mirror StudentContactRelationship: the contact is a shared
--- Contact record (a Person facet), the relationship reuses the shared
--- RelationshipTypes lookup, and a ContactOrder gives call priority. The table
--- gains the standard audit/version/soft-delete columns used by every staff area.
---
--- The old table is empty (no code ever populated it), so a clean drop-and-create
--- is safe and avoids fiddly per-constraint ALTERs. Idempotent throughout.
--- ============================================================================
+-- Drop-and-create rather than per-constraint ALTERs: the old table was never wired up, so it is
+-- empty. Idempotent throughout.
 
 -- Drop the old shape (its own FKs/indexes go with it).
 IF OBJECT_ID(N'[dbo].[NextOfKin]', N'U') IS NOT NULL

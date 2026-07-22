@@ -3,7 +3,6 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // Broad grouping for an established post (Leadership, Teaching, Support, …).
     [Table("PostCategories")]
     public class PostCategory : LookupEntity, ISystemEntity, IOrderedLookupEntity
     {

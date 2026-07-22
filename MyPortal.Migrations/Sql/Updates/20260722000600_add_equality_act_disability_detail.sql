@@ -1,17 +1,6 @@
--- ============================================================================
--- Equality Act disability detail — MyPortal recorded only a HasDisability flag,
--- free text, and a bare StaffMemberId+DisabilityId join — none of the detail the
--- reasonable-adjustments duty actually needs:
---   * per-declared-disability: DateAdvised, IsLongTerm, AffectsWorkingAbility,
---     AssistanceRequired (the agreed adjustments)
---   * ImpairmentEffects lookup + StaffMembers.ImpairmentEffectId — the Equality Act
---     "substantially affects normal day-to-day activities" determinant
---   * StaffMembers.DisabilityNumber — registered disability number
---
--- The CBDS-coded Disability lookup is kept (coded values stay usable for statutory
--- returns) and the new detail hangs off it. No new permissions — all inside the
--- existing EqualityDetails area. Idempotent.
--- ============================================================================
+-- Equality Act disability detail: per-declared-disability advised date, long-term and
+-- affects-working-ability flags, and the agreed adjustments; plus the day-to-day-activities
+-- effect determinant and registered disability number. Idempotent.
 
 IF OBJECT_ID(N'[dbo].[ImpairmentEffects]', N'U') IS NULL
 BEGIN

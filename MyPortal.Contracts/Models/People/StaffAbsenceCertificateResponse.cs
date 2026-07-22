@@ -1,9 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// A certificate covering an absence — a self-certification, a doctor's fit note, or a
-/// return-to-work record.
-/// </summary>
 public class StaffAbsenceCertificateResponse
 {
     public Guid Id { get; set; }

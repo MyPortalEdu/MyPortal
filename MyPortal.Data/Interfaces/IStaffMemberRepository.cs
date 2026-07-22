@@ -25,11 +25,6 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
     Task<StaffBasicDetailsResponse?> GetBasicDetailsByIdAsync(Guid staffMemberId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null);
 
-    /// <summary>
-    /// Management section: the subject's line manager (id/name/code, null when unset) plus their
-    /// direct reports. <c>ManagerOptions</c> is left empty for the service to populate. Null if no
-    /// staff member matches. Backed by usp_staff_member_get_management_by_id.
-    /// </summary>
     Task<StaffManagementResponse?> GetManagementByIdAsync(Guid staffMemberId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null);
 

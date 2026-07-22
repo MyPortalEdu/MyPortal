@@ -19,19 +19,14 @@ namespace MyPortal.Core.Entities
 
         public string? Notes { get; set; }
 
-        // ---- Statutory / payroll treatment (HR-only: set by All-scope editors) ----
-
-        // The authorised rate this absence is paid at (SSP, occupational full/half pay, unpaid).
         public Guid? AuthorisedPayRateId { get; set; }
 
-        // The category reported to the payroll provider.
         public Guid? PayrollReasonId { get; set; }
 
-        // "SSP exclusion advised" — the staff member is not entitled to statutory sick pay.
         public bool SspExcluded { get; set; }
 
-        // Recorded separately from the date range: a range can span non-working days, and a
-        // part-day absence has no whole-day equivalent.
+        // Not derivable from the date range: it can span non-working days, and part-days have no
+        // whole-day equivalent.
         [Column(TypeName = "decimal(6,2)")]
         public decimal? WorkingDaysLost { get; set; }
 

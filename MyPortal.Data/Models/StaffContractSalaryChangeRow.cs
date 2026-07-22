@@ -1,9 +1,5 @@
 namespace MyPortal.Data.Models;
 
-/// <summary>
-/// A salary-change row with the changing user's display name already resolved, so the service
-/// doesn't have to round-trip per row.
-/// </summary>
 public class StaffContractSalaryChangeRow
 {
     public Guid Id { get; set; }

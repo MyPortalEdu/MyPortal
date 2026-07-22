@@ -1,13 +1,6 @@
--- ============================================================================
--- Contract allowances — payments on top of a contract's base salary (TLR1/2, TLR3,
--- SEN, R&R, London weighting, acting-up, …). Previously MyPortal had only the
--- AdditionalPaymentTypes lookup (CBDS CS082) with nothing linking it to a contract,
--- so a teacher on MPS + TLR1 + SEN could not be represented at all.
---
--- Many per contract, each with its own amount, period and payroll treatment.
--- No new permissions — this lives inside the existing
--- EmploymentDetails area (HR-edit only). Idempotent throughout.
--- ============================================================================
+-- Contract allowances (TLR, SEN, R&R, London weighting) — many per contract, each with its own
+-- amount, period and payroll treatment. Previously the AdditionalPaymentTypes lookup had nothing
+-- linking it to a contract, so MPS + TLR1 + SEN was unrepresentable. Idempotent.
 
 IF OBJECT_ID(N'[dbo].[StaffContractAllowances]', N'U') IS NULL
 BEGIN

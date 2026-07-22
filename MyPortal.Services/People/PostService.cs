@@ -18,11 +18,6 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.People;
 
-/// <summary>
-/// Owns the established-posts register. Unlike the staff-profile areas this is school-level
-/// reference data, so it gates on flat Staff.ViewStaffSetup / EditStaffSetup permissions rather
-/// than the relationship-scoped resolver. A post in use by a contract can't be deleted.
-/// </summary>
 public class PostService(
     IAuthorizationService authorizationService,
     ILogger<PostService> logger,

@@ -14,13 +14,6 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.People;
 
-/// <summary>
-/// Owns the Emergency Contacts area. Each next-of-kin is a link (NextOfKin) from the staff member
-/// to a shared Contact record — a Person facet — so a contact can be reused across relationships
-/// and carries their own phones/emails. Gating is <see cref="StaffArea.EmergencyContacts"/>,
-/// All-scope view/edit only. The save whole-area replaces the links; adding a contact either
-/// reuses an existing person (search-before-add) or creates a fresh one.
-/// </summary>
 public class StaffNextOfKinService(
     IAuthorizationService authorizationService,
     ILogger<StaffNextOfKinService> logger,

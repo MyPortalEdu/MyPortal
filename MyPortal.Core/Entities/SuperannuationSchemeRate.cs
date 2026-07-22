@@ -2,9 +2,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyPortal.Core.Entities
 {
-    // Effective-dated employer contribution rate for a scheme. Rate changes close the current row
-    // (set EffectiveTo) and insert a new one rather than mutating in place, so history stays intact
-    // — same shape as PayScalePointRate.
+    // Effective-dated: a rate change closes the current row and inserts a new one rather than
+    // mutating in place, so history survives. Same convention as PayScalePointRate.
     [Table("SuperannuationSchemeRates")]
     public class SuperannuationSchemeRate : Entity
     {
@@ -14,7 +13,6 @@ namespace MyPortal.Core.Entities
 
         public DateTime? EffectiveTo { get; set; }
 
-        // Employer contribution as a percentage of pensionable pay (e.g. 28.68 for TPS).
         [Column(TypeName = "decimal(5,2)")]
         public decimal EmployerRate { get; set; }
 

@@ -1,16 +1,5 @@
--- ============================================================================
--- Payroll spine completion — the three remaining High-priority contract gaps:
---   * SuperannuationSchemes / SuperannuationSchemeRates — pension scheme per
---     contract + effective-dated employer contribution rate (same close-and-insert
---     shape as PayScalePointRates). Plus StaffContracts.SuperannuationSchemeId and
---     NiContractedOut.
---   * StaffContractSuspensions — date-ranged suspension periods (disciplinary /
---     medical), many per contract.
---   * StaffContractSalaryChanges — append-only log of pay-point / salary movement,
---     written by the service; the audit stamp is the changed-by / changed-on.
---
--- No new permissions — all inside the existing EmploymentDetails area. Idempotent.
--- ============================================================================
+-- Pension scheme per contract (with effective-dated employer rates), contract suspensions, and
+-- an append-only salary-change log. Idempotent.
 
 IF OBJECT_ID(N'[dbo].[SuperannuationSchemes]', N'U') IS NULL
 BEGIN

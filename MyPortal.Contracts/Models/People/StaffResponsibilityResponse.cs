@@ -1,6 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>A single designated-responsibility assignment (e.g. DSL, First Aider) for a staff member.</summary>
 public class StaffResponsibilityResponse
 {
     public Guid Id { get; set; }

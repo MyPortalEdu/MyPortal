@@ -4,13 +4,9 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // An established position in the school's staffing structure — the thing a contract is held
-    // against, and the unit a vacancy is reported for. School-level reference data maintained in
-    // Staff Setup, not created ad-hoc from a staff record.
     [Table("Posts")]
     public class Post : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
     {
-        // Short unique identifier for the post within the school (e.g. "TCH-MFL-02").
         [Required]
         [StringLength(32)]
         public string Reference { get; set; } = null!;
@@ -23,11 +19,9 @@ namespace MyPortal.Core.Entities
 
         public Guid? ServiceTermId { get; set; }
 
-        // School Workforce Return post code, for census mapping.
         [StringLength(10)]
         public string? SwrPostCode { get; set; }
 
-        // FTE the post is funded/established for — the basis for comparing establishment to actual.
         [Column(TypeName = "decimal(5,4)")]
         public decimal? EstablishedFte { get; set; }
 

@@ -26,12 +26,8 @@ public interface IStaffMemberService
     Task UpdateBasicDetailsAsync(Guid id, StaffBasicDetailsUpsertRequest model,
         CancellationToken cancellationToken);
 
-    /// <summary>Management section of Basic Details: the line manager + direct reports. Read gated
-    /// on basic-details view; the manager picker list is only returned when the caller may edit.</summary>
     Task<StaffManagementResponse> GetManagementAsync(Guid id, CancellationToken cancellationToken);
 
-    /// <summary>Assigns or clears (null) the line manager. HR-owned — gated on basic-details
-    /// EditAll. Rejects self-assignment and any target that would create a cycle in the chain.</summary>
     Task SetLineManagerAsync(Guid id, SetStaffLineManagerRequest model, CancellationToken cancellationToken);
 
     /// <summary>Adds or replaces the staff member's photo (part of basic details). Gated on

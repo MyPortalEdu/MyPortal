@@ -3,8 +3,6 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // A staff member holding a designated responsibility (DSL, First Aider, …) for a period.
-    // StartDate is when they took it on; a null EndDate means still current.
     [Table("StaffResponsibilities")]
     public class StaffResponsibility : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
     {

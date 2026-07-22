@@ -42,8 +42,7 @@ export class StaffManagementSection {
   protected readonly loading = signal(false);
   protected readonly management = signal<StaffManagementResponse | null>(null);
 
-  // The persisted manager vs the edit buffer — the picker mutates `pendingManagerId`; the change
-  // is only pushed to the server when the page's Save calls commit().
+  // Edit buffer: only pushed to the server when the page's Save calls commit().
   private readonly loadedManagerId = signal<string | null>(null);
   readonly pendingManagerId = signal<string | null>(null);
   readonly dirty = computed(() => this.pendingManagerId() !== this.loadedManagerId());
@@ -53,8 +52,8 @@ export class StaffManagementSection {
   protected readonly directReports = computed(() => this.management()?.directReports ?? []);
   protected readonly history = computed(() => this.management()?.history ?? []);
 
-  // Reload when the routed staff member changes — the page reuses this component across
-  // staff-member ids (e.g. clicking a direct report), so a one-shot ngOnInit fetch would go stale.
+  // effect, not ngOnInit: the page reuses this component across staff-member ids, so a one-shot
+  // fetch would go stale when you click through to a direct report.
   constructor() {
     effect(() => {
       const id = this.staffMemberId();
@@ -81,13 +80,12 @@ export class StaffManagementSection {
     });
   }
 
-  /** Revert the buffered selection — called by the page when the user cancels the edit. */
+  // Called by the page on cancel.
   reset(): void {
     this.pendingManagerId.set(this.loadedManagerId());
   }
 
-  /** Persist the buffered selection if it changed — called by the page's Save. Throws on failure
-   * so the page's save handler surfaces the error and keeps the form in edit mode. */
+  // Called by the page's Save. Throws on failure so the page keeps the form in edit mode.
   async commit(): Promise<void> {
     if (!this.dirty()) {
       return;

@@ -1,22 +1,9 @@
--- ============================================================================
--- Teacher category & status — census classifications required for PLASC and
--- School Census returns:
---   TeacherCategories -> StaffMembers.TeacherCategoryId
---   TeacherStatuses   -> StaffMembers.TeacherStatusId
--- Both sit ALONGSIDE the existing HasQts flag rather than replacing it: the flag
--- answers "is this person qualified", the code answers "under which
--- classification", and the census needs the latter.
+-- Teacher category and qualified-teacher-status classifications (required for PLASC and School
+-- Census returns), plus the School Workforce Return eligibility flag. Both sit alongside the
+-- existing HasQts flag rather than replacing it.
 --
--- Also adds StaffMembers.EligibleForSwr — whether the person is included in the
--- School Workforce Return.
---
--- Same shape as the other CBDS-backed lookups (Code + DisplayOrder), but NOTE:
--- the DfE Codes are deliberately left NULL. The descriptions below are the
--- established classifications; the CBDS code strings must be populated from the
--- CBDS source before these are used to build a census return, rather than
--- guessed here. No new permissions — inside the existing ProfessionalDetails
--- area. Idempotent.
--- ============================================================================
+-- NOTE: the DfE Codes are seeded NULL on purpose — populate them from the CBDS source before
+-- using these to build a census return rather than guessing them here. Idempotent.
 
 IF OBJECT_ID(N'[dbo].[TeacherCategories]', N'U') IS NULL
 BEGIN

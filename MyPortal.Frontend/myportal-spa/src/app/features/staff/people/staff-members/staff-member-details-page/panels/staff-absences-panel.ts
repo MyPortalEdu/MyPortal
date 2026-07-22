@@ -151,7 +151,6 @@ export class StaffAbsencesPanel extends StaffAreaPanel implements OnInit {
   protected readonly payRates = computed(() => this.absences()?.payRates ?? []);
   protected readonly payrollReasons = computed(() => this.absences()?.payrollReasons ?? []);
 
-  /** The statutory pay treatment is HR's (All scope) — the server decides and tells us. */
   protected readonly canEditPayroll = computed(() => this.absences()?.canEditPayroll ?? false);
 
   override readonly canEdit = computed(() => {

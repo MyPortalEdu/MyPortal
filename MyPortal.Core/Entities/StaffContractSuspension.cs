@@ -4,8 +4,6 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // A period a contract was suspended (disciplinary investigation, medical exclusion, …).
-    // A null EndDate means the suspension is still in force.
     [Table("StaffContractSuspensions")]
     public class StaffContractSuspension : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
     {

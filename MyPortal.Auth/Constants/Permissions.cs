@@ -233,8 +233,7 @@ public static class Permissions
         public const string EditManagedStaffPerformanceDetails  = "Staff.EditManagedStaffPerformanceDetails";
         public const string EditAllStaffPerformanceDetails      = "Staff.EditAllStaffPerformanceDetails";
 
-        // Staff Setup — school-level HR reference data (established posts & vacancies, and in time
-        // service terms, pay scales and superannuation). Not per-staff-member, so no scopes.
+        // Staff Setup — school-level reference data, so no per-staff-member scopes.
         public const string ViewStaffSetup                      = "Staff.ViewStaffSetup";
         public const string EditStaffSetup                      = "Staff.EditStaffSetup";
 

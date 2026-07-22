@@ -3,10 +3,8 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // A period during which one staff member reported to another. The reporting line is
-    // date-ranged and historical: a null EndDate is the current manager. This table — not
-    // StaffMembers.LineManagerId — is the source of truth; the chain and direct-report queries
-    // resolve the row current on the day.
+    // Source of truth for the reporting line, not StaffMembers.LineManagerId: the managed-by chain
+    // and direct-report queries resolve the row current on the day.
     [Table("StaffLineManagers")]
     public class StaffLineManager : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
     {

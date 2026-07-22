@@ -1,6 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>A period an established post was unfilled. A null <see cref="EndDate"/> is still open.</summary>
 public class VacancyResponse
 {
     public Guid Id { get; set; }

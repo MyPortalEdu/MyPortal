@@ -3,9 +3,6 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // Links a staff member to an emergency contact / next of kin. The contact itself is a
-    // shared Contact record (a Person facet), mirroring StudentContactRelationship — so the
-    // same person can be reused across relationships and carries their own phones/emails.
     [Table("NextOfKin")]
     public class NextOfKin : Entity, IAuditableEntity, ISoftDeleteEntity, IVersionedEntity
     {
@@ -15,7 +12,6 @@ namespace MyPortal.Core.Entities
 
         public Guid? RelationshipTypeId { get; set; }
 
-        // Priority / order to call (1 = first).
         public int ContactOrder { get; set; }
 
         public string? Notes { get; set; }

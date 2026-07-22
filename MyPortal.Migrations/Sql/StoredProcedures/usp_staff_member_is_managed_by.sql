@@ -2,17 +2,11 @@ SET QUOTED_IDENTIFIER ON;
 SET ANSI_NULLS ON;
 GO
 
--- Transitive line-management test: returns IsManaged = 1 when @managerStaffMemberId
--- appears anywhere ABOVE @subjectStaffMemberId in the reporting chain (direct
--- manager, manager's manager, any depth), else 0. Backs StaffRelationship.LineManaged
--- in IStaffMemberAccessService — see docs/staff-profile-access.md.
+-- Backs StaffRelationship.LineManaged — see docs/staff-profile-access.md.
 --
--- The chain resolves against dbo.StaffLineManagers, which is date-ranged: only the row
--- current TODAY counts, so a manager whose period has ended no longer confers access.
--- (StaffMembers.LineManagerId is retained as a convenience copy but is NOT authoritative.)
---
--- A staff member never manages themselves. The Depth cap + MAXRECURSION guard against
--- cycles in bad data (A -> B -> A would otherwise recurse forever).
+-- Resolves against dbo.StaffLineManagers (NOT StaffMembers.LineManagerId, which is no longer
+-- authoritative): only the row current TODAY counts, so an ended reporting line stops conferring
+-- access. The Depth cap + MAXRECURSION guard against cycles in bad data.
 CREATE OR ALTER PROCEDURE [dbo].[usp_staff_member_is_managed_by]
     @subjectStaffMemberId UNIQUEIDENTIFIER,
     @managerStaffMemberId UNIQUEIDENTIFIER

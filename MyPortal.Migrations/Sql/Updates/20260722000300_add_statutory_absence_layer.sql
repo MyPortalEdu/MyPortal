@@ -1,16 +1,6 @@
--- ============================================================================
--- Statutory absence layer — the payroll / medical-evidence side of staff absence
--- that MyPortal's lean date-range record was missing entirely:
---   * StaffAbsenceCertificates  — self-certifications, doctors' fit notes and
---     return-to-work records (many per absence)
---   * StaffAbsencePayRates      — the authorised rate (SSP, OSP full/half, unpaid)
---   * StaffAbsencePayrollReasons— the category reported to the payroll provider
---   * new StaffAbsences columns — pay rate, payroll reason, SSP exclusion,
---     working days / hours lost, industrial injury
---
--- No new permissions — all of it sits inside the existing Absences area; the pay
--- treatment is gated to All-scope (HR) editors at the service layer. Idempotent.
--- ============================================================================
+-- Statutory / payroll side of staff absence: certificates and fit notes, authorised pay rate,
+-- payroll category, SSP exclusion, and days/hours lost. The pay treatment is gated to All-scope
+-- (HR) editors at the service layer. Idempotent.
 
 -- ---- Lookups ----
 IF OBJECT_ID(N'[dbo].[StaffAbsencePayRates]', N'U') IS NULL

@@ -482,7 +482,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
       value ? value.toISOString() : null);
   }
 
-  /** Indicative annual employer pension cost for a contract, from the scheme's current rate. */
   protected employerPensionCost(c: StaffContractUpsertItem): number | null {
     const rate = this.superannuationSchemes().find(s => s.id === c.superannuationSchemeId)?.employerRate;
     if (rate == null || c.annualSalary == null) return null;
@@ -541,7 +540,6 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
       value ? value.toISOString() : null);
   }
 
-  /** Total of the allowances on a contract, applying each row's pay factor. */
   protected allowanceTotal(c: StaffContractUpsertItem): number {
     return c.allowances.reduce((sum, a) => sum + (a.amount ?? 0) * (a.payFactor ?? 1), 0);
   }

@@ -126,7 +126,6 @@ export class PostEditorDialog {
   });
 
   constructor() {
-    // Re-seed whenever the dialog is opened for a different post (or for a new one).
     effect(() => {
       if (!this.open()) return;
       const row = this.post();

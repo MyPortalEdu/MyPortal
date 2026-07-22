@@ -14,11 +14,6 @@ using Task = System.Threading.Tasks.Task;
 
 namespace MyPortal.Services.People;
 
-/// <summary>
-/// Owns the Responsibilities area (DSL, First Aider, SENCO, …). Gating is
-/// <see cref="StaffArea.Responsibilities"/> — self / line-manager / HR view, HR-only edit. The save
-/// is a whole-area reconcile: new rows inserted, matched ids updated, dropped rows soft-deleted.
-/// </summary>
 public class StaffResponsibilityService(
     IAuthorizationService authorizationService,
     ILogger<StaffResponsibilityService> logger,

@@ -39,12 +39,10 @@ namespace MyPortal.Core.Entities
 
         public bool IsTeachingStaff { get; set; }
 
-        // Census classifications (see TeacherCategory / TeacherStatus).
         public Guid? TeacherCategoryId { get; set; }
 
         public Guid? TeacherStatusId { get; set; }
 
-        // Include this person in the School Workforce Return.
         public bool EligibleForSwr { get; set; }
 
         public bool HasQts { get; set; }
@@ -73,10 +71,8 @@ namespace MyPortal.Core.Entities
 
         public string? DisabilityDetails { get; set; }
 
-        // Equality Act: does the impairment substantially affect day-to-day activities?
         public Guid? ImpairmentEffectId { get; set; }
 
-        // Registered disability number, where the staff member holds one.
         [StringLength(32)]
         public string? DisabilityNumber { get; set; }
 

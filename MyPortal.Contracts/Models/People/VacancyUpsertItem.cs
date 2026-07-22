@@ -1,9 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// One vacancy in a post's replace payload. Null id inserts; populated id updates; omitted rows
-/// are soft-deleted.
-/// </summary>
 public class VacancyUpsertItem
 {
     public Guid? Id { get; set; }

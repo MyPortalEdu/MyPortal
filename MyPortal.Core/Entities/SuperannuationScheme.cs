@@ -4,7 +4,6 @@ using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
 {
-    // A pension scheme a contract can be enrolled in (TPS, LGPS, NEST, opted out).
     [Table("SuperannuationSchemes")]
     public class SuperannuationScheme : LookupEntity, ISystemEntity, IOrderedLookupEntity
     {

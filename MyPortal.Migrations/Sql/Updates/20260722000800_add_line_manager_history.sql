@@ -1,21 +1,9 @@
--- ============================================================================
--- Line-manager history — the reporting line was a single mutable
--- StaffMembers.LineManagerId pointer, so "who managed X in 2023" was unanswerable
--- and an ended reporting line still conferred Managed-scope access forever.
---
--- StaffLineManagers is now the SOURCE OF TRUTH: date-ranged, many per person, a
--- null EndDate being the current manager.
---
--- Both consumers are re-pointed at it (see the updated stored procedures, which
--- re-run every pass):
---   * usp_staff_member_is_managed_by       — the security-critical Managed-scope chain
---   * usp_staff_member_get_management_by_id — current manager + direct reports
--- StaffMembers.LineManagerId is RETAINED as a convenience copy the service keeps
--- roughly in step, but nothing authoritative reads it any more.
---
--- Existing pointers are backfilled as open-ended rows so no one loses access.
--- No new permissions. Idempotent.
--- ============================================================================
+-- Line-manager history. StaffLineManagers is now the source of truth for the reporting line:
+-- date-ranged, many per person, a null EndDate being the current manager. Both consumers resolve
+-- the row current today — usp_staff_member_is_managed_by (the Managed-scope chain) and
+-- usp_staff_member_get_management_by_id — so an ended reporting line no longer grants access
+-- indefinitely. StaffMembers.LineManagerId is retained but is no longer authoritative. Existing
+-- pointers are backfilled as open-ended rows. Idempotent.
 
 IF OBJECT_ID(N'[dbo].[StaffLineManagers]', N'U') IS NULL
 BEGIN

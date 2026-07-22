@@ -475,8 +475,8 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
   ngOnInit(): void {
     this.me.me().subscribe(me => this.heldPerms.set(new Set(me.permissions ?? [])));
 
-    // React to the :id param (not just the initial snapshot) so navigating between staff records
-    // — e.g. clicking a direct report — reloads rather than reusing the previous member's data.
+    // paramMap, not the initial snapshot: the router reuses this component across staff-member
+    // ids, so clicking a direct report must reload rather than show the previous member.
     this.route.paramMap.subscribe(params => {
       const id = params.get('id') ?? '';
       if (id === this.staffMemberId()) return;
@@ -676,8 +676,7 @@ export class StaffMemberDetailsPage implements OnInit, CanComponentDeactivate {
     };
 
     try {
-      // Only write the bio endpoint when the bio actually changed — a manager-only edit shouldn't
-      // bump the basic-details audit/version. The line manager is a separate HR-gated endpoint.
+      // Skip the bio write when only the manager changed, so it doesn't bump the audit/version.
       if (this.basicDirty()) {
         await firstValueFrom(this.data.updateBasicDetails(this.staffMemberId(), payload));
       }

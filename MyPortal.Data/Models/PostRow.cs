@@ -1,6 +1,5 @@
 namespace MyPortal.Data.Models;
 
-/// <summary>A post plus the number of contracts currently held against it.</summary>
 public class PostRow
 {
     public Guid Id { get; set; }

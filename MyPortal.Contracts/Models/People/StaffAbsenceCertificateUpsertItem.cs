@@ -1,10 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// One certificate in an absence's replace payload. A null <see cref="Id"/> is a new row; a
-/// populated one updates. Certificates absent from the payload are deleted with the absence's
-/// reconcile (hard delete, matching the lean absence tables).
-/// </summary>
 public class StaffAbsenceCertificateUpsertItem
 {
     public Guid? Id { get; set; }

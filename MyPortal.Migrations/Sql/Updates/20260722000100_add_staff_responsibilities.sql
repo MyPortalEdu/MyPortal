@@ -1,9 +1,5 @@
--- ============================================================================
--- Staff Responsibilities area — designated duties a staff member holds on top of
--- their post (DSL, First Aider, SENCO, Fire Marshal, …), each for a period. A new
--- StaffResponsibilityTypes lookup + a date-ranged StaffResponsibilities join.
--- Distinct from the census job role on the contract. Idempotent throughout.
--- ============================================================================
+-- Staff responsibilities — date-ranged designated duties (DSL, first aider, SENCO) held on top
+-- of a post. Distinct from the census job role on the contract. Idempotent.
 
 IF OBJECT_ID(N'[dbo].[StaffResponsibilityTypes]', N'U') IS NULL
 BEGIN

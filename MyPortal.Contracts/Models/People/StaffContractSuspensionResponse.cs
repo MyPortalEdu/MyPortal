@@ -1,6 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>A period this contract was suspended. A null <see cref="EndDate"/> is still in force.</summary>
 public class StaffContractSuspensionResponse
 {
     public Guid Id { get; set; }

@@ -1,9 +1,5 @@
 namespace MyPortal.Contracts.Models.People;
 
-/// <summary>
-/// An emergency contact / next of kin for a staff member: the relationship (type, call order,
-/// notes) plus the linked shared Contact's name and reachable phones/emails.
-/// </summary>
 public class StaffNextOfKinResponse
 {
     public Guid Id { get; set; }
