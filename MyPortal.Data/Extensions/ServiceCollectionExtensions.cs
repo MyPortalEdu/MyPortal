@@ -97,6 +97,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdditionalPaymentTypeRepository, AdditionalPaymentTypeRepository>();
         services.AddScoped<IStaffContractSuspensionRepository, StaffContractSuspensionRepository>();
         services.AddScoped<IStaffContractSalaryChangeRepository, StaffContractSalaryChangeRepository>();
+        services.AddScoped<IScheduledIncrementRepository, ScheduledIncrementRepository>();
         services.AddScoped<IPostRepository, PostRepository>();
         services.AddScoped<ISubjectRepository, SubjectRepository>();
         services.AddScoped<IPostCategoryRepository, PostCategoryRepository>();
@@ -117,6 +118,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITrainingCertificateStatusRepository, TrainingCertificateStatusRepository>();
         services.AddScoped<IStaffRoleRepository, StaffRoleRepository>();
         services.AddScoped<IServiceTermRepository, ServiceTermRepository>();
+        services
+            .AddScoped<IServiceTermSuperannuationSchemeRepository, ServiceTermSuperannuationSchemeRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<IPayScaleRepository, PayScaleRepository>();
         services.AddScoped<IPayScalePointRepository, PayScalePointRepository>();

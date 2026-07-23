@@ -149,6 +149,31 @@ public class StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationS
         }
     }
 
+    public async Task<IReadOnlyList<ComplianceItemResponse>> GetComplianceItemsAsync(DateTime today,
+        DateTime horizon, CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var sql = SqlResourceLoader.Load("People.GetComplianceItems.sql");
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, new { today, horizon }, transaction,
+                cancellationToken: cancellationToken);
+
+            var rows = await conn.QueryAsync<ComplianceItemResponse>(command);
+
+            return rows.AsList();
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
     public async Task<IReadOnlyList<PersonMatchResponse>> SearchPeopleForStaffCreateAsync(string like,
         CancellationToken cancellationToken, IDbTransaction? transaction = null)
     {

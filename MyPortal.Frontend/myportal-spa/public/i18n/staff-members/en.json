@@ -60,6 +60,9 @@
     "firstName": "First name",
     "lastName": "Last name",
     "title": "Title",
+    "role": "Role",
+    "gender": "Gender",
+    "startDate": "Start Date",
     "status": "Status"
   },
   "statusFilter": {
@@ -192,6 +195,12 @@
     "leavingReason": "Leaving reason",
     "origin": "Recruited from",
     "destination": "Destination on leaving",
+    "previousEmployer": "Previous employer",
+    "nextEmployer": "Next employer",
+    "continuousServiceStartDate": "Continuous service start date",
+    "continuousServiceStartDateHint": "Includes service carried in from previous employment.",
+    "localAuthorityStartDate": "Local authority start date",
+    "localAuthorityStartDateHint": "First day of continuous service with this local authority.",
     "notes": "Notes",
     "contractsHeading": "Contracts",
     "contract": "Contract",
@@ -258,7 +267,8 @@
       "current": "Current",
       "ended": "Ended"
     },
-    "fteTotal": "FTE total: {{total}}"
+    "fteTotal": "FTE total: {{total}}",
+    "pickServiceTermFirst": "Pick a service term first"
   },
   "preEmployment": {
     "hint": "Single Central Record checks — DBS, right to work, references and overseas checks. Safeguarding data, visible to HR only.",
@@ -489,5 +499,8 @@
     "savedToast": "Line manager updated",
     "loadError": "Couldn't load management details",
     "saveError": "Couldn't update the line manager"
+  },
+  "genderFilter": {
+    "all": "All genders"
   }
 }

@@ -3,8 +3,27 @@ import { LookupResponse } from './lookup';
 export interface PayScalePointResponse {
   id: string;
   payScaleId: string;
+  pointValue: number;
   description: string;
   fullTimeSalary?: number | null;
+}
+
+export interface PayScaleResponse {
+  id: string;
+  serviceTermId: string;
+  description: string;
+}
+
+export interface ServiceTermSchemeLink {
+  serviceTermId: string;
+  superannuationSchemeId: string;
+  isMain: boolean;
+}
+
+export interface ServiceTermDefaults {
+  serviceTermId: string;
+  hoursPerWeek?: number | null;
+  weeksPerYear?: number | null;
 }
 
 export interface SuperannuationSchemeResponse {
@@ -119,9 +138,13 @@ export interface StaffEmploymentResponse {
   id: string;
   startDate: string;
   endDate?: string | null;
+  continuousServiceStartDate?: string | null;
+  localAuthorityStartDate?: string | null;
   leavingReasonId?: string | null;
   originId?: string | null;
   destinationId?: string | null;
+  previousEmployer?: string | null;
+  nextEmployer?: string | null;
   notes?: string | null;
   contracts: StaffContractResponse[];
 }
@@ -130,9 +153,13 @@ export interface StaffEmploymentUpsertItem {
   id?: string | null;
   startDate: string | null;
   endDate?: string | null;
+  continuousServiceStartDate?: string | null;
+  localAuthorityStartDate?: string | null;
   leavingReasonId?: string | null;
   originId?: string | null;
   destinationId?: string | null;
+  previousEmployer?: string | null;
+  nextEmployer?: string | null;
   notes?: string | null;
   contracts: StaffContractUpsertItem[];
 }
@@ -155,7 +182,9 @@ export interface StaffEmploymentDetailsResponse {
   staffRoles: LookupResponse[];
   serviceTerms: LookupResponse[];
   departments: LookupResponse[];
-  payScales: LookupResponse[];
+  payScales: PayScaleResponse[];
+  serviceTermSchemes: ServiceTermSchemeLink[];
+  serviceTermDefaults: ServiceTermDefaults[];
   additionalPaymentTypes: LookupResponse[];
   superannuationSchemes: SuperannuationSchemeResponse[];
   posts: LookupResponse[];

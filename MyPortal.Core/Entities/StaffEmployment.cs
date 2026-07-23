@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MyPortal.Core.Interfaces;
 
@@ -12,6 +13,12 @@ namespace MyPortal.Core.Entities
 
         public DateTime? EndDate { get; set; }
 
+        // Carried in from earlier employment, so it may predate StartDate — it drives redundancy
+        // and pension entitlement, not the length of this spell.
+        public DateTime? ContinuousServiceStartDate { get; set; }
+
+        public DateTime? LocalAuthorityStartDate { get; set; }
+
         public Guid? LeavingReasonId { get; set; }
 
         // Where the staff member was recruited from (CBDS CS055) — census arrivals.
@@ -20,6 +27,12 @@ namespace MyPortal.Core.Entities
 
         // Destination on leaving (CBDS CS042) — workforce-census leavers return.
         public Guid? DestinationId { get; set; }
+
+        [StringLength(128)]
+        public string? PreviousEmployer { get; set; }
+
+        [StringLength(128)]
+        public string? NextEmployer { get; set; }
 
         public string? Notes { get; set; }
 

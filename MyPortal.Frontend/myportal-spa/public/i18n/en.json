@@ -127,7 +127,17 @@
       "code": "Code",
       "firstName": "First name",
       "lastName": "Last name",
-      "empty": "No staff members found."
+      "empty": "No staff members found.",
+      "role": "Role",
+      "statusHeader": "Status",
+      "status": {
+        "all": "All Statuses",
+        "Active": "Active",
+        "Future": "Future",
+        "Leaver": "Leaver",
+        "None": "No Employment",
+        "Archived": "Archived"
+      }
     },
     "personPicker": {
       "pick": "Link a person…",
@@ -177,10 +187,11 @@
     "schoolDetails": "School Details",
     "curriculum": "Curriculum",
     "academicYears": "Academic Years",
-    "staffSetup": "Staff Setup",
+    "personnel": "Personnel",
+    "staffMembers": "Staff",
     "posts": "Posts",
-    "people": "People",
-    "staffMembers": "Staff"
+    "serviceTerms": "Service Terms",
+    "compliance": "Compliance"
   },
   "pages": {
     "home": {

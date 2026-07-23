@@ -12,7 +12,10 @@ import { SchoolDetailsPage } from './school/school-details/school-details-page';
 import { AcademicYearListPage } from './curriculum/academic-years/academic-year-list-page/academic-year-list-page';
 import { StaffMemberListPage } from './people/staff-members/staff-member-list-page/staff-member-list-page';
 import { StaffMemberDetailsPage } from './people/staff-members/staff-member-details-page/staff-member-details-page';
+import { StaffCompliancePage } from './people/staff-compliance/staff-compliance-page';
 import { PostListPage } from './setup/posts/post-list-page/post-list-page';
+import { ServiceTermListPage } from './setup/service-terms/service-term-list-page/service-term-list-page';
+import { ServiceTermDetailsPage } from './setup/service-terms/service-term-details-page/service-term-details-page';
 import { Permissions } from '../../core/constants/permissions';
 export const STAFF_ROUTES: Routes = [
   {
@@ -111,12 +114,39 @@ export const STAFF_ROUTES: Routes = [
         }
       },
       {
+        path: 'setup/service-terms',
+        component: ServiceTermListPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup],
+          breadcrumb: 'Service Terms'
+        }
+      },
+      {
+        path: 'setup/service-terms/:id',
+        component: ServiceTermDetailsPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup],
+          breadcrumb: 'Service Term'
+        }
+      },
+      {
         path: 'people/staff-members',
         component: StaffMemberListPage,
         canActivate: [AuthGuard],
         data: {
           permissionsAny: [Permissions.Staff.ViewAllStaffBasicDetails],
           breadcrumb: 'Staff'
+        }
+      },
+      {
+        path: 'people/compliance',
+        component: StaffCompliancePage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffPreEmploymentChecks],
+          breadcrumb: 'Compliance'
         }
       },
       {

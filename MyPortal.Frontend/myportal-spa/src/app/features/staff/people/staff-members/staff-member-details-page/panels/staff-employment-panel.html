@@ -94,6 +94,27 @@
                     <span>{{ lookupLabel(origins(), e.originId) }}</span>
                   }
                 </mp-field>
+                <mp-field class="md:col-span-2" [label]="t('staff-members.employment.previousEmployer')">
+                  @if (editing()) {
+                    <input mpInput maxlength="128" [ngModel]="e.previousEmployer ?? ''" (ngModelChange)="patchEmployment(ei, 'previousEmployer', $event)" />
+                  } @else {
+                    <span>{{ e.previousEmployer || '—' }}</span>
+                  }
+                </mp-field>
+                <mp-field [label]="t('staff-members.employment.continuousServiceStartDate')" [hint]="t('staff-members.employment.continuousServiceStartDateHint')">
+                  @if (editing()) {
+                    <mp-date-picker [ngModel]="toDate(e.continuousServiceStartDate)" (ngModelChange)="patchEmployment(ei, 'continuousServiceStartDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                  } @else {
+                    <span>{{ e.continuousServiceStartDate ? (toDate(e.continuousServiceStartDate) | date:'mediumDate') : '—' }}</span>
+                  }
+                </mp-field>
+                <mp-field [label]="t('staff-members.employment.localAuthorityStartDate')" [hint]="t('staff-members.employment.localAuthorityStartDateHint')">
+                  @if (editing()) {
+                    <mp-date-picker [ngModel]="toDate(e.localAuthorityStartDate)" (ngModelChange)="patchEmployment(ei, 'localAuthorityStartDate', $event ? $event.toISOString() : null)" [showIcon]="true" class="w-full"></mp-date-picker>
+                  } @else {
+                    <span>{{ e.localAuthorityStartDate ? (toDate(e.localAuthorityStartDate) | date:'mediumDate') : '—' }}</span>
+                  }
+                </mp-field>
                 <mp-field [label]="t('staff-members.employment.endDate')">
                   @if (editing()) {
                     <mp-date-picker [ngModel]="toDate(e.endDate)" (ngModelChange)="onEmploymentEndDate(ei, $event)" [showIcon]="true" class="w-full"></mp-date-picker>
@@ -115,6 +136,13 @@
                       <mp-lookup-select [options]="destinations()" [value]="e.destinationId ?? null" (valueChange)="patchEmployment(ei, 'destinationId', $event)"></mp-lookup-select>
                     } @else {
                       <span>{{ lookupLabel(destinations(), e.destinationId) }}</span>
+                    }
+                  </mp-field>
+                  <mp-field class="md:col-span-2" [label]="t('staff-members.employment.nextEmployer')">
+                    @if (editing()) {
+                      <input mpInput maxlength="128" [ngModel]="e.nextEmployer ?? ''" (ngModelChange)="patchEmployment(ei, 'nextEmployer', $event)" />
+                    } @else {
+                      <span>{{ e.nextEmployer || '—' }}</span>
                     }
                   </mp-field>
                 }
@@ -169,7 +197,7 @@
                                 <mp-lookup-select [options]="contractTypes()" [value]="c.contractTypeId" (valueChange)="patchContract(ei, ci, 'contractTypeId', $event)" [invalid]="!c.contractTypeId"></mp-lookup-select>
                               </mp-field>
                               <mp-field [label]="t('staff-members.employment.serviceTerm')">
-                                <mp-lookup-select [options]="serviceTerms()" [value]="c.serviceTermId ?? null" (valueChange)="patchContract(ei, ci, 'serviceTermId', $event)"></mp-lookup-select>
+                                <mp-lookup-select [options]="serviceTerms()" [value]="c.serviceTermId ?? null" (valueChange)="onContractServiceTerm(ei, ci, $event)"></mp-lookup-select>
                               </mp-field>
                               <mp-field [label]="t('staff-members.employment.staffRole')">
                                 <mp-lookup-select [options]="staffRoles()" [value]="c.staffRoleId ?? null" (valueChange)="patchContract(ei, ci, 'staffRoleId', $event)"></mp-lookup-select>
@@ -187,7 +215,11 @@
                             </div>
                             <div class="grid gap-3 md:grid-cols-2 md:items-start">
                               <mp-field [label]="t('staff-members.employment.payScale')">
-                                <mp-lookup-select [options]="payScales()" [value]="c.payScaleId ?? null" (valueChange)="onContractPayScale(ei, ci, $event)"></mp-lookup-select>
+                                @if (c.serviceTermId) {
+                                  <mp-lookup-select [options]="contractPayScales(c.serviceTermId)" [value]="c.payScaleId ?? null" (valueChange)="onContractPayScale(ei, ci, $event)"></mp-lookup-select>
+                                } @else {
+                                  <span class="text-sm text-muted-foreground">{{ t('staff-members.employment.pickServiceTermFirst') }}</span>
+                                }
                               </mp-field>
                               <mp-field [label]="t('staff-members.employment.payScalePoint')">
                                 @if (c.payScaleId) {
@@ -264,8 +296,12 @@
                                 (valueChange)="patchContract(ei, ci, 'postId', $event)"></mp-lookup-select>
                             </mp-field>
                             <mp-field [label]="t('staff-members.employment.pensionScheme')">
-                              <mp-lookup-select [options]="superannuationSchemes()" [value]="c.superannuationSchemeId ?? null"
-                                (valueChange)="patchContract(ei, ci, 'superannuationSchemeId', $event)"></mp-lookup-select>
+                              @if (c.serviceTermId) {
+                                <mp-lookup-select [options]="contractSchemes(c.serviceTermId)" [value]="c.superannuationSchemeId ?? null"
+                                  (valueChange)="patchContract(ei, ci, 'superannuationSchemeId', $event)"></mp-lookup-select>
+                              } @else {
+                                <span class="text-sm text-muted-foreground">{{ t('staff-members.employment.pickServiceTermFirst') }}</span>
+                              }
                             </mp-field>
                             <mp-field [label]="t('staff-members.employment.employerContribution')">
                               @if (employerPensionCost(c); as cost) {

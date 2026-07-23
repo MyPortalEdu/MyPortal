@@ -7,6 +7,7 @@ using MyPortal.Contracts.Models.People;
 using MyPortal.Data.Interfaces;
 using MyPortal.Services.Interfaces;
 using MyPortal.Services.Interfaces.People;
+using MyPortal.Services.Interfaces.Providers;
 using MyPortal.Services.People;
 using FluentValidation;
 
@@ -33,6 +34,8 @@ public class StaffMemberServiceTests
             Mock.Of<ILogger<StaffMemberService>>(),
             _staffMemberRepository.Object,
             Mock.Of<IPersonRepository>(),
+            Mock.Of<IStaffLineManagerRepository>(),
+            Mock.Of<IDateTimeProvider>(),
             Mock.Of<IStaffMemberAccessService>(),
             Mock.Of<IPersonService>(),
             Mock.Of<IPhotoService>(),

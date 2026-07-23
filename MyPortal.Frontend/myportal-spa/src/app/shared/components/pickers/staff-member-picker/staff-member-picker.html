@@ -21,6 +21,7 @@
         [value]="rows()"
         (lazyLoad)="load($event)"
         [filterDelay]="300"
+        [filters]="initialFilters"
         dataKey="id"
         selectionMode="single"
         (rowSelect)="onRowSelect($any($event))"
@@ -41,6 +42,14 @@
               {{ t('common.staffMemberPicker.lastName') }}
               <mp-sort-icon field="lastName"></mp-sort-icon>
             </th>
+            <th mpSortable="role" class="hidden sm:table-cell">
+              {{ t('common.staffMemberPicker.role') }}
+              <mp-sort-icon field="role"></mp-sort-icon>
+            </th>
+            <th mpSortable="status" class="hidden sm:table-cell" style="width: 9rem">
+              {{ t('common.staffMemberPicker.statusHeader') }}
+              <mp-sort-icon field="status"></mp-sort-icon>
+            </th>
           </tr>
           <tr>
             <th>
@@ -52,6 +61,13 @@
             <th>
               <mp-column-filter field="lastName" matchMode="contains"></mp-column-filter>
             </th>
+            <th class="hidden sm:table-cell">
+              <mp-column-filter field="role" matchMode="contains"></mp-column-filter>
+            </th>
+            <th class="hidden sm:table-cell">
+              <mp-column-select-filter field="status" [options]="statusOptions()" clearValue="All"
+                [ariaLabel]="t('common.staffMemberPicker.statusHeader')"></mp-column-select-filter>
+            </th>
           </tr>
         </ng-template>
 
@@ -60,12 +76,14 @@
             <td class="font-mono text-xs">{{ row.code }}</td>
             <td>{{ row.preferredFirstName ?? row.firstName }}</td>
             <td>{{ row.preferredLastName ?? row.lastName }}</td>
+            <td class="hidden sm:table-cell text-muted-foreground">{{ row.role || '—' }}</td>
+            <td class="hidden sm:table-cell text-muted-foreground">{{ statusLabel(row.status) }}</td>
           </tr>
         </ng-template>
 
         <ng-template mpTableEmpty>
           <tr>
-            <td colspan="3" class="text-center text-sm text-muted-foreground py-4">
+            <td colspan="5" class="text-center text-sm text-muted-foreground py-4">
               {{ t('common.staffMemberPicker.empty') }}
             </td>
           </tr>

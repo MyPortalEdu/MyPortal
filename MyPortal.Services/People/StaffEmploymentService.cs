@@ -1,4 +1,6 @@
 using System.Data;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using MyPortal.Auth.Interfaces;
 using MyPortal.Common.Exceptions;
@@ -43,6 +45,7 @@ public class StaffEmploymentService(
     IContractTypeRepository contractTypeRepository,
     IStaffRoleRepository staffRoleRepository,
     IServiceTermRepository serviceTermRepository,
+    IServiceTermSuperannuationSchemeRepository serviceTermSchemeRepository,
     IDepartmentRepository departmentRepository,
     IPayScaleRepository payScaleRepository,
     IPayScalePointRepository payScalePointRepository,
@@ -152,9 +155,13 @@ public class StaffEmploymentService(
                     Id = e.Id,
                     StartDate = e.StartDate,
                     EndDate = e.EndDate,
+                    ContinuousServiceStartDate = e.ContinuousServiceStartDate,
+                    LocalAuthorityStartDate = e.LocalAuthorityStartDate,
                     LeavingReasonId = e.LeavingReasonId,
                     OriginId = e.OriginId,
                     DestinationId = e.DestinationId,
+                    PreviousEmployer = e.PreviousEmployer,
+                    NextEmployer = e.NextEmployer,
                     Notes = e.Notes,
                     Contracts = (contractsByEmployment.TryGetValue(e.Id, out var rows) ? rows : new List<StaffContract>())
                         .OrderByDescending(c => c.StartDate)
@@ -170,7 +177,33 @@ public class StaffEmploymentService(
             StaffRoles = staffRoles.ToOrderedLookup(),
             ServiceTerms = serviceTerms.ToAlphabeticalLookup(),
             Departments = departments.ToAlphabeticalLookup(),
-            PayScales = payScales.ToAlphabeticalLookup(),
+            PayScales = payScales
+                .WhereActive()
+                .OrderBy(s => s.Description)
+                .Select(s => new PayScaleResponse
+                {
+                    Id = s.Id,
+                    ServiceTermId = s.ServiceTermId,
+                    Description = s.Description
+                })
+                .ToList(),
+            ServiceTermSchemes = (await serviceTermSchemeRepository
+                    .GetByServiceTermIdsAsync(serviceTerms.Select(t => t.Id), cancellationToken))
+                .Select(l => new ServiceTermSchemeLink
+                {
+                    ServiceTermId = l.ServiceTermId,
+                    SuperannuationSchemeId = l.SuperannuationSchemeId,
+                    IsMain = l.IsMain
+                })
+                .ToList(),
+            ServiceTermDefaults = serviceTerms
+                .Select(t => new ServiceTermDefaultsItem
+                {
+                    ServiceTermId = t.Id,
+                    HoursPerWeek = t.HoursPerWeek,
+                    WeeksPerYear = t.WeeksPerYear
+                })
+                .ToList(),
             AdditionalPaymentTypes = additionalPaymentTypes.ToOrderedLookup(),
             // Reference + title so the picker disambiguates similarly-titled posts.
             Posts = posts
@@ -187,19 +220,57 @@ public class StaffEmploymentService(
                     EmployerRate = employerRateByScheme.TryGetValue(s.Id, out var rate) ? rate : null
                 })
                 .ToList(),
-            PayScalePoints = payScalePoints
-                .WhereActive()
-                .OrderBy(p => p.DisplayOrder)
-                .ThenBy(p => p.Description)
-                .Select(p => new PayScalePointResponse
-                {
-                    Id = p.Id,
-                    PayScaleId = p.PayScaleId,
-                    Description = p.Description,
-                    FullTimeSalary = fullTimeSalaryByPoint.TryGetValue(p.Id, out var salary) ? salary : null
-                })
-                .ToList()
+            PayScalePoints = BuildPointOptions(payScales, payScalePoints, fullTimeSalaryByPoint)
         };
+    }
+
+    /// <summary>
+    /// The points selectable under each pay scale. A scale that owns its points offers those; on a
+    /// term running a single spine the scale is a window, so it offers the term's points that fall
+    /// inside it — which means an overlapping grade legitimately offers the same point as its
+    /// neighbour.
+    /// </summary>
+    private static List<PayScalePointResponse> BuildPointOptions(IEnumerable<PayScale> payScales,
+        IEnumerable<PayScalePoint> payScalePoints, Dictionary<Guid, decimal> fullTimeSalaryByPoint)
+    {
+        var points = payScalePoints.WhereActive().ToList();
+        var scales = payScales.WhereActive().ToList();
+
+        var spineByTerm = points
+            .Where(p => p.ServiceTermId.HasValue)
+            .GroupBy(p => p.ServiceTermId!.Value)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var options = points
+            .Where(p => p.PayScaleId.HasValue)
+            .Select(p => (ScaleId: p.PayScaleId!.Value, Point: p))
+            .ToList();
+
+        foreach (var scale in scales)
+        {
+            if (!spineByTerm.TryGetValue(scale.ServiceTermId, out var spine))
+            {
+                continue;
+            }
+
+            options.AddRange(spine
+                .Where(p => (scale.MinimumPoint is null || p.PointValue >= scale.MinimumPoint)
+                            && (scale.MaximumPoint is null || p.PointValue <= scale.MaximumPoint))
+                .Select(p => (ScaleId: scale.Id, Point: p)));
+        }
+
+        return options
+            .OrderBy(o => o.Point.PointValue)
+            .ThenBy(o => o.Point.Description)
+            .Select(o => new PayScalePointResponse
+            {
+                Id = o.Point.Id,
+                PayScaleId = o.ScaleId,
+                PointValue = o.Point.PointValue,
+                Description = o.Point.Description,
+                FullTimeSalary = fullTimeSalaryByPoint.TryGetValue(o.Point.Id, out var salary) ? salary : null
+            })
+            .ToList();
     }
 
     public async Task UpdateEmploymentDetailsAsync(Guid staffMemberId, StaffEmploymentDetailsUpsertRequest model,
@@ -218,6 +289,8 @@ public class StaffEmploymentService(
             throw new NotFoundException("Staff member not found.");
         }
 
+        await EnsureContractsMatchTheirServiceTermAsync(model, cancellationToken);
+
         staffMember.BankName = model.BankName;
         staffMember.BankAccount = model.BankAccount;
         staffMember.BankSortCode = model.BankSortCode;
@@ -228,6 +301,85 @@ public class StaffEmploymentService(
             await staffMemberRepository.UpdateAsync(staffMember, cancellationToken, uow.Transaction);
             await ReconcileEmploymentsAsync(staffMemberId, model.Employments, uow.Transaction, cancellationToken);
         }, cancellationToken);
+    }
+
+    /// <summary>
+    /// A contract's pay scale, point and pension scheme all hang off its service term. The editor
+    /// cascades them, but nothing stops a caller posting a Burgundy contract on an NJC scale, so
+    /// the combination is re-checked here rather than trusted from the client.
+    /// </summary>
+    private async Task EnsureContractsMatchTheirServiceTermAsync(StaffEmploymentDetailsUpsertRequest model,
+        CancellationToken cancellationToken)
+    {
+        var contracts = model.Employments
+            .SelectMany(e => e.Contracts)
+            .Where(c => c.PayScaleId.HasValue || c.SuperannuationSchemeId.HasValue
+                                              || c.PayScalePointId.HasValue)
+            .ToList();
+
+        if (contracts.Count == 0)
+        {
+            return;
+        }
+
+        var scales = (await payScaleRepository.GetListAsync(cancellationToken: cancellationToken))
+            .ToDictionary(s => s.Id);
+        var points = (await payScalePointRepository.GetListAsync(cancellationToken: cancellationToken))
+            .ToDictionary(p => p.Id);
+        var schemesByTerm = (await serviceTermSchemeRepository
+                .GetByServiceTermIdsAsync(model.Employments
+                    .SelectMany(e => e.Contracts)
+                    .Where(c => c.ServiceTermId.HasValue)
+                    .Select(c => c.ServiceTermId!.Value)
+                    .Distinct(), cancellationToken))
+            .GroupBy(l => l.ServiceTermId)
+            .ToDictionary(g => g.Key, g => g.Select(l => l.SuperannuationSchemeId).ToHashSet());
+
+        var failures = new List<ValidationFailure>();
+
+        foreach (var contract in contracts)
+        {
+            if (contract.ServiceTermId is not { } serviceTermId)
+            {
+                failures.Add(new ValidationFailure(nameof(StaffContractUpsertItem.ServiceTermId),
+                    "Choose a service term before a pay scale or pension scheme."));
+                continue;
+            }
+
+            if (contract.PayScaleId is { } payScaleId
+                && scales.TryGetValue(payScaleId, out var scale)
+                && scale.ServiceTermId != serviceTermId)
+            {
+                failures.Add(new ValidationFailure(nameof(StaffContractUpsertItem.PayScaleId),
+                    $"'{scale.Description}' does not belong to the contract's service term."));
+            }
+
+            // The point must sit under the chosen scale, or on the term's own spine when it runs one.
+            if (contract.PayScalePointId is { } pointId && points.TryGetValue(pointId, out var point))
+            {
+                var belongs = point.PayScaleId is { } owner
+                    ? owner == contract.PayScaleId
+                    : point.ServiceTermId == serviceTermId;
+
+                if (!belongs)
+                {
+                    failures.Add(new ValidationFailure(nameof(StaffContractUpsertItem.PayScalePointId),
+                        $"Point '{point.Code}' is not on the contract's pay scale."));
+                }
+            }
+
+            if (contract.SuperannuationSchemeId is { } schemeId
+                && !(schemesByTerm.TryGetValue(serviceTermId, out var offered) && offered.Contains(schemeId)))
+            {
+                failures.Add(new ValidationFailure(nameof(StaffContractUpsertItem.SuperannuationSchemeId),
+                    "That pension scheme is not offered on the contract's service term."));
+            }
+        }
+
+        if (failures.Count > 0)
+        {
+            throw new ValidationException(failures);
+        }
     }
 
     private async Task ReconcileEmploymentsAsync(Guid staffMemberId, List<StaffEmploymentUpsertItem> incoming,
@@ -273,9 +425,13 @@ public class StaffEmploymentService(
             {
                 entity.StartDate = item.StartDate;
                 entity.EndDate = item.EndDate;
+                entity.ContinuousServiceStartDate = item.ContinuousServiceStartDate;
+                entity.LocalAuthorityStartDate = item.LocalAuthorityStartDate;
                 entity.LeavingReasonId = item.LeavingReasonId;
                 entity.OriginId = item.OriginId;
                 entity.DestinationId = item.DestinationId;
+                entity.PreviousEmployer = item.PreviousEmployer;
+                entity.NextEmployer = item.NextEmployer;
                 entity.Notes = item.Notes;
                 await employmentRepository.UpdateAsync(entity, cancellationToken, transaction);
                 employmentId = entity.Id;
@@ -289,9 +445,13 @@ public class StaffEmploymentService(
                     StaffMemberId = staffMemberId,
                     StartDate = item.StartDate,
                     EndDate = item.EndDate,
+                    ContinuousServiceStartDate = item.ContinuousServiceStartDate,
+                    LocalAuthorityStartDate = item.LocalAuthorityStartDate,
                     LeavingReasonId = item.LeavingReasonId,
                     OriginId = item.OriginId,
                     DestinationId = item.DestinationId,
+                    PreviousEmployer = item.PreviousEmployer,
+                    NextEmployer = item.NextEmployer,
                     Notes = item.Notes
                 }, cancellationToken, transaction);
             }

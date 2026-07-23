@@ -12,7 +12,8 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT [Id], [StaffMemberId], [LeavingReasonId], [OriginId], [DestinationId], [StartDate],
-        [EndDate], [Notes], [IsDeleted], [CreatedById], [CreatedByIpAddress], [CreatedAt],
+        [EndDate], [ContinuousServiceStartDate], [LocalAuthorityStartDate], [PreviousEmployer],
+        [NextEmployer], [Notes], [IsDeleted], [CreatedById], [CreatedByIpAddress], [CreatedAt],
         [LastModifiedById], [LastModifiedByIpAddress], [LastModifiedAt], [Version]
     FROM [dbo].[StaffEmployments] WHERE [StaffMemberId] = @staffMemberId AND [IsDeleted] = 0;
 END;

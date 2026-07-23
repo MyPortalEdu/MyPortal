@@ -1,0 +1,158 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('staff-compliance.title')"
+    [subtitle]="t('staff-compliance.subtitle')"
+    icon="fa-solid fa-shield-halved"></mp-page-header>
+
+  <div class="mb-4 flex flex-wrap items-end gap-4">
+    <div class="flex flex-col gap-1 min-w-[12rem]">
+      <label class="text-xs text-muted-foreground">{{ t('staff-compliance.horizon.label') }}</label>
+      <mp-select
+        [ngModel]="horizonDays()"
+        (ngModelChange)="onHorizonChange($event)"
+        [options]="horizonOptions()"
+        optionLabel="label" optionValue="value"></mp-select>
+    </div>
+  </div>
+
+  @if (loading() && !dashboard()) {
+    <mp-card><mp-skeleton></mp-skeleton></mp-card>
+  } @else if (dashboard(); as d) {
+    <div class="mb-4 grid gap-3 sm:grid-cols-3">
+      <button type="button" (click)="toggleKind('Expired')"
+        class="rounded-surface border p-4 text-left transition-all
+               bg-red-500/10 hover:bg-red-500/15 border-red-500/20"
+        [class.!border-red-500]="isKindActive('Expired')"
+        [class.ring-1]="isKindActive('Expired')"
+        [class.ring-red-500]="isKindActive('Expired')">
+        <div class="flex items-center gap-2 text-red-600 dark:text-red-400">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span class="text-xs font-semibold uppercase tracking-wide">{{ t('staff-compliance.kind.Expired') }}</span>
+        </div>
+        <div class="mt-1 text-3xl font-semibold tabular-nums">{{ d.expiredCount }}</div>
+      </button>
+
+      <button type="button" (click)="toggleKind('ExpiringSoon')"
+        class="rounded-surface border p-4 text-left transition-all
+               bg-amber-500/10 hover:bg-amber-500/15 border-amber-500/20"
+        [class.!border-amber-500]="isKindActive('ExpiringSoon')"
+        [class.ring-1]="isKindActive('ExpiringSoon')"
+        [class.ring-amber-500]="isKindActive('ExpiringSoon')">
+        <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+          <i class="fa-solid fa-clock"></i>
+          <span class="text-xs font-semibold uppercase tracking-wide">{{ t('staff-compliance.kind.ExpiringSoon') }}</span>
+        </div>
+        <div class="mt-1 text-3xl font-semibold tabular-nums">{{ d.expiringSoonCount }}</div>
+      </button>
+
+      <button type="button" (click)="toggleKind('Missing')"
+        class="rounded-surface border p-4 text-left transition-all
+               bg-slate-500/10 hover:bg-slate-500/15 border-slate-400/30"
+        [class.!border-slate-500]="isKindActive('Missing')"
+        [class.ring-1]="isKindActive('Missing')"
+        [class.ring-slate-500]="isKindActive('Missing')">
+        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+          <i class="fa-solid fa-circle-question"></i>
+          <span class="text-xs font-semibold uppercase tracking-wide">{{ t('staff-compliance.kind.Missing') }}</span>
+        </div>
+        <div class="mt-1 text-3xl font-semibold tabular-nums">{{ d.missingCount }}</div>
+      </button>
+    </div>
+
+    <mp-table
+      #dt
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="pageSize"
+      [first]="0"
+      [totalRecords]="totalRecords()"
+      [value]="pagedRows()"
+      (lazyLoad)="onLazy($event)"
+      [filterDelay]="0"
+      dataKey="staffMemberId"
+      [scrollable]="true">
+
+      <ng-template mpTableCaption>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <mp-select
+            class="w-full sm:w-56"
+            [ngModel]="activeCategory()"
+            (ngModelChange)="onCategoryChange($event)"
+            [options]="categoryOptions()"
+            optionLabel="label" optionValue="value"
+            [ariaLabel]="t('staff-compliance.filter.category')"></mp-select>
+          <span class="relative w-full sm:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
+            <input
+              mpInput
+              type="text"
+              class="w-full pl-9 pr-9"
+              [placeholder]="t('staff-compliance.searchPlaceholder')"
+              [value]="search()"
+              (input)="onSearch($any($event.target).value)" />
+            @if (search()) {
+              <button
+                type="button"
+                class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                [attr.aria-label]="t('staff-compliance.clearSearch')"
+                (click)="clearSearch()">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            }
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template mpTableHeader>
+        <tr>
+          <th mpSortable="staffName">
+            {{ t('staff-compliance.columns.staff') }}
+            <mp-sort-icon field="staffName"></mp-sort-icon>
+          </th>
+          <th mpSortable="detail">
+            {{ t('staff-compliance.columns.item') }}
+            <mp-sort-icon field="detail"></mp-sort-icon>
+          </th>
+          <th mpSortable="dueDate" style="width: 10rem">
+            {{ t('staff-compliance.columns.due') }}
+            <mp-sort-icon field="dueDate"></mp-sort-icon>
+          </th>
+          <th mpSortable="kind" style="width: 10rem">
+            {{ t('staff-compliance.columns.status') }}
+            <mp-sort-icon field="kind"></mp-sort-icon>
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableBody let-item>
+        <tr>
+          <td class="py-2 pr-4">
+            <a [routerLink]="['/staff/people/staff-members', item.staffMemberId]"
+              class="font-medium hover:underline">{{ item.staffName }}</a>
+            <span class="ml-2 font-mono text-xs text-muted-foreground">{{ item.staffCode }}</span>
+          </td>
+          <td class="py-2 px-3">
+            <span class="mr-2 text-muted-foreground"><i [class]="categoryIcon(item.category)"></i></span>
+            {{ item.detail }}
+          </td>
+          <td class="py-2 px-3 tabular-nums whitespace-nowrap">{{ dueLabel(item) }}</td>
+          <td class="py-2 px-3">
+            <mp-badge
+              [value]="t('staff-compliance.kind.' + item.kind)"
+              [severity]="kindSeverity(item.kind)"></mp-badge>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableEmpty>
+        <tr>
+          <td [attr.colspan]="4" class="p-4">
+            <mp-empty-state
+              icon="fa-solid fa-shield-halved"
+              [message]="items().length ? t('staff-compliance.emptyFiltered') : t('staff-compliance.emptyAllClear')"></mp-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </mp-table>
+  }
+</ng-container>

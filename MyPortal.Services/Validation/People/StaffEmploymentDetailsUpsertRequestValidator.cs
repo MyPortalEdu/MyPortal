@@ -36,6 +36,24 @@ public class StaffEmploymentDetailsUpsertRequestValidator
                 .When(e => e.EndDate.HasValue)
                 .WithMessage("The employment end date cannot be before its start date.");
 
+            // Service carried in from an earlier employer starts on or before this spell — never
+            // after it, which would mean service accruing before the person was employed.
+            employment.RuleFor(e => e.ContinuousServiceStartDate)
+                .LessThanOrEqualTo(e => e.StartDate)
+                .When(e => e.ContinuousServiceStartDate.HasValue)
+                .WithMessage("The continuous service start date cannot be after the employment start date.");
+
+            employment.RuleFor(e => e.LocalAuthorityStartDate)
+                .LessThanOrEqualTo(e => e.StartDate)
+                .When(e => e.LocalAuthorityStartDate.HasValue)
+                .WithMessage("The local authority start date cannot be after the employment start date.");
+
+            employment.RuleFor(e => e.PreviousEmployer)
+                .MaximumLength(128).WithMessage("The previous employer must not exceed 128 characters.");
+
+            employment.RuleFor(e => e.NextEmployer)
+                .MaximumLength(128).WithMessage("The next employer must not exceed 128 characters.");
+
             employment.RuleFor(e => e.Notes)
                 .MaximumLength(1024).WithMessage("Notes must not exceed 1024 characters.");
 

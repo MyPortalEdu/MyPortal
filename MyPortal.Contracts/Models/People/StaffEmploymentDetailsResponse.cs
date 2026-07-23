@@ -28,9 +28,15 @@ public class StaffEmploymentDetailsResponse
     public List<LookupResponse> StaffRoles { get; set; } = [];
     public List<LookupResponse> ServiceTerms { get; set; } = [];
     public List<LookupResponse> Departments { get; set; } = [];
-    public List<LookupResponse> PayScales { get; set; } = [];
+    public List<PayScaleResponse> PayScales { get; set; } = [];
     public List<LookupResponse> AdditionalPaymentTypes { get; set; } = [];
     public List<SuperannuationSchemeResponse> SuperannuationSchemes { get; set; } = [];
+
+    /// <summary>Which schemes each service term offers, so the editor can cascade and default.</summary>
+    public List<ServiceTermSchemeLink> ServiceTermSchemes { get; set; } = [];
+
+    /// <summary>Per-term contract defaults (hours, weeks) pre-filled when a term is chosen.</summary>
+    public List<ServiceTermDefaultsItem> ServiceTermDefaults { get; set; } = [];
     public List<LookupResponse> Posts { get; set; } = [];
     public List<PayScalePointResponse> PayScalePoints { get; set; } = [];
 }

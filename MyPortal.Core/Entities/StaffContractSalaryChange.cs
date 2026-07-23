@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MyPortal.Core.Interfaces;
 
@@ -17,6 +18,12 @@ namespace MyPortal.Core.Entities
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal? NewAnnualSalary { get; set; }
+
+        // Set by the increment routine so a cycle can't be applied to the same contract twice.
+        public DateTime? EffectiveDate { get; set; }
+
+        [StringLength(20)]
+        public string? Source { get; set; }
 
         public StaffContract? StaffContract { get; set; }
 

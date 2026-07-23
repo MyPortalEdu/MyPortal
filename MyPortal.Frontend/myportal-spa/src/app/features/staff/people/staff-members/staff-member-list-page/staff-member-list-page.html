@@ -27,88 +27,38 @@
       (lazyLoad)="grid.load($event)"
       [filterDelay]="300"
       [filters]="initialFilters"
-      [globalFilterFields]="['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code']"
-      dataKey="id"
-      selectionMode="single"
+      [columns]="columns()"
+      [rowClickable]="true"
+      (rowClick)="openDetails($any($event))"
       [scrollable]="true">
 
-      <ng-template mpTableCaption>
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <mp-select
-            [options]="statusOptions()"
-            optionLabel="label"
-            optionValue="value"
-            [ngModel]="statusFilter()"
-            (ngModelChange)="onStatusFilterChange($event)"
-            class="w-full sm:w-44"
-            [ariaLabel]="t('staff-members.statusFilter.label')"></mp-select>
-          <span class="relative w-full sm:w-80">
-            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
-            <input
-              mpInput
-              type="text"
-              class="w-full pl-9 pr-9"
-              [placeholder]="t('staff-members.searchPlaceholder')"
-              [value]="grid.searchTerm()"
-              (input)="grid.onSearch($any($event.target).value)" />
-            @if (grid.searchTerm()) {
-              <button
-                type="button"
-                class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                [attr.aria-label]="t('staff-members.clearSearch')"
-                (click)="grid.clearSearch()">
-                <i class="fa-solid fa-xmark text-xs"></i>
-              </button>
-            }
-          </span>
+      <ng-template mpCell="avatar" let-row>
+        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
+          {{ initials(row) }}
         </div>
       </ng-template>
 
-      <ng-template mpTableHeader>
-        <tr>
-          <th style="width: 4rem"></th>
-          <th mpSortable="lastName">
-            {{ t('staff-members.columns.name') }}
-            <mp-sort-icon field="lastName"></mp-sort-icon>
-          </th>
-          <th mpSortable="code" style="width: 12rem">
-            {{ t('staff-members.columns.code') }}
-            <mp-sort-icon field="code"></mp-sort-icon>
-          </th>
-          <th mpSortable="status" style="width: 9rem">
-            {{ t('staff-members.columns.status') }}
-            <mp-sort-icon field="status"></mp-sort-icon>
-          </th>
-        </tr>
+      <ng-template mpCell="name" let-row>
+        <a [routerLink]="['/staff/people/staff-members', row.id]"
+          class="font-medium hover:underline">{{ displayName(row) }}</a>
+        @if (legalName(row); as legal) {
+          <div class="text-xs text-muted-foreground">{{ legal }}</div>
+        }
       </ng-template>
 
-      <ng-template mpTableBody let-row>
-        <tr class="cursor-pointer" (click)="onRowClick($event, row)">
-          <td>
-            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700 dark:bg-primary-900/40 dark:text-primary-200">
-              {{ initials(row) }}
-            </div>
-          </td>
-          <td>
-            <a
-              [routerLink]="['/staff/people/staff-members', row.id]"
-              class="font-medium hover:underline">{{ displayName(row) }}</a>
-            @if (legalName(row); as legal) {
-              <div class="text-xs text-muted-foreground">{{ legal }}</div>
-            }
-          </td>
-          <td class="font-mono text-xs text-muted-foreground">{{ row.code }}</td>
-          <td>
-            <mp-badge
-              [value]="t('staff-members.status.' + row.status)"
-              [severity]="statusSeverity(row.status)"></mp-badge>
-          </td>
-        </tr>
+      <ng-template mpCell="gender" let-row>{{ genderLabel(row) }}</ng-template>
+
+      <ng-template mpCell="startDate" let-row>{{ startDate(row) || '—' }}</ng-template>
+
+      <ng-template mpCell="status" let-row>
+        <mp-badge
+          [value]="t('staff-members.status.' + row.status)"
+          [severity]="statusSeverity(row.status)"></mp-badge>
       </ng-template>
 
       <ng-template mpTableEmpty>
         <tr>
-          <td [attr.colspan]="4" class="p-4">
+          <td [attr.colspan]="8" class="p-4">
             @if (hasFilter()) {
               <mp-empty-state
                 icon="fa-solid fa-magnifying-glass"

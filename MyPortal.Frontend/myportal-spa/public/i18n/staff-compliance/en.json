@@ -1,0 +1,35 @@
+{
+  "title": "Compliance",
+  "subtitle": "Safeguarding, right-to-work, training and contract records that are missing, expired, or due to expire.",
+  "loadError": "Couldn't load the compliance dashboard",
+  "emptyAllClear": "Nothing needs attention in this window.",
+  "emptyFiltered": "No items match the current filters.",
+  "horizon": {
+    "label": "Expiring within",
+    "days": "{{ days }} days"
+  },
+  "filter": {
+    "category": "Type",
+    "allCategories": "All types"
+  },
+  "kind": {
+    "Expired": "Expired",
+    "ExpiringSoon": "Expiring soon",
+    "Missing": "Missing"
+  },
+  "category": {
+    "Dbs": "DBS",
+    "RightToWork": "Right to Work",
+    "Training": "Training",
+    "Contract": "Contract",
+    "PreEmployment": "Pre-employment"
+  },
+  "columns": {
+    "staff": "Staff Member",
+    "item": "Item",
+    "due": "Due",
+    "status": "Status"
+  },
+  "searchPlaceholder": "Search staff or item…",
+  "clearSearch": "Clear search"
+}

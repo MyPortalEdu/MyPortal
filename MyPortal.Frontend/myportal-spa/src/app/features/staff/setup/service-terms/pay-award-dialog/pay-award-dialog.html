@@ -1,0 +1,123 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [dismissable]="false"
+    [closeOnEscape]="!busy()"
+    panelClass="w-[min(56rem,94vw)]"
+    [title]="t('staff-setup.payScales.newAward')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="busy()">
+
+    <div class="flex flex-col gap-5">
+      <p class="text-sm text-muted-foreground">{{ t('staff-setup.payScales.awardHint') }}</p>
+
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.upliftFrom') }}</label>
+          <mp-select
+            [ngModel]="source()"
+            (ngModelChange)="source.set($event); onInputChanged()"
+            [options]="generationOptions()"
+            optionLabel="label"
+            optionValue="value">
+          </mp-select>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.effectiveFrom') }}</label>
+          <mp-date-picker
+            [ngModel]="effectiveFrom()"
+            (ngModelChange)="effectiveFrom.set($event); onInputChanged()"
+            [showIcon]="true"
+            class="w-full"></mp-date-picker>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.uplift') }}</label>
+          <mp-input-number
+            mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="3"
+            [min]="-100" [max]="100" suffix="%"
+            [ngModel]="defaultPercentage()"
+            (ngModelChange)="defaultPercentage.set($event); onInputChanged()"
+            class="w-full"></mp-input-number>
+        </div>
+      </div>
+
+      @if (!singleSpine()) {
+        <div>
+          <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+            <i class="fa-solid fa-sliders"></i>
+            {{ t('staff-setup.payScales.perScale') }}
+          </div>
+          <p class="text-sm text-muted-foreground mb-2">{{ t('staff-setup.payScales.perScaleHint') }}</p>
+          <div class="grid gap-3 md:grid-cols-2">
+            @for (scale of scales(); track scale.id) {
+              @if (scale.points.length) {
+                <div class="flex items-center gap-3">
+                  <span class="flex-1 text-sm">{{ scale.description }}</span>
+                  <mp-input-number
+                    mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="3"
+                    [min]="-100" [max]="100" suffix="%"
+                    [placeholder]="t('staff-setup.payScales.default')"
+                    [ngModel]="overrideFor(scale.id)"
+                    (ngModelChange)="setOverride(scale.id, $event)"
+                    class="w-[9rem]"></mp-input-number>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      @if (preview(); as rows) {
+        <div>
+          <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+            <i class="fa-solid fa-list-check"></i>
+            {{ t('staff-setup.payScales.preview') }}
+            <span class="normal-case font-normal">({{ rows.length }})</span>
+          </div>
+          <div class="max-h-72 overflow-auto">
+            <table class="w-full text-sm border-collapse">
+              <thead class="sticky top-0 bg-emphasis">
+                <tr class="border-b border-border">
+                  <th class="text-left font-medium py-1.5 pr-3">{{ t('staff-setup.payScales.point') }}</th>
+                  <th class="text-left font-medium py-1.5 px-3">{{ t('staff-setup.payScales.zone') }}</th>
+                  <th class="text-right font-medium py-1.5 px-3">{{ t('staff-setup.payScales.before') }}</th>
+                  <th class="text-right font-medium py-1.5 pl-3">{{ t('staff-setup.payScales.after') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of rows; track $index) {
+                  <tr class="border-b border-border">
+                    <td class="py-1 pr-3">
+                      <span class="text-muted-foreground">{{ row.scale }}</span> · {{ row.point }}
+                    </td>
+                    <td class="py-1 px-3">{{ row.zone }}</td>
+                    <td class="py-1 px-3 text-right tabular-nums text-muted-foreground">
+                      {{ row.before | currency: 'GBP' : 'symbol' : '1.0-0' }}
+                    </td>
+                    <td class="py-1 pl-3 text-right tabular-nums font-medium">
+                      {{ row.after | currency: 'GBP' : 'symbol' : '1.0-0' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div mpDialogFooter class="flex items-center justify-end gap-2">
+      <button mpButton variant="outline" (click)="onClose()" [disabled]="busy()">
+        {{ t('common.cancel') }}
+      </button>
+      <button mpButton variant="outline" (click)="runPreview()" [disabled]="!canPreview() || busy()">
+        {{ t('staff-setup.payScales.calculate') }}
+      </button>
+      <button mpButton (click)="apply()" [disabled]="!preview() || busy()">
+        {{ t('staff-setup.payScales.applyAward') }}
+      </button>
+    </div>
+  </mp-dialog>
+</ng-container>

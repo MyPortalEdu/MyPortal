@@ -13,23 +13,27 @@ export class StaffMenuContributor implements AppMenuContributor {
     const has = (p: string) => user.permissions?.includes(p) ?? false;
     const cats: MenuCategory[] = [
       {
-        label: 'nav.people',
-        icon: 'fa-users',
+        label: 'nav.personnel',
+        icon: 'fa-id-badge',
         children: [
           {
             label: 'nav.staffMembers',
             routerLink: ['/staff/people/staff-members'],
             permissionsAny: [Permissions.Staff.ViewAllStaffBasicDetails]
-          }
-        ]
-      },
-      {
-        label: 'nav.staffSetup',
-        icon: 'fa-sliders',
-        children: [
+          },
+          {
+            label: 'nav.compliance',
+            routerLink: ['/staff/people/compliance'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffPreEmploymentChecks]
+          },
           {
             label: 'nav.posts',
             routerLink: ['/staff/setup/posts'],
+            permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
+          },
+          {
+            label: 'nav.serviceTerms',
+            routerLink: ['/staff/setup/service-terms'],
             permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
           }
         ]

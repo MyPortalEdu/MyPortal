@@ -83,6 +83,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStaffAbsenceService, StaffAbsenceService>();
         services.AddScoped<IStaffResponsibilityService, StaffResponsibilityService>();
         services.AddScoped<IPostService, PostService>();
+        services.AddScoped<IServiceTermService, ServiceTermService>();
+        services.AddScoped<IPayScaleService, PayScaleService>();
+        services.AddScoped<IStaffComplianceService, StaffComplianceService>();
+        services.AddScoped<IStaffIncrementService, StaffIncrementService>();
         services.AddScoped<IStaffTimetableService, StaffTimetableService>();
         services.AddScoped<IStaffPerformanceService, StaffPerformanceService>();
         services.AddScoped<IStaffAttachmentsService, StaffAttachmentsService>();

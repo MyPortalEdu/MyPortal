@@ -1,0 +1,72 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('staff-setup.serviceTerms.title')"
+    [subtitle]="t('staff-setup.serviceTerms.subtitle')"
+    [actions]="headerActions()"></mp-page-header>
+
+  <mp-card>
+    @if (loading() && !area()) {
+      <mp-skeleton></mp-skeleton>
+    } @else if (!serviceTerms().length) {
+      <mp-empty-state icon="fa-solid fa-file-contract" [message]="t('staff-setup.serviceTerms.none')"></mp-empty-state>
+    } @else {
+      <mp-table [value]="serviceTerms()" dataKey="id" [scrollable]="true">
+        <ng-template mpTableHeader>
+          <tr>
+            <th style="width: 8rem">{{ t('staff-setup.serviceTerms.code') }}</th>
+            <th>{{ t('staff-setup.serviceTerms.description') }}</th>
+            <th style="width: 7rem">{{ t('staff-setup.serviceTerms.appliesTo') }}</th>
+            <th style="width: 10rem">{{ t('staff-setup.serviceTerms.increment') }}</th>
+            <th style="width: 6rem" class="text-right">{{ t('staff-setup.serviceTerms.hours') }}</th>
+            <th style="width: 6rem" class="text-right">{{ t('staff-setup.serviceTerms.weeks') }}</th>
+            <th style="width: 7rem" class="text-right">{{ t('staff-setup.serviceTerms.contracts') }}</th>
+            <th style="width: 5rem"></th>
+          </tr>
+        </ng-template>
+        <ng-template mpTableBody let-term>
+          <tr class="cursor-pointer" (click)="openDetails(term)">
+            <td class="font-mono text-sm">{{ term.code }}</td>
+            <td class="font-medium">
+              {{ term.description }}
+              @if (!term.active) {
+                <mp-badge class="ml-2" [value]="t('staff-setup.serviceTerms.inactive')" severity="secondary"></mp-badge>
+              }
+            </td>
+            <td>
+              @if (term.isTeacher) {
+                <mp-badge [value]="t('staff-setup.serviceTerms.teachers')" severity="info"></mp-badge>
+              } @else {
+                <mp-badge [value]="t('staff-setup.serviceTerms.support')" severity="secondary"></mp-badge>
+              }
+            </td>
+            <td class="text-sm">{{ incrementLabel(term) }}</td>
+            <td class="text-right tabular-nums">{{ term.hoursPerWeek ?? '—' }}</td>
+            <td class="text-right tabular-nums">{{ term.weeksPerYear ?? '—' }}</td>
+            <td class="text-right tabular-nums">{{ term.contractCount }}</td>
+            <td>
+              @if (canEdit()) {
+                <div class="flex items-center justify-end">
+                  <button mpButton variant="ghost" size="sm" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('common.delete')"
+                    [disabled]="term.contractCount > 0 || term.postCount > 0"
+                    (click)="$event.stopPropagation(); confirmDelete(term)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </mp-table>
+    }
+  </mp-card>
+
+  @if (editorOpen()) {
+    <mp-service-term-editor-dialog
+      [open]="editorOpen()"
+      [serviceTerm]="editing()"
+      [schemes]="schemes()"
+      (closed)="editorOpen.set(false)"
+      (saved)="onSaved()"></mp-service-term-editor-dialog>
+  }
+</ng-container>

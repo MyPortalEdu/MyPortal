@@ -7,7 +7,14 @@ namespace MyPortal.Contracts.Models.People;
 public class PayScalePointResponse
 {
     public Guid Id { get; set; }
+
+    /// <summary>
+    /// The scale this point is offered under. On a single-spine term the same point appears once
+    /// per scale whose window contains it, since overlapping grades share the spine.
+    /// </summary>
     public Guid PayScaleId { get; set; }
+
+    public decimal PointValue { get; set; }
     public string Description { get; set; } = null!;
 
     // Current full-time statutory salary for this point in the school's pay zone (null if no

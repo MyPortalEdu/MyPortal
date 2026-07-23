@@ -10,9 +10,13 @@ public class StaffEmploymentUpsertItem
     public Guid? Id { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+    public DateTime? ContinuousServiceStartDate { get; set; }
+    public DateTime? LocalAuthorityStartDate { get; set; }
     public Guid? LeavingReasonId { get; set; }
     public Guid? OriginId { get; set; }
     public Guid? DestinationId { get; set; }
+    public string? PreviousEmployer { get; set; }
+    public string? NextEmployer { get; set; }
     public string? Notes { get; set; }
     public List<StaffContractUpsertItem> Contracts { get; set; } = [];
 }

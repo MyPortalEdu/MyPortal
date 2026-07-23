@@ -11,12 +11,71 @@
     [style.max-height]="scrollable() ? scrollHeight() : null">
     <table [class]="tableClass">
       <thead>
-        @if (headerSlot()) {
+        @if (useColumns()) {
+          <tr>
+            @for (col of columns(); track col.field) {
+              @if (columnSortable(col)) {
+                <th [class]="headerClassOf(col)" [style.width]="col.width || null"
+                    [mpSortable]="sortFieldOf(col)" [attr.aria-label]="col.ariaLabel || null">
+                  {{ col.header }}
+                  <mp-sort-icon [field]="sortFieldOf(col)"></mp-sort-icon>
+                </th>
+              } @else {
+                <th [class]="headerClassOf(col)" [style.width]="col.width || null"
+                    [attr.aria-label]="col.ariaLabel || null">{{ col.header }}</th>
+              }
+            }
+          </tr>
+          @if (filterRowVisible()) {
+            <tr class="[&>th]:px-2 [&>th]:pb-2 [&>th]:pt-1">
+              @for (col of columns(); track col.field) {
+                <th [class]="headerClassOf(col)">
+                  @if (allowFiltering() && col.filter) {
+                    @if (isSelectFilter(col)) {
+                      <mp-column-select-filter
+                        [field]="filterFieldOf(col)"
+                        [options]="selectFilter(col).options"
+                        [clearValue]="selectFilter(col).clearValue ?? null"
+                        [optionLabel]="selectFilter(col).optionLabel ?? 'label'"
+                        [optionValue]="selectFilter(col).optionValue ?? 'value'"
+                        [ariaLabel]="col.header || ''"></mp-column-select-filter>
+                    } @else {
+                      <mp-column-filter
+                        [field]="filterFieldOf(col)"
+                        [type]="inputFilterType(col)"
+                        [placeholder]="col.header || ''"></mp-column-filter>
+                    }
+                  }
+                </th>
+              }
+            </tr>
+          }
+        } @else if (headerSlot()) {
           <ng-container [ngTemplateOutlet]="headerSlot()!.template" />
         }
       </thead>
       <tbody>
-        @if (value().length) {
+        @if (useColumns()) {
+          @if (value().length) {
+            @for (row of value(); track trackRow(row); let i = $index) {
+              <tr [class]="rowClass()" (click)="rowClickable() && onColumnRowClick($event, row)">
+                @for (col of columns(); track col.field) {
+                  <td [class]="cellClassOf(col)">
+                    @if (cellDefFor(col.field); as def) {
+                      <ng-container
+                        [ngTemplateOutlet]="def.template"
+                        [ngTemplateOutletContext]="{ $implicit: row, index: i }" />
+                    } @else {
+                      {{ renderCell(row, col) }}
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          } @else if (!loading() && emptySlot()) {
+            <ng-container [ngTemplateOutlet]="emptySlot()!.template" />
+          }
+        } @else if (value().length) {
           @for (row of value(); track trackRow(row); let i = $index) {
             @if (bodySlot()) {
               <ng-container

@@ -1,0 +1,419 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="term()?.description ?? t('staff-setup.serviceTerms.title')"
+    [subtitle]="t('staff-setup.payScales.spineSubtitle')"
+    [actions]="headerActions()"></mp-page-header>
+
+  @if (loading() && !pay()) {
+    <mp-card><mp-skeleton></mp-skeleton></mp-card>
+  } @else if (term(); as row) {
+    @if (dueIncrements() > 0 && canEdit()) {
+      <mp-callout class="block mb-4" severity="warn" [title]="t('staff-setup.increment.dueTitle')">
+        {{ t('staff-setup.increment.dueBody', { count: dueIncrements() }) }}
+        <button mpButton size="sm" calloutAction (click)="incrementOpen.set(true)">
+          {{ t('staff-setup.increment.dueAction') }}
+        </button>
+      </mp-callout>
+    }
+
+    <mp-card class="block mb-4">
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mb-4">
+        <span class="font-mono text-xs text-muted-foreground">{{ row.code }}</span>
+        <mp-badge
+          [value]="row.isTeacher ? t('staff-setup.serviceTerms.teachers') : t('staff-setup.serviceTerms.support')"
+          severity="secondary"></mp-badge>
+        @if (singleSpine()) {
+          <mp-badge [value]="t('staff-setup.payScales.singleSpineBadge')" severity="info"></mp-badge>
+        }
+        @if (!row.active) {
+          <mp-badge [value]="t('staff-setup.serviceTerms.inactive')" severity="warn"></mp-badge>
+        }
+        <span class="flex-1"></span>
+        <button mpButton variant="ghost" size="sm" (click)="back()">
+          <i class="fa-solid fa-arrow-left mr-2"></i>{{ t('common.back') }}
+        </button>
+      </div>
+
+      <dl class="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.salaried') }}</dt>
+          <dd>{{ row.salaried ? t('common.yes') : t('common.no') }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.termTimeOnlyPossible') }}</dt>
+          <dd>{{ row.termTimeOnlyPossible ? t('common.yes') : t('common.no') }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.spinalProgression') }}</dt>
+          <dd>{{ row.spinalProgression ? t('common.yes') : t('common.no') }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.increment') }}</dt>
+          <dd>{{ incrementLabel(row) }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.hoursPerWeek') }}</dt>
+          <dd>{{ row.hoursPerWeek ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.weeksPerYear') }}</dt>
+          <dd>{{ row.weeksPerYear ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.groupPension') }}</dt>
+          <dd>{{ schemeSummary() }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-muted-foreground">{{ t('staff-setup.serviceTerms.contracts') }}</dt>
+          <dd>{{ row.contractCount }}</dd>
+        </div>
+      </dl>
+    </mp-card>
+
+    <mp-card>
+      <div class="flex flex-wrap items-end gap-4 mb-4">
+        <div class="flex flex-col gap-1 min-w-[16rem]">
+          <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.generation') }}</label>
+          @if (hasGenerations()) {
+            <mp-select
+              [ngModel]="selectedGeneration()"
+              (ngModelChange)="onGenerationChange($event)"
+              [options]="generationOptions()"
+              optionLabel="label" optionValue="value" [disabled]="dirty()">
+            </mp-select>
+          } @else {
+            <mp-date-picker [ngModel]="firstGenerationDate()"
+              (ngModelChange)="firstGenerationDate.set($event)"
+              [disabled]="!canEdit()"></mp-date-picker>
+          }
+        </div>
+        <div class="flex flex-col gap-1 min-w-[14rem]">
+          <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.zone') }}</label>
+          <mp-select
+            [ngModel]="zoneFilter()" (ngModelChange)="zoneFilter.set($event)"
+            [options]="zoneOptions()" optionLabel="label" optionValue="value">
+          </mp-select>
+        </div>
+
+        <span class="flex-1"></span>
+
+        @if (canEdit()) {
+          <div class="flex items-center gap-2">
+            <button mpButton variant="outline" (click)="addScale()" [disabled]="saving()">
+              <i class="fa-solid fa-plus mr-2"></i>{{ t(singleSpine() ? 'staff-setup.payScales.addGrade' : 'staff-setup.payScales.addScale') }}
+            </button>
+            <button mpButton (click)="save()"
+              [disabled]="!dirty() || saving() || saveBlockedReason() !== null">
+              {{ t('common.save') }}
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (!hasGenerations()) {
+        <mp-callout class="block mb-4" severity="info">
+          {{ t('staff-setup.payScales.firstGenerationHint') }}
+        </mp-callout>
+      }
+
+      @if (saveBlockedReason(); as reason) {
+        @if (dirty()) {
+          <p class="text-sm text-muted-foreground mb-3">{{ t(reason) }}</p>
+        }
+      }
+
+      <div class="rounded border border-border p-3 mb-4">
+        <label class="flex items-center gap-2 text-sm cursor-pointer">
+          <mp-checkbox [ngModel]="singleSpine()" (ngModelChange)="onSingleSpineChange($event)"
+            [disabled]="!canEdit()"></mp-checkbox>
+          {{ t('staff-setup.serviceTerms.singlePaySpine') }}
+        </label>
+        <p class="text-sm text-muted-foreground mt-2">
+          {{ singleSpine() ? t('staff-setup.payScales.spineHint') : t('staff-setup.payScales.perScaleSpineHint') }}
+        </p>
+
+        @if (singleSpine()) {
+          <div class="grid gap-4 md:grid-cols-3 max-w-2xl mt-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.minimumPoint') }}</label>
+              <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                [ngModel]="spineMinimum()" (ngModelChange)="spineMinimum.set($event)"
+                [invalid]="!!spineError('spineMinimum')"
+                [disabled]="!canEdit()" class="w-full"></mp-input-number>
+              @if (spineError('spineMinimum'); as e) {
+                <span class="text-xs text-destructive">{{ t(e) }}</span>
+              }
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.maximumPoint') }}</label>
+              <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                [ngModel]="spineMaximum()" (ngModelChange)="spineMaximum.set($event)"
+                [invalid]="!!spineError('spineMaximum')"
+                [disabled]="!canEdit()" class="w-full"></mp-input-number>
+              @if (spineError('spineMaximum'); as e) {
+                <span class="text-xs text-destructive">{{ t(e) }}</span>
+              }
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.interval') }}</label>
+              <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                [ngModel]="spineInterval()" (ngModelChange)="spineInterval.set($event)"
+                [invalid]="!!spineError('spineInterval')"
+                [disabled]="!canEdit()" class="w-full"></mp-input-number>
+              @if (spineError('spineInterval'); as e) {
+                <span class="text-xs text-destructive">{{ t(e) }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Single spine: one shared salary grid, and the scales below are just windows onto it. -->
+      @if (singleSpine()) {
+        @if (!spinePoints().length) {
+          <p class="text-sm text-muted-foreground mb-4">{{ t('staff-setup.payScales.noSpineRange') }}</p>
+        } @else {
+          <div class="overflow-x-auto mb-4">
+            <table class="w-full min-w-max text-sm border-collapse">
+              <thead>
+                <tr class="border-b border-border">
+                  <th class="text-left font-medium py-2 px-3 w-40">{{ t('staff-setup.payScales.spinePoint') }}</th>
+                  @for (zone of visibleZones(); track zone.id) {
+                    <th class="text-right font-medium py-2 px-3 whitespace-nowrap">{{ zone.description }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (pointValue of spinePoints(); track pointValue) {
+                  <tr class="border-b border-border">
+                    <td class="py-1.5 px-3 tabular-nums">{{ formatPoint(pointValue) }}</td>
+                    @for (zone of visibleZones(); track zone.id) {
+                      <td class="py-1 px-3 text-right tabular-nums">
+                        @if (canEdit()) {
+                          <mp-input-number
+                            mode="currency" currency="GBP" locale="en-GB"
+                            [minFractionDigits]="0" [maxFractionDigits]="0" [min]="0"
+                            [ngModel]="salaryOf('spine', pointValue, zone.id)"
+                            (ngModelChange)="setSalary('spine', pointValue, zone.id, $event)"
+                            class="w-full"></mp-input-number>
+                        } @else {
+                          @if (salaryOf('spine', pointValue, zone.id); as salary) {
+                            {{ salary | currency: 'GBP' : 'symbol' : '1.0-0' }}
+                          } @else {
+                            <span class="text-muted-foreground">—</span>
+                          }
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+          {{ t('staff-setup.payScales.grades') }}
+        </div>
+        <p class="text-sm text-muted-foreground mb-3">{{ t('staff-setup.payScales.sharedSpineHint') }}</p>
+
+        @for (scale of scaleDrafts(); track $index; let i = $index) {
+          <div class="flex flex-wrap items-start gap-3 rounded border border-border p-3 mb-2">
+            <div class="flex flex-col gap-1 w-28">
+              <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.code') }}</label>
+              <input mpInput [ngModel]="scale.code" (ngModelChange)="updateScale(i, { code: $event })"
+                [invalid]="!!scaleError(i, 'code')" [disabled]="!canEdit()" />
+              @if (scaleError(i, 'code'); as e) {
+                <span class="text-xs text-destructive">{{ t(e) }}</span>
+              }
+            </div>
+            <div class="flex flex-col gap-1 flex-1 min-w-[14rem]">
+              <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.description') }}</label>
+              <input mpInput [ngModel]="scale.description"
+                (ngModelChange)="updateScale(i, { description: $event })"
+                [invalid]="!!scaleError(i, 'description')" [disabled]="!canEdit()" />
+              @if (scaleError(i, 'description'); as e) {
+                <span class="text-xs text-destructive">{{ t(e) }}</span>
+              }
+            </div>
+            <div class="flex flex-col gap-1 w-24">
+              <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.from') }}</label>
+              <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                [ngModel]="scale.minimumPoint" (ngModelChange)="updateScale(i, { minimumPoint: $event })"
+                [invalid]="!!scaleError(i, 'minimumPoint')" [disabled]="!canEdit()" class="w-full"></mp-input-number>
+              @if (scaleError(i, 'minimumPoint'); as e) {
+                <span class="text-xs text-destructive">{{ t(e) }}</span>
+              }
+            </div>
+            <div class="flex flex-col gap-1 w-24">
+              <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.to') }}</label>
+              <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                [ngModel]="scale.maximumPoint" (ngModelChange)="updateScale(i, { maximumPoint: $event })"
+                [invalid]="!!scaleError(i, 'maximumPoint')" [disabled]="!canEdit()" class="w-full"></mp-input-number>
+              @if (scaleError(i, 'maximumPoint'); as e) {
+                <span class="text-xs text-destructive">{{ t(e) }}</span>
+              }
+            </div>
+            @if (canEdit()) {
+              <button mpButton type="button" variant="ghost" size="sm" class="mt-5"
+                [attr.aria-label]="t('common.remove')" (click)="removeScale(i)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            }
+          </div>
+        }
+      } @else {
+        <!-- Separate scales: each owns its range and its own salary grid. -->
+        @if (!scaleDrafts().length) {
+          <mp-empty-state icon="fa-solid fa-table-cells"
+            [message]="t('staff-setup.payScales.noScales')"></mp-empty-state>
+        }
+
+        @for (scale of scaleDrafts(); track $index; let i = $index) {
+          <div class="rounded border border-border mb-4">
+            <div class="flex flex-wrap items-start gap-3 p-3 bg-emphasis">
+              <div class="flex flex-col gap-1 w-28">
+                <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.code') }}</label>
+                <input mpInput [ngModel]="scale.code" (ngModelChange)="updateScale(i, { code: $event })"
+                  [invalid]="!!scaleError(i, 'code')" [disabled]="!canEdit()" />
+                @if (scaleError(i, 'code'); as e) {
+                  <span class="text-xs text-destructive">{{ t(e) }}</span>
+                }
+              </div>
+              <div class="flex flex-col gap-1 flex-1 min-w-[14rem]">
+                <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.description') }}</label>
+                <input mpInput [ngModel]="scale.description"
+                  (ngModelChange)="updateScale(i, { description: $event })"
+                  [invalid]="!!scaleError(i, 'description')" [disabled]="!canEdit()" />
+                @if (scaleError(i, 'description'); as e) {
+                  <span class="text-xs text-destructive">{{ t(e) }}</span>
+                }
+              </div>
+              <div class="flex flex-col gap-1 w-24">
+                <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.from') }}</label>
+                <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                  [ngModel]="scale.minimumPoint" (ngModelChange)="updateScale(i, { minimumPoint: $event })"
+                  [invalid]="!!scaleError(i, 'minimumPoint')" [disabled]="!canEdit()" class="w-full"></mp-input-number>
+                @if (scaleError(i, 'minimumPoint'); as e) {
+                  <span class="text-xs text-destructive">{{ t(e) }}</span>
+                }
+              </div>
+              <div class="flex flex-col gap-1 w-24">
+                <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.to') }}</label>
+                <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                  [ngModel]="scale.maximumPoint" (ngModelChange)="updateScale(i, { maximumPoint: $event })"
+                  [invalid]="!!scaleError(i, 'maximumPoint')" [disabled]="!canEdit()" class="w-full"></mp-input-number>
+                @if (scaleError(i, 'maximumPoint'); as e) {
+                  <span class="text-xs text-destructive">{{ t(e) }}</span>
+                }
+              </div>
+              <div class="flex flex-col gap-1 w-24">
+                <label class="text-xs text-muted-foreground">{{ t('staff-setup.payScales.interval') }}</label>
+                <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                  [ngModel]="scale.pointInterval"
+                  (ngModelChange)="updateScale(i, { pointInterval: $event })"
+                  [invalid]="!!scaleError(i, 'pointInterval')" [disabled]="!canEdit()" class="w-full"></mp-input-number>
+                @if (scaleError(i, 'pointInterval'); as e) {
+                  <span class="text-xs text-destructive">{{ t(e) }}</span>
+                }
+              </div>
+              @if (canEdit()) {
+                <button mpButton type="button" variant="ghost" size="sm" class="mt-5"
+                  [attr.aria-label]="t('common.remove')" (click)="removeScale(i)">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              }
+            </div>
+
+            @if (lockedLoss(scale); as lost) {
+              @if (lost.length) {
+                <mp-callout class="block m-3" severity="danger">
+                  {{ t('staff-setup.payScales.dropInUse', { points: lost.join(', ') }) }}
+                </mp-callout>
+              }
+            }
+
+            @if (!pointsOf(scale).length) {
+              <p class="text-sm text-muted-foreground p-3">{{ t('staff-setup.payScales.noRange') }}</p>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full min-w-max text-sm border-collapse">
+                  <thead>
+                    <tr class="border-b border-border">
+                      <th class="text-left font-medium py-2 px-3 w-32">
+                        {{ t('staff-setup.payScales.point') }}
+                      </th>
+                      @for (zone of visibleZones(); track zone.id) {
+                        <th class="text-right font-medium py-2 px-3 whitespace-nowrap">
+                          {{ zone.description }}
+                        </th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (pointValue of pointsOf(scale); track pointValue) {
+                      <tr class="border-b border-border">
+                        <td class="py-1.5 px-3 tabular-nums">{{ formatPoint(pointValue) }}</td>
+                        @for (zone of visibleZones(); track zone.id) {
+                          <td class="py-1 px-3 text-right tabular-nums">
+                            @if (canEdit()) {
+                              <mp-input-number
+                                mode="currency" currency="GBP" locale="en-GB"
+                                [minFractionDigits]="0" [maxFractionDigits]="0" [min]="0"
+                                [ngModel]="salaryOf(bucketOf(scale), pointValue, zone.id)"
+                                (ngModelChange)="setSalary(bucketOf(scale), pointValue, zone.id, $event)"
+                                class="w-full"></mp-input-number>
+                            } @else {
+                              @if (salaryOf(bucketOf(scale), pointValue, zone.id); as salary) {
+                                {{ salary | currency: 'GBP' : 'symbol' : '1.0-0' }}
+                              } @else {
+                                <span class="text-muted-foreground">—</span>
+                              }
+                            }
+                          </td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        }
+      }
+    </mp-card>
+  }
+
+  @if (editorOpen()) {
+    <mp-service-term-editor-dialog
+      [open]="editorOpen()"
+      [serviceTerm]="term()"
+      [schemes]="schemes()"
+      (closed)="editorOpen.set(false)"
+      (saved)="onTermSaved()"></mp-service-term-editor-dialog>
+  }
+
+  @if (awardOpen()) {
+    <mp-pay-award-dialog
+      [open]="awardOpen()"
+      [serviceTermId]="serviceTermId()"
+      [scales]="pay()?.scales ?? []"
+      [singleSpine]="singleSpine()"
+      [zones]="zones()"
+      [generations]="generations()"
+      [sourceEffectiveFrom]="selectedGeneration()"
+      (closed)="awardOpen.set(false)"
+      (applied)="onAwardApplied()"></mp-pay-award-dialog>
+  }
+
+  @if (incrementOpen()) {
+    <mp-increment-dialog
+      [open]="incrementOpen()"
+      [serviceTermId]="serviceTermId()"
+      [incrementMonth]="term()?.incrementMonth ?? null"
+      [incrementDay]="term()?.incrementDay ?? null"
+      (closed)="incrementOpen.set(false)"
+      (applied)="onIncrementApplied()"
+      (scheduleChanged)="loadDueIncrements()"></mp-increment-dialog>
+  }
+</ng-container>
