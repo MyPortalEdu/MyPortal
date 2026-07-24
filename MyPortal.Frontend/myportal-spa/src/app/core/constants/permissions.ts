@@ -45,6 +45,17 @@ export const Permissions = {
     ViewAllStaffPreEmploymentChecks:     'Staff.ViewAllStaffPreEmploymentChecks',
     EditAllStaffPreEmploymentChecks:     'Staff.EditAllStaffPreEmploymentChecks',
 
+    ViewAllStaffEmergencyContacts:       'Staff.ViewAllStaffEmergencyContacts',
+    EditAllStaffEmergencyContacts:       'Staff.EditAllStaffEmergencyContacts',
+
+    ViewStaffSetup:                      'Staff.ViewStaffSetup',
+    EditStaffSetup:                      'Staff.EditStaffSetup',
+
+    ViewOwnStaffResponsibilities:        'Staff.ViewOwnStaffResponsibilities',
+    ViewManagedStaffResponsibilities:    'Staff.ViewManagedStaffResponsibilities',
+    ViewAllStaffResponsibilities:        'Staff.ViewAllStaffResponsibilities',
+    EditAllStaffResponsibilities:        'Staff.EditAllStaffResponsibilities',
+
     ViewOwnStaffAbsences:                'Staff.ViewOwnStaffAbsences',
     ViewManagedStaffAbsences:            'Staff.ViewManagedStaffAbsences',
     ViewAllStaffAbsences:                'Staff.ViewAllStaffAbsences',

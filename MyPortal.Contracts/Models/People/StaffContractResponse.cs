@@ -13,6 +13,9 @@ public class StaffContractResponse
     public Guid? DepartmentId { get; set; }
     public Guid? PayScaleId { get; set; }
     public Guid? PayScalePointId { get; set; }
+    public Guid? PostId { get; set; }
+    public Guid? SuperannuationSchemeId { get; set; }
+    public bool NiContractedOut { get; set; }
     public string PostTitle { get; set; } = null!;
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
@@ -23,4 +26,10 @@ public class StaffContractResponse
     public bool IsAgencySupply { get; set; }
     public bool SafeguardedSalary { get; set; }
     public bool DailyRate { get; set; }
+
+    public List<StaffContractAllowanceResponse> Allowances { get; set; } = [];
+
+    public List<StaffContractSuspensionResponse> Suspensions { get; set; } = [];
+
+    public List<StaffContractSalaryChangeResponse> SalaryChanges { get; set; } = [];
 }

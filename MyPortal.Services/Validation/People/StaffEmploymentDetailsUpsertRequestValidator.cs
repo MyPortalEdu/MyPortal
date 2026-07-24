@@ -36,6 +36,24 @@ public class StaffEmploymentDetailsUpsertRequestValidator
                 .When(e => e.EndDate.HasValue)
                 .WithMessage("The employment end date cannot be before its start date.");
 
+            // Service carried in from an earlier employer starts on or before this spell — never
+            // after it, which would mean service accruing before the person was employed.
+            employment.RuleFor(e => e.ContinuousServiceStartDate)
+                .LessThanOrEqualTo(e => e.StartDate)
+                .When(e => e.ContinuousServiceStartDate.HasValue)
+                .WithMessage("The continuous service start date cannot be after the employment start date.");
+
+            employment.RuleFor(e => e.LocalAuthorityStartDate)
+                .LessThanOrEqualTo(e => e.StartDate)
+                .When(e => e.LocalAuthorityStartDate.HasValue)
+                .WithMessage("The local authority start date cannot be after the employment start date.");
+
+            employment.RuleFor(e => e.PreviousEmployer)
+                .MaximumLength(128).WithMessage("The previous employer must not exceed 128 characters.");
+
+            employment.RuleFor(e => e.NextEmployer)
+                .MaximumLength(128).WithMessage("The next employer must not exceed 128 characters.");
+
             employment.RuleFor(e => e.Notes)
                 .MaximumLength(1024).WithMessage("Notes must not exceed 1024 characters.");
 
@@ -71,6 +89,44 @@ public class StaffEmploymentDetailsUpsertRequestValidator
                 contract.RuleFor(c => c.AnnualSalary)
                     .GreaterThanOrEqualTo(0m).When(c => c.AnnualSalary.HasValue)
                     .WithMessage("The annual salary cannot be negative.");
+
+                contract.RuleForEach(c => c.Allowances).ChildRules(allowance =>
+                {
+                    allowance.RuleFor(a => a.AdditionalPaymentTypeId)
+                        .NotEmpty().WithMessage("An allowance type is required.");
+
+                    allowance.RuleFor(a => a.Amount)
+                        .GreaterThanOrEqualTo(0m).WithMessage("The allowance amount cannot be negative.");
+
+                    allowance.RuleFor(a => a.PayFactor)
+                        .InclusiveBetween(0m, 1m).When(a => a.PayFactor.HasValue)
+                        .WithMessage("The pay factor must be between 0 and 1.");
+
+                    allowance.RuleFor(a => a.StartDate)
+                        .NotEmpty().WithMessage("An allowance start date is required.");
+
+                    allowance.RuleFor(a => a.EndDate)
+                        .GreaterThanOrEqualTo(a => a.StartDate)
+                        .When(a => a.EndDate.HasValue)
+                        .WithMessage("The allowance end date cannot be before its start date.");
+
+                    allowance.RuleFor(a => a.Reason)
+                        .MaximumLength(256).WithMessage("The reason must not exceed 256 characters.");
+                });
+
+                contract.RuleForEach(c => c.Suspensions).ChildRules(suspension =>
+                {
+                    suspension.RuleFor(s => s.StartDate)
+                        .NotEmpty().WithMessage("A suspension start date is required.");
+
+                    suspension.RuleFor(s => s.EndDate)
+                        .GreaterThanOrEqualTo(s => s.StartDate)
+                        .When(s => s.EndDate.HasValue)
+                        .WithMessage("The suspension end date cannot be before its start date.");
+
+                    suspension.RuleFor(s => s.Reason)
+                        .MaximumLength(256).WithMessage("The reason must not exceed 256 characters.");
+                });
             });
         });
     }

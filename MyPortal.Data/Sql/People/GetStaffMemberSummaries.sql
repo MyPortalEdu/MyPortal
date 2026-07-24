@@ -16,6 +16,9 @@
 -- table-source column, so the unqualified reference resolves. (No CTE — the
 -- template is nested in parens for paging.) The spell tests are inline correlated
 -- EXISTS, mirroring usp_staff_member_get_header_by_id.
+-- Role and EmploymentStartDate come from a single OUTER APPLY that picks the member's primary
+-- spell (a current spell wins, else the most recent) and, within it, the latest-starting contract's
+-- job role. Like Status they are apply columns, so QueryKit can sort/filter on the bare names.
 SELECT
     SM.[Id],
     SM.[PersonId],
@@ -25,9 +28,45 @@ SELECT
     P.[LastName],
     P.[PreferredFirstName],
     P.[PreferredLastName],
-    S.[Status]
+    P.[Gender],
+    P.[Dob] AS [DateOfBirth],
+    E.[Role],
+    E.[EmploymentStartDate],
+    E.[StartDateOnly],
+    S.[Status],
+    SN.[SearchName]
 FROM [dbo].[StaffMembers] SM
     INNER JOIN [dbo].[People] P ON SM.PersonId = P.Id
+    -- All name parts concatenated so the Name column filter matches first/preferred, not just
+    -- surname (an apply column, like Status, so QueryKit can filter it by the bare name).
+    CROSS APPLY (
+        SELECT LTRIM(RTRIM(
+            COALESCE(P.[FirstName], '') + ' ' + COALESCE(P.[LastName], '') + ' ' +
+            COALESCE(P.[PreferredFirstName], '') + ' ' + COALESCE(P.[PreferredLastName], '')
+        )) AS [SearchName]
+    ) SN
+    OUTER APPLY (
+        SELECT TOP 1
+            EM.[StartDate] AS [EmploymentStartDate],
+            -- Date-only copy so a date filter compares day-to-day (StartDate carries a time).
+            CAST(EM.[StartDate] AS date) AS [StartDateOnly],
+            (
+                SELECT TOP 1 SR.[Description]
+                FROM [dbo].[StaffContracts] SC
+                    LEFT JOIN [dbo].[StaffRoles] SR ON SR.Id = SC.StaffRoleId
+                WHERE SC.StaffEmploymentId = EM.Id AND SC.IsDeleted = 0
+                ORDER BY SC.StartDate DESC
+            ) AS [Role]
+        FROM [dbo].[StaffEmployments] EM
+        WHERE EM.StaffMemberId = SM.Id AND EM.IsDeleted = 0
+        ORDER BY
+            CASE
+                WHEN CAST(EM.StartDate AS date) <= CAST(SYSUTCDATETIME() AS date)
+                     AND (EM.EndDate IS NULL OR CAST(EM.EndDate AS date) >= CAST(SYSUTCDATETIME() AS date))
+                THEN 0 ELSE 1
+            END,
+            EM.StartDate DESC
+    ) E
     CROSS APPLY (
         SELECT CASE
             WHEN EXISTS (

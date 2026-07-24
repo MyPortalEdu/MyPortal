@@ -267,6 +267,10 @@
                       </mp-field>
                     </div>
                   </section>
+
+                  <mp-staff-management-section
+                    [staffMemberId]="staffMemberId()"
+                    [editing]="editing()"></mp-staff-management-section>
                 </div>
               </div>
             }
@@ -302,6 +306,18 @@
               [staffMemberId]="staffMemberId()"
               [permissions]="heldPerms()"
             ></mp-staff-pre-employment-panel>
+          }
+          @case ('nextOfKin') {
+            <mp-staff-next-of-kin-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+            ></mp-staff-next-of-kin-panel>
+          }
+          @case ('responsibilities') {
+            <mp-staff-responsibilities-panel
+              [staffMemberId]="staffMemberId()"
+              [permissions]="heldPerms()"
+            ></mp-staff-responsibilities-panel>
           }
           @case ('absences') {
             <mp-staff-absences-panel

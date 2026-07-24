@@ -7,21 +7,15 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
   MpButton,
   MpCard,
-  MpInput,
-  MpSelect,
   MpTable,
-  MpTableCaption,
-  MpTableHeader,
-  MpTableBody,
   MpTableEmpty,
-  MpSortable,
-  MpSortIcon,
+  MpCellDef,
   MpBadge,
+  type MpColumn,
   type MpFilterMetadata,
 } from '@myportal/ui';
 import { TranslocoDirective, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
@@ -40,11 +34,15 @@ import { GridState } from '../../../../../shared/utils/querykit';
 import { GridListController, injectGridList } from '../../../../../shared/utils/grid-list';
 import { StaffMemberCreateDialog } from '../staff-member-create-dialog/staff-member-create-dialog';
 
-const SEARCH_FIELDS = ['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code'];
-
 const DEFAULT_STATUS: StaffStatus | 'All' = 'Active';
 
-const GRID_DEFAULTS: GridState = { first: 0, rows: 25, filters: { status: DEFAULT_STATUS } };
+const GRID_DEFAULTS: GridState = {
+  first: 0,
+  rows: 25,
+  sortField: 'lastName',
+  sortOrder: 1,
+  filters: { status: DEFAULT_STATUS },
+};
 
 @Component({
   selector: 'mp-staff-member-list-page',
@@ -53,17 +51,10 @@ const GRID_DEFAULTS: GridState = { first: 0, rows: 25, filters: { status: DEFAUL
   imports: [
     MpButton,
     MpCard,
-    MpInput,
-    MpSelect,
     MpTable,
-    MpTableCaption,
-    MpTableHeader,
-    MpTableBody,
     MpTableEmpty,
-    MpSortable,
-    MpSortIcon,
+    MpCellDef,
     MpBadge,
-    FormsModule,
     RouterLink,
     PageHeader,
     EmptyState,
@@ -88,27 +79,34 @@ export class StaffMemberListPage implements OnInit {
   protected readonly grid: GridListController<StaffMemberSummaryResponse> =
     injectGridList<StaffMemberSummaryResponse>({
       list: params => this.data.list(params),
-      searchFields: SEARCH_FIELDS,
       defaults: GRID_DEFAULTS,
       table: this.table,
       onError: err => this.notify.apiError(err, this.transloco.translate('staff-members.loadError')),
-      filters: () => ({ status: this.statusFilter() }),
+      // Persist just the status to the URL (per-column text filters are transient).
+      filters: (): Record<string, string> | undefined => {
+        const status = this.table()?.filterValue('status');
+        return status != null ? { status: String(status) } : undefined;
+      },
     });
 
-  protected readonly statusFilter = signal<StaffStatus | 'All'>(
-    (this.grid.initialState.filters?.['status'] ?? DEFAULT_STATUS) as StaffStatus | 'All',
-  );
+  private readonly initialStatus =
+    (this.grid.initialState.filters?.['status'] ?? DEFAULT_STATUS) as StaffStatus | 'All';
 
-  protected readonly hasFilter = computed(
-    () => this.grid.hasFilter() || this.statusFilter() !== DEFAULT_STATUS,
-  );
+  // Seeds the grid so it opens filtered to Active (the status column filter shows it).
+  protected readonly initialFilters: Record<string, MpFilterMetadata> =
+    this.initialStatus !== 'All' ? { status: { value: this.initialStatus, matchMode: 'equals' } } : {};
 
-  protected readonly initialFilters: Record<string, MpFilterMetadata> = {
-    ...this.grid.initialFilters,
-    ...(this.statusFilter() !== 'All'
-      ? { status: { value: this.statusFilter(), matchMode: 'equals' } }
-      : {}),
-  };
+  // Any filter set beyond the default status → offer "clear filters" on an empty result. Reads the
+  // table's active fields so it stays correct as columns are added.
+  protected readonly hasFilter = computed(() => {
+    const t = this.table();
+    if (!t) return false;
+    const status = t.filterValue('status');
+    return (
+      t.activeFilterFields().some(f => f !== 'status') ||
+      (status != null && status !== DEFAULT_STATUS)
+    );
+  });
 
   protected readonly statusOptions = computed<{ label: string; value: StaffStatus | 'All' }[]>(() => [
     { label: this.transloco.translate('staff-members.statusFilter.all'), value: 'All' },
@@ -117,6 +115,49 @@ export class StaffMemberListPage implements OnInit {
     { label: this.transloco.translate('staff-members.status.Leaver'), value: 'Leaver' },
     { label: this.transloco.translate('staff-members.status.None'), value: 'None' },
   ]);
+
+  protected readonly genderOptions = computed<{ label: string; value: string }[]>(() => [
+    { label: this.transloco.translate('staff-members.genderFilter.all'), value: 'All' },
+    { label: this.transloco.translate('common.gender.M'), value: 'M' },
+    { label: this.transloco.translate('common.gender.F'), value: 'F' },
+    { label: this.transloco.translate('common.gender.U'), value: 'U' },
+  ]);
+
+  // The grid, described declaratively — header, sort and filters are generated from this; only the
+  // custom cells (avatar, name link, gender label, date, status badge) need an mpCell template.
+  protected readonly columns = computed<MpColumn[]>(() => {
+    const t = (key: string) => this.transloco.translate(key);
+    return [
+      { field: 'avatar', width: '4rem' },
+      {
+        field: 'name', header: t('staff-members.columns.name'),
+        sortable: true, sortField: 'lastName', filter: 'text', filterField: 'searchName'
+      },
+      {
+        field: 'code', header: t('staff-members.columns.code'), sortable: true, filter: 'text',
+        width: '10rem', cellClass: 'font-mono text-xs text-muted-foreground',
+      },
+      { field: 'role', header: t('staff-members.columns.role'), sortable: true, filter: 'text', hideBelow: 'lg' },
+      {
+        field: 'title', header: t('staff-members.columns.title'), sortable: true, filter: 'text',
+        hideBelow: 'xl', cellClass: 'text-muted-foreground',
+      },
+      {
+        field: 'gender', header: t('staff-members.columns.gender'), sortable: true, hideBelow: 'xl',
+        width: '7rem', cellClass: 'text-muted-foreground',
+        filter: { type: 'select', options: this.genderOptions(), clearValue: 'All' },
+      },
+      {
+        field: 'startDate', header: t('staff-members.columns.startDate'),
+        sortable: true, sortField: 'employmentStartDate', filter: 'date', filterField: 'startDateOnly',
+        hideBelow: 'xl', cellClass: 'text-muted-foreground tabular-nums',
+      },
+      {
+        field: 'status', header: t('staff-members.columns.status'), sortable: true, width: '9rem',
+        filter: { type: 'select', options: this.statusOptions(), clearValue: 'All' },
+      },
+    ];
+  });
 
   protected readonly headerActions = computed<HeaderAction[]>(() =>
     this.canCreate()
@@ -137,23 +178,12 @@ export class StaffMemberListPage implements OnInit {
     });
   }
 
-  openDetails(row: StaffMemberSummaryResponse): void {
+  protected openDetails(row: StaffMemberSummaryResponse): void {
     this.router.navigate(['/staff/people/staff-members', row.id]);
   }
 
-  protected onRowClick(event: MouseEvent, row: StaffMemberSummaryResponse): void {
-    if ((event.target as HTMLElement).closest('a,button')) return;
-    this.openDetails(row);
-  }
-
-  protected onStatusFilterChange(value: StaffStatus | 'All'): void {
-    this.statusFilter.set(value);
-    this.table()?.filter(value === 'All' ? null : value, 'status', 'equals');
-  }
-
   protected clearFilters(): void {
-    this.grid.clearSearch();
-    this.onStatusFilterChange(DEFAULT_STATUS);
+    this.table()?.clearFilters();
   }
 
   protected statusSeverity(
@@ -176,11 +206,11 @@ export class StaffMemberListPage implements OnInit {
   protected displayName(row: StaffMemberSummaryResponse): string {
     const first = row.preferredFirstName?.trim() || row.firstName;
     const last = row.preferredLastName?.trim() || row.lastName;
-    return `${first} ${last}`.trim();
+    return last ? `${last}, ${first}`.trim() : first;
   }
 
   protected legalName(row: StaffMemberSummaryResponse): string | null {
-    const legal = `${row.firstName} ${row.lastName}`.trim();
+    const legal = row.lastName ? `${row.lastName}, ${row.firstName}`.trim() : row.firstName;
     return legal === this.displayName(row) ? null : legal;
   }
 
@@ -188,6 +218,22 @@ export class StaffMemberListPage implements OnInit {
     const first = (row.preferredFirstName?.trim() || row.firstName).charAt(0);
     const last = (row.preferredLastName?.trim() || row.lastName).charAt(0);
     return (first + last).toUpperCase();
+  }
+
+  protected genderLabel(row: StaffMemberSummaryResponse): string {
+    const key = (row.gender ?? '').trim().toUpperCase();
+    return key === 'M' || key === 'F' || key === 'U'
+      ? this.transloco.translate(`common.gender.${key}`)
+      : (row.gender ?? '');
+  }
+
+  protected startDate(row: StaffMemberSummaryResponse): string {
+    if (!row.employmentStartDate) return '';
+    return new Date(row.employmentStartDate).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   }
 
   protected onCreateClosed(): void {

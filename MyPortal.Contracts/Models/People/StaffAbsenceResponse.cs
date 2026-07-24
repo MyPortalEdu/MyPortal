@@ -10,4 +10,13 @@ public class StaffAbsenceResponse
     public DateTime EndDate { get; set; }
     public bool IsConfidential { get; set; }
     public string? Notes { get; set; }
+
+    public Guid? AuthorisedPayRateId { get; set; }
+    public Guid? PayrollReasonId { get; set; }
+    public bool SspExcluded { get; set; }
+    public decimal? WorkingDaysLost { get; set; }
+    public decimal? HoursLost { get; set; }
+    public bool IsIndustrialInjury { get; set; }
+
+    public List<StaffAbsenceCertificateResponse> Certificates { get; set; } = [];
 }

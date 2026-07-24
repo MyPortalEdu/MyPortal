@@ -3,12 +3,13 @@
     <ul class="list-none m-0 p-0 flex flex-col gap-0.5">
       @for (item of items(); track item.label) {
         @if (item.items?.length) {
-          <li>
+          <li class="nav-group">
             <button
               type="button"
-              class="nav-row"
+              class="nav-row nav-row--group"
               [class.nav-row--rail]="collapsed()"
               [class.active]="collapsed() && hasActiveChild(item)"
+              [class.has-active-child]="!collapsed() && hasActiveChild(item)"
               (click)="toggle(item)"
               [attr.aria-expanded]="!collapsed() && isExpanded(item)"
               [mpTooltip]="(item.label || '') | transloco"
@@ -45,7 +46,7 @@
             }
           </li>
         } @else {
-          <li>
+          <li class="nav-group">
             <a
               [routerLink]="item.routerLink"
               routerLinkActive="active"

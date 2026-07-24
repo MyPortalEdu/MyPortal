@@ -1,0 +1,136 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [dismissable]="false"
+    [closeOnEscape]="!f().submitting()"
+    panelClass="w-[min(52rem,94vw)]"
+    [title]="isEdit() ? t('staff-setup.serviceTerms.edit') : t('staff-setup.serviceTerms.add')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="f().submitting()">
+
+    <div class="flex flex-col gap-5">
+      <div class="grid gap-4 md:grid-cols-2">
+        <mp-form-field [label]="t('staff-setup.serviceTerms.code')">
+          <input mpInput [formField]="f.code" />
+        </mp-form-field>
+        <mp-form-field class="md:col-span-2" [label]="t('staff-setup.serviceTerms.description')">
+          <input mpInput [formField]="f.description" />
+        </mp-form-field>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+          <i class="fa-solid fa-users-gear"></i>
+          {{ t('staff-setup.serviceTerms.groupClassification') }}
+        </div>
+        <div class="flex flex-wrap gap-x-6 gap-y-2">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox [formField]="f.isTeacher"></mp-checkbox>
+            {{ t('staff-setup.serviceTerms.isTeacher') }}
+          </label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox [formField]="f.salaried"></mp-checkbox>
+            {{ t('staff-setup.serviceTerms.salaried') }}
+          </label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox [formField]="f.termTimeOnlyPossible"></mp-checkbox>
+            {{ t('staff-setup.serviceTerms.termTimeOnlyPossible') }}
+          </label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox [formField]="f.active"></mp-checkbox>
+            {{ t('staff-setup.serviceTerms.active') }}
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+          <i class="fa-solid fa-stairs"></i>
+          {{ t('staff-setup.serviceTerms.groupPaySpine') }}
+        </div>
+        <div class="flex flex-wrap gap-x-6 gap-y-2 mb-3">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <mp-checkbox [formField]="f.spinalProgression"></mp-checkbox>
+            {{ t('staff-setup.serviceTerms.spinalProgression') }}
+          </label>
+        </div>
+        <p class="text-sm text-muted-foreground">{{ t('staff-setup.serviceTerms.spineOnPanel') }}</p>
+
+        @if (model().spinalProgression) {
+          <div class="grid gap-4 md:grid-cols-2">
+            <mp-form-field [label]="t('staff-setup.serviceTerms.incrementMonth')">
+              <mp-select [formField]="f.incrementMonth" [options]="monthOptions()"
+                optionLabel="label" optionValue="value" [showClear]="true"></mp-select>
+            </mp-form-field>
+            <mp-form-field [label]="t('staff-setup.serviceTerms.incrementDay')"
+              [hint]="t('staff-setup.serviceTerms.incrementDayHint')">
+              <mp-input-number mode="decimal" [min]="1" [max]="31" [formField]="f.incrementDay"
+                class="w-full"></mp-input-number>
+            </mp-form-field>
+          </div>
+
+        }
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+          <i class="fa-solid fa-clock"></i>
+          {{ t('staff-setup.serviceTerms.groupDefaults') }}
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <mp-form-field [label]="t('staff-setup.serviceTerms.hoursPerWeek')"
+            [hint]="t('staff-setup.serviceTerms.defaultsHint')">
+            <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+              [formField]="f.hoursPerWeek" class="w-full"></mp-input-number>
+          </mp-form-field>
+          <mp-form-field [label]="t('staff-setup.serviceTerms.weeksPerYear')">
+            <mp-input-number mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+              [formField]="f.weeksPerYear" class="w-full"></mp-input-number>
+          </mp-form-field>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2.5 pb-1.5 border-b border-border">
+          <i class="fa-solid fa-piggy-bank"></i>
+          {{ t('staff-setup.serviceTerms.groupPension') }}
+        </div>
+
+        @if (!schemes().length) {
+          <p class="text-sm text-muted-foreground">{{ t('staff-setup.serviceTerms.noSchemes') }}</p>
+        } @else {
+          <p class="text-sm text-muted-foreground mb-2">{{ t('staff-setup.serviceTerms.schemesHint') }}</p>
+          <div class="flex flex-col gap-1.5">
+            @for (scheme of schemes(); track scheme.id) {
+              <div class="flex items-center gap-3 rounded border border-border px-3 py-2">
+                <label class="flex items-center gap-2 text-sm cursor-pointer flex-1">
+                  <mp-checkbox [ngModel]="isSchemeSelected(scheme.id)"
+                    (ngModelChange)="toggleScheme(scheme.id, $event)"></mp-checkbox>
+                  {{ scheme.description }}
+                </label>
+                @if (isSchemeSelected(scheme.id)) {
+                  <button mpButton type="button" size="sm"
+                    [variant]="mainSchemeId() === scheme.id ? 'default' : 'outline'"
+                    (click)="setMain(scheme.id)">
+                    {{ t('staff-setup.serviceTerms.mainScheme') }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div mpDialogFooter class="flex items-center justify-end gap-2">
+      <button mpButton variant="outline" (click)="onClose()" [disabled]="f().submitting()">
+        {{ t('common.cancel') }}
+      </button>
+      <button mpButton (click)="save()" [disabled]="f().submitting()">
+        {{ t('common.save') }}
+      </button>
+    </div>
+  </mp-dialog>
+</ng-container>

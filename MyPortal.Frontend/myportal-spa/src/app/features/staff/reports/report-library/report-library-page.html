@@ -1,0 +1,114 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('staff-reports.library.title')"
+    [subtitle]="t('staff-reports.library.subtitle')"
+    icon="fa-solid fa-folder-open"></mp-page-header>
+
+  <!-- Area tabs — only when the user can reach more than one area -->
+  @if (showTabs()) {
+    <div class="mb-5 flex gap-1 overflow-x-auto border-b border-border" role="tablist">
+      @for (area of accessibleAreas(); track area.key) {
+        <a
+          [routerLink]="[]"
+          [queryParams]="{ area: area.key }"
+          class="flex shrink-0 items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2 text-sm
+                 font-medium transition-colors focus-visible:outline-none"
+          [ngClass]="area.key === activeArea()?.key
+            ? 'border-primary text-foreground'
+            : 'border-transparent text-muted-foreground hover:text-foreground'"
+          [attr.aria-current]="area.key === activeArea()?.key ? 'page' : null">
+          <i [class]="area.icon" class="text-xs"></i>
+          {{ t('staff-reports.areas.' + area.key) }}
+        </a>
+      }
+    </div>
+  }
+
+  <!-- Search across the current area's reports -->
+  <div class="mb-5">
+    <span class="relative block w-full sm:max-w-xs">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground"></i>
+      <input
+        mpInput
+        type="text"
+        class="w-full pl-9 pr-9"
+        [placeholder]="t('staff-reports.searchPlaceholder')"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)" />
+      @if (search()) {
+        <button
+          type="button"
+          class="mp-icon-button absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+          [attr.aria-label]="t('staff-reports.clearSearch')"
+          (click)="clearSearch()">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      }
+    </span>
+  </div>
+
+  @if (visibleGroups().length) {
+    <div class="flex flex-col gap-8">
+      @for (group of visibleGroups(); track group.key) {
+        <section>
+          <div class="mb-3 flex items-center gap-2">
+            <i [class]="group.eyebrowIcon" class="text-sm" [ngClass]="group.tint"></i>
+            <h2 class="text-xs font-semibold uppercase tracking-wide" [ngClass]="group.tint">
+              {{ t('staff-reports.groups.' + group.key) }}
+            </h2>
+            <span class="h-px flex-1 bg-border"></span>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            @for (report of group.reports; track report.key) {
+              @if (report.route) {
+                <a
+                  [routerLink]="[report.route]"
+                  class="group flex items-start gap-3 rounded-surface border border-border bg-background p-4
+                         transition hover:border-primary/40 hover:shadow-sm focus-visible:outline-none
+                         focus-visible:ring-2 focus-visible:ring-primary/40">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" [ngClass]="group.tile">
+                    <i [class]="report.icon"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-1.5 font-medium">
+                      {{ t('staff-reports.reports.' + report.key + '.title') }}
+                      <i class="fa-solid fa-arrow-right-long text-xs text-muted-foreground opacity-0
+                                transition-opacity group-hover:opacity-100"></i>
+                    </span>
+                    <span class="mt-0.5 block text-sm text-muted-foreground">
+                      {{ t('staff-reports.reports.' + report.key + '.description') }}
+                    </span>
+                  </span>
+                </a>
+              } @else {
+                <div
+                  class="flex items-start gap-3 rounded-surface border border-dashed border-border/70 p-4 opacity-70"
+                  [attr.aria-disabled]="true">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <i [class]="report.icon"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-2 font-medium text-muted-foreground">
+                      {{ t('staff-reports.reports.' + report.key + '.title') }}
+                      <span class="rounded-full bg-muted px-2 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide">
+                        {{ t('staff-reports.comingSoon') }}
+                      </span>
+                    </span>
+                    <span class="mt-0.5 block text-sm text-muted-foreground">
+                      {{ t('staff-reports.reports.' + report.key + '.description') }}
+                    </span>
+                  </span>
+                </div>
+              }
+            }
+          </div>
+        </section>
+      }
+    </div>
+  } @else {
+    <mp-empty-state
+      icon="fa-solid fa-magnifying-glass"
+      [message]="t('staff-reports.noMatches', { term: search() })"></mp-empty-state>
+  }
+</ng-container>

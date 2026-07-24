@@ -23,6 +23,11 @@ export class AppShell implements OnInit, OnDestroy {
   readonly sidebarOpen = signal(false);
   readonly sidebarCollapsed = signal(false);
 
+  // Transient peek: while the rail is collapsed, hover/focus floats the full sidebar over the
+  // content without disturbing the collapsed preference. Held while the pointer stays over the
+  // sidebar (even across navigation) and cleared only on mouse-leave / focus-out.
+  readonly hoverExpanded = signal(false);
+
   private mq = window.matchMedia('(min-width: 1024px)');
   private mqHandler = (e: MediaQueryListEvent) => this.setDesktop(e.matches);
 
@@ -66,6 +71,20 @@ export class AppShell implements OnInit, OnDestroy {
       this.sidebarCollapsed.set(false);
       localStorage.setItem('mp:sidebar', 'expanded');
     }
+  }
+
+  onSidebarEnter() {
+    if (this.isDesktop() && this.sidebarCollapsed()) this.hoverExpanded.set(true);
+  }
+
+  onSidebarLeave() {
+    this.hoverExpanded.set(false);
+  }
+
+  onSidebarFocusOut(event: FocusEvent) {
+    const host = event.currentTarget as HTMLElement;
+    const next = event.relatedTarget as Node | null;
+    if (!next || !host.contains(next)) this.hoverExpanded.set(false);
   }
 
   closeSidebar() {

@@ -1833,8 +1833,18 @@ BEGIN
 CREATE TABLE [dbo].[NextOfKin] (
     [Id] uniqueidentifier NOT NULL,
     [StaffMemberId] uniqueidentifier NOT NULL,
-    [NextOfKinPersonId] uniqueidentifier NOT NULL,
-    [RelationshipTypeId] uniqueidentifier NOT NULL,
+    [ContactId] uniqueidentifier NOT NULL,
+    [RelationshipTypeId] uniqueidentifier NULL,
+    [ContactOrder] int NOT NULL CONSTRAINT DF_NextOfKin_ContactOrder DEFAULT (0),
+    [Notes] nvarchar(max) NULL,
+    [IsDeleted] bit NOT NULL CONSTRAINT DF_NextOfKin_IsDeleted DEFAULT (0),
+    [CreatedById] uniqueidentifier NOT NULL,
+    [CreatedByIpAddress] nvarchar(45) NOT NULL,
+    [CreatedAt] datetime2(7) NOT NULL CONSTRAINT DF_NextOfKin_CreatedAt DEFAULT SYSUTCDATETIME(),
+    [LastModifiedById] uniqueidentifier NOT NULL,
+    [LastModifiedByIpAddress] nvarchar(45) NOT NULL,
+    [LastModifiedAt] datetime2(7) NOT NULL CONSTRAINT DF_NextOfKin_LastModifiedAt DEFAULT SYSUTCDATETIME(),
+    [Version] BIGINT NOT NULL CONSTRAINT DF_NextOfKin_Version DEFAULT (1),
      CONSTRAINT PK_NextOfKin PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -1845,8 +1855,9 @@ BEGIN
 CREATE TABLE [dbo].[NextOfKinRelationshipTypes] (
     [Id] uniqueidentifier NOT NULL,
     [Description] nvarchar(256) NOT NULL,
+    [DisplayOrder] int NOT NULL CONSTRAINT DF_NextOfKinRelationshipTypes_DisplayOrder DEFAULT (0),
+    [IsSystem] bit NOT NULL CONSTRAINT DF_NextOfKinRelationshipTypes_IsSystem DEFAULT (0),
     [Active] bit NOT NULL CONSTRAINT DF_NextOfKinRelationshipTypes_Active DEFAULT (1),
-    [IsSystem] bit NOT NULL,
     CONSTRAINT PK_NextOfKinRelationshipTypes PRIMARY KEY CLUSTERED ([Id])
     );
 END
@@ -2519,7 +2530,55 @@ CREATE TABLE [dbo].[StaffAbsences] (
     [EndDate] datetime2(7) NOT NULL,
     [IsConfidential] bit NOT NULL,
     [Notes] nvarchar(256) NULL,
+    [AuthorisedPayRateId] uniqueidentifier NULL,
+    [PayrollReasonId] uniqueidentifier NULL,
+    [SspExcluded] bit NOT NULL CONSTRAINT DF_StaffAbsences_SspExcluded DEFAULT (0),
+    [WorkingDaysLost] decimal(6,2) NULL,
+    [HoursLost] decimal(6,2) NULL,
+    [IsIndustrialInjury] bit NOT NULL CONSTRAINT DF_StaffAbsences_IsIndustrialInjury DEFAULT (0),
     CONSTRAINT PK_StaffAbsences PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+
+
+IF OBJECT_ID(N'[dbo].[StaffAbsencePayRates]', N'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[StaffAbsencePayRates] (
+    [Id] uniqueidentifier NOT NULL,
+    [Description] nvarchar(256) NOT NULL,
+    [DisplayOrder] int NOT NULL CONSTRAINT DF_StaffAbsencePayRates_DisplayOrder DEFAULT (0),
+    [IsSystem] bit NOT NULL CONSTRAINT DF_StaffAbsencePayRates_IsSystem DEFAULT (0),
+    [Active] bit NOT NULL CONSTRAINT DF_StaffAbsencePayRates_Active DEFAULT (1),
+    CONSTRAINT PK_StaffAbsencePayRates PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+
+
+IF OBJECT_ID(N'[dbo].[StaffAbsencePayrollReasons]', N'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[StaffAbsencePayrollReasons] (
+    [Id] uniqueidentifier NOT NULL,
+    [Description] nvarchar(256) NOT NULL,
+    [DisplayOrder] int NOT NULL CONSTRAINT DF_StaffAbsencePayrollReasons_DisplayOrder DEFAULT (0),
+    [IsSystem] bit NOT NULL CONSTRAINT DF_StaffAbsencePayrollReasons_IsSystem DEFAULT (0),
+    [Active] bit NOT NULL CONSTRAINT DF_StaffAbsencePayrollReasons_Active DEFAULT (1),
+    CONSTRAINT PK_StaffAbsencePayrollReasons PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+
+
+IF OBJECT_ID(N'[dbo].[StaffAbsenceCertificates]', N'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[StaffAbsenceCertificates] (
+    [Id] uniqueidentifier NOT NULL,
+    [StaffAbsenceId] uniqueidentifier NOT NULL,
+    [DateReceived] datetime2(7) NOT NULL,
+    [DateSigned] datetime2(7) NULL,
+    [IsSelfCertified] bit NOT NULL CONSTRAINT DF_StaffAbsenceCertificates_IsSelfCertified DEFAULT (0),
+    [IsReturnToWork] bit NOT NULL CONSTRAINT DF_StaffAbsenceCertificates_IsReturnToWork DEFAULT (0),
+    [SignedBy] nvarchar(256) NULL,
+    [Notes] nvarchar(256) NULL,
+    CONSTRAINT PK_StaffAbsenceCertificates PRIMARY KEY CLUSTERED ([Id])
     );
 END
 
@@ -2532,6 +2591,41 @@ CREATE TABLE [dbo].[StaffIllnessTypes] (
     [Active] bit NOT NULL CONSTRAINT DF_StaffIllnessTypes_Active DEFAULT (1),
     [IsSystem] bit NOT NULL,
     CONSTRAINT PK_StaffIllnessTypes PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+
+
+IF OBJECT_ID(N'[dbo].[StaffResponsibilityTypes]', N'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[StaffResponsibilityTypes] (
+    [Id] uniqueidentifier NOT NULL,
+    [Description] nvarchar(256) NOT NULL,
+    [DisplayOrder] int NOT NULL CONSTRAINT DF_StaffResponsibilityTypes_DisplayOrder DEFAULT (0),
+    [IsSystem] bit NOT NULL CONSTRAINT DF_StaffResponsibilityTypes_IsSystem DEFAULT (0),
+    [Active] bit NOT NULL CONSTRAINT DF_StaffResponsibilityTypes_Active DEFAULT (1),
+    CONSTRAINT PK_StaffResponsibilityTypes PRIMARY KEY CLUSTERED ([Id])
+    );
+END
+
+
+IF OBJECT_ID(N'[dbo].[StaffResponsibilities]', N'U') IS NULL
+BEGIN
+CREATE TABLE [dbo].[StaffResponsibilities] (
+    [Id] uniqueidentifier NOT NULL,
+    [StaffMemberId] uniqueidentifier NOT NULL,
+    [ResponsibilityTypeId] uniqueidentifier NOT NULL,
+    [StartDate] datetime2(7) NOT NULL,
+    [EndDate] datetime2(7) NULL,
+    [Notes] nvarchar(max) NULL,
+    [IsDeleted] bit NOT NULL CONSTRAINT DF_StaffResponsibilities_IsDeleted DEFAULT (0),
+    [CreatedById] uniqueidentifier NOT NULL,
+    [CreatedByIpAddress] nvarchar(45) NOT NULL,
+    [CreatedAt] datetime2(7) NOT NULL CONSTRAINT DF_StaffResponsibilities_CreatedAt DEFAULT SYSUTCDATETIME(),
+    [LastModifiedById] uniqueidentifier NOT NULL,
+    [LastModifiedByIpAddress] nvarchar(45) NOT NULL,
+    [LastModifiedAt] datetime2(7) NOT NULL CONSTRAINT DF_StaffResponsibilities_LastModifiedAt DEFAULT SYSUTCDATETIME(),
+    [Version] BIGINT NOT NULL CONSTRAINT DF_StaffResponsibilities_Version DEFAULT (1),
+    CONSTRAINT PK_StaffResponsibilities PRIMARY KEY CLUSTERED ([Id])
     );
 END
 
@@ -5280,16 +5374,16 @@ CREATE INDEX [IX_NextOfKin_StaffMemberId] ON [dbo].[NextOfKin]([StaffMemberId]);
 END
 
 
-IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_NextOfKin_NextOfKinPersonId_People' AND parent_object_id = OBJECT_ID(N'[dbo].[NextOfKin]'))
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_NextOfKin_ContactId_Contacts' AND parent_object_id = OBJECT_ID(N'[dbo].[NextOfKin]'))
 BEGIN
 ALTER TABLE [dbo].[NextOfKin]
-    ADD CONSTRAINT [FK_NextOfKin_NextOfKinPersonId_People] FOREIGN KEY ([NextOfKinPersonId]) REFERENCES [dbo].[People]([Id]);
+    ADD CONSTRAINT [FK_NextOfKin_ContactId_Contacts] FOREIGN KEY ([ContactId]) REFERENCES [dbo].[Contacts]([Id]);
 END
 
 
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_NextOfKin_NextOfKinPersonId' AND object_id = OBJECT_ID(N'[dbo].[NextOfKin]'))
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_NextOfKin_ContactId' AND object_id = OBJECT_ID(N'[dbo].[NextOfKin]'))
 BEGIN
-CREATE INDEX [IX_NextOfKin_NextOfKinPersonId] ON [dbo].[NextOfKin]([NextOfKinPersonId]);
+CREATE INDEX [IX_NextOfKin_ContactId] ON [dbo].[NextOfKin]([ContactId]);
 END
 
 
@@ -5303,6 +5397,20 @@ END
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_NextOfKin_RelationshipTypeId' AND object_id = OBJECT_ID(N'[dbo].[NextOfKin]'))
 BEGIN
 CREATE INDEX [IX_NextOfKin_RelationshipTypeId] ON [dbo].[NextOfKin]([RelationshipTypeId]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_NextOfKin_CreatedById_Users' AND parent_object_id = OBJECT_ID(N'[dbo].[NextOfKin]'))
+BEGIN
+ALTER TABLE [dbo].[NextOfKin]
+    ADD CONSTRAINT [FK_NextOfKin_CreatedById_Users] FOREIGN KEY ([CreatedById]) REFERENCES [dbo].[Users]([Id]);
+END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_NextOfKin_LastModifiedById_Users' AND parent_object_id = OBJECT_ID(N'[dbo].[NextOfKin]'))
+BEGIN
+ALTER TABLE [dbo].[NextOfKin]
+    ADD CONSTRAINT [FK_NextOfKin_LastModifiedById_Users] FOREIGN KEY ([LastModifiedById]) REFERENCES [dbo].[Users]([Id]);
 END
 
 
@@ -6317,6 +6425,47 @@ BEGIN
 ALTER TABLE [dbo].[StaffAbsences]
     ADD CONSTRAINT [FK_StaffAbsences_IllnessTypeId_StaffIllnessTypes] FOREIGN KEY ([IllnessTypeId]) REFERENCES [dbo].[StaffIllnessTypes]([Id]);
 END
+
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_StaffAbsenceCertificates_StaffAbsenceId_StaffAbsences' AND parent_object_id = OBJECT_ID(N'[dbo].[StaffAbsenceCertificates]'))
+    ALTER TABLE [dbo].[StaffAbsenceCertificates] ADD CONSTRAINT [FK_StaffAbsenceCertificates_StaffAbsenceId_StaffAbsences] FOREIGN KEY ([StaffAbsenceId]) REFERENCES [dbo].[StaffAbsences]([Id]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_StaffAbsenceCertificates_StaffAbsenceId' AND object_id = OBJECT_ID(N'[dbo].[StaffAbsenceCertificates]'))
+    CREATE INDEX [IX_StaffAbsenceCertificates_StaffAbsenceId] ON [dbo].[StaffAbsenceCertificates]([StaffAbsenceId]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_StaffAbsences_AuthorisedPayRateId_StaffAbsencePayRates' AND parent_object_id = OBJECT_ID(N'[dbo].[StaffAbsences]'))
+    ALTER TABLE [dbo].[StaffAbsences] ADD CONSTRAINT [FK_StaffAbsences_AuthorisedPayRateId_StaffAbsencePayRates] FOREIGN KEY ([AuthorisedPayRateId]) REFERENCES [dbo].[StaffAbsencePayRates]([Id]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_StaffAbsences_PayrollReasonId_StaffAbsencePayrollReasons' AND parent_object_id = OBJECT_ID(N'[dbo].[StaffAbsences]'))
+    ALTER TABLE [dbo].[StaffAbsences] ADD CONSTRAINT [FK_StaffAbsences_PayrollReasonId_StaffAbsencePayrollReasons] FOREIGN KEY ([PayrollReasonId]) REFERENCES [dbo].[StaffAbsencePayrollReasons]([Id]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_StaffResponsibilities_StaffMemberId_StaffMembers' AND parent_object_id = OBJECT_ID(N'[dbo].[StaffResponsibilities]'))
+    ALTER TABLE [dbo].[StaffResponsibilities] ADD CONSTRAINT [FK_StaffResponsibilities_StaffMemberId_StaffMembers] FOREIGN KEY ([StaffMemberId]) REFERENCES [dbo].[StaffMembers]([Id]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_StaffResponsibilities_ResponsibilityTypeId_StaffResponsibilityTypes' AND parent_object_id = OBJECT_ID(N'[dbo].[StaffResponsibilities]'))
+    ALTER TABLE [dbo].[StaffResponsibilities] ADD CONSTRAINT [FK_StaffResponsibilities_ResponsibilityTypeId_StaffResponsibilityTypes] FOREIGN KEY ([ResponsibilityTypeId]) REFERENCES [dbo].[StaffResponsibilityTypes]([Id]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_StaffResponsibilities_CreatedById_Users' AND parent_object_id = OBJECT_ID(N'[dbo].[StaffResponsibilities]'))
+    ALTER TABLE [dbo].[StaffResponsibilities] ADD CONSTRAINT [FK_StaffResponsibilities_CreatedById_Users] FOREIGN KEY ([CreatedById]) REFERENCES [dbo].[Users]([Id]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_StaffResponsibilities_LastModifiedById_Users' AND parent_object_id = OBJECT_ID(N'[dbo].[StaffResponsibilities]'))
+    ALTER TABLE [dbo].[StaffResponsibilities] ADD CONSTRAINT [FK_StaffResponsibilities_LastModifiedById_Users] FOREIGN KEY ([LastModifiedById]) REFERENCES [dbo].[Users]([Id]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_StaffResponsibilities_StaffMemberId' AND object_id = OBJECT_ID(N'[dbo].[StaffResponsibilities]'))
+    CREATE INDEX [IX_StaffResponsibilities_StaffMemberId] ON [dbo].[StaffResponsibilities]([StaffMemberId]);
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_StaffResponsibilities_ResponsibilityTypeId' AND object_id = OBJECT_ID(N'[dbo].[StaffResponsibilities]'))
+    CREATE INDEX [IX_StaffResponsibilities_ResponsibilityTypeId] ON [dbo].[StaffResponsibilities]([ResponsibilityTypeId]);
+GO
 
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_StaffAbsences_IllnessTypeId' AND object_id = OBJECT_ID(N'[dbo].[StaffAbsences]'))

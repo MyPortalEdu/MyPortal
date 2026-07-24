@@ -1,0 +1,117 @@
+<ng-container *transloco="let t">
+  <a
+    routerLink="/staff/reports"
+    class="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground print:hidden">
+    <i class="fa-solid fa-arrow-left-long text-xs"></i>
+    {{ t('staff-reports.backToLibrary') }}
+  </a>
+
+  <mp-page-header
+    [title]="t('staff-reports.reports.terminatingContracts.title')"
+    [subtitle]="t('staff-reports.reports.terminatingContracts.description')"
+    icon="fa-solid fa-file-circle-xmark"></mp-page-header>
+
+  <mp-card class="mb-4 block print:hidden">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex min-w-[12rem] flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('staff-reports.criteria.startDate') }}</label>
+        <mp-date-picker
+          [ngModel]="startDate()"
+          (ngModelChange)="startDate.set($event)"
+          [showIcon]="true"></mp-date-picker>
+      </div>
+      <div class="flex min-w-[12rem] flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('staff-reports.criteria.endDate') }}</label>
+        <mp-date-picker
+          [ngModel]="endDate()"
+          (ngModelChange)="endDate.set($event)"
+          [showIcon]="true"></mp-date-picker>
+      </div>
+      <button mpButton (click)="run()" [disabled]="loading()">
+        <i class="fa-solid fa-play text-xs"></i>
+        {{ t('staff-reports.run') }}
+      </button>
+    </div>
+  </mp-card>
+
+  @if (loading()) {
+    <mp-card><mp-skeleton></mp-skeleton></mp-card>
+  } @else if (!hasRun()) {
+    <mp-card>
+      <mp-empty-state icon="fa-solid fa-sliders" [message]="t('staff-reports.setCriteria')"></mp-empty-state>
+    </mp-card>
+  } @else {
+    <div class="mb-4 hidden print:block">
+      <h1 class="text-lg font-semibold">{{ t('staff-reports.reports.terminatingContracts.title') }}</h1>
+      <p class="text-sm text-muted-foreground">
+        {{ dateLabel(startDate().toISOString()) }} – {{ dateLabel(endDate().toISOString()) }}
+      </p>
+    </div>
+
+    <div class="mb-4 grid gap-3 sm:grid-cols-2">
+      <div class="rounded-surface border border-border bg-muted p-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {{ t('staff-reports.terminatingContracts.summary.count') }}
+        </div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums">{{ count() }}</div>
+      </div>
+      <div class="rounded-surface border border-border bg-muted p-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {{ t('staff-reports.terminatingContracts.summary.totalFte') }}
+        </div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums">{{ fteLabel(totalFte()) }}</div>
+      </div>
+    </div>
+
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2 print:hidden">
+      <span class="text-sm text-muted-foreground">{{ t('staff-reports.resultCount', { count: count() }) }}</span>
+      <div class="flex items-center gap-2">
+        <button mpButton variant="secondary" size="sm" (click)="exportCsv()" [disabled]="!count()">
+          <i class="fa-solid fa-file-csv text-xs"></i>
+          {{ t('staff-reports.exportCsv') }}
+        </button>
+        <button mpButton variant="secondary" size="sm" (click)="print()" [disabled]="!count()">
+          <i class="fa-solid fa-print text-xs"></i>
+          {{ t('staff-reports.print') }}
+        </button>
+      </div>
+    </div>
+
+    <mp-table [value]="rows()" dataKey="staffCode" [scrollable]="true">
+      <ng-template mpTableHeader>
+        <tr>
+          <th>{{ t('staff-reports.terminatingContracts.columns.name') }}</th>
+          <th>{{ t('staff-reports.terminatingContracts.columns.post') }}</th>
+          <th>{{ t('staff-reports.terminatingContracts.columns.type') }}</th>
+          <th>{{ t('staff-reports.terminatingContracts.columns.serviceTerm') }}</th>
+          <th class="text-right">{{ t('staff-reports.terminatingContracts.columns.fte') }}</th>
+          <th class="text-right">{{ t('staff-reports.terminatingContracts.columns.end') }}</th>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableBody let-row>
+        <tr>
+          <td class="py-2 pr-4">
+            <span class="font-medium">{{ row.staffName }}</span>
+            <span class="ml-2 font-mono text-xs text-muted-foreground">{{ row.staffCode }}</span>
+          </td>
+          <td class="py-2 px-3">{{ row.postTitle ?? '—' }}</td>
+          <td class="py-2 px-3">{{ row.contractType ?? '—' }}</td>
+          <td class="py-2 px-3 text-muted-foreground">{{ row.serviceTerm ?? '—' }}</td>
+          <td class="py-2 px-3 text-right tabular-nums">{{ fteLabel(row.fte) }}</td>
+          <td class="py-2 pl-3 text-right font-medium tabular-nums whitespace-nowrap">{{ dateLabel(row.endDate) }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableEmpty>
+        <tr>
+          <td [attr.colspan]="6" class="p-4">
+            <mp-empty-state
+              icon="fa-solid fa-file-circle-xmark"
+              [message]="t('staff-reports.terminatingContracts.empty')"></mp-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </mp-table>
+  }
+</ng-container>

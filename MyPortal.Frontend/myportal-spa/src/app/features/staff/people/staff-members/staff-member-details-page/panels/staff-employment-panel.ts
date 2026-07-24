@@ -27,8 +27,13 @@ import { EmptyState } from '../../../../../../shared/components/empty-state/empt
 import { SectionHeader } from '../../../../../../shared/components/section-header/section-header';
 import { Field } from '../../../../../../shared/components/field/field';
 import { Callout } from '../../../../../../shared/components/callout/callout';
+import { LookupResponse } from '../../../../../../shared/types/lookup';
 import {
   PayScalePointResponse,
+  ServiceTermDefaults,
+  SuperannuationSchemeResponse,
+  StaffContractAllowanceUpsertItem,
+  StaffContractSuspensionUpsertItem,
   StaffContractUpsertItem,
   StaffEmploymentDetailsResponse,
   StaffEmploymentDetailsUpsertRequest,
@@ -92,10 +97,19 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
   protected readonly serviceTerms = computed(() => this.employment()?.serviceTerms ?? []);
   protected readonly departments = computed(() => this.employment()?.departments ?? []);
   protected readonly payScales = computed(() => this.employment()?.payScales ?? []);
+  protected readonly additionalPaymentTypes = computed(
+    () => this.employment()?.additionalPaymentTypes ?? [],
+  );
+  protected readonly posts = computed(() => this.employment()?.posts ?? []);
+  protected readonly superannuationSchemes = computed(
+    () => this.employment()?.superannuationSchemes ?? [],
+  );
   protected readonly payScalePoints = computed(() => this.employment()?.payScalePoints ?? []);
   protected readonly payZoneName = computed(() => this.employment()?.payZoneName ?? null);
 
   private static readonly NO_POINTS: PayScalePointResponse[] = [];
+  private static readonly NO_OPTIONS: LookupResponse[] = [];
+
   private readonly payScalePointsByScale = computed(() => {
     const map = new Map<string, PayScalePointResponse[]>();
     for (const point of this.payScalePoints()) {
@@ -105,6 +119,66 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
     }
     return map;
   });
+
+  // Pay scale, point and pension scheme all belong to a service term, so none of them are
+  // offered until one is picked and each is filtered to that term.
+  protected contractPayScales(serviceTermId: string | null | undefined): LookupResponse[] {
+    if (!serviceTermId) return StaffEmploymentPanel.NO_OPTIONS;
+    return this.payScales()
+      .filter(s => s.serviceTermId === serviceTermId)
+      .map(s => ({ id: s.id, description: s.description }));
+  }
+
+  protected contractSchemes(serviceTermId: string | null | undefined): SuperannuationSchemeResponse[] {
+    if (!serviceTermId) return StaffEmploymentPanel.NO_SCHEMES;
+    const offered = new Set(
+      (this.employment()?.serviceTermSchemes ?? [])
+        .filter(l => l.serviceTermId === serviceTermId)
+        .map(l => l.superannuationSchemeId),
+    );
+    return this.superannuationSchemes().filter(s => offered.has(s.id));
+  }
+
+  private static readonly NO_SCHEMES: SuperannuationSchemeResponse[] = [];
+
+  private serviceTermDefault(serviceTermId: string | null | undefined): ServiceTermDefaults | null {
+    if (!serviceTermId) return null;
+    return (
+      (this.employment()?.serviceTermDefaults ?? []).find(d => d.serviceTermId === serviceTermId) ?? null
+    );
+  }
+
+  /**
+   * Changing the service term invalidates everything hanging off it. The pension scheme lands on
+   * the term's main scheme; hours and weeks take the new term's defaults — but only where the user
+   * hasn't overtyped them (still blank, or still equal to the previous term's default).
+   */
+  protected onContractServiceTerm(
+    employmentIndex: number,
+    contractIndex: number,
+    serviceTermId: string | null,
+  ): void {
+    const main = (this.employment()?.serviceTermSchemes ?? []).find(
+      l => l.serviceTermId === serviceTermId && l.isMain,
+    );
+    const next = this.serviceTermDefault(serviceTermId);
+
+    this.mutateContract(employmentIndex, contractIndex, c => {
+      const prev = this.serviceTermDefault(c.serviceTermId);
+      const hoursAtDefault = c.hoursPerWeek == null || c.hoursPerWeek === prev?.hoursPerWeek;
+      const weeksAtDefault = c.weeksPerYear == null || c.weeksPerYear === prev?.weeksPerYear;
+
+      return {
+        ...c,
+        serviceTermId,
+        payScaleId: null,
+        payScalePointId: null,
+        superannuationSchemeId: main?.superannuationSchemeId ?? null,
+        hoursPerWeek: hoursAtDefault ? (next?.hoursPerWeek ?? null) : c.hoursPerWeek,
+        weeksPerYear: weeksAtDefault ? (next?.weeksPerYear ?? null) : c.weeksPerYear,
+      };
+    });
+  }
 
   override readonly canEdit = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffEmploymentDetails),
@@ -190,9 +264,13 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
         id: e.id ?? null,
         startDate: e.startDate,
         endDate: e.endDate ?? null,
+        continuousServiceStartDate: e.continuousServiceStartDate ?? null,
+        localAuthorityStartDate: e.localAuthorityStartDate ?? null,
         leavingReasonId: e.leavingReasonId ?? null,
         originId: e.originId ?? null,
         destinationId: e.destinationId ?? null,
+        previousEmployer: this.normalise(e.previousEmployer),
+        nextEmployer: this.normalise(e.nextEmployer),
         notes: this.normalise(e.notes),
         contracts: e.contracts.map(c => ({
           id: c.id ?? null,
@@ -212,6 +290,28 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
           isAgencySupply: c.isAgencySupply,
           safeguardedSalary: c.safeguardedSalary,
           dailyRate: c.dailyRate,
+          postId: c.postId ?? null,
+          superannuationSchemeId: c.superannuationSchemeId ?? null,
+          niContractedOut: c.niContractedOut,
+          salaryChanges: c.salaryChanges,
+          suspensions: c.suspensions.map(s => ({
+            id: s.id ?? null,
+            startDate: s.startDate,
+            endDate: s.endDate ?? null,
+            reason: this.normalise(s.reason),
+          })),
+          allowances: c.allowances.map(a => ({
+            id: a.id ?? null,
+            additionalPaymentTypeId: a.additionalPaymentTypeId,
+            amount: a.amount,
+            payFactor: a.payFactor ?? null,
+            startDate: a.startDate,
+            endDate: a.endDate ?? null,
+            isSuperannuable: a.isSuperannuable,
+            isSubjectToNi: a.isSubjectToNi,
+            isBenefitInKind: a.isBenefitInKind,
+            reason: this.normalise(a.reason),
+          })),
         })),
       })),
     };
@@ -238,9 +338,13 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
         id: e.id,
         startDate: e.startDate,
         endDate: e.endDate ?? null,
+        continuousServiceStartDate: e.continuousServiceStartDate ?? null,
+        localAuthorityStartDate: e.localAuthorityStartDate ?? null,
         leavingReasonId: e.leavingReasonId ?? null,
         originId: e.originId ?? null,
         destinationId: e.destinationId ?? null,
+        previousEmployer: e.previousEmployer ?? null,
+        nextEmployer: e.nextEmployer ?? null,
         notes: e.notes ?? null,
         contracts: (e.contracts ?? []).map(c => ({
           id: c.id,
@@ -260,6 +364,28 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
           isAgencySupply: c.isAgencySupply,
           safeguardedSalary: c.safeguardedSalary,
           dailyRate: c.dailyRate,
+          postId: c.postId ?? null,
+          superannuationSchemeId: c.superannuationSchemeId ?? null,
+          niContractedOut: c.niContractedOut,
+          salaryChanges: c.salaryChanges ?? [],
+          suspensions: (c.suspensions ?? []).map(s => ({
+            id: s.id,
+            startDate: s.startDate,
+            endDate: s.endDate ?? null,
+            reason: s.reason ?? null,
+          })),
+          allowances: (c.allowances ?? []).map(a => ({
+            id: a.id,
+            additionalPaymentTypeId: a.additionalPaymentTypeId,
+            amount: a.amount,
+            payFactor: a.payFactor ?? null,
+            startDate: a.startDate,
+            endDate: a.endDate ?? null,
+            isSuperannuable: a.isSuperannuable,
+            isSubjectToNi: a.isSubjectToNi,
+            isBenefitInKind: a.isBenefitInKind,
+            reason: a.reason ?? null,
+          })),
         })),
       })),
     );
@@ -273,13 +399,27 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
         id: null,
         startDate: null,
         endDate: null,
+        // Service dates carry forward from the latest spell — a rejoiner keeps the continuous
+        // service they accrued before. Editable, since a long enough break resets it.
+        continuousServiceStartDate: this.latestSpell(rows)?.continuousServiceStartDate ?? null,
+        localAuthorityStartDate: this.latestSpell(rows)?.localAuthorityStartDate ?? null,
         leavingReasonId: null,
         originId: null,
         destinationId: null,
+        previousEmployer: null,
+        nextEmployer: null,
         notes: null,
         contracts: [],
       },
     ]);
+  }
+
+  private latestSpell(rows: StaffEmploymentUpsertItem[]): StaffEmploymentUpsertItem | null {
+    return rows.reduce<StaffEmploymentUpsertItem | null>(
+      (latest, row) =>
+        row.startDate && (!latest?.startDate || row.startDate > latest.startDate) ? row : latest,
+      null,
+    );
   }
 
   protected removeEmployment(index: number): void {
@@ -302,7 +442,7 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
       rows.map((row, i) => {
         if (i !== index) return row;
         if (iso) return { ...row, endDate: iso };
-        return { ...row, endDate: null, leavingReasonId: null, destinationId: null };
+        return { ...row, endDate: null, leavingReasonId: null, destinationId: null, nextEmployer: null };
       }),
     );
   }
@@ -333,6 +473,12 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
                   isAgencySupply: false,
                   safeguardedSalary: false,
                   dailyRate: false,
+                  postId: null,
+                  superannuationSchemeId: null,
+                  niContractedOut: false,
+                  allowances: [],
+                  suspensions: [],
+                  salaryChanges: [],
                 },
               ],
             }
@@ -383,6 +529,106 @@ export class StaffEmploymentPanel extends StaffAreaPanel implements OnInit {
           : row,
       ),
     );
+  }
+
+  protected addSuspension(employmentIndex: number, contractIndex: number): void {
+    this.mutateContract(employmentIndex, contractIndex, c => ({
+      ...c,
+      suspensions: [...c.suspensions, { id: null, startDate: c.startDate, endDate: null, reason: null }],
+    }));
+  }
+
+  protected removeSuspension(employmentIndex: number, contractIndex: number, suspensionIndex: number): void {
+    this.mutateContract(employmentIndex, contractIndex, c => ({
+      ...c,
+      suspensions: c.suspensions.filter((_, k) => k !== suspensionIndex),
+    }));
+  }
+
+  protected patchSuspension<K extends keyof StaffContractSuspensionUpsertItem>(
+    employmentIndex: number,
+    contractIndex: number,
+    suspensionIndex: number,
+    key: K,
+    value: StaffContractSuspensionUpsertItem[K],
+  ): void {
+    this.mutateContract(employmentIndex, contractIndex, c => ({
+      ...c,
+      suspensions: c.suspensions.map((s, k) => (k === suspensionIndex ? { ...s, [key]: value } : s)),
+    }));
+  }
+
+  protected onSuspensionDate(
+    employmentIndex: number,
+    contractIndex: number,
+    suspensionIndex: number,
+    key: 'startDate' | 'endDate',
+    value: Date | null,
+  ): void {
+    this.patchSuspension(employmentIndex, contractIndex, suspensionIndex, key,
+      value ? value.toISOString() : null);
+  }
+
+  protected employerPensionCost(c: StaffContractUpsertItem): number | null {
+    const rate = this.superannuationSchemes().find(s => s.id === c.superannuationSchemeId)?.employerRate;
+    if (rate == null || c.annualSalary == null) return null;
+    return Math.round(((c.annualSalary + this.allowanceTotal(c)) * rate) / 100 * 100) / 100;
+  }
+
+  protected addAllowance(employmentIndex: number, contractIndex: number): void {
+    this.mutateContract(employmentIndex, contractIndex, c => ({
+      ...c,
+      allowances: [
+        ...c.allowances,
+        {
+          id: null,
+          additionalPaymentTypeId: null,
+          amount: 0,
+          payFactor: null,
+          startDate: c.startDate,
+          endDate: null,
+          isSuperannuable: true,
+          isSubjectToNi: true,
+          isBenefitInKind: false,
+          reason: null,
+        },
+      ],
+    }));
+  }
+
+  protected removeAllowance(employmentIndex: number, contractIndex: number, allowanceIndex: number): void {
+    this.mutateContract(employmentIndex, contractIndex, c => ({
+      ...c,
+      allowances: c.allowances.filter((_, k) => k !== allowanceIndex),
+    }));
+  }
+
+  protected patchAllowance<K extends keyof StaffContractAllowanceUpsertItem>(
+    employmentIndex: number,
+    contractIndex: number,
+    allowanceIndex: number,
+    key: K,
+    value: StaffContractAllowanceUpsertItem[K],
+  ): void {
+    this.mutateContract(employmentIndex, contractIndex, c => ({
+      ...c,
+      allowances: c.allowances.map((a, k) => (k === allowanceIndex ? { ...a, [key]: value } : a)),
+    }));
+  }
+
+  protected onAllowanceDate(
+    employmentIndex: number,
+    contractIndex: number,
+    allowanceIndex: number,
+    key: 'startDate' | 'endDate',
+    value: Date | null,
+  ): void {
+    this.patchAllowance(employmentIndex, contractIndex, allowanceIndex, key,
+      value ? value.toISOString() : null);
+  }
+
+  protected allowanceTotal(c: StaffContractUpsertItem): number {
+    return c.allowances.reduce((sum, a) => sum + (a.amount ?? 0) * (a.payFactor ?? 1), 0);
   }
 
   protected statutoryFor(payScalePointId: string | null | undefined): number | null {

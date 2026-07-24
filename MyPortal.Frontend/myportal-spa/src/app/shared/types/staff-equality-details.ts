@@ -1,5 +1,13 @@
 import { LookupResponse } from './lookup';
 
+export interface StaffDisabilityItem {
+  disabilityId: string | null;
+  dateAdvised?: string | null;
+  isLongTerm: boolean;
+  affectsWorkingAbility: boolean;
+  assistanceRequired?: string | null;
+}
+
 export interface StaffEqualityDetailsResponse {
   ethnicityId?: string | null;
   nationalityId?: string | null;
@@ -11,7 +19,9 @@ export interface StaffEqualityDetailsResponse {
 
   hasDisability: boolean;
   disabilityDetails?: string | null;
-  disabilityIds: string[];
+  declaredDisabilities: StaffDisabilityItem[];
+  impairmentEffectId?: string | null;
+  disabilityNumber?: string | null;
 
   ethnicities: LookupResponse[];
   nationalities: LookupResponse[];
@@ -21,6 +31,7 @@ export interface StaffEqualityDetailsResponse {
   sexualOrientations: LookupResponse[];
   genderIdentities: LookupResponse[];
   disabilities: LookupResponse[];
+  impairmentEffects: LookupResponse[];
 }
 
 export interface StaffEqualityDetailsUpsertRequest {
@@ -34,5 +45,7 @@ export interface StaffEqualityDetailsUpsertRequest {
 
   hasDisability: boolean;
   disabilityDetails?: string | null;
-  disabilityIds: string[];
+  declaredDisabilities: StaffDisabilityItem[];
+  impairmentEffectId?: string | null;
+  disabilityNumber?: string | null;
 }

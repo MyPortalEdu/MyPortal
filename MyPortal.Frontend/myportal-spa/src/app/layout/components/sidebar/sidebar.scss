@@ -40,9 +40,11 @@
     transition: opacity 120ms;
   }
 
+  // A translucent foreground tint, not a fixed token: it adapts to the theme so the hover always
+  // contrasts with the sidebar surface (var(--muted) equalled the sidebar bg in dark mode).
   &:hover,
   &:focus-visible {
-    background: var(--muted);
+    background: color-mix(in srgb, var(--foreground) 8%, transparent);
   }
 
   &.active {
@@ -58,6 +60,24 @@
       opacity: 1;
     }
   }
+}
+
+// Group (category) headers read as headers, not as another leaf row.
+.nav-row--group {
+  font-weight: 500;
+
+  // Hint which collapsed/expanded group holds the current page.
+  &.has-active-child i:not(.nav-chevron) {
+    color: var(--primary);
+    opacity: 1;
+  }
+}
+
+// Break the (soon to be long) list into sections with a hairline + a little air.
+.nav-group + .nav-group {
+  margin-top: 0.375rem;
+  padding-top: 0.375rem;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 .nav-row--sub {

@@ -34,6 +34,21 @@ const CATEGORY_COLOUR: Record<StaffCalendarCategory, string> = {
   Absence: '#9ca3af',
 };
 
+// Per-kind colours for diary-sourced events (keyed by DiaryEventKind). Colour is a UI concern, so it
+// lives here rather than in SQL. Kinds without an entry fall back to the category colour.
+const KIND_COLOUR: Record<number, string> = {
+  1: '#06b6d4', // ECActivity
+  3: '#7c3aed', // Cover
+  4: '#dc2626', // Detention
+  5: '#14b8a6', // NCC
+  6: '#16a34a', // PPA
+  7: '#9333ea', // SchoolHoliday
+  8: '#a21caf', // PublicHoliday
+  9: '#ea580c', // TeacherTraining (INSET)
+  10: '#d97706', // ParentEvening
+  11: '#0ea5e9', // TrainingEvent (staff training)
+};
+
 const MOBILE_MAX = 639;
 
 @Component({
@@ -218,7 +233,11 @@ export class StaffTimetable implements AfterViewInit, OnDestroy {
   }
 
   private toInput(e: StaffCalendarEvent): EventInput {
-    const colour = e.colourCode || CATEGORY_COLOUR[e.category] || CATEGORY_COLOUR.Event;
+    const colour =
+      (e.kind != null ? KIND_COLOUR[e.kind] : null) ||
+      e.colourCode ||
+      CATEGORY_COLOUR[e.category] ||
+      CATEGORY_COLOUR.Event;
     return {
       id: e.id,
       title: e.location ? `${e.title} · ${e.location}` : e.title,

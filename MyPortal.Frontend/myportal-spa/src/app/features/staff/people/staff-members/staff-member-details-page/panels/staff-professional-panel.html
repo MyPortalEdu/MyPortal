@@ -37,6 +37,24 @@
             }
           </mp-field>
 
+          <mp-field [label]="t('staff-members.professional.teacherCategory')" for="teacherCategory">
+            @if (editing()) {
+              <mp-lookup-select inputId="teacherCategory" [options]="teacherCategories()"
+                [formField]="f.teacherCategoryId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(teacherCategories(), model().teacherCategoryId) }}</span>
+            }
+          </mp-field>
+
+          <mp-field [label]="t('staff-members.professional.teacherStatus')" for="teacherStatus">
+            @if (editing()) {
+              <mp-lookup-select inputId="teacherStatus" [options]="teacherStatuses()"
+                [formField]="f.teacherStatusId"></mp-lookup-select>
+            } @else {
+              <span>{{ lookupLabel(teacherStatuses(), model().teacherStatusId) }}</span>
+            }
+          </mp-field>
+
           @if (model().hasQts) {
             <mp-field [label]="t('staff-members.professional.qtsRoute')" for="qtsRoute">
               @if (editing()) {

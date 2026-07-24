@@ -253,3 +253,31 @@ body {
     background-color: var(--muted);
   }
 }
+
+/* Print: strip the app shell so reports (and any print:hidden-marked chrome) come out clean,
+   and release scroll clipping so long tables paginate across pages. */
+@media print {
+  mp-topbar,
+  mp-drawer,
+  aside,
+  mp-breadcrumb,
+  mp-breadcrumbs {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .overflow-hidden,
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+}

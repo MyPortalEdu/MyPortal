@@ -75,6 +75,39 @@ public class StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationS
         }
     }
 
+    public async Task<StaffManagementResponse?> GetManagementByIdAsync(Guid staffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition("[dbo].[usp_staff_member_get_management_by_id]",
+                new { staffMemberId }, transaction, commandType: CommandType.StoredProcedure,
+                cancellationToken: cancellationToken);
+
+            using var multi = await conn.QueryMultipleAsync(command);
+
+            var manager = await multi.ReadFirstOrDefaultAsync<StaffManagementResponse>();
+
+            if (manager == null)
+            {
+                return null;
+            }
+
+            manager.DirectReports = (await multi.ReadAsync<StaffDirectReportResponse>()).AsList();
+
+            return manager;
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
     public async Task<Guid?> GetStaffMemberIdByPersonIdAsync(Guid personId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {
@@ -106,6 +139,31 @@ public class StaffMemberRepository(IDbConnectionFactory factory, IAuthorizationS
         {
             return await conn.ExecuteStoredProcedureAsync<LookupResponse>(
                 "[dbo].[usp_staff_member_get_lookup]", null, transaction, cancellationToken: cancellationToken);
+        }
+        finally
+        {
+            if (owns)
+            {
+                conn.Dispose();
+            }
+        }
+    }
+
+    public async Task<IReadOnlyList<ComplianceItemResponse>> GetComplianceItemsAsync(DateTime today,
+        DateTime horizon, CancellationToken cancellationToken, IDbTransaction? transaction = null)
+    {
+        var sql = SqlResourceLoader.Load("People.GetComplianceItems.sql");
+
+        var (conn, owns) = AcquireConnection(transaction);
+
+        try
+        {
+            var command = new CommandDefinition(sql, new { today, horizon }, transaction,
+                cancellationToken: cancellationToken);
+
+            var rows = await conn.QueryAsync<ComplianceItemResponse>(command);
+
+            return rows.AsList();
         }
         finally
         {

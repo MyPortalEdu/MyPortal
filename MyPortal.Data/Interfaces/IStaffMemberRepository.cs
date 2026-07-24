@@ -25,6 +25,9 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
     Task<StaffBasicDetailsResponse?> GetBasicDetailsByIdAsync(Guid staffMemberId,
         CancellationToken cancellationToken, IDbTransaction? transaction = null);
 
+    Task<StaffManagementResponse?> GetManagementByIdAsync(Guid staffMemberId,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null);
+
     /// <summary>
     /// Paged staff-only summary for the staff/head-teacher picker. Backed by an
     /// inner join on <c>StaffMembers</c> so people who only exist as
@@ -72,4 +75,12 @@ public interface IStaffMemberRepository : IEntityRepository<StaffMember>
     /// </summary>
     Task<bool> CodeExistsAsync(string code, Guid? excludeStaffMemberId, CancellationToken cancellationToken,
         IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// HR compliance items across current/future staff: expiring/expired DBS, right-to-work,
+    /// training and contracts, plus core safeguarding records not held at all. <paramref name="today"/>
+    /// and <paramref name="horizon"/> bound "expired" vs "expiring soon".
+    /// </summary>
+    Task<IReadOnlyList<ComplianceItemResponse>> GetComplianceItemsAsync(DateTime today, DateTime horizon,
+        CancellationToken cancellationToken, IDbTransaction? transaction = null);
 }

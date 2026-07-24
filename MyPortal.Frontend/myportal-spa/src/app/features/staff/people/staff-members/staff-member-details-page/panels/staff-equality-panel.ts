@@ -10,8 +10,9 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { FormField, form, submit } from '@angular/forms/signals';
-import { MpCheckbox, MpTextarea, MpMultiSelect } from '@myportal/ui';
+import { FormField, applyEach, form, maxLength, required, submit } from '@angular/forms/signals';
+import { DatePipe } from '@angular/common';
+import { MpButton, MpCheckbox, MpDatePicker, MpInput, MpTextarea } from '@myportal/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   TranslocoDirective,
@@ -32,6 +33,14 @@ import {
 } from '../../../../../../shared/types/staff-equality-details';
 import { StaffAreaPanel } from './staff-area-panel';
 
+interface DisabilityFormRow {
+  disabilityId: string | null;
+  dateAdvised: Date | null;
+  isLongTerm: boolean;
+  affectsWorkingAbility: boolean;
+  assistanceRequired: string;
+}
+
 interface EqualityModel {
   ethnicityId: string | null;
   nationalityId: string | null;
@@ -42,14 +51,16 @@ interface EqualityModel {
   genderIdentityId: string | null;
   hasDisability: boolean;
   disabilityDetails: string;
-  disabilityIds: string[];
+  disabilityNumber: string;
+  impairmentEffectId: string | null;
+  declaredDisabilities: DisabilityFormRow[];
 }
 
 @Component({
   selector: 'mp-staff-equality-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormField, MpCheckbox, MpTextarea, MpMultiSelect, LookupSelect, Loading, SectionHeader, Field, TranslocoDirective],
+  imports: [DatePipe, FormField, MpButton, MpCheckbox, MpDatePicker, MpInput, MpTextarea, LookupSelect, Loading, SectionHeader, Field, TranslocoDirective],
   providers: [
     provideTranslocoScope('staff-members'),
     { provide: StaffAreaPanel, useExisting: forwardRef(() => StaffEqualityPanel) },
@@ -79,9 +90,16 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
     genderIdentityId: null,
     hasDisability: false,
     disabilityDetails: '',
-    disabilityIds: [],
+    disabilityNumber: '',
+    impairmentEffectId: null,
+    declaredDisabilities: [],
   });
-  protected readonly f = form(this.model);
+  protected readonly f = form(this.model, path => {
+    applyEach(path.declaredDisabilities, item => {
+      required(item.disabilityId);
+      maxLength(item.assistanceRequired, 512);
+    });
+  });
   private readonly snapshot = signal<string>('');
 
   protected readonly ethnicities = computed(() => this.equality()?.ethnicities ?? []);
@@ -92,6 +110,7 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
   protected readonly sexualOrientations = computed(() => this.equality()?.sexualOrientations ?? []);
   protected readonly genderIdentities = computed(() => this.equality()?.genderIdentities ?? []);
   protected readonly disabilities = computed(() => this.equality()?.disabilities ?? []);
+  protected readonly impairmentEffects = computed(() => this.equality()?.impairmentEffects ?? []);
 
   override readonly canEdit = computed(() =>
     this.permissions().has(Permissions.Staff.EditAllStaffEqualityDetails),
@@ -112,7 +131,9 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
       genderIdentityId: m.genderIdentityId,
       hasDisability: m.hasDisability,
       disabilityDetails: m.disabilityDetails,
-      disabilityIds: [...m.disabilityIds].sort(),
+      disabilityNumber: m.disabilityNumber,
+      impairmentEffectId: m.impairmentEffectId,
+      declaredDisabilities: m.declaredDisabilities,
     });
   });
 
@@ -126,9 +147,9 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
       if (!this.model().hasDisability) {
         untracked(() =>
           this.model.update(m =>
-            m.disabilityIds.length === 0 && m.disabilityDetails === ''
+            m.declaredDisabilities.length === 0 && m.disabilityDetails === '' && !m.impairmentEffectId && m.disabilityNumber === ''
               ? m
-              : { ...m, disabilityIds: [], disabilityDetails: '' },
+              : { ...m, declaredDisabilities: [], disabilityDetails: '', impairmentEffectId: null, disabilityNumber: '' },
           ),
         );
       }
@@ -177,7 +198,15 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
         genderIdentityId: m.genderIdentityId,
         hasDisability: m.hasDisability,
         disabilityDetails: this.normalise(m.disabilityDetails),
-        disabilityIds: m.disabilityIds,
+        disabilityNumber: this.normalise(m.disabilityNumber),
+        impairmentEffectId: m.impairmentEffectId,
+        declaredDisabilities: m.declaredDisabilities.map(d => ({
+          disabilityId: d.disabilityId,
+          dateAdvised: d.dateAdvised?.toISOString() ?? null,
+          isLongTerm: d.isLongTerm,
+          affectsWorkingAbility: d.affectsWorkingAbility,
+          assistanceRequired: this.normalise(d.assistanceRequired),
+        })),
       };
       try {
         await firstValueFrom(this.data.updateEqualityDetails(this.staffMemberId(), payload));
@@ -191,6 +220,23 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
     });
   }
 
+  protected addDisability(): void {
+    this.model.update(m => ({
+      ...m,
+      declaredDisabilities: [
+        ...m.declaredDisabilities,
+        { disabilityId: null, dateAdvised: null, isLongTerm: false, affectsWorkingAbility: false, assistanceRequired: '' },
+      ],
+    }));
+  }
+
+  protected removeDisability(index: number): void {
+    this.model.update(m => ({
+      ...m,
+      declaredDisabilities: m.declaredDisabilities.filter((_, i) => i !== index),
+    }));
+  }
+
   private apply(row: StaffEqualityDetailsResponse | null): void {
     this.model.set({
       ethnicityId: row?.ethnicityId ?? null,
@@ -202,7 +248,15 @@ export class StaffEqualityPanel extends StaffAreaPanel implements OnInit {
       genderIdentityId: row?.genderIdentityId ?? null,
       hasDisability: row?.hasDisability ?? false,
       disabilityDetails: row?.disabilityDetails ?? '',
-      disabilityIds: [...(row?.disabilityIds ?? [])],
+      disabilityNumber: row?.disabilityNumber ?? '',
+      impairmentEffectId: row?.impairmentEffectId ?? null,
+      declaredDisabilities: (row?.declaredDisabilities ?? []).map(d => ({
+        disabilityId: d.disabilityId,
+        dateAdvised: d.dateAdvised ? new Date(d.dateAdvised) : null,
+        isLongTerm: d.isLongTerm,
+        affectsWorkingAbility: d.affectsWorkingAbility,
+        assistanceRequired: d.assistanceRequired ?? '',
+      })),
     });
     this.f().reset();
     this.snapshot.set(this.form());

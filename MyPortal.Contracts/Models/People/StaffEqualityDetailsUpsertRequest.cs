@@ -17,5 +17,7 @@ public class StaffEqualityDetailsUpsertRequest
 
     public bool HasDisability { get; set; }
     public string? DisabilityDetails { get; set; }
-    public List<Guid> DisabilityIds { get; set; } = [];
+    public Guid? ImpairmentEffectId { get; set; }
+    public string? DisabilityNumber { get; set; }
+    public List<StaffDisabilityUpsertItem> DeclaredDisabilities { get; set; } = [];
 }

@@ -1,0 +1,29 @@
+{
+  "title": "School Workforce Census",
+  "subtitle": "Assemble the 2026 return from your workforce data and export the DfE XML.",
+  "referenceDate": "Census date",
+  "refresh": "Refresh",
+  "download": "Download XML",
+  "loadError": "Couldn't assemble the census.",
+  "downloadError": "Couldn't generate the XML.",
+  "empty": "No workforce members on the census date.",
+  "summary": {
+    "members": "Members",
+    "issues": "Readiness issues",
+    "la": "LA / Estab",
+    "year": "Collection"
+  },
+  "readiness": {
+    "heading": "Readiness",
+    "intro": "These need fixing before the return is complete:",
+    "clear": "No readiness issues — every member has the required data.",
+    "note": "The return omits the Curriculum and Qualification modules and the School vacancies module (all need subjects-taught, which isn't modelled yet). Pay-range codes are mapped to the DfE set (verify against CBDS). Validate the XML against the official DfE schema before submitting."
+  },
+  "columns": {
+    "name": "Name",
+    "trn": "TRN",
+    "postRole": "Post / Role",
+    "absences": "Absences",
+    "issues": "Issues"
+  }
+}

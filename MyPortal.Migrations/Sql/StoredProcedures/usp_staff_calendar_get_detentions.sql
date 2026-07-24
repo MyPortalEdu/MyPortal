@@ -18,10 +18,9 @@ BEGIN
         e.IsAllDay                                        AS AllDay,
         'Detention'                                       AS Category,
         COALESCE(e.Location, r.[Name])                    AS Location,
-        t.ColourCode                                      AS ColourCode
+        e.Kind                                            AS Kind
     FROM dbo.Detentions AS d
     JOIN dbo.DiaryEvents AS e ON e.Id = d.EventId
-    LEFT JOIN dbo.DiaryEventTypes AS t ON t.Id = e.EventTypeId
     LEFT JOIN dbo.Rooms AS r ON r.Id = e.RoomId
     WHERE d.SupervisorId = @staffMemberId
       AND e.StartTime < @to

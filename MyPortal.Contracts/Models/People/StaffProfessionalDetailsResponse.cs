@@ -10,6 +10,9 @@ public class StaffProfessionalDetailsResponse
 {
     // Teaching status / workforce-census flags.
     public bool IsTeachingStaff { get; set; }
+    public Guid? TeacherCategoryId { get; set; }
+    public Guid? TeacherStatusId { get; set; }
+    public bool EligibleForSwr { get; set; }
     public bool HasQts { get; set; }
     public bool HasHlta { get; set; }
     public bool HasQtls { get; set; }
@@ -33,6 +36,8 @@ public class StaffProfessionalDetailsResponse
 
     // Option lists (active only).
     public List<LookupResponse> QtsRoutes { get; set; } = [];
+    public List<LookupResponse> TeacherCategories { get; set; } = [];
+    public List<LookupResponse> TeacherStatuses { get; set; } = [];
     public List<LookupResponse> InductionStatuses { get; set; } = [];
     public List<LookupResponse> QualificationLevels { get; set; } = [];
     public List<LookupResponse> ClassesOfDegree { get; set; } = [];

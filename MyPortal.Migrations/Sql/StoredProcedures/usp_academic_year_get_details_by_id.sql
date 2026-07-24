@@ -38,12 +38,12 @@ BEGIN
     ORDER BY AT.StartDate;
 
     -- 3) Holidays. SchoolHolidays.EventId points at a DiaryEvent that owns the
-    --    name / date range / type for the holiday; join to surface those.
-    --    The service maps DiaryEventTypeId back to the SchoolHolidayType enum.
+    --    name / date range / kind for the holiday; join to surface those.
+    --    The service maps DiaryEventKind back to the SchoolHolidayType enum.
     SELECT
         Id          = SH.Id,
         [Name]      = DE.Subject,
-        EventTypeId = DE.EventTypeId,
+        Kind        = DE.Kind,
         StartDate   = DE.StartTime,
         EndDate     = DE.EndTime
     FROM dbo.SchoolHolidays AS SH

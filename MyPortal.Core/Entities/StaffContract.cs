@@ -22,6 +22,12 @@ namespace MyPortal.Core.Entities
 
         public Guid? PayScalePointId { get; set; }
 
+        public Guid? PostId { get; set; }
+
+        public Guid? SuperannuationSchemeId { get; set; }
+
+        public bool NiContractedOut { get; set; }
+
         [Required]
         [StringLength(256)]
         public string PostTitle { get; set; } = null!;
@@ -62,6 +68,8 @@ namespace MyPortal.Core.Entities
         public Department? Department { get; set; }
         public PayScale? PayScale { get; set; }
         public PayScalePoint? PayScalePoint { get; set; }
+        public SuperannuationScheme? SuperannuationScheme { get; set; }
+        public Post? Post { get; set; }
 
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;

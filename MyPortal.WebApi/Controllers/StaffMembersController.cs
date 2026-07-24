@@ -28,7 +28,9 @@ public sealed class StaffMembersController(
     IStaffProfessionalService staffProfessionalService,
     IStaffEmploymentService staffEmploymentService,
     IStaffPreEmploymentService staffPreEmploymentService,
+    IStaffNextOfKinService staffNextOfKinService,
     IStaffAbsenceService staffAbsenceService,
+    IStaffResponsibilityService staffResponsibilityService,
     IStaffTimetableService staffTimetableService,
     IStaffPerformanceService staffPerformanceService,
     IStaffAttachmentsService staffAttachmentsService)
@@ -71,6 +73,31 @@ public sealed class StaffMembersController(
         [FromBody] StaffBasicDetailsUpsertRequest model)
     {
         await staffMemberService.UpdateBasicDetailsAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the management section (line manager + direct reports).</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/management")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffManagementResponse), 200)]
+    public async Task<IActionResult> GetManagementAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await staffMemberService.GetManagementAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Assign or clear (null) the staff member's line manager. HR-owned.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The line manager to set, or null to clear.</param>
+    [HttpPut("{staffMemberId:guid}/line-manager")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> SetLineManagerAsync([FromRoute] Guid staffMemberId,
+        [FromBody] SetStaffLineManagerRequest model)
+    {
+        await staffMemberService.SetLineManagerAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 
@@ -247,6 +274,56 @@ public sealed class StaffMembersController(
         [FromBody] StaffPreEmploymentChecksUpsertRequest model)
     {
         await staffPreEmploymentService.UpdatePreEmploymentChecksAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the emergency contacts (next of kin) area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/next-of-kin")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffNextOfKinAreaResponse), 200)]
+    public async Task<IActionResult> GetNextOfKinAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await staffNextOfKinService.GetNextOfKinAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the emergency contacts (next of kin) area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new next-of-kin payload.</param>
+    [HttpPut("{staffMemberId:guid}/next-of-kin")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateNextOfKinAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffNextOfKinAreaUpsertRequest model)
+    {
+        await staffNextOfKinService.UpdateNextOfKinAsync(staffMemberId, model, CancellationToken);
+        return Ok(new IdResponse { Id = staffMemberId });
+    }
+
+    /// <summary>Get the designated responsibilities area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    [HttpGet("{staffMemberId:guid}/responsibilities")]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(StaffResponsibilitiesResponse), 200)]
+    public async Task<IActionResult> GetResponsibilitiesAsync([FromRoute] Guid staffMemberId)
+    {
+        var result = await staffResponsibilityService.GetResponsibilitiesAsync(staffMemberId, CancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>Update the designated responsibilities area.</summary>
+    /// <param name="staffMemberId">The StaffMember id.</param>
+    /// <param name="model">The new responsibilities payload.</param>
+    [HttpPut("{staffMemberId:guid}/responsibilities")]
+    [ValidateModel]
+    [UserType(UserType.Staff)]
+    [ProducesResponseType(typeof(IdResponse), 200)]
+    public async Task<IActionResult> UpdateResponsibilitiesAsync([FromRoute] Guid staffMemberId,
+        [FromBody] StaffResponsibilitiesUpsertRequest model)
+    {
+        await staffResponsibilityService.UpdateResponsibilitiesAsync(staffMemberId, model, CancellationToken);
         return Ok(new IdResponse { Id = staffMemberId });
     }
 

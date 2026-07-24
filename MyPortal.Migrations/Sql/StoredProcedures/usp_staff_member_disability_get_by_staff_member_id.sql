@@ -10,6 +10,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT [Id], [StaffMemberId], [DisabilityId] FROM [dbo].[StaffMemberDisabilities]
+    SELECT [Id], [StaffMemberId], [DisabilityId], [DateAdvised], [IsLongTerm], [AffectsWorkingAbility],
+        [AssistanceRequired] FROM [dbo].[StaffMemberDisabilities]
     WHERE [StaffMemberId] = @staffMemberId;
 END;

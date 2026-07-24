@@ -1,0 +1,67 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('staff-setup.posts.title')"
+    [subtitle]="t('staff-setup.posts.subtitle')"
+    [actions]="headerActions()"></mp-page-header>
+
+  <mp-card>
+    @if (loading() && !area()) {
+      <mp-skeleton></mp-skeleton>
+    } @else if (!posts().length) {
+      <mp-empty-state icon="fa-solid fa-sitemap" [message]="t('staff-setup.posts.none')"></mp-empty-state>
+    } @else {
+      <mp-table [value]="posts()" dataKey="id" [scrollable]="true">
+        <ng-template mpTableHeader>
+          <tr>
+            <th style="width: 10rem">{{ t('staff-setup.posts.reference') }}</th>
+            <th>{{ t('staff-setup.posts.postTitle') }}</th>
+            <th style="width: 12rem">{{ t('staff-setup.posts.category') }}</th>
+            <th style="width: 8rem" class="text-right">{{ t('staff-setup.posts.establishedFte') }}</th>
+            <th style="width: 7rem">{{ t('staff-setup.posts.status') }}</th>
+            <th style="width: 7rem" class="text-right">{{ t('staff-setup.posts.contracts') }}</th>
+            <th style="width: 5rem"></th>
+          </tr>
+        </ng-template>
+        <ng-template mpTableBody let-post>
+          <tr class="cursor-pointer" (click)="openEdit(post)">
+            <td class="font-mono text-sm">{{ post.reference }}</td>
+            <td class="font-medium">{{ post.description }}</td>
+            <td>{{ label(categories(), post.postCategoryId) }}</td>
+            <td class="text-right tabular-nums">{{ post.establishedFte ?? '—' }}</td>
+            <td>
+              @if (post.isVacant) {
+                <mp-badge [value]="t('staff-setup.posts.vacant')" severity="warn"></mp-badge>
+              } @else {
+                <mp-badge [value]="t('staff-setup.posts.filled')" severity="success"></mp-badge>
+              }
+            </td>
+            <td class="text-right tabular-nums">{{ post.contractCount }}</td>
+            <td>
+              @if (canEdit()) {
+                <div class="flex items-center justify-end">
+                  <button mpButton variant="ghost" size="sm" class="text-destructive hover:text-destructive"
+                    [attr.aria-label]="t('common.delete')"
+                    [disabled]="post.contractCount > 0"
+                    (click)="$event.stopPropagation(); confirmDelete(post)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </mp-table>
+    }
+  </mp-card>
+
+  @if (editorOpen()) {
+    <mp-post-editor-dialog
+      [open]="editorOpen()"
+      [post]="editing()"
+      [categories]="categories()"
+      [serviceTerms]="area()?.serviceTerms ?? []"
+      [subjects]="area()?.subjects ?? []"
+      (closed)="editorOpen.set(false)"
+      (saved)="onSaved()"></mp-post-editor-dialog>
+  }
+</ng-container>

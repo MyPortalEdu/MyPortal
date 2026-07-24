@@ -12,4 +12,9 @@ public class StaffAbsencesResponse
 
     public List<LookupResponse> AbsenceTypes { get; set; } = [];
     public List<LookupResponse> IllnessTypes { get; set; } = [];
+
+    public List<LookupResponse> PayRates { get; set; } = [];
+    public List<LookupResponse> PayrollReasons { get; set; } = [];
+
+    public bool CanEditPayroll { get; set; }
 }

@@ -27,7 +27,15 @@ export { MpTableCaption, MpTableHeader, MpTableBody, MpTableEmpty } from './lib/
 export { MpSortable, MpSortIcon, MpSortHost } from './lib/table/mp-sortable';
 export { MpSelectableRow, MpSelectionHost } from './lib/table/mp-selectable-row';
 export { MpTableCheckbox, MpTableHeaderCheckbox } from './lib/table/mp-table-checkbox';
-export { MpColumnFilter } from './lib/table/mp-column-filter';
+export { MpColumnFilter, MpColumnSelectFilter } from './lib/table/mp-column-filter';
+export { MpCellDef } from './lib/table/mp-column';
+export type {
+  MpColumn,
+  MpColumnAlign,
+  MpColumnBreakpoint,
+  MpColumnFilterSpec,
+  MpSelectColumnFilter,
+} from './lib/table/mp-column';
 export type { MpTableLazyLoadEvent, MpFilterMetadata, MpSortMeta } from './lib/table/mp-table-types';
 export { MpCalendar } from './lib/date-picker/mp-calendar';
 export { MpDatePicker } from './lib/date-picker/mp-date-picker';

@@ -16,7 +16,8 @@ import {
 
 export interface GridListConfig<T> {
   list: (params: QueryKitParams) => Observable<PageResult<T>>;
-  searchFields: string[];
+  /** Fields the global search box matches. Omit when the grid has no global search (uses column filters). */
+  searchFields?: string[];
   defaults: GridState;
   table: Signal<MpTable | undefined>;
   onError?: (err: unknown) => void;
@@ -74,7 +75,7 @@ export function injectGridList<T>(config: GridListConfig<T>): GridListController
     syncUrl(event);
     loading.set(true);
     config
-      .list(toQueryKitParams(event, { globalFields: config.searchFields }))
+      .list(toQueryKitParams(event, { globalFields: config.searchFields ?? [] }))
       .pipe(takeUntilDestroyed(destroyRef))
       .subscribe({
         next: page => {

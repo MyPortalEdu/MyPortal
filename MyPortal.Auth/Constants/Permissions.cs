@@ -196,6 +196,16 @@ public static class Permissions
         public const string ViewAllStaffPreEmploymentChecks     = "Staff.ViewAllStaffPreEmploymentChecks";
         public const string EditAllStaffPreEmploymentChecks     = "Staff.EditAllStaffPreEmploymentChecks";
 
+        // Emergency contacts / next of kin. HR-maintained; All-only.
+        public const string ViewAllStaffEmergencyContacts       = "Staff.ViewAllStaffEmergencyContacts";
+        public const string EditAllStaffEmergencyContacts       = "Staff.EditAllStaffEmergencyContacts";
+
+        // Designated responsibilities (DSL, First Aider, SENCO, …). View self/manager/HR; HR edit only.
+        public const string ViewOwnStaffResponsibilities        = "Staff.ViewOwnStaffResponsibilities";
+        public const string ViewManagedStaffResponsibilities    = "Staff.ViewManagedStaffResponsibilities";
+        public const string ViewAllStaffResponsibilities        = "Staff.ViewAllStaffResponsibilities";
+        public const string EditAllStaffResponsibilities        = "Staff.EditAllStaffResponsibilities";
+
         // Absences & leave (health data). No EditOwn — you don't self-mark sick.
         public const string ViewOwnStaffAbsences                = "Staff.ViewOwnStaffAbsences";
         public const string ViewManagedStaffAbsences            = "Staff.ViewManagedStaffAbsences";
@@ -222,6 +232,10 @@ public static class Permissions
         public const string ViewAllStaffPerformanceDetails      = "Staff.ViewAllStaffPerformanceDetails";
         public const string EditManagedStaffPerformanceDetails  = "Staff.EditManagedStaffPerformanceDetails";
         public const string EditAllStaffPerformanceDetails      = "Staff.EditAllStaffPerformanceDetails";
+
+        // Staff Setup — school-level reference data, so no per-staff-member scopes.
+        public const string ViewStaffSetup                      = "Staff.ViewStaffSetup";
+        public const string EditStaffSetup                      = "Staff.EditStaffSetup";
 
         // Not yet modelled — kept as a marker for future slices.
         // public const string ViewAllStaffTasks               = "Staff.ViewAllStaffTasks";

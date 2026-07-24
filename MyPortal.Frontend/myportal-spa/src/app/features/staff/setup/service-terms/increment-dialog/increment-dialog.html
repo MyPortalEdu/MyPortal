@@ -1,0 +1,165 @@
+<ng-container *transloco="let t">
+  <mp-dialog
+    [visible]="open()"
+    (visibleChange)="$event ? null : onClose()"
+    [modal]="true"
+    [dismissable]="false"
+    [closeOnEscape]="!busy()"
+    panelClass="w-[min(60rem,94vw)]"
+    [title]="t('staff-setup.increment.title')"
+    [closeAriaLabel]="t('common.cancel')"
+    [closeDisabled]="busy()">
+
+    <div class="flex flex-col gap-5">
+      <p class="text-sm text-muted-foreground">{{ t('staff-setup.increment.hint') }}</p>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('staff-setup.increment.effectiveFrom') }}</label>
+          <mp-date-picker
+            [ngModel]="effectiveFrom()"
+            (ngModelChange)="effectiveFrom.set($event); preview.set(null)"
+            [showIcon]="true"
+            class="w-full"></mp-date-picker>
+          <span class="text-xs text-muted-foreground">
+            {{ isFuture() ? t('staff-setup.increment.futureHint') : t('staff-setup.increment.nowHint') }}
+          </span>
+        </div>
+        <button mpButton variant="outline" (click)="runPreview()" [disabled]="busy() || !effectiveFrom()">
+          {{ t('staff-setup.increment.preview') }}
+        </button>
+      </div>
+
+      @if (preview(); as p) {
+        @if (!items().length) {
+          <p class="text-sm text-muted-foreground">{{ t('staff-setup.increment.noStaff') }}</p>
+        } @else {
+          <p class="text-sm text-muted-foreground">
+            {{ t('staff-setup.increment.summary', { eligible: p.eligibleCount, total: items().length }) }}
+          </p>
+          <div class="max-h-[22rem] overflow-auto rounded border border-border">
+            <table class="w-full min-w-max text-sm border-collapse">
+              <thead class="sticky top-0 bg-emphasis">
+                <tr class="border-b border-border text-left">
+                  <th class="py-2 px-3 w-10">
+                    <mp-checkbox
+                      [ngModel]="allSelected()"
+                      (ngModelChange)="toggleAll($event)"
+                      [ariaLabel]="t('staff-setup.increment.selectAll')"></mp-checkbox>
+                  </th>
+                  <th class="py-2 px-3 font-medium">{{ t('staff-setup.increment.staff') }}</th>
+                  <th class="py-2 px-3 font-medium">{{ t('staff-setup.increment.scale') }}</th>
+                  <th class="py-2 px-3 font-medium text-right">{{ t('staff-setup.increment.point') }}</th>
+                  <th class="py-2 px-3 font-medium text-right">{{ t('staff-setup.increment.salary') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of items(); track item.contractId) {
+                  <tr class="border-b border-border" [class.opacity-55]="!isEligible(item)">
+                    <td class="py-1.5 px-3">
+                      @if (isEligible(item)) {
+                        <mp-checkbox
+                          [ngModel]="isSelected(item)"
+                          (ngModelChange)="toggle(item, $event)"
+                          [ariaLabel]="item.staffName"></mp-checkbox>
+                      }
+                    </td>
+                    <td class="py-1.5 px-3">
+                      {{ item.staffName }}
+                      <span class="ml-1 font-mono text-xs text-muted-foreground">{{ item.staffCode }}</span>
+                    </td>
+                    <td class="py-1.5 px-3">
+                      <span class="font-mono text-xs text-muted-foreground">{{ item.scaleCode }}</span>
+                    </td>
+                    <td class="py-1.5 px-3 text-right tabular-nums">
+                      @if (item.atMaximum) {
+                        <span>{{ item.currentPointCode }}</span>
+                        <span class="ml-2 text-xs text-amber-600 dark:text-amber-400">
+                          {{ t('staff-setup.increment.atMaximum') }}
+                        </span>
+                      } @else if (item.alreadyIncremented) {
+                        <span>{{ item.currentPointCode }}</span>
+                        <span class="ml-2 text-xs text-muted-foreground">
+                          {{ t('staff-setup.increment.alreadyDone') }}
+                        </span>
+                      } @else {
+                        {{ item.currentPointCode }}
+                        <i class="fa-solid fa-arrow-right-long mx-1.5 text-muted-foreground"></i>
+                        <span class="font-medium">{{ item.nextPointCode }}</span>
+                      }
+                    </td>
+                    <td class="py-1.5 px-3 text-right tabular-nums">
+                      @if (item.atMaximum || item.alreadyIncremented) {
+                        {{ (item.currentSalary ?? 0) | currency: 'GBP' : 'symbol' : '1.0-0' }}
+                      } @else if (item.missingRate) {
+                        <span class="text-xs text-red-600 dark:text-red-400">
+                          {{ t('staff-setup.increment.missingRate') }}
+                        </span>
+                      } @else {
+                        <span class="text-muted-foreground">
+                          {{ (item.currentSalary ?? 0) | currency: 'GBP' : 'symbol' : '1.0-0' }}
+                        </span>
+                        <i class="fa-solid fa-arrow-right-long mx-1.5 text-muted-foreground"></i>
+                        <span class="font-medium">
+                          {{ (item.newSalary ?? 0) | currency: 'GBP' : 'symbol' : '1.0-0' }}
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+
+      @if (scheduled().length) {
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 pb-1.5 border-b border-border">
+            {{ t('staff-setup.increment.scheduledHeading') }}
+          </div>
+          <div class="flex flex-col gap-1.5">
+            @for (row of scheduled(); track row.id) {
+              <div class="flex items-center gap-3 rounded border border-border px-3 py-2 text-sm">
+                <span class="tabular-nums">{{ formatDate(row.effectiveDate) }}</span>
+                <mp-badge [value]="t('staff-setup.increment.status.' + row.status)"
+                  [severity]="statusSeverity(row.status)"></mp-badge>
+                @if (row.status === 'Completed' && row.appliedCount != null) {
+                  <span class="text-xs text-muted-foreground">
+                    {{ t('staff-setup.increment.appliedCount', { count: row.appliedCount }) }}
+                  </span>
+                }
+                @if (row.scheduledBy) {
+                  <span class="text-xs text-muted-foreground">· {{ row.scheduledBy }}</span>
+                }
+                <span class="flex-1"></span>
+                @if (row.isDue) {
+                  <button mpButton size="sm" (click)="runScheduled(row)" [disabled]="busy()">
+                    {{ t('staff-setup.increment.runNow') }}
+                  </button>
+                }
+                @if (row.status === 'Scheduled') {
+                  <button mpButton size="sm" variant="ghost" (click)="cancelScheduled(row)" [disabled]="busy()">
+                    {{ t('common.cancel') }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div mpDialogFooter class="flex items-center justify-end gap-2">
+      <button mpButton variant="outline" (click)="onClose()" [disabled]="busy()">
+        {{ t('common.close') }}
+      </button>
+      <button mpButton variant="outline" (click)="schedule()" [disabled]="!canSchedule()">
+        {{ t('staff-setup.increment.schedule') }}
+      </button>
+      <button mpButton (click)="apply()" [disabled]="!canApply()">
+        {{ t('staff-setup.increment.apply', { count: selected().size }) }}
+      </button>
+    </div>
+  </mp-dialog>
+</ng-container>

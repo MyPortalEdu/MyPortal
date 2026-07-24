@@ -26,6 +26,8 @@ public class StaffProfessionalService(
     IStaffMemberRepository staffMemberRepository,
     IStaffQualificationRepository qualificationRepository,
     IQtsRouteRepository qtsRouteRepository,
+    ITeacherCategoryRepository teacherCategoryRepository,
+    ITeacherStatusRepository teacherStatusRepository,
     IInductionStatusRepository inductionStatusRepository,
     IQualificationLevelRepository qualificationLevelRepository,
     IClassOfDegreeRepository classOfDegreeRepository,
@@ -49,6 +51,8 @@ public class StaffProfessionalService(
         var qualifications = await qualificationRepository.GetByStaffMemberIdAsync(staffMemberId, cancellationToken);
 
         var qtsRoutes = await qtsRouteRepository.GetListAsync(cancellationToken: cancellationToken);
+        var teacherCategories = await teacherCategoryRepository.GetListAsync(cancellationToken: cancellationToken);
+        var teacherStatuses = await teacherStatusRepository.GetListAsync(cancellationToken: cancellationToken);
         var inductionStatuses = await inductionStatusRepository.GetListAsync(cancellationToken: cancellationToken);
         var qualificationLevels = await qualificationLevelRepository.GetListAsync(cancellationToken: cancellationToken);
         var classesOfDegree = await classOfDegreeRepository.GetListAsync(cancellationToken: cancellationToken);
@@ -56,6 +60,9 @@ public class StaffProfessionalService(
         return new StaffProfessionalDetailsResponse
         {
             IsTeachingStaff = staffMember.IsTeachingStaff,
+            TeacherCategoryId = staffMember.TeacherCategoryId,
+            TeacherStatusId = staffMember.TeacherStatusId,
+            EligibleForSwr = staffMember.EligibleForSwr,
             HasQts = staffMember.HasQts,
             HasHlta = staffMember.HasHlta,
             HasQtls = staffMember.HasQtls,
@@ -80,6 +87,8 @@ public class StaffProfessionalService(
                 YearAwarded = q.YearAwarded
             }).ToList(),
             QtsRoutes = qtsRoutes.ToOrderedLookup(),
+            TeacherCategories = teacherCategories.ToOrderedLookup(),
+            TeacherStatuses = teacherStatuses.ToOrderedLookup(),
             InductionStatuses = inductionStatuses.ToAlphabeticalLookup(),
             QualificationLevels = qualificationLevels.ToAlphabeticalLookup(),
             ClassesOfDegree = classesOfDegree.ToOrderedLookup()
@@ -103,6 +112,9 @@ public class StaffProfessionalService(
         }
 
         staffMember.IsTeachingStaff = model.IsTeachingStaff;
+        staffMember.TeacherCategoryId = model.TeacherCategoryId;
+        staffMember.TeacherStatusId = model.TeacherStatusId;
+        staffMember.EligibleForSwr = model.EligibleForSwr;
         staffMember.HasQts = model.HasQts;
         staffMember.HasHlta = model.HasHlta;
         staffMember.HasQtls = model.HasQtls;

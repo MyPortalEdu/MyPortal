@@ -27,6 +27,35 @@ public class StaffAbsencesUpsertRequestValidator : AbstractValidator<StaffAbsenc
 
             absence.RuleFor(a => a.Notes)
                 .MaximumLength(256).WithMessage("Notes must not exceed 256 characters.");
+
+            absence.RuleFor(a => a.WorkingDaysLost)
+                .GreaterThanOrEqualTo(0m).When(a => a.WorkingDaysLost.HasValue)
+                .WithMessage("Working days lost cannot be negative.");
+
+            absence.RuleFor(a => a.HoursLost)
+                .GreaterThanOrEqualTo(0m).When(a => a.HoursLost.HasValue)
+                .WithMessage("Hours lost cannot be negative.");
+
+            absence.RuleForEach(a => a.Certificates).ChildRules(certificate =>
+            {
+                certificate.RuleFor(c => c.DateReceived)
+                    .NotEmpty().WithMessage("A date received is required.");
+
+                // A fit note is signed before it is handed in.
+                certificate.RuleFor(c => c.DateSigned)
+                    .LessThanOrEqualTo(c => c.DateReceived)
+                    .When(c => c.DateSigned.HasValue)
+                    .WithMessage("The signed date cannot be after the date received.");
+
+                certificate.RuleFor(c => c.SignedBy)
+                    .NotEmpty()
+                    .When(c => !c.IsSelfCertified && !c.IsReturnToWork)
+                    .WithMessage("A doctor's certificate needs a signatory.")
+                    .MaximumLength(256).WithMessage("The signatory must not exceed 256 characters.");
+
+                certificate.RuleFor(c => c.Notes)
+                    .MaximumLength(256).WithMessage("Notes must not exceed 256 characters.");
+            });
         });
     }
 

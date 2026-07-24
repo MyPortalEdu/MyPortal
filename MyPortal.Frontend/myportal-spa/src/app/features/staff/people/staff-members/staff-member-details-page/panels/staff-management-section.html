@@ -1,0 +1,76 @@
+<ng-container *transloco="let t">
+  <section>
+    <mp-section-header
+      icon="fa-solid fa-sitemap"
+      [title]="t('staff-members.management.title')"></mp-section-header>
+
+    @if (loading() && !management()) {
+      <mp-spinner></mp-spinner>
+    } @else if (management()) {
+      <div class="grid gap-6 md:grid-cols-2">
+        <div>
+          <label class="block text-sm font-medium mb-1">{{ t('staff-members.management.lineManager') }}</label>
+          @if (editing() && canEdit()) {
+            <mp-select
+              [options]="managerOptions()"
+              optionLabel="description"
+              optionValue="id"
+              [showClear]="true"
+              [filter]="true"
+              [placeholder]="t('staff-members.management.lineManagerPlaceholder')"
+              [ngModel]="pendingManagerId()"
+              (ngModelChange)="pendingManagerId.set($event ?? null)"></mp-select>
+          } @else if (management()!.lineManagerId) {
+            <a [routerLink]="reportLink(management()!.lineManagerId!)" class="text-sm text-primary hover:underline">
+              {{ management()!.lineManagerName }}
+              <span class="text-muted-foreground">· {{ management()!.lineManagerCode }}</span>
+            </a>
+          } @else {
+            <span class="text-sm text-muted-foreground">{{ t('staff-members.management.noLineManager') }}</span>
+          }
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">
+            {{ t('staff-members.management.directReports') }}
+            @if (directReports().length) {
+              <span class="text-muted-foreground">({{ directReports().length }})</span>
+            }
+          </label>
+          @if (directReports().length) {
+            <ul class="flex flex-col gap-1">
+              @for (report of directReports(); track report.staffMemberId) {
+                <li>
+                  <a [routerLink]="reportLink(report.staffMemberId)" class="text-sm text-primary hover:underline">
+                    {{ report.displayName }}
+                    <span class="text-muted-foreground">· {{ report.code }}</span>
+                  </a>
+                </li>
+              }
+            </ul>
+          } @else {
+            <span class="text-sm text-muted-foreground">{{ t('staff-members.management.noDirectReports') }}</span>
+          }
+        </div>
+      </div>
+
+      @if (history().length > 1 || (history().length === 1 && history()[0].endDate)) {
+        <div class="mt-4">
+          <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 pb-1.5 border-b border-border">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            {{ t('staff-members.management.history') }}
+          </div>
+          <ul class="flex flex-col gap-1">
+            @for (h of history(); track h.id) {
+              <li class="text-sm text-muted-foreground">
+                <span class="text-foreground">{{ h.lineManagerName }}</span>
+                <span>· {{ h.startDate | date:'mediumDate' }} –
+                  {{ h.endDate ? (h.endDate | date:'mediumDate') : t('staff-members.management.present') }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    }
+  </section>
+</ng-container>

@@ -127,7 +127,17 @@
       "code": "Code",
       "firstName": "First name",
       "lastName": "Last name",
-      "empty": "No staff members found."
+      "empty": "No staff members found.",
+      "role": "Role",
+      "statusHeader": "Status",
+      "status": {
+        "all": "All Statuses",
+        "Active": "Active",
+        "Future": "Future",
+        "Leaver": "Leaver",
+        "None": "No Employment",
+        "Archived": "Archived"
+      }
     },
     "personPicker": {
       "pick": "Link a person…",
@@ -177,8 +187,16 @@
     "schoolDetails": "School Details",
     "curriculum": "Curriculum",
     "academicYears": "Academic Years",
-    "people": "People",
-    "staffMembers": "Staff"
+    "personnel": "Personnel",
+    "staffMembers": "Staff",
+    "posts": "Posts",
+    "serviceTerms": "Service Terms",
+    "compliance": "Compliance",
+    "trainingEvents": "Training Events",
+    "trainingCourses": "Training Courses",
+    "workforceCensus": "Workforce Census",
+    "reports": "Reports",
+    "reportLibrary": "Report Library"
   },
   "pages": {
     "home": {

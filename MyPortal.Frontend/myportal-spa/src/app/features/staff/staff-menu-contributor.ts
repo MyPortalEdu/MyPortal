@@ -13,13 +13,54 @@ export class StaffMenuContributor implements AppMenuContributor {
     const has = (p: string) => user.permissions?.includes(p) ?? false;
     const cats: MenuCategory[] = [
       {
-        label: 'nav.people',
-        icon: 'fa-users',
+        label: 'nav.personnel',
+        icon: 'fa-id-badge',
         children: [
           {
             label: 'nav.staffMembers',
             routerLink: ['/staff/people/staff-members'],
             permissionsAny: [Permissions.Staff.ViewAllStaffBasicDetails]
+          },
+          {
+            label: 'nav.compliance',
+            routerLink: ['/staff/people/compliance'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffPreEmploymentChecks]
+          },
+          {
+            label: 'nav.trainingEvents',
+            routerLink: ['/staff/people/training-events'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffProfessionalDetails]
+          },
+          {
+            label: 'nav.workforceCensus',
+            routerLink: ['/staff/people/census'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails]
+          },
+          {
+            label: 'nav.posts',
+            routerLink: ['/staff/setup/posts'],
+            permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
+          },
+          {
+            label: 'nav.serviceTerms',
+            routerLink: ['/staff/setup/service-terms'],
+            permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
+          },
+          {
+            label: 'nav.trainingCourses',
+            routerLink: ['/staff/setup/training-courses'],
+            permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
+          }
+        ]
+      },
+      {
+        label: 'nav.reports',
+        icon: 'fa-chart-column',
+        children: [
+          {
+            label: 'nav.reportLibrary',
+            routerLink: ['/staff/reports'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails]
           }
         ]
       },

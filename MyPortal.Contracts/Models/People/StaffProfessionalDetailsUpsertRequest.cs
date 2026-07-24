@@ -8,6 +8,9 @@ namespace MyPortal.Contracts.Models.People;
 public class StaffProfessionalDetailsUpsertRequest
 {
     public bool IsTeachingStaff { get; set; }
+    public Guid? TeacherCategoryId { get; set; }
+    public Guid? TeacherStatusId { get; set; }
+    public bool EligibleForSwr { get; set; }
     public bool HasQts { get; set; }
     public bool HasHlta { get; set; }
     public bool HasQtls { get; set; }

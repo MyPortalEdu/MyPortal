@@ -39,6 +39,12 @@ namespace MyPortal.Core.Entities
 
         public bool IsTeachingStaff { get; set; }
 
+        public Guid? TeacherCategoryId { get; set; }
+
+        public Guid? TeacherStatusId { get; set; }
+
+        public bool EligibleForSwr { get; set; }
+
         public bool HasQts { get; set; }
 
         // Higher Level Teaching Assistant status (workforce census).
@@ -65,6 +71,11 @@ namespace MyPortal.Core.Entities
 
         public string? DisabilityDetails { get; set; }
 
+        public Guid? ImpairmentEffectId { get; set; }
+
+        [StringLength(32)]
+        public string? DisabilityNumber { get; set; }
+
         // Weekly PPA (planning, preparation, assessment) allocation. Caps the solver-assigned
         // teaching load at (TotalPeriodsPerWeek - PpaPeriodsPerWeek); the actual periods left
         // free fall out of the solution.
@@ -77,10 +88,13 @@ namespace MyPortal.Core.Entities
         public Person? Person { get; set; }
 
         public StaffMember? LineManager { get; set; }
+        public ImpairmentEffect? ImpairmentEffect { get; set; }
 
         public InductionStatus? InductionStatus { get; set; }
 
         public QtsRoute? QtsRoute { get; set; }
+        public TeacherCategory? TeacherCategory { get; set; }
+        public TeacherStatus? TeacherStatus { get; set; }
 
         public Guid CreatedById { get; set; }
         public string CreatedByIpAddress { get; set; } = string.Empty;

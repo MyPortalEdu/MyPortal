@@ -6,6 +6,7 @@ import {
   OnInit,
   computed,
   contentChild,
+  contentChildren,
   inject,
   input,
   model,
@@ -13,16 +14,34 @@ import {
   signal,
 } from '@angular/core';
 import { MpButton } from '../button/mp-button';
-import { MpSortHost } from './mp-sortable';
+import { MpSortHost, MpSortable, MpSortIcon } from './mp-sortable';
 import { MpSelectionHost } from './mp-selectable-row';
+import { MpColumnFilter, MpColumnSelectFilter } from './mp-column-filter';
 import { MpTableBody, MpTableCaption, MpTableEmpty, MpTableHeader } from './mp-table-slots';
 import { MpFilterMetadata, MpTableLazyLoadEvent } from './mp-table-types';
+import {
+  MpCellDef,
+  type MpColumn,
+  type MpColumnBreakpoint,
+  type MpSelectColumnFilter,
+} from './mp-column';
+
+const HIDE_CLASS: Record<MpColumnBreakpoint, string> = {
+  sm: 'hidden sm:table-cell',
+  md: 'hidden md:table-cell',
+  lg: 'hidden lg:table-cell',
+  xl: 'hidden xl:table-cell',
+};
+
+function alignClass(align: 'left' | 'right' | 'center' | undefined): string {
+  return align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : '';
+}
 
 @Component({
   selector: 'mp-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, MpButton],
+  imports: [NgTemplateOutlet, MpButton, MpSortable, MpSortIcon, MpColumnFilter, MpColumnSelectFilter],
   providers: [
     { provide: MpSortHost, useExisting: MpTable },
     { provide: MpSelectionHost, useExisting: MpTable },
@@ -52,13 +71,24 @@ export class MpTable implements OnInit, MpSortHost, MpSelectionHost {
   readonly scrollHeight = input<string | undefined>(undefined);
   readonly globalFilterFields = input<string[]>([]);
 
+  // Declarative column model. When provided, the header, sort icons and filter row are generated
+  // from it and the template's header/filter markup isn't needed. Body cells render row[field] by
+  // default; a <ng-template mpCell="field"> overrides one.
+  readonly columns = input<readonly MpColumn[] | null>(null);
+  readonly allowSorting = input(true);
+  readonly allowFiltering = input(true);
+  /** In columns mode, make rows clickable (cursor + hover) and emit `rowClick`. */
+  readonly rowClickable = input(false);
+
   readonly lazyLoad = output<MpTableLazyLoadEvent>();
   readonly rowSelect = output<unknown>();
+  readonly rowClick = output<unknown>();
 
   protected readonly captionSlot = contentChild(MpTableCaption);
   protected readonly headerSlot = contentChild(MpTableHeader);
   protected readonly bodySlot = contentChild(MpTableBody);
   protected readonly emptySlot = contentChild(MpTableEmpty);
+  protected readonly cellDefs = contentChildren(MpCellDef);
 
   protected readonly _first = signal(0);
   protected readonly _rows = signal(25);
@@ -72,6 +102,65 @@ export class MpTable implements OnInit, MpSortHost, MpSelectionHost {
   readonly activeSortOrder = this._sortOrder.asReadonly();
 
   readonly selectionEnabled = computed(() => this.selectionMode() != null);
+
+  // --- columns mode ---
+  protected readonly useColumns = computed(() => (this.columns()?.length ?? 0) > 0);
+  protected readonly filterRowVisible = computed(
+    () => this.allowFiltering() && (this.columns() ?? []).some(c => !!c.filter),
+  );
+  protected readonly rowClass = computed(() =>
+    this.rowClickable() ? 'cursor-pointer transition-colors hover:bg-emphasis' : '',
+  );
+
+  protected sortFieldOf(col: MpColumn): string {
+    return col.sortField ?? col.field;
+  }
+
+  protected filterFieldOf(col: MpColumn): string {
+    return col.filterField ?? col.field;
+  }
+
+  protected columnSortable(col: MpColumn): boolean {
+    return this.allowSorting() && !!col.sortable;
+  }
+
+  protected isSelectFilter(col: MpColumn): boolean {
+    return typeof col.filter === 'object' && col.filter?.type === 'select';
+  }
+
+  protected selectFilter(col: MpColumn): MpSelectColumnFilter {
+    return col.filter as MpSelectColumnFilter;
+  }
+
+  protected inputFilterType(col: MpColumn): 'text' | 'number' | 'date' {
+    return (typeof col.filter === 'string' ? col.filter : 'text') as 'text' | 'number' | 'date';
+  }
+
+  protected headerClassOf(col: MpColumn): string {
+    return [alignClass(col.align), col.hideBelow ? HIDE_CLASS[col.hideBelow] : '', col.headerClass ?? '']
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  protected cellClassOf(col: MpColumn): string {
+    return [alignClass(col.align), col.hideBelow ? HIDE_CLASS[col.hideBelow] : '', col.cellClass ?? '']
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  protected cellDefFor(field: string): MpCellDef | null {
+    return this.cellDefs().find(d => d.field() === field) ?? null;
+  }
+
+  protected renderCell(row: unknown, col: MpColumn): unknown {
+    const value = (row as Record<string, unknown>)?.[col.field];
+    return value == null || value === '' ? '—' : value;
+  }
+
+  protected onColumnRowClick(event: MouseEvent, row: unknown): void {
+    if ((event.target as HTMLElement).closest('a,button,input,mp-select')) return;
+    this.rowClick.emit(row);
+  }
 
   ngOnInit(): void {
     this._first.set(this.first());
@@ -159,6 +248,26 @@ export class MpTable implements OnInit, MpSortHost, MpSelectionHost {
 
   filterGlobal(value: string, matchMode = 'contains'): void {
     this.filter(value, 'global', matchMode);
+  }
+
+  /** The current filter value for a field, so a column filter can render controlled. */
+  filterValue(field: string): unknown {
+    const meta = this._filters()[field];
+    return Array.isArray(meta) ? meta[0]?.value : meta?.value;
+  }
+
+  /** True while any column/global filter is set. */
+  readonly hasActiveFilters = computed(() => Object.keys(this._filters()).length > 0);
+
+  /** The fields that currently have a filter — so a page can judge "is this filtered" itself. */
+  readonly activeFilterFields = computed(() => Object.keys(this._filters()));
+
+  /** Drop every filter and reload from the first page. */
+  clearFilters(): void {
+    if (Object.keys(this._filters()).length === 0) return;
+    this._filters.set({});
+    this._first.set(0);
+    this.emit();
   }
 
   protected keyOf(row: unknown): unknown {

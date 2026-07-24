@@ -26,6 +26,10 @@ public interface IStaffMemberService
     Task UpdateBasicDetailsAsync(Guid id, StaffBasicDetailsUpsertRequest model,
         CancellationToken cancellationToken);
 
+    Task<StaffManagementResponse> GetManagementAsync(Guid id, CancellationToken cancellationToken);
+
+    Task SetLineManagerAsync(Guid id, SetStaffLineManagerRequest model, CancellationToken cancellationToken);
+
     /// <summary>Adds or replaces the staff member's photo (part of basic details). Gated on
     /// basic-details edit access. The image is resized before storage.</summary>
     Task SetPhotoAsync(Guid id, Stream image, string contentType, string fileName,
