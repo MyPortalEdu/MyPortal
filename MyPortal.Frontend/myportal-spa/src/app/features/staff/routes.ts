@@ -13,6 +13,16 @@ import { AcademicYearListPage } from './curriculum/academic-years/academic-year-
 import { StaffMemberListPage } from './people/staff-members/staff-member-list-page/staff-member-list-page';
 import { StaffMemberDetailsPage } from './people/staff-members/staff-member-details-page/staff-member-details-page';
 import { StaffCompliancePage } from './people/staff-compliance/staff-compliance-page';
+import { ReportLibraryPage } from './reports/report-library/report-library-page';
+import { SalaryInformationPage } from './reports/salary-information/salary-information-page';
+import { ContractInformationPage } from './reports/contract-information/contract-information-page';
+import { ContractAnalysisPage } from './reports/contract-analysis/contract-analysis-page';
+import { TerminatingContractsPage } from './reports/terminating-contracts/terminating-contracts-page';
+import { StaffAbsenceAnalysisPage } from './reports/staff-absence-analysis/staff-absence-analysis-page';
+import { IndividualAbsencePage } from './reports/individual-absence/individual-absence-page';
+import { LongTermAbsencePage } from './reports/long-term-absence/long-term-absence-page';
+import { StaffTrainingPage } from './reports/staff-training/staff-training-page';
+import { TrainingCoursePage } from './reports/training-course/training-course-page';
 import { PostListPage } from './setup/posts/post-list-page/post-list-page';
 import { ServiceTermListPage } from './setup/service-terms/service-term-list-page/service-term-list-page';
 import { ServiceTermDetailsPage } from './setup/service-terms/service-term-details-page/service-term-details-page';
@@ -129,6 +139,96 @@ export const STAFF_ROUTES: Routes = [
         data: {
           permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup],
           breadcrumb: 'Service Term'
+        }
+      },
+      {
+        path: 'reports',
+        component: ReportLibraryPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Reports'
+        }
+      },
+      {
+        path: 'reports/salary-information',
+        component: SalaryInformationPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Salary Information'
+        }
+      },
+      {
+        path: 'reports/contract-information',
+        component: ContractInformationPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Contract Information'
+        }
+      },
+      {
+        path: 'reports/contract-analysis',
+        component: ContractAnalysisPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Contract Analysis'
+        }
+      },
+      {
+        path: 'reports/terminating-contracts',
+        component: TerminatingContractsPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Terminating Contracts'
+        }
+      },
+      {
+        path: 'reports/staff-absence-analysis',
+        component: StaffAbsenceAnalysisPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffAbsences],
+          breadcrumb: 'Absence Analysis'
+        }
+      },
+      {
+        path: 'reports/individual-absence',
+        component: IndividualAbsencePage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffAbsences],
+          breadcrumb: 'Individual Absence'
+        }
+      },
+      {
+        path: 'reports/long-term-absence',
+        component: LongTermAbsencePage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffAbsences],
+          breadcrumb: 'Long-Term Absence'
+        }
+      },
+      {
+        path: 'reports/staff-training',
+        component: StaffTrainingPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Staff Training'
+        }
+      },
+      {
+        path: 'reports/training-course',
+        component: TrainingCoursePage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Training Course'
         }
       },
       {

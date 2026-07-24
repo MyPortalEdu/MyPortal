@@ -1,0 +1,247 @@
+{
+  "library": {
+    "title": "Reports",
+    "subtitle": "Run and export predefined HR reports."
+  },
+  "areas": {
+    "personnel": "Personnel"
+  },
+  "searchPlaceholder": "Search reports",
+  "clearSearch": "Clear search",
+  "noMatches": "No reports match \"{{term}}\".",
+  "groups": {
+    "payContracts": "Pay & Contracts",
+    "absence": "Absence",
+    "training": "Training"
+  },
+  "reports": {
+    "salaryInformation": {
+      "title": "Salary Information",
+      "description": "Each staff member's salary on their current open contract."
+    },
+    "contractInformation": {
+      "title": "Contract Information",
+      "description": "Open contract details for every member of staff."
+    },
+    "contractAnalysis": {
+      "title": "Contract Analysis",
+      "description": "Open contracts summarised by service term."
+    },
+    "terminatingContracts": {
+      "title": "Terminating Contracts",
+      "description": "Contracts ending within a chosen period."
+    },
+    "staffAbsenceAnalysis": {
+      "title": "Staff Absence Analysis",
+      "description": "Absences for a period, grouped by service term."
+    },
+    "individualAbsence": {
+      "title": "Individual Absence",
+      "description": "All absences for one member of staff."
+    },
+    "longTermAbsence": {
+      "title": "Long-Term Absence Analysis",
+      "description": "Extended absences over three years, for insurance."
+    },
+    "staffTraining": {
+      "title": "Staff Training",
+      "description": "Courses a member of staff has taken."
+    },
+    "trainingCourse": {
+      "title": "Training Course",
+      "description": "Course details and its list of attendees."
+    }
+  },
+  "comingSoon": "Soon",
+  "backToLibrary": "All reports",
+  "run": "Run report",
+  "exportCsv": "Export CSV",
+  "print": "Print",
+  "setCriteria": "Set your criteria and run the report.",
+  "resultCount": "{{count}} staff",
+  "criteria": {
+    "staffType": "Staff type",
+    "effectiveDate": "Effective date",
+    "startDate": "From",
+    "endDate": "To",
+    "asAt": "as at",
+    "absenceType": "Absence type",
+    "minDays": "Min. days lost",
+    "staffMember": "Staff member",
+    "staffMemberOptional": "Staff member (optional)",
+    "chooseStaff": "Choose staff member",
+    "changeStaff": "Change",
+    "allStaff": "All staff",
+    "clearStaff": "Clear",
+    "course": "Course",
+    "chooseCourse": "Choose a course"
+  },
+  "absenceType": {
+    "all": "All types"
+  },
+  "staffType": {
+    "All": "All staff",
+    "Teaching": "Teaching staff",
+    "Support": "Support staff"
+  },
+  "salaryInformation": {
+    "loadError": "Couldn't run the Salary Information report.",
+    "empty": "No open contracts match these criteria.",
+    "summary": {
+      "headcount": "Staff",
+      "paybill": "Actual paybill",
+      "totalFte": "Total FTE"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "serviceTerm": "Service term",
+      "post": "Post",
+      "scale": "Scale",
+      "point": "Point",
+      "scalePoint": "Scale · Point",
+      "fte": "FTE",
+      "fteSalary": "FTE salary",
+      "actualSalary": "Actual salary",
+      "pension": "Pension",
+      "start": "Started"
+    }
+  },
+  "contractInformation": {
+    "loadError": "Couldn't run the Contract Information report.",
+    "empty": "No open contracts match these criteria.",
+    "summary": {
+      "contracts": "Contracts",
+      "totalFte": "Total FTE"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "serviceTerm": "Service term",
+      "post": "Post",
+      "role": "Role",
+      "type": "Type",
+      "fte": "FTE",
+      "hours": "Hrs/wk",
+      "weeks": "Wks/yr",
+      "scale": "Scale",
+      "point": "Point",
+      "scalePoint": "Scale · Point",
+      "start": "Start",
+      "end": "End"
+    }
+  },
+  "contractAnalysis": {
+    "loadError": "Couldn't run the Contract Analysis report.",
+    "empty": "No open contracts match these criteria.",
+    "summary": {
+      "serviceTerms": "Service terms",
+      "contracts": "Contracts",
+      "totalFte": "Total FTE"
+    },
+    "columns": {
+      "serviceTerm": "Service term",
+      "contracts": "Contracts",
+      "staff": "Staff",
+      "teaching": "Teaching",
+      "support": "Support",
+      "totalFte": "Total FTE"
+    }
+  },
+  "terminatingContracts": {
+    "loadError": "Couldn't run the Terminating Contracts report.",
+    "empty": "No contracts end within this period.",
+    "summary": {
+      "count": "Contracts ending",
+      "totalFte": "Total FTE"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "post": "Post",
+      "type": "Type",
+      "serviceTerm": "Service term",
+      "fte": "FTE",
+      "end": "Ends"
+    }
+  },
+  "staffAbsenceAnalysis": {
+    "loadError": "Couldn't run the Staff Absence Analysis report.",
+    "empty": "No absences match these criteria.",
+    "summary": {
+      "absences": "Absences",
+      "staff": "Staff affected",
+      "daysLost": "Working days lost"
+    },
+    "columns": {
+      "serviceTerm": "Service term",
+      "absences": "Absences",
+      "staff": "Staff",
+      "daysLost": "Days lost"
+    }
+  },
+  "individualAbsence": {
+    "loadError": "Couldn't run the Individual Absence report.",
+    "choose": "Choose a staff member and run the report.",
+    "empty": "No absences match these criteria.",
+    "summary": {
+      "count": "Absences",
+      "daysLost": "Working days lost"
+    },
+    "columns": {
+      "type": "Type",
+      "illness": "Illness",
+      "start": "From",
+      "end": "To",
+      "daysLost": "Days lost",
+      "hoursLost": "Hours lost",
+      "notes": "Notes"
+    }
+  },
+  "longTermAbsence": {
+    "loadError": "Couldn't run the Long-Term Absence report.",
+    "empty": "No extended absences match these criteria.",
+    "days": "days",
+    "summary": {
+      "count": "Extended absences",
+      "daysLost": "Working days lost"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "type": "Type",
+      "start": "From",
+      "end": "To",
+      "daysLost": "Days lost"
+    }
+  },
+  "staffTraining": {
+    "loadError": "Couldn't run the Staff Training report.",
+    "empty": "No training records match these criteria.",
+    "count": "{{count}} records",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "course": "Course",
+      "status": "Status",
+      "completed": "Completed",
+      "expiry": "Expires",
+      "hours": "Hours",
+      "provider": "Provider"
+    }
+  },
+  "trainingCourse": {
+    "loadError": "Couldn't run the Training Course report.",
+    "choose": "Choose a course and run the report.",
+    "empty": "No staff hold a record for this course.",
+    "attendees": "{{count}} attendees",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "status": "Status",
+      "completed": "Completed",
+      "expiry": "Expires",
+      "hours": "Hours"
+    }
+  }
+}

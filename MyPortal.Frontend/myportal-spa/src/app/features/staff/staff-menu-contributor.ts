@@ -39,6 +39,17 @@ export class StaffMenuContributor implements AppMenuContributor {
         ]
       },
       {
+        label: 'nav.reports',
+        icon: 'fa-chart-column',
+        children: [
+          {
+            label: 'nav.reportLibrary',
+            routerLink: ['/staff/reports'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails]
+          }
+        ]
+      },
+      {
         label: 'nav.school',
         icon: 'fa-school',
         children: [

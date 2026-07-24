@@ -191,7 +191,9 @@
     "staffMembers": "Staff",
     "posts": "Posts",
     "serviceTerms": "Service Terms",
-    "compliance": "Compliance"
+    "compliance": "Compliance",
+    "reports": "Reports",
+    "reportLibrary": "Report Library"
   },
   "pages": {
     "home": {

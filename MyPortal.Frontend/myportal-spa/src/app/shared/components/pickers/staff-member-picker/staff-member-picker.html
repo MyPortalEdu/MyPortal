@@ -22,6 +22,8 @@
         (lazyLoad)="load($event)"
         [filterDelay]="300"
         [filters]="initialFilters"
+        [sortField]="'lastName'"
+        [sortOrder]="1"
         dataKey="id"
         selectionMode="single"
         (rowSelect)="onRowSelect($any($event))"
@@ -30,17 +32,17 @@
 
         <ng-template mpTableHeader>
           <tr>
-            <th mpSortable="code" style="width: 10rem">
-              {{ t('common.staffMemberPicker.code') }}
-              <mp-sort-icon field="code"></mp-sort-icon>
+            <th mpSortable="lastName">
+              {{ t('common.staffMemberPicker.lastName') }}
+              <mp-sort-icon field="lastName"></mp-sort-icon>
             </th>
             <th mpSortable="firstName">
               {{ t('common.staffMemberPicker.firstName') }}
               <mp-sort-icon field="firstName"></mp-sort-icon>
             </th>
-            <th mpSortable="lastName">
-              {{ t('common.staffMemberPicker.lastName') }}
-              <mp-sort-icon field="lastName"></mp-sort-icon>
+            <th mpSortable="code" style="width: 10rem">
+              {{ t('common.staffMemberPicker.code') }}
+              <mp-sort-icon field="code"></mp-sort-icon>
             </th>
             <th mpSortable="role" class="hidden sm:table-cell">
               {{ t('common.staffMemberPicker.role') }}
@@ -53,13 +55,13 @@
           </tr>
           <tr>
             <th>
-              <mp-column-filter field="code" matchMode="contains"></mp-column-filter>
+              <mp-column-filter field="lastName" matchMode="contains"></mp-column-filter>
             </th>
             <th>
               <mp-column-filter field="firstName" matchMode="contains"></mp-column-filter>
             </th>
             <th>
-              <mp-column-filter field="lastName" matchMode="contains"></mp-column-filter>
+              <mp-column-filter field="code" matchMode="contains"></mp-column-filter>
             </th>
             <th class="hidden sm:table-cell">
               <mp-column-filter field="role" matchMode="contains"></mp-column-filter>
@@ -73,9 +75,9 @@
 
         <ng-template mpTableBody let-row>
           <tr [mpSelectableRow]="row">
-            <td class="font-mono text-xs">{{ row.code }}</td>
-            <td>{{ row.preferredFirstName ?? row.firstName }}</td>
             <td>{{ row.preferredLastName ?? row.lastName }}</td>
+            <td>{{ row.preferredFirstName ?? row.firstName }}</td>
+            <td class="font-mono text-xs">{{ row.code }}</td>
             <td class="hidden sm:table-cell text-muted-foreground">{{ row.role || '—' }}</td>
             <td class="hidden sm:table-cell text-muted-foreground">{{ statusLabel(row.status) }}</td>
           </tr>

@@ -34,11 +34,15 @@ import { GridState } from '../../../../../shared/utils/querykit';
 import { GridListController, injectGridList } from '../../../../../shared/utils/grid-list';
 import { StaffMemberCreateDialog } from '../staff-member-create-dialog/staff-member-create-dialog';
 
-const SEARCH_FIELDS = ['firstName', 'lastName', 'preferredFirstName', 'preferredLastName', 'code'];
-
 const DEFAULT_STATUS: StaffStatus | 'All' = 'Active';
 
-const GRID_DEFAULTS: GridState = { first: 0, rows: 25, filters: { status: DEFAULT_STATUS } };
+const GRID_DEFAULTS: GridState = {
+  first: 0,
+  rows: 25,
+  sortField: 'lastName',
+  sortOrder: 1,
+  filters: { status: DEFAULT_STATUS },
+};
 
 @Component({
   selector: 'mp-staff-member-list-page',
@@ -75,7 +79,6 @@ export class StaffMemberListPage implements OnInit {
   protected readonly grid: GridListController<StaffMemberSummaryResponse> =
     injectGridList<StaffMemberSummaryResponse>({
       list: params => this.data.list(params),
-      searchFields: SEARCH_FIELDS,
       defaults: GRID_DEFAULTS,
       table: this.table,
       onError: err => this.notify.apiError(err, this.transloco.translate('staff-members.loadError')),

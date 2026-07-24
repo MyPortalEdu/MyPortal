@@ -1,0 +1,148 @@
+<ng-container *transloco="let t">
+  <a
+    routerLink="/staff/reports"
+    class="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground print:hidden">
+    <i class="fa-solid fa-arrow-left-long text-xs"></i>
+    {{ t('staff-reports.backToLibrary') }}
+  </a>
+
+  <mp-page-header
+    [title]="t('staff-reports.reports.salaryInformation.title')"
+    [subtitle]="t('staff-reports.reports.salaryInformation.description')"
+    icon="fa-solid fa-sterling-sign"></mp-page-header>
+
+  <!-- Criteria -->
+  <mp-card class="mb-4 block print:hidden">
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex min-w-[12rem] flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('staff-reports.criteria.staffType') }}</label>
+        <mp-select
+          [ngModel]="staffType()"
+          (ngModelChange)="staffType.set($event)"
+          [options]="staffTypeOptions()"
+          optionLabel="label" optionValue="value"></mp-select>
+      </div>
+      <div class="flex min-w-[12rem] flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('staff-reports.criteria.effectiveDate') }}</label>
+        <mp-date-picker
+          [ngModel]="effectiveDate()"
+          (ngModelChange)="effectiveDate.set($event)"
+          [showIcon]="true"></mp-date-picker>
+      </div>
+      <button mpButton (click)="run()" [disabled]="loading()">
+        <i class="fa-solid fa-play text-xs"></i>
+        {{ t('staff-reports.run') }}
+      </button>
+    </div>
+  </mp-card>
+
+  @if (loading()) {
+    <mp-card><mp-skeleton></mp-skeleton></mp-card>
+  } @else if (!hasRun()) {
+    <mp-card>
+      <mp-empty-state
+        icon="fa-solid fa-sliders"
+        [message]="t('staff-reports.setCriteria')"></mp-empty-state>
+    </mp-card>
+  } @else {
+    <!-- Print-only heading: what was run -->
+    <div class="mb-4 hidden print:block">
+      <h1 class="text-lg font-semibold">{{ t('staff-reports.reports.salaryInformation.title') }}</h1>
+      <p class="text-sm text-muted-foreground">
+        {{ t('staff-reports.staffType.' + staffType()) }} · {{ t('staff-reports.criteria.asAt') }}
+        {{ dateLabel(effectiveDate().toISOString()) }}
+      </p>
+    </div>
+
+    <!-- Summary strip -->
+    <div class="mb-4 grid gap-3 sm:grid-cols-3">
+      <div class="rounded-surface border border-border bg-muted p-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {{ t('staff-reports.salaryInformation.summary.headcount') }}
+        </div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums">{{ headcount() }}</div>
+      </div>
+      <div class="rounded-surface border border-border bg-muted p-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {{ t('staff-reports.salaryInformation.summary.paybill') }}
+        </div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums">{{ money(paybill()) }}</div>
+      </div>
+      <div class="rounded-surface border border-border bg-muted p-4">
+        <div class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {{ t('staff-reports.salaryInformation.summary.totalFte') }}
+        </div>
+        <div class="mt-1 text-2xl font-semibold tabular-nums">{{ fteLabel(totalFte()) }}</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2 print:hidden">
+      <span class="text-sm text-muted-foreground">
+        {{ t('staff-reports.resultCount', { count: headcount() }) }}
+      </span>
+      <div class="flex items-center gap-2">
+        <button mpButton variant="secondary" size="sm" (click)="exportCsv()" [disabled]="!headcount()">
+          <i class="fa-solid fa-file-csv text-xs"></i>
+          {{ t('staff-reports.exportCsv') }}
+        </button>
+        <button mpButton variant="secondary" size="sm" (click)="print()" [disabled]="!headcount()">
+          <i class="fa-solid fa-print text-xs"></i>
+          {{ t('staff-reports.print') }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <mp-table [value]="rows()" dataKey="staffCode" [scrollable]="true">
+      <ng-template mpTableHeader>
+        <tr>
+          <th>{{ t('staff-reports.salaryInformation.columns.name') }}</th>
+          <th>{{ t('staff-reports.salaryInformation.columns.serviceTerm') }}</th>
+          <th>{{ t('staff-reports.salaryInformation.columns.post') }}</th>
+          <th>{{ t('staff-reports.salaryInformation.columns.scalePoint') }}</th>
+          <th class="text-right">{{ t('staff-reports.salaryInformation.columns.fte') }}</th>
+          <th class="text-right">{{ t('staff-reports.salaryInformation.columns.fteSalary') }}</th>
+          <th class="text-right">{{ t('staff-reports.salaryInformation.columns.actualSalary') }}</th>
+          <th>{{ t('staff-reports.salaryInformation.columns.pension') }}</th>
+          <th class="text-right">{{ t('staff-reports.salaryInformation.columns.start') }}</th>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableBody let-row>
+        <tr>
+          <td class="py-2 pr-4">
+            <span class="font-medium">{{ row.staffName }}</span>
+            <span class="ml-2 font-mono text-xs text-muted-foreground">{{ row.staffCode }}</span>
+          </td>
+          <td class="py-2 px-3 text-muted-foreground">{{ row.serviceTerm ?? '—' }}</td>
+          <td class="py-2 px-3">{{ row.postTitle ?? '—' }}</td>
+          <td class="py-2 px-3 whitespace-nowrap">
+            @if (row.payScale || row.payPoint) {
+              <span class="font-mono text-xs">{{ row.payScale }}<span class="text-muted-foreground"> · </span>{{ row.payPoint }}</span>
+            } @else { — }
+          </td>
+          <td class="py-2 px-3 text-right tabular-nums">{{ fteLabel(row.fte) }}</td>
+          <td class="py-2 px-3 text-right tabular-nums text-muted-foreground">{{ money(row.fullTimeSalary) }}</td>
+          <td class="py-2 px-3 text-right font-medium tabular-nums">{{ money(row.actualSalary) }}</td>
+          <td class="py-2 px-3">
+            <span class="font-mono text-xs text-muted-foreground">{{ row.pensionScheme ?? '—' }}</span>
+          </td>
+          <td class="py-2 pl-3 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+            {{ dateLabel(row.contractStartDate) }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableEmpty>
+        <tr>
+          <td [attr.colspan]="9" class="p-4">
+            <mp-empty-state
+              icon="fa-solid fa-sterling-sign"
+              [message]="t('staff-reports.salaryInformation.empty')"></mp-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </mp-table>
+  }
+</ng-container>
