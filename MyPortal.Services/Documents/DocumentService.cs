@@ -210,9 +210,7 @@ public class DocumentService(
         {
             throw new ForbiddenException("You do not have permission to delete this document.");
         }
-
-        // Delete the DB row first; only purge the blob on success. Reverse order would orphan
-        // the row pointing at a missing blob if storage delete succeeded but DB delete failed.
+        
         await documentRepository.DeleteAsync(documentId, cancellationToken, softDelete, uow?.Transaction);
 
         Logger.LogInformation("Document deleted: {documentId}, soft delete: {softDelete}", documentId, softDelete);
@@ -221,11 +219,7 @@ public class DocumentService(
         {
             return;
         }
-
-        // When the caller owns the UoW, the DB delete is still pending commit — defer the
-        // blob purge until the txn actually commits, otherwise a later rollback would leave
-        // the DB row restored but the blob already gone (relevant for tree deletes via
-        // DirectoryService where many docs share one transaction).
+        
         if (uow is not null)
         {
             var storageKey = document.StorageKey;

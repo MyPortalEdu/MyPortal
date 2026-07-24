@@ -41,9 +41,7 @@ public class AcademicYearService(
         { SchoolHolidayType.PublicHoliday, DiaryEventTypes.PublicHoliday },
         { SchoolHolidayType.TeacherTraining, DiaryEventTypes.TeacherTraining }
     };
-
-    // Reverse of _schoolHolidayMap for surfacing holidays on read. Built in the
-    // field initialiser so it stays automatically consistent with the forward map.
+    
     private static readonly IReadOnlyDictionary<Guid, SchoolHolidayType> EventTypeToHolidayType
         = new Dictionary<Guid, SchoolHolidayType>
         {
@@ -76,10 +74,6 @@ public class AcademicYearService(
         {
             Id = h.Id,
             Name = h.Name,
-            // Holidays were always created via _schoolHolidayMap, so every EventTypeId
-            // here should round-trip cleanly. If a row ever shows up with an unknown
-            // type (e.g. someone hand-inserts a SchoolHoliday with an unrelated
-            // DiaryEventType), defaulting to HalfTerm is the least-surprising fallback.
             Type = EventTypeToHolidayType.TryGetValue(h.EventTypeId, out var t) ? t : SchoolHolidayType.HalfTerm,
             StartDate = h.StartDate,
             EndDate = h.EndDate
@@ -131,10 +125,7 @@ public class AcademicYearService(
             return academicYear.Id;
         }, cancellationToken);
     }
-
-    // The copy-from ids point at existing academic years to clone periods / pastoral structure from.
-    // A stale or wrong id would otherwise silently clone nothing (leaving the new year unschedulable),
-    // so reject it up front with a clear error.
+    
     private async Task EnsureCopyFromAcademicYearsExistAsync(AcademicYearUpsertRequest model,
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
@@ -170,10 +161,6 @@ public class AcademicYearService(
     private async Task InsertCalendarArtefactsAsync(Guid academicYearId, AcademicYearUpsertRequest model,
         IDbTransaction? transaction, CancellationToken cancellationToken)
     {
-        // Sort terms chronologically so weekIndex (calendar weeks since the year's first
-        // Monday) is deterministic regardless of caller input order. The cycle counter ticks
-        // continuously across terms — including holiday weeks that get skipped below — so
-        // anchoring it on the year's first Monday is what gives us "continuous" semantics.
         var orderedTerms = model.AcademicTerms.OrderBy(t => t.StartDate).ToArray();
         var yearStartMonday = MondayOf(orderedTerms[0].StartDate);
 
@@ -189,17 +176,7 @@ public class AcademicYearService(
             };
 
             await academicTermRepository.InsertAsync(academicTerm, cancellationToken, transaction);
-
-            // Walk every calendar week that touches the term, anchored on Monday. Every week
-            // gets a row — weeks where the entire Mon-Fri block is covered by SchoolHoliday
-            // rows are flagged IsNonTimetable so the attendance flow knows to write '#' marks
-            // instead of expecting real codes. Single mid-week holidays (May Day etc.) leave
-            // IsNonTimetable false and are resolved per-day at the attendance level. The
-            // cycleOffset is computed for every week regardless so downstream cycle-aware
-            // code doesn't need a special case. Partial weeks at term boundaries (term
-            // starts/ends mid-week) need no gap-day holidays — vw_attendance_period_instances
-            // bounds period instances by [TermStartDate, TermEndDate] so out-of-term days
-            // in the first/last week never materialise.
+            
             for (var monday = MondayOf(termModel.StartDate);
                  monday <= termModel.EndDate;
                  monday = monday.AddDays(7))
@@ -229,10 +206,6 @@ public class AcademicYearService(
                 Subject = holidayModel.Name,
                 StartTime = holidayModel.StartDate,
                 EndTime = holidayModel.EndDate,
-                // IsAllDay=true tells fn_diary_event_get_overlapping to extend the end
-                // by a day so the last calendar day of the holiday is covered. Without
-                // this, EndTime defaults to midnight at the start of EndDate and lessons
-                // on that final day would slip past the holiday filter.
                 IsAllDay = true,
                 IsPublic = true,
                 IsSystem = true,
@@ -315,12 +288,6 @@ public class AcademicYearService(
         var studentGroupIdMap = sourceStudentGroups.ToDictionary(sg => sg.Id, _ => SqlConvention.SequentialGuid());
         var supervisorIdMap = sourceSupervisors.ToDictionary(s => s.Id, _ => SqlConvention.SequentialGuid());
         var yearGroupIdMap = sourceYearGroups.ToDictionary(yg => yg.Id, _ => SqlConvention.SequentialGuid());
-
-        // StudentGroup.MainSupervisorId points at StudentGroupSupervisor.Id, but
-        // StudentGroupSupervisor.StudentGroupId points back at StudentGroup.Id — a circular
-        // FK that we break by inserting groups with MainSupervisorId=null first, then
-        // backfilling once supervisors exist. PromoteToGroupId is also left null here:
-        // it gets set by the end-of-year promotion routine, not by structure copy.
         var insertedStudentGroups = new Dictionary<Guid, StudentGroup>();
         foreach (var src in sourceStudentGroups)
         {
@@ -405,11 +372,7 @@ public class AcademicYearService(
         CancellationToken cancellationToken)
     {
         await AuthorizationService.RequirePermissionAsync(Permissions.Curriculum.EditAcademicYears, cancellationToken);
-
-        // The Copy* fields seed structure at create time only — re-applying them on update is
-        // ambiguous (would we wipe the existing pastoral hierarchy? merge?). Reject up-front so
-        // the caller gets a precise error instead of the validator's "either Copy or inline"
-        // message, which would be misleading here.
+        
         if (model.CopyPeriodsFromAcademicYearId.HasValue ||
             model.CopyPastoralStructureFromAcademicYearId.HasValue)
         {
@@ -431,11 +394,7 @@ public class AcademicYearService(
                 throw new AcademicYearLockedException(
                     "This academic year is locked and cannot be edited.");
             }
-
-            // Once the earliest term has started (or starts today) the calendar is live —
-            // attendance weeks are being read by the register flow, sessions reference
-            // periods, etc. Blocking updates from this point keeps regen safe even if no
-            // marks have been written yet.
+            
             var earliestStart = await academicYearRepository.GetEarliestTermStartDateAsync(
                 academicYearId, cancellationToken, uow.Transaction);
 
@@ -455,10 +414,6 @@ public class AcademicYearService(
 
             await EnsureNoOverlapAsync(excludeAcademicYearId: academicYearId, model, uow.Transaction,
                 cancellationToken);
-
-            // FK-safe wipe order: periods (no children — marks already proven absent),
-            // weeks (parent of marks), terms (parent of weeks), holidays + their backing
-            // diary events. Pastoral hierarchy is intentionally left in place.
             await attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
             await attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
@@ -495,10 +450,7 @@ public class AcademicYearService(
                 throw new AcademicYearLockedException(
                     "This academic year is locked and cannot be deleted.");
             }
-
-            // Same gate as update: once the calendar is live other systems read from it,
-            // and once any user data is attached we can't tear the AY down without
-            // orphaning that data.
+            
             var earliestStart = await academicYearRepository.GetEarliestTermStartDateAsync(
                 academicYearId, cancellationToken, uow.Transaction);
 
@@ -515,9 +467,7 @@ public class AcademicYearService(
                     "This academic year has data attached to it and cannot be deleted. " +
                     "Delete the dependent data first.");
             }
-
-            // Same FK-safe wipe as update, then add the pastoral hierarchy on top (which
-            // update leaves alone) and finally the AY row itself.
+            
             await attendancePeriodRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
                 uow.Transaction);
             await attendanceWeekRepository.DeleteByAcademicYearAsync(academicYearId, cancellationToken,
@@ -536,8 +486,6 @@ public class AcademicYearService(
 
     private static DateTime MondayOf(DateTime date)
     {
-        // DayOfWeek.Sunday is 0, Monday is 1, …; the (+ 7) % 7 wraps Sunday back to a 6-day
-        // step instead of -1 so we land on the most recent Monday at or before the date.
         var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
         return date.Date.AddDays(-diff);
     }
