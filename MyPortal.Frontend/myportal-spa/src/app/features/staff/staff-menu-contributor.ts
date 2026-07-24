@@ -27,6 +27,16 @@ export class StaffMenuContributor implements AppMenuContributor {
             permissionsAny: [Permissions.Staff.ViewAllStaffPreEmploymentChecks]
           },
           {
+            label: 'nav.trainingEvents',
+            routerLink: ['/staff/people/training-events'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffProfessionalDetails]
+          },
+          {
+            label: 'nav.workforceCensus',
+            routerLink: ['/staff/people/census'],
+            permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails]
+          },
+          {
             label: 'nav.posts',
             routerLink: ['/staff/setup/posts'],
             permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
@@ -34,6 +44,11 @@ export class StaffMenuContributor implements AppMenuContributor {
           {
             label: 'nav.serviceTerms',
             routerLink: ['/staff/setup/service-terms'],
+            permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
+          },
+          {
+            label: 'nav.trainingCourses',
+            routerLink: ['/staff/setup/training-courses'],
             permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup]
           }
         ]

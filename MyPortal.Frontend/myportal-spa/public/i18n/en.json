@@ -192,6 +192,9 @@
     "posts": "Posts",
     "serviceTerms": "Service Terms",
     "compliance": "Compliance",
+    "trainingEvents": "Training Events",
+    "trainingCourses": "Training Courses",
+    "workforceCensus": "Workforce Census",
     "reports": "Reports",
     "reportLibrary": "Report Library"
   },

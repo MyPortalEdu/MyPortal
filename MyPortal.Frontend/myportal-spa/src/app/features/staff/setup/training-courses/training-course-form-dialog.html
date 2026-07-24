@@ -1,0 +1,42 @@
+<ng-container *transloco="let t">
+  <mp-dialog [(visible)]="visible" panelClass="w-[min(32rem,94vw)]" [ariaLabel]="t('training-courses.form.title')">
+    <div class="flex items-center justify-between border-b border-border p-3">
+      <span class="text-sm font-semibold">
+        {{ isEdit() ? t('training-courses.form.editTitle') : t('training-courses.form.title') }}
+      </span>
+      <button type="button" class="mp-icon-button" (click)="visible.set(false)" [attr.aria-label]="t('common.close')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="grid gap-3 p-4">
+      <div class="grid grid-cols-3 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('training-courses.columns.code') }}</label>
+          <input mpInput type="text" [ngModel]="model().code" (ngModelChange)="patch('code', $event)" />
+        </div>
+        <div class="col-span-2 flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('training-courses.columns.name') }}</label>
+          <input mpInput type="text" [ngModel]="model().name" (ngModelChange)="patch('name', $event)" />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('training-courses.columns.description') }}</label>
+        <textarea mpTextarea rows="2" [ngModel]="model().description" (ngModelChange)="patch('description', $event)"></textarea>
+      </div>
+
+      <label class="mt-1 inline-flex items-center gap-2 text-sm">
+        <mp-checkbox [ngModel]="model().active" (ngModelChange)="patch('active', $event)"></mp-checkbox>
+        {{ t('training-courses.form.active') }}
+      </label>
+    </div>
+
+    <div class="flex justify-end gap-2 border-t border-border p-3">
+      <button mpButton variant="secondary" (click)="visible.set(false)">{{ t('common.cancel') }}</button>
+      <button mpButton (click)="save()" [disabled]="saving()">
+        {{ isEdit() ? t('common.save') : t('training-courses.form.create') }}
+      </button>
+    </div>
+  </mp-dialog>
+</ng-container>

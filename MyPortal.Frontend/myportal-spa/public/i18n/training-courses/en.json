@@ -1,0 +1,28 @@
+{
+  "title": "Training Courses",
+  "subtitle": "The catalogue of courses staff can be trained on.",
+  "new": "New Course",
+  "empty": "No training courses yet.",
+  "loadError": "Couldn't load training courses.",
+  "active": "Active",
+  "inactive": "Inactive",
+  "inUse": "In use — deactivate instead of deleting",
+  "confirmDelete": "Delete the course \"{{name}}\"?",
+  "deleted": "Training course deleted.",
+  "deleteError": "Couldn't delete the course.",
+  "columns": {
+    "code": "Code",
+    "name": "Name",
+    "description": "Description",
+    "status": "Status"
+  },
+  "form": {
+    "title": "New Training Course",
+    "editTitle": "Edit Training Course",
+    "active": "Active",
+    "create": "Create",
+    "incomplete": "Enter a code and a name.",
+    "saved": "Training course saved.",
+    "saveError": "Couldn't save the course."
+  }
+}

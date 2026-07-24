@@ -1,0 +1,74 @@
+<ng-container *transloco="let t">
+  <mp-dialog [(visible)]="visible" panelClass="w-[min(40rem,94vw)]" [ariaLabel]="t('training-events.form.title')">
+    <div class="flex items-center justify-between border-b border-border p-3">
+      <span class="text-sm font-semibold">
+        {{ isEdit() ? t('training-events.form.editTitle') : t('training-events.form.title') }}
+      </span>
+      <button type="button" class="mp-icon-button" (click)="visible.set(false)" [attr.aria-label]="t('common.close')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="grid gap-3 p-4 sm:grid-cols-2">
+      <div class="flex flex-col gap-1 sm:col-span-2">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.course') }}</label>
+        <mp-select
+          [ngModel]="model().trainingCourseId"
+          (ngModelChange)="onCourseChange($event)"
+          [options]="courses()"
+          optionLabel="name" optionValue="id"
+          [placeholder]="t('training-events.form.chooseCourse')"></mp-select>
+      </div>
+
+      <div class="flex flex-col gap-1 sm:col-span-2">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.eventTitle') }}</label>
+        <input mpInput type="text" [ngModel]="model().title" (ngModelChange)="patch('title', $event)" />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.start') }}</label>
+        <mp-date-picker [ngModel]="model().start" (ngModelChange)="patch('start', $event)" [showTime]="true"></mp-date-picker>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.end') }}</label>
+        <mp-date-picker [ngModel]="model().end" (ngModelChange)="patch('end', $event)" [showTime]="true"></mp-date-picker>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.location') }}</label>
+        <input mpInput type="text" [ngModel]="model().location" (ngModelChange)="patch('location', $event)" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.trainer') }}</label>
+        <input mpInput type="text" [ngModel]="model().trainer" (ngModelChange)="patch('trainer', $event)" />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.provider') }}</label>
+        <input mpInput type="text" [ngModel]="model().provider" (ngModelChange)="patch('provider', $event)" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('training-events.form.hours') }}</label>
+          <mp-input-number [ngModel]="model().hours" (ngModelChange)="patch('hours', $event)" [min]="0"></mp-input-number>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-muted-foreground">{{ t('training-events.form.capacity') }}</label>
+          <mp-input-number [ngModel]="model().capacity" (ngModelChange)="patch('capacity', $event)" [min]="0"></mp-input-number>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1 sm:col-span-2">
+        <label class="text-xs text-muted-foreground">{{ t('training-events.form.notes') }}</label>
+        <textarea mpTextarea rows="2" [ngModel]="model().notes" (ngModelChange)="patch('notes', $event)"></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 border-t border-border p-3">
+      <button mpButton variant="secondary" (click)="visible.set(false)">{{ t('common.cancel') }}</button>
+      <button mpButton (click)="save()" [disabled]="saving()">
+        {{ isEdit() ? t('common.save') : t('training-events.form.create') }}
+      </button>
+    </div>
+  </mp-dialog>
+</ng-container>

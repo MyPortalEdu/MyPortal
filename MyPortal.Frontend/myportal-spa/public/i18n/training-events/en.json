@@ -1,0 +1,46 @@
+{
+  "title": "Training Events",
+  "subtitle": "Schedule training and book staff onto it.",
+  "new": "New Event",
+  "empty": "No training events scheduled.",
+  "loadError": "Couldn't load training events.",
+  "backToList": "All events",
+  "confirmDelete": "Delete this event, its attendees and their certificates?",
+  "deleted": "Training event deleted.",
+  "deleteError": "Couldn't delete the event.",
+  "bookError": "Couldn't update attendees.",
+  "attendError": "Couldn't update attendance.",
+  "columns": {
+    "course": "Event",
+    "when": "When",
+    "location": "Location",
+    "trainer": "Trainer",
+    "attendees": "Attendees"
+  },
+  "attendees": {
+    "heading": "Attendees ({{count}})",
+    "book": "Book staff",
+    "name": "Name",
+    "attended": "Attended",
+    "empty": "No one is booked on yet."
+  },
+  "form": {
+    "title": "New Training Event",
+    "editTitle": "Edit Training Event",
+    "course": "Course",
+    "chooseCourse": "Choose a course",
+    "eventTitle": "Title",
+    "start": "Starts",
+    "end": "Ends",
+    "location": "Location",
+    "trainer": "Trainer",
+    "provider": "Provider",
+    "hours": "Hours",
+    "capacity": "Capacity",
+    "notes": "Notes",
+    "create": "Create",
+    "incomplete": "Choose a course and enter a title.",
+    "saved": "Training event saved.",
+    "saveError": "Couldn't save the event."
+  }
+}

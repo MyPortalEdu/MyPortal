@@ -8,6 +8,9 @@ namespace MyPortal.Core.Entities
     {
         public Guid TrainingCourseId { get; set; }
 
+        // Set when this record is an attendee booking on a scheduled training event.
+        public Guid? TrainingEventId { get; set; }
+
         public Guid StaffMemberId { get; set; }
 
         public Guid TrainingCertificateStatusId { get; set; }

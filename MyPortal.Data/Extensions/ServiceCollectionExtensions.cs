@@ -135,6 +135,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISchoolHolidayRepository, SchoolHolidayRepository>();
         services.AddScoped<IStaffMemberRepository, StaffMemberRepository>();
         services.AddScoped<IStaffReportRepository, StaffReportRepository>();
+        services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
+        services.AddScoped<ISwfCensusRepository, SwfCensusRepository>();
         services.AddScoped<IStaffLineManagerRepository, StaffLineManagerRepository>();
         services.AddScoped<IStudentGroupRepository, StudentGroupRepository>();
         services.AddScoped<IStudentGroupSupervisorRepository, StudentGroupSupervisorRepository>();

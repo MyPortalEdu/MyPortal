@@ -1,0 +1,62 @@
+<ng-container *transloco="let t">
+  <mp-page-header
+    [title]="t('training-courses.title')"
+    [subtitle]="t('training-courses.subtitle')"
+    icon="fa-solid fa-book-open"
+    [actions]="headerActions()"></mp-page-header>
+
+  @if (loading()) {
+    <mp-card><mp-skeleton></mp-skeleton></mp-card>
+  } @else {
+    <mp-table [value]="courses()" dataKey="id" [scrollable]="true">
+      <ng-template mpTableHeader>
+        <tr>
+          <th style="width: 10rem">{{ t('training-courses.columns.code') }}</th>
+          <th>{{ t('training-courses.columns.name') }}</th>
+          <th class="hidden md:table-cell">{{ t('training-courses.columns.description') }}</th>
+          <th style="width: 8rem">{{ t('training-courses.columns.status') }}</th>
+          @if (canEdit()) { <th style="width: 6rem"></th> }
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableBody let-row>
+        <tr>
+          <td class="py-2 pr-4 font-mono text-xs">{{ row.code }}</td>
+          <td class="py-2 px-3 font-medium">{{ row.name }}</td>
+          <td class="py-2 px-3 hidden md:table-cell text-muted-foreground">{{ row.description || '—' }}</td>
+          <td class="py-2 px-3">
+            <mp-badge
+              [value]="row.active ? t('training-courses.active') : t('training-courses.inactive')"
+              [severity]="row.active ? 'success' : 'secondary'"></mp-badge>
+          </td>
+          @if (canEdit()) {
+            <td class="py-2 pl-3 text-right whitespace-nowrap">
+              <button type="button" class="mp-icon-button h-7 w-7" (click)="edit(row)" [attr.aria-label]="t('common.edit')">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+              <button
+                type="button"
+                class="mp-icon-button h-7 w-7"
+                (click)="remove(row)"
+                [disabled]="row.inUse"
+                [title]="row.inUse ? t('training-courses.inUse') : t('common.delete')"
+                [attr.aria-label]="t('common.delete')">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </td>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableEmpty>
+        <tr>
+          <td [attr.colspan]="canEdit() ? 5 : 4" class="p-4">
+            <mp-empty-state icon="fa-solid fa-book-open" [message]="t('training-courses.empty')"></mp-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </mp-table>
+  }
+
+  <mp-training-course-form-dialog (saved)="load()"></mp-training-course-form-dialog>
+</ng-container>

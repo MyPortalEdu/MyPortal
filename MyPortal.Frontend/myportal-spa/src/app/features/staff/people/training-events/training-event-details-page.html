@@ -1,0 +1,94 @@
+<ng-container *transloco="let t">
+  <a
+    routerLink="/staff/people/training-events"
+    class="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+    <i class="fa-solid fa-arrow-left-long text-xs"></i>
+    {{ t('training-events.backToList') }}
+  </a>
+
+  @if (loading() && !event()) {
+    <mp-card><mp-skeleton></mp-skeleton></mp-card>
+  } @else if (event(); as e) {
+    <mp-page-header [title]="e.title" [subtitle]="e.courseName" icon="fa-solid fa-chalkboard-user"></mp-page-header>
+
+    <mp-card class="mb-4 block">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <dl class="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
+          <div><dt class="text-xs text-muted-foreground">{{ t('training-events.columns.when') }}</dt><dd class="tabular-nums">{{ whenLabel(e) }}</dd></div>
+          <div><dt class="text-xs text-muted-foreground">{{ t('training-events.form.location') }}</dt><dd>{{ e.location || '—' }}</dd></div>
+          <div><dt class="text-xs text-muted-foreground">{{ t('training-events.form.trainer') }}</dt><dd>{{ e.trainer || '—' }}</dd></div>
+          <div><dt class="text-xs text-muted-foreground">{{ t('training-events.form.provider') }}</dt><dd>{{ e.provider || '—' }}</dd></div>
+          <div><dt class="text-xs text-muted-foreground">{{ t('training-events.form.hours') }}</dt><dd class="tabular-nums">{{ e.hours ?? '—' }}</dd></div>
+          <div><dt class="text-xs text-muted-foreground">{{ t('training-events.form.capacity') }}</dt><dd class="tabular-nums">{{ e.capacity ?? '—' }}</dd></div>
+        </dl>
+        @if (canEdit()) {
+          <div class="flex shrink-0 gap-2">
+            <button mpButton variant="secondary" size="sm" (click)="edit()">
+              <i class="fa-solid fa-pen text-xs"></i> {{ t('common.edit') }}
+            </button>
+            <button mpButton variant="destructive" size="sm" (click)="remove()">
+              <i class="fa-solid fa-trash text-xs"></i> {{ t('common.delete') }}
+            </button>
+          </div>
+        }
+      </div>
+      @if (e.notes) {
+        <p class="mt-3 border-t border-border pt-3 text-sm text-muted-foreground">{{ e.notes }}</p>
+      }
+    </mp-card>
+
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-sm font-semibold">
+        {{ t('training-events.attendees.heading', { count: e.attendees.length }) }}
+      </h2>
+      @if (canEdit()) {
+        <mp-staff-member-picker
+          [buttonLabel]="t('training-events.attendees.book')"
+          (picked)="onStaffPicked($any($event))"></mp-staff-member-picker>
+      }
+    </div>
+
+    <mp-table [value]="e.attendees" dataKey="staffMemberId" [scrollable]="true">
+      <ng-template mpTableHeader>
+        <tr>
+          <th>{{ t('training-events.attendees.name') }}</th>
+          <th class="text-center" style="width: 8rem">{{ t('training-events.attendees.attended') }}</th>
+          @if (canEdit()) { <th style="width: 4rem"></th> }
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableBody let-a>
+        <tr>
+          <td class="py-2 pr-4">
+            <span class="font-medium">{{ a.staffName }}</span>
+            <span class="ml-2 font-mono text-xs text-muted-foreground">{{ a.staffCode }}</span>
+          </td>
+          <td class="py-2 px-3 text-center">
+            <mp-checkbox
+              [ngModel]="a.hasAttended === true"
+              (ngModelChange)="setAttended(a, $event)"
+              [disabled]="!canEdit()"
+              [ariaLabel]="t('training-events.attendees.attended')"></mp-checkbox>
+          </td>
+          @if (canEdit()) {
+            <td class="py-2 pl-3 text-right">
+              <button type="button" class="mp-icon-button h-7 w-7" (click)="removeAttendee(a)" [attr.aria-label]="t('common.remove')">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            </td>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template mpTableEmpty>
+        <tr>
+          <td [attr.colspan]="canEdit() ? 3 : 2" class="p-4">
+            <mp-empty-state icon="fa-solid fa-user-group" [message]="t('training-events.attendees.empty')"></mp-empty-state>
+          </td>
+        </tr>
+      </ng-template>
+    </mp-table>
+
+    <mp-training-event-form-dialog [event]="e" (saved)="load()"></mp-training-event-form-dialog>
+  }
+</ng-container>

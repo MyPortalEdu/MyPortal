@@ -13,6 +13,9 @@ import { AcademicYearListPage } from './curriculum/academic-years/academic-year-
 import { StaffMemberListPage } from './people/staff-members/staff-member-list-page/staff-member-list-page';
 import { StaffMemberDetailsPage } from './people/staff-members/staff-member-details-page/staff-member-details-page';
 import { StaffCompliancePage } from './people/staff-compliance/staff-compliance-page';
+import { SwfCensusPage } from './people/swf-census/swf-census-page';
+import { TrainingEventListPage } from './people/training-events/training-event-list-page';
+import { TrainingEventDetailsPage } from './people/training-events/training-event-details-page';
 import { ReportLibraryPage } from './reports/report-library/report-library-page';
 import { SalaryInformationPage } from './reports/salary-information/salary-information-page';
 import { ContractInformationPage } from './reports/contract-information/contract-information-page';
@@ -24,6 +27,7 @@ import { LongTermAbsencePage } from './reports/long-term-absence/long-term-absen
 import { StaffTrainingPage } from './reports/staff-training/staff-training-page';
 import { TrainingCoursePage } from './reports/training-course/training-course-page';
 import { PostListPage } from './setup/posts/post-list-page/post-list-page';
+import { TrainingCourseListPage } from './setup/training-courses/training-course-list-page';
 import { ServiceTermListPage } from './setup/service-terms/service-term-list-page/service-term-list-page';
 import { ServiceTermDetailsPage } from './setup/service-terms/service-term-details-page/service-term-details-page';
 import { Permissions } from '../../core/constants/permissions';
@@ -121,6 +125,15 @@ export const STAFF_ROUTES: Routes = [
         data: {
           permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup],
           breadcrumb: 'Posts'
+        }
+      },
+      {
+        path: 'setup/training-courses',
+        component: TrainingCourseListPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewStaffSetup, Permissions.Staff.EditStaffSetup],
+          breadcrumb: 'Training Courses'
         }
       },
       {
@@ -241,12 +254,39 @@ export const STAFF_ROUTES: Routes = [
         }
       },
       {
+        path: 'people/training-events',
+        component: TrainingEventListPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffProfessionalDetails],
+          breadcrumb: 'Training Events'
+        }
+      },
+      {
+        path: 'people/training-events/:id',
+        component: TrainingEventDetailsPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffProfessionalDetails],
+          breadcrumb: 'Training Event'
+        }
+      },
+      {
         path: 'people/compliance',
         component: StaffCompliancePage,
         canActivate: [AuthGuard],
         data: {
           permissionsAny: [Permissions.Staff.ViewAllStaffPreEmploymentChecks],
           breadcrumb: 'Compliance'
+        }
+      },
+      {
+        path: 'people/census',
+        component: SwfCensusPage,
+        canActivate: [AuthGuard],
+        data: {
+          permissionsAny: [Permissions.Staff.ViewAllStaffEmploymentDetails],
+          breadcrumb: 'Workforce Census'
         }
       },
       {

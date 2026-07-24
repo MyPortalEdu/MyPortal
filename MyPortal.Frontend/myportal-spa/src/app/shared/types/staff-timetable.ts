@@ -16,6 +16,7 @@ export interface StaffCalendarEvent {
   allDay: boolean;
   category: StaffCalendarCategory;
   location?: string | null;
+  kind?: number | null;
   colourCode?: string | null;
 }
 

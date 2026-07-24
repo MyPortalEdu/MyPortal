@@ -35,21 +35,20 @@ public class AcademicYearService(
     IValidationService validationService)
     : BaseService(authorizationService, logger), IAcademicYearService
 {
-    private IDictionary<SchoolHolidayType, Guid> _schoolHolidayMap = new Dictionary<SchoolHolidayType, Guid>
-    {
-        { SchoolHolidayType.HalfTerm, DiaryEventTypes.SchoolHoliday },
-        { SchoolHolidayType.PublicHoliday, DiaryEventTypes.PublicHoliday },
-        { SchoolHolidayType.TeacherTraining, DiaryEventTypes.TeacherTraining }
-    };
-
-    // Reverse of _schoolHolidayMap for surfacing holidays on read. Built in the
-    // field initialiser so it stays automatically consistent with the forward map.
-    private static readonly IReadOnlyDictionary<Guid, SchoolHolidayType> EventTypeToHolidayType
-        = new Dictionary<Guid, SchoolHolidayType>
+    private static readonly IReadOnlyDictionary<SchoolHolidayType, DiaryEventKind> HolidayTypeToKind
+        = new Dictionary<SchoolHolidayType, DiaryEventKind>
         {
-            { DiaryEventTypes.SchoolHoliday,   SchoolHolidayType.HalfTerm },
-            { DiaryEventTypes.PublicHoliday,   SchoolHolidayType.PublicHoliday },
-            { DiaryEventTypes.TeacherTraining, SchoolHolidayType.TeacherTraining }
+            { SchoolHolidayType.HalfTerm, DiaryEventKind.SchoolHoliday },
+            { SchoolHolidayType.PublicHoliday, DiaryEventKind.PublicHoliday },
+            { SchoolHolidayType.TeacherTraining, DiaryEventKind.TeacherTraining }
+        };
+
+    private static readonly IReadOnlyDictionary<DiaryEventKind, SchoolHolidayType> KindToHolidayType
+        = new Dictionary<DiaryEventKind, SchoolHolidayType>
+        {
+            { DiaryEventKind.SchoolHoliday,   SchoolHolidayType.HalfTerm },
+            { DiaryEventKind.PublicHoliday,   SchoolHolidayType.PublicHoliday },
+            { DiaryEventKind.TeacherTraining, SchoolHolidayType.TeacherTraining }
         };
 
 
@@ -76,11 +75,7 @@ public class AcademicYearService(
         {
             Id = h.Id,
             Name = h.Name,
-            // Holidays were always created via _schoolHolidayMap, so every EventTypeId
-            // here should round-trip cleanly. If a row ever shows up with an unknown
-            // type (e.g. someone hand-inserts a SchoolHoliday with an unrelated
-            // DiaryEventType), defaulting to HalfTerm is the least-surprising fallback.
-            Type = EventTypeToHolidayType.TryGetValue(h.EventTypeId, out var t) ? t : SchoolHolidayType.HalfTerm,
+            Type = KindToHolidayType.TryGetValue(h.Kind, out var t) ? t : SchoolHolidayType.HalfTerm,
             StartDate = h.StartDate,
             EndDate = h.EndDate
         }).ToList();
@@ -236,7 +231,7 @@ public class AcademicYearService(
                 IsAllDay = true,
                 IsPublic = true,
                 IsSystem = true,
-                EventTypeId = _schoolHolidayMap[holidayModel.Type]
+                Kind = HolidayTypeToKind[holidayModel.Type]
             };
 
             var diaryEventEntity =

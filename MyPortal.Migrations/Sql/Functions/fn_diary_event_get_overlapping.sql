@@ -4,7 +4,7 @@ GO
 
 -- Returns events that overlap the [@StartTime, @EndTime] window.
 -- All-day events are treated as [StartTime, EndDate + 1 day] so they cover the whole calendar day.
--- Filtering by event kind/type is the caller's responsibility (join DiaryEventTypes on EventTypeId).
+-- Filtering by event kind is the caller's responsibility (filter on the returned Kind).
 CREATE OR ALTER FUNCTION dbo.fn_diary_event_get_overlapping
     (
         @StartTime datetime2(7),
@@ -16,7 +16,7 @@ CREATE OR ALTER FUNCTION dbo.fn_diary_event_get_overlapping
     RETURN
 SELECT
     DE.Id,
-    DE.EventTypeId,
+    DE.Kind,
     DE.CreatedById,
     DE.CreatedAt,
     DE.RoomId,

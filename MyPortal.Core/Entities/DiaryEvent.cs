@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MyPortal.Common.Enums;
 using MyPortal.Core.Interfaces;
 
 namespace MyPortal.Core.Entities
@@ -7,7 +8,8 @@ namespace MyPortal.Core.Entities
     [Table("DiaryEvents")]
     public class DiaryEvent : Entity, IAuditableEntity, ISystemEntity, IVersionedEntity
     {
-        public Guid EventTypeId { get; set; }
+        // Only User is user-created; other kinds are reserved for system events (detentions, cover, holidays, training).
+        public DiaryEventKind Kind { get; set; }
 
         public Guid? RoomId { get; set; }
 

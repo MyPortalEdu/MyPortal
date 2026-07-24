@@ -85,8 +85,7 @@ WHERE
             AND NOT EXISTS (
                 SELECT 1
                 FROM dbo.fn_diary_event_get_overlapping(i.ActualStartTime, i.ActualEndTime) AS OE
-                JOIN dbo.DiaryEventTypes AS DET ON DET.Id = OE.EventTypeId
-                WHERE DET.Kind IN (7, 8, 9)
+                WHERE OE.Kind IN (7, 8, 9)
             )
         )
         OR i.IsAmReg = 1
